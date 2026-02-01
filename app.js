@@ -1,11 +1,4 @@
-/* Typer PWA - UI: Splash 7s -> Menu -> Liga/Stats/Exit
-   - Telefon: img_menu.png
-   - PC:      img_menu_pc.png
-   - Nick zapis w localStorage i pokaz na górze
-*/
-
 const KEY_NICK = "typer_nick_v1";
-
 const SPLASH_MS = 7000;
 
 const MENU_PHONE = "img_menu.png";
@@ -15,6 +8,7 @@ const viewSplash = document.getElementById("viewSplash");
 const viewMenu = document.getElementById("viewMenu");
 
 const splashHint = document.getElementById("splashHint");
+const splashBg = document.getElementById("splashBg");
 const menuBg = document.getElementById("menuBg");
 
 const nickPill = document.getElementById("nickPill");
@@ -23,14 +17,11 @@ const nickPill2 = document.getElementById("nickPill2");
 const panelLiga = document.getElementById("panelLiga");
 const panelStats = document.getElementById("panelStats");
 
-const debugInfo = document.getElementById("debugInfo");
-
 function isLandscape() {
   return window.matchMedia("(orientation: landscape)").matches;
 }
 
 function pickMenuSrc() {
-  // Prosta zasada: landscape = PC/poziomo, portrait = telefon/pionowo
   return isLandscape() ? MENU_PC : MENU_PHONE;
 }
 
@@ -39,12 +30,15 @@ function applyMenuBg() {
   menuBg.style.backgroundImage = `url("./${src}")`;
 }
 
+function applySplashBg() {
+  splashBg.style.backgroundImage = `url("./img_starter.png")`;
+}
+
 function setNickPills() {
   const nick = loadNick();
   if (nick) {
     nickPill.style.display = "inline-block";
     nickPill.textContent = `Nick: ${nick}`;
-
     nickPill2.style.display = "inline-block";
     nickPill2.textContent = `Nick: ${nick}`;
   } else {
@@ -63,9 +57,7 @@ function loadNick() {
 }
 
 function saveNick(nick) {
-  try {
-    localStorage.setItem(KEY_NICK, nick);
-  } catch {}
+  try { localStorage.setItem(KEY_NICK, nick); } catch {}
 }
 
 function askNickIfNeeded() {
@@ -74,7 +66,7 @@ function askNickIfNeeded() {
 
   while (true) {
     const val = prompt("Podaj nick / imię (będzie widoczne w grze):", "");
-    if (val === null) return ""; // anuluj
+    if (val === null) return "";
     const trimmed = val.trim();
     if (trimmed.length >= 2) {
       saveNick(trimmed);
@@ -105,43 +97,29 @@ function hidePanels() {
 function showLiga() {
   hidePanels();
   panelLiga.style.display = "flex";
-  debugInfo.textContent = "Liga: placeholder (dalej dodamy właściwą ligę).";
 }
 
 function showStats() {
   hidePanels();
   panelStats.style.display = "flex";
-  debugInfo.textContent = "Statystyki: placeholder (w kolejnym kroku).";
 }
 
 function exitApp() {
-  // W przeglądarce: próbujemy zamknąć kartę (zwykle zablokowane)
-  // W Android WebView: dodamy później obsługę w MainActivity (finish()).
-  alert("Wyjście: w przeglądarce nie zamknę karty automatycznie.\nW aplikacji Android dodamy obsługę przycisku (finish()).");
+  alert("Wyjście: w przeglądarce nie da się pewnie zamknąć karty.\nW Androidzie później dodamy finish().");
 }
 
 function handleAction(go) {
-  if (go === "menu") {
-    showMenu();
-    return;
-  }
+  if (go === "menu") return showMenu();
 
   if (go === "liga") {
     const nick = askNickIfNeeded();
-    if (!nick) return; // anulował
-    showLiga();
-    return;
+    if (!nick) return;
+    return showLiga();
   }
 
-  if (go === "stats") {
-    showStats();
-    return;
-  }
+  if (go === "stats") return showStats();
 
-  if (go === "exit") {
-    exitApp();
-    return;
-  }
+  if (go === "exit") return exitApp();
 }
 
 function bindClicks() {
@@ -156,12 +134,12 @@ function bindClicks() {
 function boot() {
   setNickPills();
 
-  // MENU background
+  applySplashBg();
   applyMenuBg();
   window.addEventListener("resize", applyMenuBg);
 
-  // Splash -> Menu po 7 sekundach
   showSplash();
+
   let left = Math.ceil(SPLASH_MS / 1000);
   splashHint.textContent = `Ekran startowy (${left}s)…`;
 
@@ -175,7 +153,6 @@ function boot() {
     }
   }, 1000);
 
-  // SW
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }
