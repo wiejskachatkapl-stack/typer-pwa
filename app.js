@@ -1,151 +1,186 @@
-// ================== USTAWIENIA ==================
-const APP_VERSION = "v1001";
+/* Typer PWA - UI: Splash 7s -> Menu -> Liga/Stats/Exit
+   - Telefon: img_menu.png
+   - PC:      img_menu_pc.png
+   - Nick zapis w localStorage i pokaz na górze
+*/
+
+const KEY_NICK = "typer_nick_v1";
+
+const SPLASH_MS = 7000;
+
 const MENU_PHONE = "img_menu.png";
 const MENU_PC = "img_menu_pc.png";
-const CALIBRATE = false; // kalibracja WYŁĄCZONA
 
-// ================== START ==================
-document.addEventListener("DOMContentLoaded", () => {
-  mountUI();
-  registerSW();
-});
+const viewSplash = document.getElementById("viewSplash");
+const viewMenu = document.getElementById("viewMenu");
 
-// ================== UI ==================
-function mountUI() {
-  const root = document.getElementById("app");
-  root.innerHTML = `
-    <div id="wrap" style="position:fixed; inset:0; background:#0b1020;">
-      <div id="version" style="position:fixed; left:10px; top:8px; font-size:12px; opacity:.7; z-index:50;">
-        ${APP_VERSION}
-      </div>
+const splashHint = document.getElementById("splashHint");
+const menuBg = document.getElementById("menuBg");
 
-      <div id="splash" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-        <img src="./img_starter.png" alt="Start" style="max-width:92vw; max-height:80vh; object-fit:contain; border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,.55);" />
-        <div style="margin-top:10px; opacity:.8;">Ekran startowy (5s)…</div>
-      </div>
+const nickPill = document.getElementById("nickPill");
+const nickPill2 = document.getElementById("nickPill2");
 
-      <div id="menuView" style="position:absolute; inset:0; display:none;">
-        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-          <img id="menuImg" alt="Menu"
-               style="max-width:96vw; max-height:92vh; object-fit:contain; border-radius:22px; box-shadow:0 10px 50px rgba(0,0,0,.55);" />
-        </div>
+const panelLiga = document.getElementById("panelLiga");
+const panelStats = document.getElementById("panelStats");
 
-        <!-- Hotspoty / przyciski (przezroczyste) -->
-        <div id="hotspots" style="position:absolute; inset:0; pointer-events:auto;"></div>
+const debugInfo = document.getElementById("debugInfo");
 
-        <div style="position:fixed; left:0; right:0; bottom:10px; text-align:center; font-size:12px; opacity:.7;">
-          Copyright 2026 RN_APS Mariusz Gębka
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Splash 5s -> menu
-  setTimeout(() => {
-    showMenu();
-  }, 5000);
-
-  window.addEventListener("resize", () => refreshMenuImage());
-}
-
-// ================== MENU RESPONSIVE ==================
 function isLandscape() {
   return window.matchMedia("(orientation: landscape)").matches;
 }
 
 function pickMenuSrc() {
+  // Prosta zasada: landscape = PC/poziomo, portrait = telefon/pionowo
   return isLandscape() ? MENU_PC : MENU_PHONE;
 }
 
-function refreshMenuImage() {
-  const img = document.getElementById("menuImg");
-  if (!img) return;
-  img.src = "./" + pickMenuSrc() + "?t=" + Date.now();
+function applyMenuBg() {
+  const src = pickMenuSrc();
+  menuBg.style.backgroundImage = `url("./${src}")`;
+}
+
+function setNickPills() {
+  const nick = loadNick();
+  if (nick) {
+    nickPill.style.display = "inline-block";
+    nickPill.textContent = `Nick: ${nick}`;
+
+    nickPill2.style.display = "inline-block";
+    nickPill2.textContent = `Nick: ${nick}`;
+  } else {
+    nickPill.style.display = "none";
+    nickPill2.style.display = "none";
+  }
+}
+
+function loadNick() {
+  try {
+    const v = localStorage.getItem(KEY_NICK);
+    return v ? String(v) : "";
+  } catch {
+    return "";
+  }
+}
+
+function saveNick(nick) {
+  try {
+    localStorage.setItem(KEY_NICK, nick);
+  } catch {}
+}
+
+function askNickIfNeeded() {
+  let nick = loadNick();
+  if (nick) return nick;
+
+  while (true) {
+    const val = prompt("Podaj nick / imię (będzie widoczne w grze):", "");
+    if (val === null) return ""; // anuluj
+    const trimmed = val.trim();
+    if (trimmed.length >= 2) {
+      saveNick(trimmed);
+      setNickPills();
+      return trimmed;
+    }
+    alert("Nick musi mieć przynajmniej 2 znaki.");
+  }
+}
+
+function showSplash() {
+  viewMenu.classList.remove("active");
+  viewSplash.classList.add("active");
 }
 
 function showMenu() {
-  const splash = document.getElementById("splash");
-  const menuView = document.getElementById("menuView");
-  if (splash) splash.style.display = "none";
-  if (menuView) menuView.style.display = "block";
-
-  refreshMenuImage();
-  mountHotspots();
+  viewSplash.classList.remove("active");
+  viewMenu.classList.add("active");
+  hidePanels();
+  applyMenuBg();
 }
 
-// ================== HOTSPOTY (przyciski) ==================
-function mountHotspots() {
-  const hs = document.getElementById("hotspots");
-  if (!hs) return;
-
-  // UWAGA: Tu wpisujemy Twoje przyciski jako przezroczyste pola.
-  // Na razie 3 przykładowe: Liga / Statystyki / Wyjście
-  // Pozycje są procentowe -> działają na telefonie i PC (bo obraz jest "contain").
-  // Jeśli będziesz chciał idealnie, zrobimy kalibrację.
-  hs.innerHTML = "";
-
-  // Kontener referencyjny na środku (pod obraz)
-  // Zrobimy warstwę, która ma taki sam rozmiar jak obraz (contain):
-  const layer = document.createElement("div");
-  layer.style.position = "absolute";
-  layer.style.left = "50%";
-  layer.style.top = "50%";
-  layer.style.transform = "translate(-50%, -50%)";
-  layer.style.width = "96vw";
-  layer.style.height = "92vh";
-  layer.style.maxWidth = "96vw";
-  layer.style.maxHeight = "92vh";
-  layer.style.pointerEvents = "none"; // hotspoty same będą miały pointer events
-
-  // Hotspoty (w % tej warstwy)
-  layer.appendChild(hotspot(20, 60, 60, 10, "Liga typerów", () => alert("Liga typerów (tu będzie Nick)")));
-  layer.appendChild(hotspot(20, 72, 60, 10, "Statystyki", () => alert("Statystyki — zrobimy później")));
-  layer.appendChild(hotspot(20, 84, 60, 10, "Wyjście", () => alert("Wyjście (Android: finish())")));
-
-  hs.appendChild(layer);
+function hidePanels() {
+  panelLiga.style.display = "none";
+  panelStats.style.display = "none";
 }
 
-function hotspot(x, y, w, h, label, onClick) {
-  const d = document.createElement("div");
-  d.title = label;
-  d.style.position = "absolute";
-  d.style.left = x + "%";
-  d.style.top = y + "%";
-  d.style.width = w + "%";
-  d.style.height = h + "%";
-  d.style.pointerEvents = "auto";
-  d.style.borderRadius = "14px";
-  d.style.background = "rgba(0,0,0,0.18)"; // lekko ciemniejsze, jak chciałeś
-  d.style.border = "1px solid rgba(255,255,255,0.12)";
-  d.style.display = "flex";
-  d.style.alignItems = "center";
-  d.style.justifyContent = "center";
-  d.style.fontWeight = "700";
-  d.style.letterSpacing = "0.2px";
-  d.style.userSelect = "none";
+function showLiga() {
+  hidePanels();
+  panelLiga.style.display = "flex";
+  debugInfo.textContent = "Liga: placeholder (dalej dodamy właściwą ligę).";
+}
 
-  d.addEventListener("click", (e) => {
-    if (CALIBRATE) return; // tu kiedyś kliknięcia do kalibracji
-    onClick();
+function showStats() {
+  hidePanels();
+  panelStats.style.display = "flex";
+  debugInfo.textContent = "Statystyki: placeholder (w kolejnym kroku).";
+}
+
+function exitApp() {
+  // W przeglądarce: próbujemy zamknąć kartę (zwykle zablokowane)
+  // W Android WebView: dodamy później obsługę w MainActivity (finish()).
+  alert("Wyjście: w przeglądarce nie zamknę karty automatycznie.\nW aplikacji Android dodamy obsługę przycisku (finish()).");
+}
+
+function handleAction(go) {
+  if (go === "menu") {
+    showMenu();
+    return;
+  }
+
+  if (go === "liga") {
+    const nick = askNickIfNeeded();
+    if (!nick) return; // anulował
+    showLiga();
+    return;
+  }
+
+  if (go === "stats") {
+    showStats();
+    return;
+  }
+
+  if (go === "exit") {
+    exitApp();
+    return;
+  }
+}
+
+function bindClicks() {
+  document.querySelectorAll("[data-go]").forEach(el => {
+    el.addEventListener("click", () => {
+      const go = el.getAttribute("data-go");
+      handleAction(go);
+    });
   });
-
-  return d;
 }
 
-// ================== SERVICE WORKER ==================
-function registerSW() {
-  if (!("serviceWorker" in navigator)) return;
+function boot() {
+  setNickPills();
 
-  navigator.serviceWorker
-    .register("./sw.js", { scope: "./" })
-    .then(() => {
-      // jak SW się zaktualizuje — odśwież
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        // unikamy pętli
-        if (window.__reloaded) return;
-        window.__reloaded = true;
-        location.reload();
-      });
-    })
-    .catch(() => {});
+  // MENU background
+  applyMenuBg();
+  window.addEventListener("resize", applyMenuBg);
+
+  // Splash -> Menu po 7 sekundach
+  showSplash();
+  let left = Math.ceil(SPLASH_MS / 1000);
+  splashHint.textContent = `Ekran startowy (${left}s)…`;
+
+  const timer = setInterval(() => {
+    left -= 1;
+    if (left <= 0) {
+      clearInterval(timer);
+      showMenu();
+    } else {
+      splashHint.textContent = `Ekran startowy (${left}s)…`;
+    }
+  }, 1000);
+
+  // SW
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+
+  bindClicks();
 }
+
+boot();
