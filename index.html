@@ -3,406 +3,281 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#071A2A" />
   <title>Typer</title>
-  <meta name="theme-color" content="#061226" />
   <link rel="manifest" href="manifest.json" />
   <style>
     :root{
-      --bg1:#030a16;
-      --bg2:#081a33;
-      --card: rgba(16, 30, 55, 0.55);
-      --stroke: rgba(255,255,255,0.12);
-      --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.70);
-      --muted2: rgba(255,255,255,0.55);
-      --btn: rgba(255,255,255,0.12);
-      --btn2: rgba(255,255,255,0.18);
-      --shadow: 0 14px 40px rgba(0,0,0,0.45);
+      --bg:#071A2A;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --btn: rgba(255,255,255,.12);
+      --btnHover: rgba(255,255,255,.18);
+      --stroke: rgba(255,255,255,.14);
       --radius: 18px;
     }
-
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 700px at 50% 20%, #1b3f7e 0%, var(--bg2) 45%, var(--bg1) 100%);
-      color:var(--text);
-      overflow-x:hidden;
-    }
-
-    /* app frame */
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--text);}
     .app{
-      min-height:100dvh;
+      min-height:100%;
       display:flex;
-      flex-direction:column;
       align-items:center;
       justify-content:center;
-      padding: 18px 14px 18px;
-      gap: 12px;
+      padding: 18px;
     }
 
+    /* tło */
+    .bg{
+      position:fixed; inset:0;
+      background:
+        radial-gradient(1200px 700px at 50% 20%, rgba(30,110,170,.45), transparent 60%),
+        radial-gradient(900px 500px at 20% 80%, rgba(20,60,120,.35), transparent 55%),
+        radial-gradient(900px 500px at 80% 80%, rgba(10,30,60,.45), transparent 55%),
+        linear-gradient(180deg, #051624, #071A2A 55%, #051624);
+      z-index:-2;
+    }
+
+    /* główna karta */
     .card{
-      width:min(980px, 96vw);
-      background: var(--card);
+      width:min(1100px, 100%);
       border:1px solid var(--stroke);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      background: rgba(0,0,0,.18);
+      border-radius: 22px;
       overflow:hidden;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 30px 80px rgba(0,0,0,.35);
     }
 
-    /* header bar */
+    /* pasek górny */
     .topbar{
       display:flex;
+      gap:12px;
       align-items:center;
-      gap: 12px;
-      padding: 10px 12px;
+      justify-content:space-between;
+      padding: 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
     }
-
-    .leftBlock{
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .titleWrap{
+    .topLeft{
       display:flex;
       flex-direction:column;
-      gap:2px;
-      min-width:0;
+      gap:3px;
+      min-width: 220px;
     }
-
-    .title{
-      font-weight: 700;
-      font-size: 16px;
-      line-height: 1.1;
-      margin:0;
-      opacity:0.95;
-    }
-
-    .subtitle{
-      font-size: 12px;
-      color: var(--muted2);
-      margin:0;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* NICK - DUŻY PO LEWEJ */
-    .nickBig{
-      font-weight: 800;
-      letter-spacing: .2px;
-      font-size: 18px;
-      line-height: 1.1;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--stroke);
-      background: rgba(0,0,0,0.12);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-      max-width: 52vw;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-    }
-
-    @media (min-width: 800px){
-      .nickBig{ font-size: 22px; padding: 10px 14px; max-width: 420px; }
-      .title{ font-size: 18px; }
-      .subtitle{ font-size: 13px; }
-    }
-
-    .rightBlock{
+    .title{font-weight:700; font-size:16px; line-height:1.1}
+    .subtitle{color:var(--muted); font-size:12px}
+    .topRight{
       display:flex;
+      gap:10px;
       align-items:center;
       justify-content:flex-end;
-      gap: 10px;
+      flex-wrap:wrap;
     }
-
-    .btn{
-      appearance:none;
+    .nickBadge{
+      padding:8px 12px;
       border:1px solid var(--stroke);
-      background: var(--btn);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-weight: 700;
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      font-weight:800;
+      font-size:16px; /* DUŻA nazwa */
+    }
+    .smallBtn{
+      padding:8px 12px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.10);
+      border-radius: 999px;
+      color:var(--text);
       cursor:pointer;
-      transition: transform .08s ease, background .15s ease;
       user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      white-space:nowrap;
+      font-weight:650;
     }
-    .btn:hover{ background: var(--btn2); }
-    .btn:active{ transform: scale(0.98); }
+    .smallBtn:hover{background: rgba(255,255,255,.16)}
 
-    /* view area (image + hotspots) */
-    .stage{
+    /* Obszar z obrazem menu */
+    .menuStage{
       position:relative;
       width:100%;
-      padding: 12px;
-      padding-top: 0;
+      aspect-ratio: 16/9; /* na PC ładnie */
+      background: #000;
+    }
+    /* Na telefonach preferujemy pion -> inny obraz i proporcja */
+    @media (max-width: 640px){
+      .menuStage{ aspect-ratio: 9/16; }
+      .nickBadge{font-size:15px}
     }
 
-    .imgWrap{
-      position:relative;
-      width:100%;
-      border-radius: 20px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.15);
+    .menuImg{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit: cover; /* bez czarnych pasów */
+      filter: saturate(1.05) contrast(1.02);
+      transform: scale(1.01);
     }
 
-    /* menu image */
-    #menuImg, #splashImg{
-      display:block;
-      width:100%;
-      height:auto;
-      user-select:none;
-      -webkit-user-drag:none;
-    }
-
-    /* MENU - trzy duże przyciski (nakładka) */
-    .menuButtons{
+    /* Przyciski na tle */
+    .btnCol{
       position:absolute;
-      inset: 0;
+      left:50%;
+      top:55%;
+      transform: translate(-50%, -50%);
+      width:min(560px, 86%);
       display:flex;
       flex-direction:column;
+      gap:16px;
+    }
+    .bigBtn{
+      height:64px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color:var(--text);
+      font-size:18px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .bigBtn:hover{ background: rgba(0,0,0,.34); }
+
+    /* dół */
+    .footer{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 10px 14px;
+      border-top:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.72);
+      font-size:12px;
+      background: rgba(0,0,0,.18);
+    }
+
+    /* Splash */
+    #splash{
+      position:fixed; inset:0;
+      display:flex;
       align-items:center;
       justify-content:center;
-      gap: 16px;
-      padding: 18px;
-      pointer-events:none; /* żeby klik działał tylko na buttonach */
+      background: #071A2A;
+      z-index: 9999;
     }
-    .menuButtons .menuBtn{
-      pointer-events:auto;
-      width:min(640px, 78%);
-      padding: 18px 16px;
-      border-radius: 14px;
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.14);
-      color: #fff;
-      font-weight: 800;
-      font-size: 18px;
-      text-align:center;
-      cursor:pointer;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      transition: transform .08s ease, background .15s ease;
+    #splash img{
+      width: min(520px, 80vw);
+      height:auto;
+      border-radius: 18px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.45);
     }
-    .menuButtons .menuBtn:hover{ background: rgba(0,0,0,0.28); }
-    .menuButtons .menuBtn:active{ transform: scale(0.98); }
-
-    @media (min-width: 900px){
-      .menuButtons .menuBtn{
-        width:min(720px, 62%);
-        font-size: 19px;
-      }
-    }
-
-    /* footer */
-    .footer{
-      width:min(980px, 96vw);
-      display:flex;
-      justify-content:space-between;
-      gap: 10px;
-      padding: 8px 12px;
-      font-size: 12px;
-      color: var(--muted2);
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.10);
-    }
-    .footer .right{ text-align:right; }
-
-    /* overlay modal for nick */
-    .modal{
+    #splash .hint{
       position:fixed;
-      inset:0;
-      background: rgba(0,0,0,0.65);
+      bottom: 22px;
+      left:0; right:0;
+      text-align:center;
+      color: rgba(255,255,255,.75);
+      font-size: 13px;
+    }
+
+    /* modal nick */
+    .modalMask{
+      position:fixed; inset:0;
       display:none;
       align-items:center;
       justify-content:center;
-      padding: 18px;
-      z-index: 9999;
+      background: rgba(0,0,0,.55);
+      z-index: 10000;
+      padding:18px;
     }
-    .modal.show{ display:flex; }
-    .modalCard{
-      width:min(520px, 96vw);
-      background: rgba(14, 26, 48, 0.92);
-      border:1px solid rgba(255,255,255,0.14);
+    .modal{
+      width:min(520px, 100%);
+      background: rgba(10,20,35,.92);
+      border:1px solid rgba(255,255,255,.14);
       border-radius: 18px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.55);
       padding: 16px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
     }
-    .modalCard h3{
-      margin: 0 0 6px;
-      font-size: 16px;
-      letter-spacing: .2px;
-    }
-    .modalCard p{
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-    .modalRow{
-      display:flex;
-      gap: 10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .input{
+    .modal h3{margin:0 0 10px 0}
+    .modal p{margin:0 0 12px 0; color:rgba(255,255,255,.75)}
+    .row{display:flex; gap:10px}
+    input{
       flex:1;
-      min-width: 220px;
-      padding: 12px 12px;
+      height:44px;
+      padding:0 12px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(0,0,0,0.20);
-      color: var(--text);
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      font-size:16px;
       outline:none;
-      font-size: 14px;
-      font-weight: 700;
     }
-    .input::placeholder{ color: rgba(255,255,255,0.35); font-weight:600; }
-
-    .btnPrimary{
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(34, 120, 255, 0.25);
+    .modalBtn{
+      height:44px;
+      padding:0 14px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.14);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
     }
-    .btnPrimary:hover{ background: rgba(34, 120, 255, 0.35); }
-
-    /* views toggle */
-    .view{ display:none; }
-    .view.show{ display:block; }
-
+    .modalBtn:hover{background: rgba(255,255,255,.20)}
   </style>
 </head>
 
 <body>
+  <div class="bg"></div>
+
+  <!-- Splash (7s) -->
+  <div id="splash">
+    <div>
+      <img src="img_starter.png" alt="Start" />
+      <div class="hint">Ekran startowy (7s)...</div>
+    </div>
+  </div>
+
+  <!-- Modal nick -->
+  <div id="nickMask" class="modalMask">
+    <div class="modal">
+      <h3>Podaj nick / imię</h3>
+      <p>Ustawiamy go raz na tym urządzeniu. Zawsze możesz go później zmienić.</p>
+      <div class="row">
+        <input id="nickInput" type="text" maxlength="22" placeholder="np. Mariusz" />
+        <button id="nickSaveBtn" class="modalBtn">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app">
-
-    <!-- ===== SPLASH ===== -->
-    <div id="splash" class="card view">
+    <div class="card" id="menuView" style="display:none;">
       <div class="topbar">
-        <div class="leftBlock">
-          <div class="titleWrap">
-            <p class="title">Start</p>
-            <p class="subtitle">Ekran startowy (7s) → menu</p>
-          </div>
-        </div>
-        <div class="rightBlock"></div>
-      </div>
-
-      <div class="stage">
-        <div class="imgWrap">
-          <img id="splashImg" src="img_starter.png" alt="Start" />
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== MENU ===== -->
-    <div id="menuView" class="card view">
-      <div class="topbar">
-        <div class="leftBlock">
-          <span id="nickBadge" class="nickBig">Nick: —</span>
-          <div class="titleWrap">
-            <p class="title">Menu</p>
-            <p class="subtitle">Wybierz tryb (telefon: img_menu.png / PC: img_menu_pc.png)</p>
-          </div>
+        <div class="topLeft">
+          <div class="title">Menu</div>
+          <div class="subtitle">Wybierz opcję</div>
         </div>
 
-        <div class="rightBlock">
-          <button id="changeNickBtn" class="btn">Zmień nick</button>
+        <div class="topRight">
+          <!-- Nick PO LEWEJ w topbarze (duży) -->
+          <div class="nickBadge" id="nickBadge">Nick: —</div>
+          <!-- Z drugiej strony przycisk Zmień nick -->
+          <div class="smallBtn" id="changeNickBtn">Zmień nick</div>
         </div>
       </div>
 
-      <div class="stage">
-        <div class="imgWrap">
-          <img id="menuImg" src="img_menu.png" alt="Menu" />
-          <div class="menuButtons">
-            <button class="menuBtn" data-go="liga">Liga typerów</button>
-            <button class="menuBtn" data-go="stats">Statystyki</button>
-            <button class="menuBtn" data-go="exit">Wyjście</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== LIGA (placeholder) ===== -->
-    <div id="ligaView" class="card view">
-      <div class="topbar">
-        <div class="leftBlock">
-          <span id="nickBadge2" class="nickBig">Nick: —</span>
-          <div class="titleWrap">
-            <p class="title">Liga typerów</p>
-            <p class="subtitle">Tu będzie liga. Na razie test: nick + nawigacja.</p>
-          </div>
-        </div>
-        <div class="rightBlock">
-          <button class="btn" data-go="menu">Wróć</button>
+      <div class="menuStage">
+        <img id="menuImg" class="menuImg" src="img_menu.png" alt="Menu" />
+        <div class="btnCol">
+          <button class="bigBtn" id="btnLiga">Liga typerów</button>
+          <button class="bigBtn" id="btnStats">Statystyki</button>
+          <button class="bigBtn" id="btnExit">Wyjście</button>
         </div>
       </div>
 
-      <div class="stage">
-        <div class="imgWrap">
-          <img id="ligaImg" src="img_menu.png" alt="Liga" />
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== STATY (placeholder) ===== -->
-    <div id="statsView" class="card view">
-      <div class="topbar">
-        <div class="leftBlock">
-          <span id="nickBadge3" class="nickBig">Nick: —</span>
-          <div class="titleWrap">
-            <p class="title">Statystyki</p>
-            <p class="subtitle">Na razie placeholder. Potem dodamy właściwe statystyki.</p>
-          </div>
-        </div>
-        <div class="rightBlock">
-          <button class="btn" data-go="menu">Wróć</button>
-        </div>
-      </div>
-
-      <div class="stage">
-        <div class="imgWrap">
-          <img id="statsImg" src="img_menu.png" alt="Statystyki" />
-        </div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <div>Copyright 2026 RN_APS Mariusz Gębka</div>
-      <div class="right" id="statusLine">Menu gotowe.</div>
-    </div>
-
-  </div>
-
-  <!-- MODAL: nick -->
-  <div id="nickModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modalCard">
-      <h3>Podaj nick</h3>
-      <p>Nick zapisze się lokalnie na tym urządzeniu. Możesz go potem zmienić przyciskiem „Zmień nick”.</p>
-      <div class="modalRow">
-        <input id="nickInput" class="input" maxlength="20" placeholder="np. Mariusz" />
-        <button id="saveNickBtn" class="btn btnPrimary">Zapisz</button>
-        <button id="cancelNickBtn" class="btn">Anuluj</button>
+      <div class="footer">
+        <div>Copyright 2026 RN_APS Mariusz Gębka</div>
+        <div id="statusRight"></div>
       </div>
     </div>
   </div>
 
-  <script src="app.js"></script>
-  <script>
-    // rejestracja SW (jeśli masz sw.js)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
-    }
-  </script>
+  <script src="app.js?v=1000"></script>
 </body>
 </html>

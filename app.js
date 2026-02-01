@@ -1,211 +1,136 @@
-/* ===========================
-   TYPUJ SPORT - app.js
-   =========================== */
-
+/* ================== KONFIG ================== */
 const KEY_NICK = "typer_nick_v1";
 
-// obraz menu: PC vs phone
+// Twoje pliki graficzne:
 const MENU_PHONE = "img_menu.png";
-const MENU_PC    = "img_menu_pc.png";
+const MENU_PC = "img_menu_pc.png";
 
-// czas startu
+// Splash min. 7 sekund
 const SPLASH_MS = 7000;
 
-// ====== elementy ======
+/* ================== POMOCNICZE ================== */
 const el = (id) => document.getElementById(id);
 
-const splash     = el("splash");
-const menuView   = el("menuView");
-const ligaView   = el("ligaView");
-const statsView  = el("statsView");
-
-const nickBadge  = el("nickBadge");
-const nickBadge2 = el("nickBadge2");
-const nickBadge3 = el("nickBadge3");
-
-const changeNickBtn = el("changeNickBtn");
-
-const menuImg   = el("menuImg");
-const ligaImg   = el("ligaImg");
-const statsImg  = el("statsImg");
-
-const statusLine = el("statusLine");
-
-// modal
-const nickModal    = el("nickModal");
-const nickInput    = el("nickInput");
-const saveNickBtn  = el("saveNickBtn");
-const cancelNickBtn= el("cancelNickBtn");
-
-// ====== helpers ======
-function isLandscape() {
-  return window.matchMedia && window.matchMedia("(orientation: landscape)").matches;
+function isLandscapePC() {
+  // “PC / szeroko” – nie idealne, ale praktyczne:
+  return window.matchMedia("(orientation: landscape)").matches && window.innerWidth >= 900;
 }
 
 function pickMenuSrc() {
-  // Na PC/landscape próbujemy img_menu_pc.png, jak brak — spadamy do img_menu.png
-  return isLandscape() ? MENU_PC : MENU_PHONE;
+  return isLandscapePC() ? MENU_PC : MENU_PHONE;
 }
 
-function setImageWithFallback(imgEl, primary, fallback) {
-  if (!imgEl) return;
-  imgEl.onerror = null;
-  imgEl.src = primary + "?t=" + Date.now();
-
-  imgEl.onerror = () => {
-    imgEl.onerror = null;
-    imgEl.src = fallback + "?t=" + Date.now();
-  };
+function loadNick() {
+  try { return localStorage.getItem(KEY_NICK) || ""; } catch { return ""; }
 }
 
-function refreshMenuImages() {
-  const wanted = pickMenuSrc();
-  // menu
-  setImageWithFallback(menuImg, wanted, MENU_PHONE);
-  // placeholdery widoków też na razie na tej samej grafice
-  setImageWithFallback(ligaImg, wanted, MENU_PHONE);
-  setImageWithFallback(statsImg, wanted, MENU_PHONE);
+function saveNick(nick) {
+  try { localStorage.setItem(KEY_NICK, nick); } catch {}
 }
 
-function showView(name) {
-  // ukryj wszystkie
-  [splash, menuView, ligaView, statsView].forEach(v => v.classList.remove("show"));
-
-  if (name === "splash") splash.classList.add("show");
-  if (name === "menu")   menuView.classList.add("show");
-  if (name === "liga")   ligaView.classList.add("show");
-  if (name === "stats")  statsView.classList.add("show");
-
-  // status
-  if (name === "menu") statusLine.textContent = "Menu gotowe.";
-  if (name === "liga") statusLine.textContent = "Liga: placeholder (następny krok).";
-  if (name === "stats") statusLine.textContent = "Statystyki: placeholder (następny krok).";
+function setNickUI(nick) {
+  el("nickBadge").textContent = nick ? `Nick: ${nick}` : "Nick: —";
 }
 
-function getNick() {
-  try {
-    return localStorage.getItem(KEY_NICK) || "";
-  } catch {
-    return "";
-  }
+/* ================== NICK MODAL ================== */
+function openNickModal(prefill = "") {
+  el("nickInput").value = prefill || "";
+  el("nickMask").style.display = "flex";
+  setTimeout(() => el("nickInput").focus(), 50);
 }
-
-function setNick(nick) {
-  try {
-    localStorage.setItem(KEY_NICK, nick);
-  } catch {}
-  renderNick();
-}
-
-function renderNick() {
-  const n = getNick();
-  const txt = n ? `Nick: ${n}` : "Nick: —";
-  if (nickBadge) nickBadge.textContent = txt;
-  if (nickBadge2) nickBadge2.textContent = txt;
-  if (nickBadge3) nickBadge3.textContent = txt;
-}
-
-function openNickModal(force = false) {
-  // jeśli nie force i nick już jest — nie otwieramy
-  if (!force && getNick()) return;
-
-  nickInput.value = getNick() || "";
-  nickModal.classList.add("show");
-  nickModal.setAttribute("aria-hidden", "false");
-
-  setTimeout(() => nickInput.focus(), 50);
-}
-
 function closeNickModal() {
-  nickModal.classList.remove("show");
-  nickModal.setAttribute("aria-hidden", "true");
+  el("nickMask").style.display = "none";
 }
 
-function saveNickFromModal() {
-  const val = (nickInput.value || "").trim();
-  if (!val) {
-    nickInput.focus();
-    return;
+function ensureNickOrAsk() {
+  const nick = loadNick().trim();
+  if (!nick) {
+    openNickModal("");
+    return false;
   }
-  // proste czyszczenie
-  const cleaned = val.replace(/\s+/g, " ").slice(0, 20);
-  setNick(cleaned);
-  closeNickModal();
+  setNickUI(nick);
+  return true;
 }
 
-function wireMenuButtons() {
-  const buttons = document.querySelectorAll("[data-go]");
-  buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-go");
+/* ================== SPLASH -> MENU ================== */
+function showMenu() {
+  // ustaw obraz zależnie od urządzenia
+  el("menuImg").src = pickMenuSrc();
 
-      if (target === "exit") {
-        // PWA/strona: nie zamkniemy karty. Android WebView: przycisk Wyjście docelowo może wołać finish().
-        alert("Wyjście: w przeglądarce zamknij kartę. W aplikacji Android dodamy zamykanie (finish).");
-        return;
-      }
+  // widok
+  el("menuView").style.display = "block";
+  el("statusRight").textContent = "";
 
-      if (target === "liga") {
-        // jeśli brak nicka — wymuś wpis
-        if (!getNick()) {
-          openNickModal(true);
-          // po zapisaniu i tak wróci do menu — użytkownik kliknie jeszcze raz
-          return;
-        }
-        showView("liga");
-        return;
-      }
+  // nick
+  setNickUI(loadNick().trim());
 
-      if (target === "stats") {
-        if (!getNick()) {
-          openNickModal(true);
-          return;
-        }
-        showView("stats");
-        return;
-      }
-
-      if (target === "menu") {
-        showView("menu");
-        return;
-      }
-    });
+  // reaguj na zmianę rozmiaru/orientacji
+  window.addEventListener("resize", () => {
+    el("menuImg").src = pickMenuSrc();
   });
 }
 
-function startSplashThenMenu() {
-  showView("splash");
+function startApp() {
+  // Service Worker (opcjonalnie)
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
 
-  // od razu ustaw obrazki
-  refreshMenuImages();
-  renderNick();
-
+  // Splash minimum 7s
   setTimeout(() => {
-    showView("menu");
-    // jeśli pierwszy raz na urządzeniu — poproś o nick
-    if (!getNick()) openNickModal(true);
+    el("splash").style.display = "none";
+    showMenu();
+
+    // przy pierwszym wejściu poproś o nick
+    ensureNickOrAsk();
   }, SPLASH_MS);
 }
 
-// ====== eventy ======
-window.addEventListener("resize", () => refreshMenuImages());
-window.addEventListener("orientationchange", () => refreshMenuImages());
+/* ================== PRZYCISKI ================== */
+function wireUI() {
+  // Zmień nick
+  el("changeNickBtn").addEventListener("click", () => {
+    openNickModal(loadNick().trim());
+  });
 
-changeNickBtn?.addEventListener("click", () => openNickModal(true));
+  // Zapis nick
+  el("nickSaveBtn").addEventListener("click", () => {
+    const v = el("nickInput").value.trim();
+    if (!v) return;
+    saveNick(v);
+    setNickUI(v);
+    closeNickModal();
+  });
 
-saveNickBtn?.addEventListener("click", saveNickFromModal);
-cancelNickBtn?.addEventListener("click", closeNickModal);
+  // Enter w polu nick
+  el("nickInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") el("nickSaveBtn").click();
+  });
 
-nickInput?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") saveNickFromModal();
-  if (e.key === "Escape") closeNickModal();
+  // Liga typerów
+  el("btnLiga").addEventListener("click", () => {
+    if (!ensureNickOrAsk()) return;
+    el("statusRight").textContent = "Liga: placeholder (dalej dodamy właściwą ligę).";
+    // Na razie tylko test działania nick + nawigacja
+    // Później tu zrobimy ekran ligi.
+  });
+
+  // Statystyki
+  el("btnStats").addEventListener("click", () => {
+    if (!ensureNickOrAsk()) return;
+    el("statusRight").textContent = "Statystyki: w następnym kroku.";
+  });
+
+  // Wyjście
+  el("btnExit").addEventListener("click", () => {
+    // W przeglądarce nie zamkniemy karty – więc komunikat:
+    el("statusRight").textContent = "Wyjście: w aplikacji Android zrobimy finish().";
+    alert("Wyjście: w przeglądarce zamknij kartę, w aplikacji Android dodamy zamknięcie.");
+  });
+}
+
+/* ================== START ================== */
+document.addEventListener("DOMContentLoaded", () => {
+  wireUI();
+  startApp();
 });
-
-// klik poza kartą zamyka
-nickModal?.addEventListener("click", (e) => {
-  if (e.target === nickModal) closeNickModal();
-});
-
-// ====== init ======
-wireMenuButtons();
-startSplashThenMenu();
