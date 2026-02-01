@@ -1,246 +1,306 @@
-const MENU_PHONE = "img_menu.png";
-const MENU_PC = "mg_menu_pc.png";
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <title>Typer</title>
 
-/* Kalibracja WYŁĄCZONA */
-const CALIBRATE = false;
+  <link rel="manifest" href="manifest.json?v=18" />
+  <link rel="icon" href="icons/icon-192.png" />
 
-// =================== WIDOKI ===================
-const splash = document.getElementById("splash");
-const menuView = document.getElementById("menuView");
-const gameView = document.getElementById("gameView");
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#0b1020; color:#e5e7eb; }
+    .fullscreen { position: fixed; inset: 0; background:#0b1020; overflow:hidden; }
 
-function showView(name) {
-  if (splash) splash.style.display = "none";
-  if (menuView) menuView.style.display = (name === "menu") ? "block" : "none";
-  if (gameView) gameView.style.display = (name === "game") ? "block" : "none";
-}
+    /* STARTER */
+    #splash { z-index: 9999; }
+    #starterImg { position:absolute; inset:0; width:100%; height:100%; object-fit: cover; object-position:center; display:block; }
+    .splashOverlay { position:absolute; inset:0; background: radial-gradient(transparent 0%, rgba(0,0,0,.35) 60%, rgba(0,0,0,.62) 100%); pointer-events:none; }
+    .splashHud { position:absolute; left:16px; right:16px; bottom:18px; display:flex; align-items:flex-end; justify-content:space-between; pointer-events:none; }
+    .splashTitle { font-weight:900; font-size:20px; text-shadow:0 2px 12px rgba(0,0,0,.65); }
+    .splashSub { font-size:14px; opacity:.9; text-shadow:0 2px 12px rgba(0,0,0,.65); }
 
-function go(hash) { location.hash = hash; }
+    /* WSPÓLNE dla ekranów z obrazem tła */
+    .bgImg { position:absolute; inset:0; width:100%; height:100%; object-fit: cover; object-position:center; display:block; }
+    .bgShade { position:absolute; inset:0; background: radial-gradient(transparent 0%, rgba(0,0,0,.18) 55%, rgba(0,0,0,.45) 100%); pointer-events:none; }
 
-function applyRoute() {
-  const h = (location.hash || "#menu").replace("#", "");
-  if (h === "game") showView("game");
-  else showView("menu");
-}
-window.addEventListener("hashchange", applyRoute);
+    /* MENU */
+    #menuView { z-index: 9000; display:none; background:#000; }
+    .hotspots { position:absolute; inset:0; }
 
-// =================== STARTER 5s -> MENU ===================
-(function starter5s() {
-  const secLeftEl = document.getElementById("secLeft");
-  let left = 5;
-  if (secLeftEl) secLeftEl.textContent = String(left);
-
-  const tick = setInterval(() => {
-    left -= 1;
-    if (secLeftEl) secLeftEl.textContent = String(Math.max(0, left));
-    if (left <= 0) clearInterval(tick);
-  }, 1000);
-
-  setTimeout(() => {
-    if (splash) splash.style.display = "none";
-    go("#menu");
-    applyRoute();
-  }, 5000);
-})();
-
-// =================== MENU: PC vs PHONE + fallback ===================
-(function menuImageChooser() {
-  const img = document.getElementById("menuImg");
-  if (!img) return;
-
-  function isLandscape() {
-    return window.matchMedia("(orientation: landscape)").matches;
-  }
-  function pickSrc() {
-    return isLandscape() ? MENU_PC : MENU_PHONE;
-  }
-
-  img.addEventListener("error", () => {
-    const wanted = pickSrc();
-    if (wanted !== MENU_PHONE) {
-      img.src = MENU_PHONE + "?t=" + Date.now();
+    .btnHot{
+      position:absolute;
+      border-radius: 16px;
+      background: rgba(0,0,0,.38);
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      user-select:none;
     }
-  });
+    .btnHot:active { transform: scale(0.99); }
 
-  function refreshImage() {
-    const src = pickSrc();
-    img.src = src + "?t=" + Date.now();
-  }
+    .btnHot span{
+      font-weight: 900;
+      font-size: clamp(16px, 2.6vw, 28px);
+      letter-spacing: .2px;
+      text-shadow: 0 2px 10px rgba(0,0,0,.65);
+      padding: 0 10px;
+      text-align:center;
+      line-height: 1.1;
+    }
 
-  refreshImage();
-  window.addEventListener("resize", refreshImage);
-})();
+    #btnLiga { background: rgba(0,0,0,.42); }
+    #btnStats{ background: rgba(0,0,0,.40); }
+    #btnExit { background: rgba(0,0,0,.46); border-color: rgba(255,255,255,.26); }
 
-// =================== HOTSPOTY MENU ===================
-(function initMenuActions() {
-  const hotspots = document.getElementById("hotspots");
-  if (!hotspots) return;
+    #menuFooter {
+      position:absolute;
+      left:12px; right:12px; bottom:10px;
+      z-index: 99999;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.38);
+      border: 1px solid rgba(255,255,255,.12);
+      color:#e5e7eb;
+      text-shadow: 0 2px 10px rgba(0,0,0,.65);
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+    }
 
-  hotspots.querySelectorAll("[data-go]").forEach(el => {
-    el.addEventListener("click", () => {
-      const target = el.getAttribute("data-go");
+    /* LIGA TYPERÓW */
+    #ligaView { z-index: 8800; display:none; background:#000; }
 
-      if (CALIBRATE) return;
+    .topBar{
+      position:absolute;
+      left:12px; right:12px; top:12px;
+      z-index: 99999;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.45);
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .topTitle{
+      font-weight: 900;
+      font-size: 16px;
+      letter-spacing:.2px;
+      text-shadow: 0 2px 10px rgba(0,0,0,.65);
+      white-space:nowrap;
+    }
+    .topNick{
+      font-weight: 800;
+      opacity:.95;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .topSpacer{ flex:1; }
 
-      if (target === "liga") {
-        // TODO: ekran ligi
-        go("#game"); // tymczasowo przerzutka
-        applyRoute();
-      } else if (target === "stats") {
-        alert("Statystyki – zrobimy w następnym kroku.");
-      } else if (target === "exit") {
-        alert("Wyjście: w przeglądarce nie zamkniemy karty, w aplikacji Android dodamy finish().");
-      }
-    });
-  });
-})();
+    .miniBtn{
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      color:#e5e7eb;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .miniBtn:active{ transform: scale(0.99); }
 
-(function initBackButton() {
-  const btn = document.getElementById("backToMenuBtn");
-  if (!btn) return;
-  btn.addEventListener("click", () => {
-    go("#menu");
-    applyRoute();
-  });
-})();
+    /* modal do nicku */
+    #nickModal{
+      position:absolute; inset:0;
+      z-index: 999999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.55);
+      padding: 18px;
+    }
+    .modalCard{
+      width: min(520px, 92vw);
+      background: rgba(10,14,28,.92);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      padding: 16px;
+    }
+    .modalTitle{
+      font-weight: 900;
+      font-size: 18px;
+      margin: 0 0 6px;
+    }
+    .modalSub{
+      margin: 0 0 12px;
+      color:#cbd5e1;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .modalRow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    #nickInput{
+      flex:1;
+      min-width: 220px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      color:#e5e7eb;
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-size: 16px;
+      outline:none;
+    }
+    .saveBtn{
+      background:#2563eb;
+      border:1px solid #2563eb;
+      color:#fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 900;
+      cursor:pointer;
+    }
+    .saveBtn:active{ transform: scale(0.99); }
+    .err{ margin-top:10px; color:#fca5a5; font-size: 13px; display:none; }
 
-/* ====== Typowanie ====== */
-function pointsFor(realH, realA, tipH, tipA) {
-  if ([realH, realA, tipH, tipA].some(v => v === null || Number.isNaN(v))) return 0;
-  if (realH === tipH && realA === tipA) return 3;
-  const realSign = Math.sign(realH - realA);
-  const tipSign  = Math.sign(tipH - tipA);
-  return realSign === tipSign ? 1 : 0;
-}
-const KEY = "typer_matches_v1";
-let state = load();
+    /* GAME */
+    #gameView { display:none; }
+    .wrap { max-width: 820px; margin: 0 auto; padding: 18px; }
+    .card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10); border-radius: 16px; padding: 16px; }
+    h1 { margin: 10px 0 6px; font-size: 26px; }
+    .muted { color:#9ca3af; margin:0 0 12px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    input, button, select {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.16);
+      color:#e5e7eb;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 16px;
+      outline: none;
+    }
+    input { width: 86px; text-align:center; }
+    button { cursor:pointer; }
+    button.primary { background:#2563eb; border-color:#2563eb; }
+    button.danger { background:#ef4444; border-color:#ef4444; }
+    .list { margin-top: 12px; display:flex; flex-direction:column; gap:10px; }
+    .match { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .pill { padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.10); }
+    .spacer { flex:1; }
+    .score { font-weight:700; }
+    .footer { margin-top: 14px; font-size: 13px; color:#9ca3af; }
+    .hr { height:1px; background: rgba(255,255,255,.12); margin: 14px 0; }
+  </style>
+</head>
 
-function load() {
-  try { const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : []; }
-  catch { return []; }
-}
-function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
-function el(id) { return document.getElementById(id); }
+<body>
 
-function render() {
-  const root = el("matches");
-  if (!root) return;
-  root.innerHTML = "";
+  <!-- STARTER -->
+  <div id="splash" class="fullscreen">
+    <img id="starterImg" src="img_starter.png" alt="Start" />
+    <div class="splashOverlay"></div>
+    <div class="splashHud">
+      <div>
+        <div class="splashTitle">Typer</div>
+        <div class="splashSub">Start za <span id="secLeft">5</span>s</div>
+      </div>
+    </div>
+  </div>
 
-  if (state.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "pill";
-    empty.textContent = "Brak meczów. Dodaj pierwszy u góry.";
-    root.appendChild(empty);
-    return;
-  }
+  <!-- MENU -->
+  <div id="menuView" class="fullscreen">
+    <img id="menuImg" class="bgImg" alt="Menu" />
+    <div class="bgShade"></div>
 
-  state.forEach((m, idx) => {
-    const wrap = document.createElement("div");
-    wrap.className = "card";
-    wrap.style.padding = "12px";
+    <div class="hotspots" id="hotspots">
+      <div class="btnHot" id="btnLiga" data-go="liga" style="left:20%; top:44%; width:60%; height:10%;">
+        <span>Liga Typerów</span>
+      </div>
 
-    const row1 = document.createElement("div");
-    row1.className = "match";
-    row1.innerHTML = `
-      <span class="pill">${escapeHtml(m.league)}</span>
-      <span><b>${escapeHtml(m.home)}</b> vs <b>${escapeHtml(m.away)}</b></span>
-      <span class="spacer"></span>
-      <button class="danger" data-del="${idx}">Usuń</button>
-    `;
+      <div class="btnHot" id="btnStats" data-go="stats" style="left:20%; top:57%; width:60%; height:10%;">
+        <span>Statystyki</span>
+      </div>
 
-    const row2 = document.createElement("div");
-    row2.className = "match";
-    row2.style.marginTop = "10px";
+      <div class="btnHot" id="btnExit" data-go="exit" style="left:20%; top:70%; width:60%; height:10%;">
+        <span>Wyjście</span>
+      </div>
+    </div>
 
-    const realH = inputScore(m.realH, v => update(idx, { realH: v }));
-    const realA = inputScore(m.realA, v => update(idx, { realA: v }));
-    const tipH  = inputScore(m.tipH,  v => update(idx, { tipH: v }));
-    const tipA  = inputScore(m.tipA,  v => update(idx, { tipA: v }));
+    <div id="menuFooter">Copyright 2026 RN_APS Mariusz Gębka</div>
+  </div>
 
-    const pts = pointsFor(m.realH, m.realA, m.tipH, m.tipA);
+  <!-- LIGA TYPERÓW -->
+  <div id="ligaView" class="fullscreen">
+    <img id="ligaImg" class="bgImg" alt="Liga" />
+    <div class="bgShade"></div>
 
-    row2.append(
-      label("Wynik:"), realH, text(":"), realA,
-      spacer(),
-      label("Typ:"), tipH, text(":"), tipA,
-      spacer(),
-      pill(`Punkty: ${pts}`)
-    );
+    <div class="topBar">
+      <div class="topTitle">Liga Typerów</div>
+      <div class="topNick" id="nickLabel">Nick: —</div>
+      <div class="topSpacer"></div>
+      <button class="miniBtn" id="changeNickBtn">Zmień nick</button>
+      <button class="miniBtn" id="backToMenuLigaBtn">Menu</button>
+    </div>
 
-    wrap.append(row1, row2);
-    root.appendChild(wrap);
-  });
+    <!-- Modal: ustaw nick -->
+    <div id="nickModal">
+      <div class="modalCard">
+        <div class="modalTitle">Ustaw nick</div>
+        <p class="modalSub">To jednorazowe ustawienie na tym urządzeniu. Nick będzie widoczny w grze.</p>
 
-  root.querySelectorAll("button[data-del]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const i = Number(btn.getAttribute("data-del"));
-      state.splice(i, 1);
-      save();
-      render();
-    });
-  });
-}
+        <div class="modalRow">
+          <input id="nickInput" placeholder="Wpisz nick lub imię (min. 2 znaki)" maxlength="20" />
+          <button class="saveBtn" id="saveNickBtn">Zapisz</button>
+        </div>
 
-function update(i, patch) { state[i] = { ...state[i], ...patch }; save(); render(); }
+        <div class="err" id="nickErr">Wpisz poprawny nick (min. 2 znaki).</div>
+      </div>
+    </div>
+  </div>
 
-function inputScore(value, onChange) {
-  const input = document.createElement("input");
-  input.type = "number";
-  input.inputMode = "numeric";
-  input.min = "0";
-  input.value = (value ?? "") === null ? "" : (value ?? "");
-  input.addEventListener("input", () => {
-    const n = input.value === "" ? null : Number(input.value);
-    onChange(Number.isNaN(n) ? null : n);
-  });
-  return input;
-}
-function label(t) { const s = document.createElement("span"); s.className = "muted"; s.style.marginRight = "6px"; s.textContent = t; return s; }
-function pill(t) { const s = document.createElement("span"); s.className = "pill score"; s.textContent = t; return s; }
-function text(t) { const s = document.createElement("span"); s.textContent = t; return s; }
-function spacer() { const s = document.createElement("span"); s.className = "spacer"; return s; }
-function escapeHtml(str) {
-  return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
+  <!-- GAME (zostaje na później) -->
+  <div id="gameView">
+    <div class="wrap">
+      <div class="card">
+        <h1>Typer</h1>
+        <p class="muted">Dodaj mecz, wpisz wynik rzeczywisty i typ — policzy punkty (3/1/0).</p>
 
-const addBtn = el("addBtn");
-if (addBtn) {
-  addBtn.addEventListener("click", () => {
-    const leagueEl = el("league");
-    const homeEl = el("home");
-    const awayEl = el("away");
-    if (!leagueEl || !homeEl || !awayEl) return;
+        <div class="row">
+          <select id="league">
+            <option value="Ekstraklasa">Ekstraklasa</option>
+            <option value="Premier League">Premier League</option>
+            <option value="LaLiga">LaLiga</option>
+            <option value="Serie A">Serie A</option>
+            <option value="Bundesliga">Bundesliga</option>
+          </select>
 
-    const league = leagueEl.value;
-    const home = homeEl.value.trim();
-    const away = awayEl.value.trim();
-    if (!home || !away) return;
+          <input id="home" placeholder="Gospodarz" style="width:160px;text-align:left" />
+          <input id="away" placeholder="Gość" style="width:160px;text-align:left" />
+          <button class="primary" id="addBtn">Dodaj mecz</button>
 
-    state.unshift({ league, home, away, realH: null, realA: null, tipH: null, tipA: null });
-    homeEl.value = "";
-    awayEl.value = "";
-    save();
-    render();
-  });
-}
+          <span class="spacer"></span>
+          <button id="backToMenuBtn">Menu</button>
+          <button id="installBtn" style="display:none">Zainstaluj (PWA)</button>
+        </div>
 
-render();
+        <div class="hr"></div>
+        <div class="list" id="matches"></div>
 
-let deferredPrompt = null;
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = el("installBtn");
-  if (!btn) return;
-  btn.style.display = "inline-block";
-  btn.addEventListener("click", async () => {
-    btn.style.display = "none";
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-  }, { once: true });
-});
+        <div class="footer">
+          Offline: działa (PWA). Dane trzymane lokalnie w przeglądarce (localStorage).
+        </div>
+      </div>
+    </div>
+  </div>
 
-applyRoute();
+  <script src="app.js?v=18"></script>
+</body>
+</html>
