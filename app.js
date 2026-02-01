@@ -1,163 +1,211 @@
+/* ===========================
+   TYPUJ SPORT - app.js
+   =========================== */
+
 const KEY_NICK = "typer_nick_v1";
+
+// obraz menu: PC vs phone
+const MENU_PHONE = "img_menu.png";
+const MENU_PC    = "img_menu_pc.png";
+
+// czas startu
 const SPLASH_MS = 7000;
 
-const MENU_PHONE = "img_menu.png";
-const MENU_PC = "img_menu_pc.png";
+// ====== elementy ======
+const el = (id) => document.getElementById(id);
 
-const viewSplash = document.getElementById("viewSplash");
-const viewMenu = document.getElementById("viewMenu");
+const splash     = el("splash");
+const menuView   = el("menuView");
+const ligaView   = el("ligaView");
+const statsView  = el("statsView");
 
-const splashHint = document.getElementById("splashHint");
-const splashBg = document.getElementById("splashBg");
-const menuBg = document.getElementById("menuBg");
+const nickBadge  = el("nickBadge");
+const nickBadge2 = el("nickBadge2");
+const nickBadge3 = el("nickBadge3");
 
-const nickPill = document.getElementById("nickPill");
-const nickPill2 = document.getElementById("nickPill2");
+const changeNickBtn = el("changeNickBtn");
 
-const panelLiga = document.getElementById("panelLiga");
-const panelStats = document.getElementById("panelStats");
+const menuImg   = el("menuImg");
+const ligaImg   = el("ligaImg");
+const statsImg  = el("statsImg");
 
+const statusLine = el("statusLine");
+
+// modal
+const nickModal    = el("nickModal");
+const nickInput    = el("nickInput");
+const saveNickBtn  = el("saveNickBtn");
+const cancelNickBtn= el("cancelNickBtn");
+
+// ====== helpers ======
 function isLandscape() {
-  return window.matchMedia("(orientation: landscape)").matches;
+  return window.matchMedia && window.matchMedia("(orientation: landscape)").matches;
 }
 
 function pickMenuSrc() {
+  // Na PC/landscape próbujemy img_menu_pc.png, jak brak — spadamy do img_menu.png
   return isLandscape() ? MENU_PC : MENU_PHONE;
 }
 
-function applyMenuBg() {
-  const src = pickMenuSrc();
-  menuBg.style.backgroundImage = `url("./${src}")`;
+function setImageWithFallback(imgEl, primary, fallback) {
+  if (!imgEl) return;
+  imgEl.onerror = null;
+  imgEl.src = primary + "?t=" + Date.now();
+
+  imgEl.onerror = () => {
+    imgEl.onerror = null;
+    imgEl.src = fallback + "?t=" + Date.now();
+  };
 }
 
-function applySplashBg() {
-  splashBg.style.backgroundImage = `url("./img_starter.png")`;
+function refreshMenuImages() {
+  const wanted = pickMenuSrc();
+  // menu
+  setImageWithFallback(menuImg, wanted, MENU_PHONE);
+  // placeholdery widoków też na razie na tej samej grafice
+  setImageWithFallback(ligaImg, wanted, MENU_PHONE);
+  setImageWithFallback(statsImg, wanted, MENU_PHONE);
 }
 
-function setNickPills() {
-  const nick = loadNick();
-  if (nick) {
-    nickPill.style.display = "inline-block";
-    nickPill.textContent = `Nick: ${nick}`;
-    nickPill2.style.display = "inline-block";
-    nickPill2.textContent = `Nick: ${nick}`;
-  } else {
-    nickPill.style.display = "none";
-    nickPill2.style.display = "none";
-  }
+function showView(name) {
+  // ukryj wszystkie
+  [splash, menuView, ligaView, statsView].forEach(v => v.classList.remove("show"));
+
+  if (name === "splash") splash.classList.add("show");
+  if (name === "menu")   menuView.classList.add("show");
+  if (name === "liga")   ligaView.classList.add("show");
+  if (name === "stats")  statsView.classList.add("show");
+
+  // status
+  if (name === "menu") statusLine.textContent = "Menu gotowe.";
+  if (name === "liga") statusLine.textContent = "Liga: placeholder (następny krok).";
+  if (name === "stats") statusLine.textContent = "Statystyki: placeholder (następny krok).";
 }
 
-function loadNick() {
+function getNick() {
   try {
-    const v = localStorage.getItem(KEY_NICK);
-    return v ? String(v) : "";
+    return localStorage.getItem(KEY_NICK) || "";
   } catch {
     return "";
   }
 }
 
-function saveNick(nick) {
-  try { localStorage.setItem(KEY_NICK, nick); } catch {}
+function setNick(nick) {
+  try {
+    localStorage.setItem(KEY_NICK, nick);
+  } catch {}
+  renderNick();
 }
 
-function askNickIfNeeded() {
-  let nick = loadNick();
-  if (nick) return nick;
+function renderNick() {
+  const n = getNick();
+  const txt = n ? `Nick: ${n}` : "Nick: —";
+  if (nickBadge) nickBadge.textContent = txt;
+  if (nickBadge2) nickBadge2.textContent = txt;
+  if (nickBadge3) nickBadge3.textContent = txt;
+}
 
-  while (true) {
-    const val = prompt("Podaj nick / imię (będzie widoczne w grze):", "");
-    if (val === null) return "";
-    const trimmed = val.trim();
-    if (trimmed.length >= 2) {
-      saveNick(trimmed);
-      setNickPills();
-      return trimmed;
-    }
-    alert("Nick musi mieć przynajmniej 2 znaki.");
+function openNickModal(force = false) {
+  // jeśli nie force i nick już jest — nie otwieramy
+  if (!force && getNick()) return;
+
+  nickInput.value = getNick() || "";
+  nickModal.classList.add("show");
+  nickModal.setAttribute("aria-hidden", "false");
+
+  setTimeout(() => nickInput.focus(), 50);
+}
+
+function closeNickModal() {
+  nickModal.classList.remove("show");
+  nickModal.setAttribute("aria-hidden", "true");
+}
+
+function saveNickFromModal() {
+  const val = (nickInput.value || "").trim();
+  if (!val) {
+    nickInput.focus();
+    return;
   }
+  // proste czyszczenie
+  const cleaned = val.replace(/\s+/g, " ").slice(0, 20);
+  setNick(cleaned);
+  closeNickModal();
 }
 
-function showSplash() {
-  viewMenu.classList.remove("active");
-  viewSplash.classList.add("active");
-}
+function wireMenuButtons() {
+  const buttons = document.querySelectorAll("[data-go]");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-go");
 
-function showMenu() {
-  viewSplash.classList.remove("active");
-  viewMenu.classList.add("active");
-  hidePanels();
-  applyMenuBg();
-}
+      if (target === "exit") {
+        // PWA/strona: nie zamkniemy karty. Android WebView: przycisk Wyjście docelowo może wołać finish().
+        alert("Wyjście: w przeglądarce zamknij kartę. W aplikacji Android dodamy zamykanie (finish).");
+        return;
+      }
 
-function hidePanels() {
-  panelLiga.style.display = "none";
-  panelStats.style.display = "none";
-}
+      if (target === "liga") {
+        // jeśli brak nicka — wymuś wpis
+        if (!getNick()) {
+          openNickModal(true);
+          // po zapisaniu i tak wróci do menu — użytkownik kliknie jeszcze raz
+          return;
+        }
+        showView("liga");
+        return;
+      }
 
-function showLiga() {
-  hidePanels();
-  panelLiga.style.display = "flex";
-}
+      if (target === "stats") {
+        if (!getNick()) {
+          openNickModal(true);
+          return;
+        }
+        showView("stats");
+        return;
+      }
 
-function showStats() {
-  hidePanels();
-  panelStats.style.display = "flex";
-}
-
-function exitApp() {
-  alert("Wyjście: w przeglądarce nie da się pewnie zamknąć karty.\nW Androidzie później dodamy finish().");
-}
-
-function handleAction(go) {
-  if (go === "menu") return showMenu();
-
-  if (go === "liga") {
-    const nick = askNickIfNeeded();
-    if (!nick) return;
-    return showLiga();
-  }
-
-  if (go === "stats") return showStats();
-
-  if (go === "exit") return exitApp();
-}
-
-function bindClicks() {
-  document.querySelectorAll("[data-go]").forEach(el => {
-    el.addEventListener("click", () => {
-      const go = el.getAttribute("data-go");
-      handleAction(go);
+      if (target === "menu") {
+        showView("menu");
+        return;
+      }
     });
   });
 }
 
-function boot() {
-  setNickPills();
+function startSplashThenMenu() {
+  showView("splash");
 
-  applySplashBg();
-  applyMenuBg();
-  window.addEventListener("resize", applyMenuBg);
+  // od razu ustaw obrazki
+  refreshMenuImages();
+  renderNick();
 
-  showSplash();
-
-  let left = Math.ceil(SPLASH_MS / 1000);
-  splashHint.textContent = `Ekran startowy (${left}s)…`;
-
-  const timer = setInterval(() => {
-    left -= 1;
-    if (left <= 0) {
-      clearInterval(timer);
-      showMenu();
-    } else {
-      splashHint.textContent = `Ekran startowy (${left}s)…`;
-    }
-  }, 1000);
-
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  }
-
-  bindClicks();
+  setTimeout(() => {
+    showView("menu");
+    // jeśli pierwszy raz na urządzeniu — poproś o nick
+    if (!getNick()) openNickModal(true);
+  }, SPLASH_MS);
 }
 
-boot();
+// ====== eventy ======
+window.addEventListener("resize", () => refreshMenuImages());
+window.addEventListener("orientationchange", () => refreshMenuImages());
+
+changeNickBtn?.addEventListener("click", () => openNickModal(true));
+
+saveNickBtn?.addEventListener("click", saveNickFromModal);
+cancelNickBtn?.addEventListener("click", closeNickModal);
+
+nickInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveNickFromModal();
+  if (e.key === "Escape") closeNickModal();
+});
+
+// klik poza kartą zamyka
+nickModal?.addEventListener("click", (e) => {
+  if (e.target === nickModal) closeNickModal();
+});
+
+// ====== init ======
+wireMenuButtons();
+startSplashThenMenu();
