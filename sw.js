@@ -1,12 +1,12 @@
-// sw.js
-const CACHE_NAME = "typer-cache-v1005";
+const CACHE_NAME = "typer-cache-v1006";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./img_menu.png",
   "./img_menu_pc.png",
-  "./img_starter.png"
+  "./img_starter.png",
+  "./app.js?v=1006"
 ];
 
 self.addEventListener("install", (event) => {
@@ -27,17 +27,13 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
-
   if (url.origin !== location.origin) return;
 
   // HTML -> network-first
   if (req.mode === "navigate" || req.destination === "document") {
     event.respondWith((async () => {
       try {
-        const fresh = await fetch(req, { cache: "no-store" });
-        const cache = await caches.open(CACHE_NAME);
-        cache.put("./index.html", fresh.clone());
-        return fresh;
+        return await fetch(req, { cache: "no-store" });
       } catch {
         const cached = await caches.match("./index.html");
         return cached || Response.error();
@@ -74,8 +70,5 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // reszta -> cache-first
-  event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req))
-  );
+  event.respondWith(caches.match(req).then((cached) => cached || fetch(req)));
 });

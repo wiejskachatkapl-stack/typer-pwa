@@ -7,11 +7,31 @@
   <link rel="manifest" href="manifest.json" />
   <title>Typer</title>
 
+  <!-- AUTO-FIX CACHE: jeśli wykryje inną wersję, spróbuje wyczyścić SW/cache -->
+  <script>
+    (async () => {
+      const BUILD = "1006";
+      try {
+        const last = localStorage.getItem("typer_last_build");
+        if (last !== BUILD) {
+          localStorage.setItem("typer_last_build", BUILD);
+          if ("serviceWorker" in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister()));
+          }
+          if (window.caches) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <style>
     :root{
       --bg:#071022;
       --text:#e9eef9;
-      --muted:rgba(233,238,249,.72);
       --stroke:rgba(255,255,255,.10);
       --glass:rgba(8,18,34,.52);
       --glass2:rgba(8,18,34,.38);
@@ -36,10 +56,8 @@
       top: calc(env(safe-area-inset-top) + 8px);
       left: 50%;
       transform: translateX(-50%);
-      width: min(720px, calc(100% - 18px));
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      width: min(900px, calc(100% - 18px));
+      display:flex; align-items:center; justify-content:space-between;
       gap:8px;
       padding: 6px 8px;
       border-radius: 12px;
@@ -49,53 +67,20 @@
       box-shadow: var(--shadow);
       z-index: 10;
     }
-
-    .top-left{
-      display:flex;
-      align-items:baseline;
-      gap:10px;
-      min-width:0;
-    }
-    .title{
-      font-weight:900;
-      font-size:14px;
-      letter-spacing:.2px;
-      line-height:1.05;
-      white-space:nowrap;
-    }
-
+    .top-left{ display:flex; align-items:baseline; gap:10px; min-width:0; }
+    .title{ font-weight:900; font-size:14px; letter-spacing:.2px; white-space:nowrap; }
     .nick{
-      display:flex;
-      align-items:center;
-      gap:6px;
+      display:flex; align-items:center; gap:6px;
       padding: 5px 8px;
       border-radius: 12px;
       background: rgba(255,255,255,.06);
       border: 1px solid rgba(255,255,255,.10);
-      max-width: 52vw;
-      min-width: 120px;
+      max-width: 52vw; min-width: 120px;
     }
-    .nick-label{
-      font-size:11px;
-      color: rgba(233,238,249,.80);
-      flex:0 0 auto;
-      white-space:nowrap;
-    }
-    .nick-value{
-      font-size:14px;
-      font-weight:900;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+    .nick-label{ font-size:11px; color: rgba(233,238,249,.80); white-space:nowrap; }
+    .nick-value{ font-size:14px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    .top-right{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-shrink:0;
-    }
-
+    .top-right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
     .btnSmall{
       appearance:none;
       border: 1px solid rgba(255,255,255,.12);
@@ -111,24 +96,15 @@
     }
     .btnSmall:active{ transform: translateY(1px); }
 
-    @media (max-width: 380px){
-      .title{ display:none; }
-      .nick{ max-width: 64vw; }
-    }
-
     .center{
-      position:absolute;
-      left:0; right:0;
+      position:absolute; left:0; right:0;
       top:50%;
       transform: translateY(-28%);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:16px;
+      display:flex; flex-direction:column;
+      align-items:center; gap:16px;
       padding:0 14px;
       z-index: 5;
     }
-
     .btnBig{
       width: min(760px, 86%);
       height: 60px;
@@ -147,10 +123,8 @@
     .btnBig:active{ transform: translateY(1px); }
 
     .bottombar{
-      position:absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(720px, calc(100% - 18px));
+      position:absolute; left: 50%; transform: translateX(-50%);
+      width: min(900px, calc(100% - 18px));
       bottom: calc(env(safe-area-inset-bottom) + 10px);
       padding: 7px 10px;
       border-radius: 12px;
@@ -158,9 +132,7 @@
       border: 1px solid rgba(255,255,255,.10);
       backdrop-filter: blur(10px);
       box-shadow: var(--shadow);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      display:flex; align-items:center; justify-content:space-between;
       gap:10px;
       font-size: 11px;
       color: rgba(233,238,249,.78);
@@ -205,23 +177,19 @@
       background: rgba(255,255,255,.06);
     }
 
-    /* ====== Room layout ====== */
+    /* Room */
     .roomWrap{
       position:absolute;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 50%; transform: translateX(-50%);
       top: calc(env(safe-area-inset-top) + 64px);
       width: min(980px, calc(100% - 18px));
       bottom: calc(env(safe-area-inset-bottom) + 64px);
       display:grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns: 1fr 340px;
       gap: 12px;
       z-index: 6;
     }
-    @media (max-width: 820px){
-      .roomWrap{ grid-template-columns: 1fr; }
-    }
-
+    @media (max-width: 820px){ .roomWrap{ grid-template-columns: 1fr; } }
     .panel{
       border-radius: 16px;
       background: rgba(8,18,34,.52);
@@ -231,23 +199,9 @@
       padding: 12px;
       overflow: hidden;
     }
-
-    .panelTitle{
-      font-weight: 900;
-      font-size: 13px;
-      letter-spacing: .2px;
-      color: rgba(233,238,249,.92);
-      margin-bottom: 8px;
-    }
-
+    .panelTitle{ font-weight: 900; font-size: 13px; color: rgba(233,238,249,.92); margin-bottom: 8px; }
     .roomName{ font-weight: 950; font-size: 18px; margin-bottom: 6px; line-height: 1.15; }
-    .adminLine{
-      font-size: 12px;
-      color: rgba(233,238,249,.82);
-      margin-bottom: 10px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
+    .adminLine{ font-size: 12px; color: rgba(233,238,249,.82); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .codeBox{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
       padding: 10px 10px;
@@ -256,21 +210,8 @@
       border: 1px solid rgba(255,255,255,.10);
       margin-bottom: 10px;
     }
-    .codeText{
-      font-weight: 950;
-      font-size: 18px;
-      letter-spacing: 2px;
-      white-space: nowrap;
-    }
-
-    .playersList{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      overflow:auto;
-      max-height: 100%;
-      padding-right: 4px;
-    }
+    .codeText{ font-weight: 950; font-size: 18px; letter-spacing: 2px; white-space: nowrap; }
+    .playersList{ display:flex; flex-direction:column; gap:8px; overflow:auto; max-height: 100%; padding-right: 4px; }
     .playerRow{
       padding: 10px 10px;
       border-radius: 14px;
@@ -280,20 +221,8 @@
       gap:8px;
       align-items:baseline;
     }
-    .playerLabel{
-      font-size: 12px;
-      color: rgba(233,238,249,.78);
-      flex:0 0 auto;
-      white-space: nowrap;
-    }
-    .playerName{
-      font-weight: 900;
-      font-size: 14px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
+    .playerLabel{ font-size: 12px; color: rgba(233,238,249,.78); white-space: nowrap; }
+    .playerName{ font-weight: 900; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .panelBtns{ display:flex; gap:8px; flex-wrap: wrap; }
     .btnPanel{
       appearance:none;
@@ -307,36 +236,22 @@
       cursor:pointer;
       white-space: nowrap;
     }
-    .btnDanger{
-      background: rgba(170,60,60,.20);
-      border-color: rgba(255,120,120,.22);
-    }
+    .btnDanger{ background: rgba(170,60,60,.20); border-color: rgba(255,120,120,.22); }
 
-    /* ====== Fixtures screen ====== */
+    /* Fixtures */
     .fixturesWrap{
       position:absolute;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 50%; transform: translateX(-50%);
       top: calc(env(safe-area-inset-top) + 64px);
       width: min(980px, calc(100% - 18px));
       bottom: calc(env(safe-area-inset-bottom) + 64px);
       display:grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns: 1fr 340px;
       gap: 12px;
       z-index: 6;
     }
-    @media (max-width: 820px){
-      .fixturesWrap{ grid-template-columns: 1fr; }
-    }
-
-    .fixtureList{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      overflow:auto;
-      max-height: 100%;
-      padding-right: 4px;
-    }
+    @media (max-width: 820px){ .fixturesWrap{ grid-template-columns: 1fr; } }
+    .fixtureList{ display:flex; flex-direction:column; gap:8px; overflow:auto; max-height: 100%; padding-right: 4px; }
     .fixtureRow{
       padding: 10px 10px;
       border-radius: 14px;
@@ -346,36 +261,18 @@
       flex-direction:column;
       gap:6px;
     }
-    .fxTop{
-      display:flex; justify-content:space-between; gap:10px; align-items:baseline;
-      font-size: 12px;
-      color: rgba(233,238,249,.76);
-    }
-    .fxTeams{
-      font-weight: 950;
-      font-size: 14px;
-      line-height: 1.15;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-    }
+    .fxTop{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; font-size: 12px; color: rgba(233,238,249,.76); }
+    .fxTeams{ font-weight: 950; font-size: 14px; line-height: 1.15; display:flex; justify-content:space-between; gap:10px; }
     .fxTeams span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .fxVs{ flex:0 0 auto; opacity:.8; }
+    .hintSmall{ font-size: 12px; color: rgba(233,238,249,.78); line-height: 1.35; }
 
-    .hintSmall{
-      font-size: 12px;
-      color: rgba(233,238,249,.78);
-      line-height: 1.35;
-    }
-
-    /* ====== Modal ====== */
+    /* Modal */
     .modalMask{
-      position:fixed;
-      inset:0;
+      position:fixed; inset:0;
       background: rgba(0,0,0,.55);
       display:none;
-      align-items:center;
-      justify-content:center;
+      align-items:center; justify-content:center;
       z-index: 20000;
       padding: 16px;
     }
@@ -412,8 +309,8 @@
       font-weight: 950;
       white-space: nowrap;
     }
-    .modalBtn:active{ transform: translateY(1px); }
     .modalBtnSecondary{ background: rgba(255,255,255,.06); }
+    .modalBtn:active{ transform: translateY(1px); }
 
     .hidden{ display:none !important; }
   </style>
@@ -426,85 +323,56 @@
     <div id="splashHint" class="hint">Ekran startowy (7s)…</div>
   </div>
 
-  <!-- MENU SCREEN -->
+  <!-- MENU -->
   <div class="screen" id="menuScreen">
     <img class="bg" id="menuImg" alt="Menu" />
-
     <div class="topbar">
       <div class="top-left">
         <div class="title">Menu</div>
-        <div class="nick">
-          <div class="nick-label">Nick:</div>
-          <div class="nick-value" id="nickText">—</div>
-        </div>
+        <div class="nick"><div class="nick-label">Nick:</div><div class="nick-value" id="nickText">—</div></div>
       </div>
-
-      <div class="top-right">
-        <button class="btnSmall" id="changeNickBtn">Zmień nick</button>
-      </div>
+      <div class="top-right"><button class="btnSmall" id="changeNickBtn">Zmień nick</button></div>
     </div>
-
     <div class="center">
       <button class="btnBig" id="btnLiga">Liga typerów</button>
       <button class="btnBig" id="btnStats">Statystyki</button>
       <button class="btnBig" id="btnExit">Wyjście</button>
     </div>
-
     <div class="bottombar">
-      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka</div>
-      <div class="bottom-right">
-        <button class="btnTiny" id="btnRefresh">Odśwież / napraw</button>
-      </div>
+      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka • BUILD 1006</div>
+      <div class="bottom-right"><button class="btnTiny" id="btnRefresh">Odśwież / napraw</button></div>
     </div>
   </div>
 
-  <!-- ROOMS SCREEN -->
+  <!-- ROOMS -->
   <div class="screen hidden" id="roomsScreen">
     <img class="bg" id="roomsBg" alt="Pokoje" />
-
     <div class="topbar">
       <div class="top-left">
         <div class="title">Pokoje</div>
-        <div class="nick">
-          <div class="nick-label">Nick:</div>
-          <div class="nick-value" id="nickTextRooms">—</div>
-        </div>
+        <div class="nick"><div class="nick-label">Nick:</div><div class="nick-value" id="nickTextRooms">—</div></div>
       </div>
-
-      <div class="top-right">
-        <button class="btnSmall" id="backToMenuBtn">Wróć</button>
-      </div>
+      <div class="top-right"><button class="btnSmall" id="backToMenuBtn">Wróć</button></div>
     </div>
-
     <div class="center">
       <button class="btnBig" id="btnNewRoom">Nowy pokój</button>
       <button class="btnBig" id="btnJoinRoom">Dołącz do pokoju</button>
     </div>
-
     <div class="bottombar">
-      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka</div>
-      <div class="bottom-right">
-        <button class="btnTiny" id="btnRefresh2">Odśwież / napraw</button>
-      </div>
+      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka • BUILD 1006</div>
+      <div class="bottom-right"><button class="btnTiny" id="btnRefresh2">Odśwież / napraw</button></div>
     </div>
   </div>
 
-  <!-- ROOM (INSIDE) SCREEN -->
+  <!-- ROOM -->
   <div class="screen hidden" id="roomScreen">
     <img class="bg" id="roomBg" alt="Pokój" />
-
     <div class="topbar">
       <div class="top-left">
         <div class="title">Pokój</div>
-        <div class="nick">
-          <div class="nick-label">Nick:</div>
-          <div class="nick-value" id="nickTextRoom">—</div>
-        </div>
+        <div class="nick"><div class="nick-label">Nick:</div><div class="nick-value" id="nickTextRoom">—</div></div>
       </div>
-
-      <div class="top-right">
-        <button class="btnSmall" id="backToRoomsBtn">Wróć</button>
-      </div>
+      <div class="top-right"><button class="btnSmall" id="backToRoomsBtn">Wróć</button></div>
     </div>
 
     <div class="roomWrap">
@@ -527,49 +395,40 @@
         </div>
 
         <div class="panelBtns">
-          <button class="btnPanel" id="btnFixtures">Mecze tygodnia</button>
+          <button class="btnPanel" id="btnFixtures">Mecze tygodnia (TEST)</button>
           <button class="btnPanel btnDanger" id="btnLeaveRoom">Opuść pokój</button>
         </div>
+
+        <div class="hintSmall" id="roomDebug" style="margin-top:10px;opacity:.85;"></div>
       </div>
     </div>
 
     <div class="bottombar">
-      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka</div>
-      <div class="bottom-right">
-        <button class="btnTiny" id="btnRefresh3">Odśwież / napraw</button>
-      </div>
+      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka • BUILD 1006</div>
+      <div class="bottom-right"><button class="btnTiny" id="btnRefresh3">Odśwież / napraw</button></div>
     </div>
   </div>
 
-  <!-- FIXTURES SCREEN -->
+  <!-- FIXTURES -->
   <div class="screen hidden" id="fixturesScreen">
     <img class="bg" id="fixturesBg" alt="Mecze" />
-
     <div class="topbar">
       <div class="top-left">
         <div class="title">Mecze tygodnia</div>
-        <div class="nick">
-          <div class="nick-label">Pokój:</div>
-          <div class="nick-value" id="fixturesRoomLabel">—</div>
-        </div>
+        <div class="nick"><div class="nick-label">Pokój:</div><div class="nick-value" id="fixturesRoomLabel">—</div></div>
       </div>
-
-      <div class="top-right">
-        <button class="btnSmall" id="backToRoomBtn">Wróć</button>
-      </div>
+      <div class="top-right"><button class="btnSmall" id="backToRoomBtn">Wróć</button></div>
     </div>
 
     <div class="fixturesWrap">
       <div class="panel">
-        <div class="panelTitle" id="fixturesTitle">Ekstraklasa — najbliższe 7 dni</div>
+        <div class="panelTitle" id="fixturesTitle">Ekstraklasa — test</div>
         <div id="fixturesList" class="fixtureList"></div>
       </div>
 
       <div class="panel">
         <div class="panelTitle">Sterowanie</div>
-        <div class="hintSmall" id="fixturesInfo">
-          Pobieramy mecze z API i zapisujemy lokalnie jako kolejkę tygodnia dla tego pokoju.
-        </div>
+        <div class="hintSmall" id="fixturesInfo">Kliknij „Pobierz / odśwież”.</div>
         <div style="height:10px;"></div>
         <div class="panelBtns">
           <button class="btnPanel" id="btnLoadFixtures">Pobierz / odśwież</button>
@@ -579,10 +438,8 @@
     </div>
 
     <div class="bottombar">
-      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka</div>
-      <div class="bottom-right">
-        <button class="btnTiny" id="btnRefresh4">Odśwież / napraw</button>
-      </div>
+      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka • BUILD 1006</div>
+      <div class="bottom-right"><button class="btnTiny" id="btnRefresh4">Odśwież / napraw</button></div>
     </div>
   </div>
 
@@ -616,6 +473,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1005"></script>
+  <script src="app.js?v=1006"></script>
 </body>
 </html>
