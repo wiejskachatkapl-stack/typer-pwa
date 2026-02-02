@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = "typer-cache-v1004";
+const CACHE_NAME = "typer-cache-v1005";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -30,7 +30,7 @@ self.addEventListener("fetch", (event) => {
 
   if (url.origin !== location.origin) return;
 
-  // HTML -> network-first (żeby aktualizacje wchodziły)
+  // HTML -> network-first
   if (req.mode === "navigate" || req.destination === "document") {
     event.respondWith((async () => {
       try {
