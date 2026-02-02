@@ -1,9 +1,9 @@
 (() => {
   /**
-   * WERSJA BUILD – podbijaj przy każdej zmianie, np. 1002 -> 1003
-   * Musi się zgadzać z index.html (app.js?v=xxxx).
+   * BUILD – podbijaj przy zmianach.
+   * Musi się zgadzać z index.html (app.js?v=1003).
    */
-  const BUILD = 1002;
+  const BUILD = 1003;
 
   const KEY_NICK = "typer_nick_v1";
   const SPLASH_MS = 7000;
@@ -13,20 +13,35 @@
 
   const el = (id) => document.getElementById(id);
 
+  // screens
   const splash = el("splash");
   const splashHint = el("splashHint");
 
-  const menuImg = el("menuImg");
-  const nickText = el("nickText");
+  const menuScreen = el("menuScreen");
+  const roomsScreen = el("roomsScreen");
 
+  // backgrounds
+  const menuImg = el("menuImg");
+  const roomsBg = el("roomsBg");
+
+  // nick
+  const nickText = el("nickText");
+  const nickTextRooms = el("nickTextRooms");
+
+  // menu buttons
   const changeNickBtn = el("changeNickBtn");
   const btnLiga = el("btnLiga");
   const btnStats = el("btnStats");
   const btnExit = el("btnExit");
   const btnRefresh = el("btnRefresh");
 
+  // rooms buttons
+  const backToMenuBtn = el("backToMenuBtn");
+  const btnNewRoom = el("btnNewRoom");
+  const btnJoinRoom = el("btnJoinRoom");
+  const btnRefresh2 = el("btnRefresh2");
+
   function isLandscapeOrWide() {
-    // “PC/poziom” – praktyczne kryterium
     return window.matchMedia("(orientation: landscape)").matches || window.innerWidth >= 900;
   }
 
@@ -34,15 +49,23 @@
     return isLandscapeOrWide() ? MENU_PC : MENU_PHONE;
   }
 
-  function setMenuImage() {
+  function setBgImages() {
     const src = pickMenuSrc();
-    // cache-bust, żeby szybko widzieć zmiany grafiki
-    menuImg.src = `${src}?b=${BUILD}&t=${Date.now()}`;
-    // fallback jeśli nie ma PC grafiki
+    const full = `${src}?b=${BUILD}&t=${Date.now()}`;
+
+    // menu
     menuImg.onerror = () => {
       menuImg.onerror = null;
       menuImg.src = `${MENU_PHONE}?b=${BUILD}&t=${Date.now()}`;
     };
+    menuImg.src = full;
+
+    // rooms
+    roomsBg.onerror = () => {
+      roomsBg.onerror = null;
+      roomsBg.src = `${MENU_PHONE}?b=${BUILD}&t=${Date.now()}`;
+    };
+    roomsBg.src = full;
   }
 
   function getNick() {
@@ -61,7 +84,9 @@
 
   function renderNick() {
     const n = getNick();
-    nickText.textContent = n ? n : "—";
+    const txt = n ? n : "—";
+    nickText.textContent = txt;
+    nickTextRooms.textContent = txt;
   }
 
   function askNick(force = false) {
@@ -79,6 +104,20 @@
     return trimmed;
   }
 
+  function showScreen(name) {
+    // tylko 2 ekrany na razie
+    if (name === "menu") {
+      menuScreen.classList.remove("hidden");
+      roomsScreen.classList.add("hidden");
+      return;
+    }
+    if (name === "rooms") {
+      menuScreen.classList.add("hidden");
+      roomsScreen.classList.remove("hidden");
+      return;
+    }
+  }
+
   // ===== SPLASH (7s) =====
   function startSplash() {
     const start = Date.now();
@@ -93,8 +132,7 @@
 
     setTimeout(() => {
       splash.classList.add("hidden");
-      // po wejściu do menu – jeśli brak nicka, poproś raz
-      if (!getNick()) askNick(false);
+      // po wejściu do menu – jeśli brak nicka, możesz wpisać później po kliknięciu ligi
       renderNick();
     }, SPLASH_MS);
   }
@@ -102,66 +140,74 @@
   // ===== AWARYJNE: odśwież / napraw cache =====
   async function hardRefreshFix() {
     try {
-      // 1) Unregister SW
       if ("serviceWorker" in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map(r => r.unregister()));
       }
-      // 2) Wyczyść caches (SW cache)
       if (window.caches) {
         const keys = await caches.keys();
         await Promise.all(keys.map(k => caches.delete(k)));
       }
-    } catch {
-      // nic
-    }
-
-    // 3) Odśwież z “cache-bust” żeby wymusić nowy HTML/JS
+    } catch {}
     const url = new URL(location.href);
     url.searchParams.set("v", String(BUILD));
     url.searchParams.set("t", String(Date.now()));
     location.replace(url.toString());
   }
 
-  // ====== EVENTS ======
+  // ===== EVENTS =====
+
+  // zmiana nicku
   changeNickBtn.addEventListener("click", () => askNick(true));
+
+  // Liga typerów -> Pokoje (po nicku)
   btnLiga.addEventListener("click", () => {
     if (!getNick()) {
       const res = askNick(false);
       if (!res) return;
     }
-    alert("Liga typerów — następny krok: zrobimy osobny ekran ligi.");
+    renderNick();
+    showScreen("rooms");
   });
 
   btnStats.addEventListener("click", () => {
-    if (!getNick()) {
-      const res = askNick(false);
-      if (!res) return;
-    }
-    alert("Statystyki — następny krok: dodamy ekran statystyk.");
+    alert("Statystyki — zrobimy później.");
   });
 
   btnExit.addEventListener("click", () => {
     alert("Wyjście: w przeglądarce zamknij kartę. W aplikacji Android dodamy finish().");
   });
 
-  btnRefresh.addEventListener("click", () => {
-    hardRefreshFix();
+  btnRefresh.addEventListener("click", hardRefreshFix);
+  btnRefresh2.addEventListener("click", hardRefreshFix);
+
+  backToMenuBtn.addEventListener("click", () => {
+    showScreen("menu");
   });
 
-  // Resize/orientation -> zmień tło
+  // Pokoje: Nowy / Dołącz (na razie placeholdery)
+  btnNewRoom.addEventListener("click", () => {
+    alert("Nowy pokój — w następnym kroku zrobimy generowanie kodu pokoju.");
+  });
+
+  btnJoinRoom.addEventListener("click", () => {
+    alert("Dołącz do pokoju — w następnym kroku dodamy wpisywanie kodu pokoju.");
+  });
+
+  // Resize/orientation
   let resizeTimer = null;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(setMenuImage, 140);
+    resizeTimer = setTimeout(setBgImages, 140);
   });
 
   // ===== INIT =====
   renderNick();
-  setMenuImage();
+  setBgImages();
+  showScreen("menu");
   startSplash();
 
-  // Rejestracja SW (PWA) – bezpiecznie
+  // SW
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }

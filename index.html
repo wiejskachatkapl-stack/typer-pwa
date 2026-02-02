@@ -17,18 +17,15 @@
       --glass2:rgba(8,18,34,.38);
       --shadow:0 10px 28px rgba(0,0,0,.33);
     }
-
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
     body{ overflow:hidden; }
 
-    /* ====== FULLSCREEN MENU (bez drugiej planszy) ====== */
     .screen{
       position:fixed;
       inset:0;
       background:var(--bg);
     }
-
     .bg{
       position:absolute;
       inset:0;
@@ -41,7 +38,6 @@
       -webkit-user-drag:none;
     }
 
-    /* ====== TOPBAR: mniejszy + węższy ====== */
     .topbar{
       position:absolute;
       top: calc(env(safe-area-inset-top) + 8px);
@@ -67,7 +63,6 @@
       gap:10px;
       min-width:0;
     }
-
     .title{
       font-weight:900;
       font-size:14px;
@@ -87,7 +82,6 @@
       max-width: 52vw;
       min-width: 120px;
     }
-
     .nick-label{
       font-size:11px;
       color: rgba(233,238,249,.80);
@@ -125,11 +119,10 @@
     .btnSmall:active{ transform: translateY(1px); }
 
     @media (max-width: 380px){
-      .title{ display:none; } /* jeszcze mniejszy pasek */
+      .title{ display:none; }
       .nick{ max-width: 64vw; }
     }
 
-    /* ====== BUTTONS ====== */
     .center{
       position:absolute;
       left:0; right:0;
@@ -159,7 +152,6 @@
     .btnBig:nth-child(3){ background: rgba(80,110,60,.38); }
     .btnBig:active{ transform: translateY(1px); }
 
-    /* ====== BOTTOM BAR (copyright + awaryjne odświeżenie) ====== */
     .bottombar{
       position:absolute;
       left: 50%;
@@ -193,7 +185,6 @@
       gap:8px;
       flex-shrink:0;
     }
-
     .btnTiny{
       appearance:none;
       border: 1px solid rgba(255,255,255,.12);
@@ -207,7 +198,7 @@
       white-space:nowrap;
     }
 
-    /* ====== SPLASH overlay (7s) ====== */
+    /* Splash */
     .splash{
       position:fixed;
       inset:0;
@@ -235,7 +226,6 @@
       border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.06);
     }
-
     .hidden{ display:none !important; }
   </style>
 </head>
@@ -247,7 +237,7 @@
     <div id="splashHint" class="hint">Ekran startowy (7s)…</div>
   </div>
 
-  <!-- Menu -->
+  <!-- MENU SCREEN -->
   <div class="screen" id="menuScreen">
     <img class="bg" id="menuImg" alt="Menu" />
 
@@ -279,7 +269,37 @@
     </div>
   </div>
 
-  <!-- UWAGA: tu jest wersjonowanie JS – jak zmieniasz kod, podbij numer -->
-  <script src="app.js?v=1002"></script>
+  <!-- ROOMS SCREEN -->
+  <div class="screen hidden" id="roomsScreen">
+    <img class="bg" id="roomsBg" alt="Pokoje" />
+
+    <div class="topbar">
+      <div class="top-left">
+        <div class="title">Pokoje</div>
+        <div class="nick">
+          <div class="nick-label">Nick:</div>
+          <div class="nick-value" id="nickTextRooms">—</div>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <button class="btnSmall" id="backToMenuBtn">Wróć</button>
+      </div>
+    </div>
+
+    <div class="center">
+      <button class="btnBig" id="btnNewRoom">Nowy pokój</button>
+      <button class="btnBig" id="btnJoinRoom">Dołącz do pokoju</button>
+    </div>
+
+    <div class="bottombar">
+      <div class="bottom-left">Copyright 2026 RN_APS Mariusz Gębka</div>
+      <div class="bottom-right">
+        <button class="btnTiny" id="btnRefresh2">Odśwież / napraw</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=1003"></script>
 </body>
 </html>
