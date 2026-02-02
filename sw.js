@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = "typer-cache-v1002"; // podbij jak robisz większe zmiany
+const CACHE_NAME = "typer-cache-v1004";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -28,10 +28,9 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // tylko własny origin
   if (url.origin !== location.origin) return;
 
-  // NAVIGATION/HTML -> network-first
+  // HTML -> network-first (żeby aktualizacje wchodziły)
   if (req.mode === "navigate" || req.destination === "document") {
     event.respondWith((async () => {
       try {
@@ -47,7 +46,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // JS/CSS -> network-first (żeby nie “trzymało” starych plików)
+  // JS/CSS -> network-first
   if (req.destination === "script" || req.destination === "style") {
     event.respondWith((async () => {
       try {
@@ -62,7 +61,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // IMAGES -> cache-first
+  // Images -> cache-first
   if (req.destination === "image") {
     event.respondWith((async () => {
       const cached = await caches.match(req);
@@ -75,7 +74,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // reszta -> cache-first fallback to network
+  // reszta -> cache-first
   event.respondWith(
     caches.match(req).then((cached) => cached || fetch(req))
   );
