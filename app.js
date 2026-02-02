@@ -1,582 +1,398 @@
-(() => {
-  const BUILD = 1006;
+/* Typer PWA - wersja cache-bust */
+const APP_VERSION = "20260202-01";
 
-  const KEY_NICK = "typer_nick_v1";
-  const KEY_ROOMS = "typer_rooms_v1";
-  const KEY_ACTIVE_ROOM = "typer_active_room_v1";
-  const KEY_FIXTURES = "typer_fixtures_v1";
+const NICK_KEY = "typer.nick.v1";
+const ROOM_KEY = "typer.room.v1"; // {code,name,admin,players[]}
 
-  const SPLASH_MS = 7000;
+const IMG_MENU_PHONE = "img_menu.png";
+const IMG_MENU_PC = "img_menu_pc.png";
+const IMG_SPLASH = "img_starter.png";
 
-  const MENU_PHONE = "img_menu.png";
-  const MENU_PC = "img_menu_pc.png";
+const $ = (id) => document.getElementById(id);
 
-  // TEST: TheSportsDB Ekstraklasa
-  // Jeśli API nie odpowie / CORS / blokada, pokażemy błąd w UI.
-  const TSD_API_KEY = "1";
-  const TSD_EKSTRAKLASA_LEAGUE_ID = "4422";
+const bgImg = $("bgImg");
+const titleLeft = $("titleLeft");
+const subLeft = $("subLeft");
+const nickText = $("nickText");
+const nickBox = $("nickBox");
+const btnChangeNick = $("btnChangeNick");
+const btnBack = $("btnBack");
+const menuButtons = $("menuButtons");
+const roomGrid = $("roomGrid");
+const playersBox = $("playersBox");
+const roomName = $("roomName");
+const roomAdmin = $("roomAdmin");
+const roomCode = $("roomCode");
+const btnCopy = $("btnCopy");
+const btnLeaveRoom = $("btnLeaveRoom");
+const statusPill = $("statusPill");
+const btnFix = $("btnFix");
 
-  const el = (id) => document.getElementById(id);
+const modalBack = $("modalBack");
+const modalTitle = $("modalTitle");
+const modalDesc = $("modalDesc");
+const modalInput = $("modalInput");
+const modalOk = $("modalOk");
+const modalCancel = $("modalCancel");
 
-  // screens
-  const splash = el("splash");
-  const splashHint = el("splashHint");
-  const menuScreen = el("menuScreen");
-  const roomsScreen = el("roomsScreen");
-  const roomScreen = el("roomScreen");
-  const fixturesScreen = el("fixturesScreen");
+function isLandscape(){
+  return window.matchMedia && window.matchMedia("(orientation: landscape)").matches;
+}
+function pickMenuBg(){
+  // PC/poziom -> PC obraz, inaczej telefon
+  return isLandscape() ? IMG_MENU_PC : IMG_MENU_PHONE;
+}
 
-  // backgrounds
-  const menuImg = el("menuImg");
-  const roomsBg = el("roomsBg");
-  const roomBg = el("roomBg");
-  const fixturesBg = el("fixturesBg");
+function loadNick(){
+  return (localStorage.getItem(NICK_KEY) || "").trim();
+}
+function saveNick(nick){
+  localStorage.setItem(NICK_KEY, nick.trim());
+}
+function loadRoom(){
+  try { return JSON.parse(localStorage.getItem(ROOM_KEY) || "null"); } catch { return null; }
+}
+function saveRoom(room){
+  localStorage.setItem(ROOM_KEY, JSON.stringify(room));
+}
+function clearRoom(){
+  localStorage.removeItem(ROOM_KEY);
+}
 
-  // nick
-  const nickText = el("nickText");
-  const nickTextRooms = el("nickTextRooms");
-  const nickTextRoom = el("nickTextRoom");
+function setBg(src){
+  // twardy cache-bust na obrazach też
+  bgImg.src = `${src}?v=${encodeURIComponent(APP_VERSION)}&t=${Date.now()}`;
+  bgImg.onerror = () => { /* jak obraz nie dojdzie, zostaw tło */ };
+}
 
-  // menu buttons
-  const changeNickBtn = el("changeNickBtn");
-  const btnLiga = el("btnLiga");
-  const btnStats = el("btnStats");
-  const btnExit = el("btnExit");
-  const btnRefresh = el("btnRefresh");
+function showMenu(){
+  titleLeft.textContent = "Menu";
+  subLeft.textContent = "Wybierz opcję";
+  btnBack.style.display = "none";
 
-  // rooms buttons
-  const backToMenuBtn = el("backToMenuBtn");
-  const btnNewRoom = el("btnNewRoom");
-  const btnJoinRoom = el("btnJoinRoom");
-  const btnRefresh2 = el("btnRefresh2");
+  setBg(pickMenuBg());
+  menuButtons.style.display = "flex";
+  roomGrid.style.display = "none";
 
-  // room ui
-  const backToRoomsBtn = el("backToRoomsBtn");
-  const btnRefresh3 = el("btnRefresh3");
-  const roomNameEl = el("roomName");
-  const roomAdminEl = el("roomAdmin");
-  const roomCodeEl = el("roomCode");
-  const playersListEl = el("playersList");
-  const btnCopyCode = el("btnCopyCode");
-  const btnLeaveRoom = el("btnLeaveRoom");
-  const btnFixtures = el("btnFixtures");
-  const roomDebug = el("roomDebug");
+  statusPill.textContent = "Gotowe";
+}
+function showRoom(room){
+  titleLeft.textContent = "Pokój";
+  subLeft.textContent = "";
+  btnBack.style.display = "inline-block";
 
-  // fixtures ui
-  const backToRoomBtn = el("backToRoomBtn");
-  const btnRefresh4 = el("btnRefresh4");
-  const fixturesRoomLabel = el("fixturesRoomLabel");
-  const fixturesTitle = el("fixturesTitle");
-  const fixturesList = el("fixturesList");
-  const fixturesInfo = el("fixturesInfo");
-  const btnLoadFixtures = el("btnLoadFixtures");
-  const btnClearFixtures = el("btnClearFixtures");
+  setBg(pickMenuBg());
+  menuButtons.style.display = "none";
+  roomGrid.style.display = "grid";
 
-  // modals
-  const createRoomMask = el("createRoomMask");
-  const createRoomNameInput = el("createRoomNameInput");
-  const createRoomOkBtn = el("createRoomOkBtn");
-  const createRoomCancelBtn = el("createRoomCancelBtn");
+  roomName.textContent = room.name || "—";
+  roomAdmin.textContent = `Admin: ${room.admin || "—"}`;
+  roomCode.textContent = room.code || "------";
 
-  const joinRoomMask = el("joinRoomMask");
-  const joinRoomCodeInput = el("joinRoomCodeInput");
-  const joinRoomOkBtn = el("joinRoomOkBtn");
-  const joinRoomCancelBtn = el("joinRoomCancelBtn");
+  renderPlayers(room);
+  statusPill.textContent = "Pokój aktywny";
+}
 
-  // ============ helpers ============
-  const escapeHtml = (s) =>
-    String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+function renderPlayers(room){
+  const nick = loadNick() || "Gracz";
+  const players = Array.isArray(room.players) ? room.players : [nick];
+  // prosto: lista, na razie lokalnie
+  playersBox.innerHTML = `
+    <div class="kv"><div class="k">Gracz:</div><div class="v">${escapeHtml(nick)}</div></div>
+    <div style="margin-top:10px; color:rgba(255,255,255,.55); font-size:12px;">
+      (Na razie lokalnie. Multiplayer dołożymy później.)
+    </div>
+  `;
+}
 
-  function isLandscapeOrWide() {
-    return window.matchMedia("(orientation: landscape)").matches || window.innerWidth >= 900;
-  }
-  function pickMenuSrc() {
-    return isLandscapeOrWide() ? MENU_PC : MENU_PHONE;
-  }
+function escapeHtml(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
 
-  function setBgImages() {
-    const src = pickMenuSrc();
-    const full = `${src}?b=${BUILD}&t=${Date.now()}`;
+function openModal({title, desc, placeholder, value, okText="OK"}){
+  return new Promise((resolve) => {
+    modalTitle.textContent = title;
+    modalDesc.textContent = desc;
+    modalInput.placeholder = placeholder || "";
+    modalInput.value = value || "";
+    modalOk.textContent = okText;
 
-    const setWithFallback = (imgEl) => {
-      imgEl.onerror = () => {
-        imgEl.onerror = null;
-        imgEl.src = `${MENU_PHONE}?b=${BUILD}&t=${Date.now()}`;
-      };
-      imgEl.src = full;
+    modalBack.style.display = "flex";
+    setTimeout(() => modalInput.focus(), 10);
+
+    const close = (val) => {
+      modalBack.style.display = "none";
+      modalOk.onclick = null;
+      modalCancel.onclick = null;
+      modalBack.onclick = null;
+      resolve(val);
     };
 
-    setWithFallback(menuImg);
-    setWithFallback(roomsBg);
-    setWithFallback(roomBg);
-    setWithFallback(fixturesBg);
-  }
+    modalOk.onclick = () => close(modalInput.value.trim());
+    modalCancel.onclick = () => close(null);
+    modalBack.onclick = (e) => { if (e.target === modalBack) close(null); };
 
-  function getNick() {
-    try {
-      const v = localStorage.getItem(KEY_NICK);
-      return (v && v.trim()) ? v.trim() : "";
-    } catch { return ""; }
-  }
-
-  function setNick(v) {
-    try { localStorage.setItem(KEY_NICK, (v || "").trim()); } catch {}
-    renderNick();
-  }
-
-  function renderNick() {
-    const n = getNick();
-    const txt = n ? n : "—";
-    nickText.textContent = txt;
-    nickTextRooms.textContent = txt;
-    nickTextRoom.textContent = txt;
-  }
-
-  function askNick(force = false) {
-    const current = getNick();
-    if (!force && current) return current;
-
-    const v = prompt("Podaj nick / imię:", current || "");
-    if (v === null) return null;
-    const trimmed = v.trim().replace(/\s+/g, " ");
-    if (!trimmed) { alert("Nick nie może być pusty."); return null; }
-    setNick(trimmed);
-    return trimmed;
-  }
-
-  function loadRooms() {
-    try {
-      const raw = localStorage.getItem(KEY_ROOMS);
-      if (!raw) return {};
-      const obj = JSON.parse(raw);
-      return (obj && typeof obj === "object") ? obj : {};
-    } catch { return {}; }
-  }
-  function saveRooms(rooms) {
-    try { localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms)); } catch {}
-  }
-
-  function setActiveRoomCode(code) {
-    try { localStorage.setItem(KEY_ACTIVE_ROOM, code); } catch {}
-  }
-  function getActiveRoomCode() {
-    try { return localStorage.getItem(KEY_ACTIVE_ROOM) || ""; } catch { return ""; }
-  }
-
-  function normalizeRoomName(name) {
-    return (name || "").trim().replace(/\s+/g, " ");
-  }
-  function normalizeCode(code) {
-    return (code || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  }
-
-  function genRoomCode6(existingRooms) {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    for (let tries = 0; tries < 200; tries++) {
-      let out = "";
-      for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
-      if (!existingRooms[out]) return out;
-    }
-    return String(Date.now()).slice(-6).toUpperCase();
-  }
-
-  function addPlayerIfMissing(room, nick) {
-    if (!room.players) room.players = [];
-    if (!room.players.includes(nick)) room.players.push(nick);
-  }
-
-  // Fixtures store
-  function loadFixturesStore() {
-    try {
-      const raw = localStorage.getItem(KEY_FIXTURES);
-      if (!raw) return {};
-      const obj = JSON.parse(raw);
-      return (obj && typeof obj === "object") ? obj : {};
-    } catch { return {}; }
-  }
-  function saveFixturesStore(store) {
-    try { localStorage.setItem(KEY_FIXTURES, JSON.stringify(store)); } catch {}
-  }
-
-  function isoWeekId(d = new Date()) {
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const dayNum = date.getUTCDay() || 7;
-    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-    return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-  }
-
-  function loadFixturesForRoomWeek(roomCode, weekId) {
-    const store = loadFixturesStore();
-    const roomObj = store[roomCode] || {};
-    return Array.isArray(roomObj[weekId]) ? roomObj[weekId] : null;
-  }
-
-  function saveFixturesForRoomWeek(roomCode, weekId, list) {
-    const store = loadFixturesStore();
-    if (!store[roomCode]) store[roomCode] = {};
-    store[roomCode][weekId] = list;
-    saveFixturesStore(store);
-  }
-
-  function clearFixturesForRoomWeek(roomCode, weekId) {
-    const store = loadFixturesStore();
-    if (!store[roomCode]) return;
-    delete store[roomCode][weekId];
-    saveFixturesStore(store);
-  }
-
-  // Screens
-  function showScreen(name) {
-    [menuScreen, roomsScreen, roomScreen, fixturesScreen].forEach(s => s.classList.add("hidden"));
-    if (name === "menu") menuScreen.classList.remove("hidden");
-    if (name === "rooms") roomsScreen.classList.remove("hidden");
-    if (name === "room") roomScreen.classList.remove("hidden");
-    if (name === "fixtures") fixturesScreen.classList.remove("hidden");
-  }
-
-  // Splash
-  function startSplash() {
-    const start = Date.now();
-    const tick = () => {
-      const leftMs = Math.max(0, SPLASH_MS - (Date.now() - start));
-      const leftSec = Math.ceil(leftMs / 1000);
-      splashHint.textContent = `Ekran startowy (${leftSec}s)…`;
-      if (leftMs > 0) requestAnimationFrame(tick);
+    modalInput.onkeydown = (e) => {
+      if (e.key === "Enter") modalOk.click();
+      if (e.key === "Escape") close(null);
     };
-    requestAnimationFrame(tick);
+  });
+}
 
-    setTimeout(() => {
-      splash.classList.add("hidden");
-      renderNick();
-    }, SPLASH_MS);
-  }
+function genCode6(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
 
-  // Modals
-  function openCreateRoomModal() {
-    createRoomNameInput.value = "";
-    createRoomMask.style.display = "flex";
-    setTimeout(() => createRoomNameInput.focus(), 50);
-  }
-  function closeCreateRoomModal() { createRoomMask.style.display = "none"; }
+async function ensureNick(){
+  let nick = loadNick();
+  if (nick) return nick;
 
-  function openJoinRoomModal() {
-    joinRoomCodeInput.value = "";
-    joinRoomMask.style.display = "flex";
-    setTimeout(() => joinRoomCodeInput.focus(), 50);
-  }
-  function closeJoinRoomModal() { joinRoomMask.style.display = "none"; }
-
-  // Render room
-  function renderRoom(code) {
-    const rooms = loadRooms();
-    const room = rooms[code];
-    if (!room) { alert("Ten pokój nie istnieje na tym urządzeniu."); showScreen("rooms"); return; }
-
-    roomNameEl.textContent = room.name || "—";
-    roomAdminEl.textContent = `Admin: ${room.admin || "—"}`;
-    roomCodeEl.textContent = code;
-
-    playersListEl.innerHTML = "";
-    const players = Array.isArray(room.players) ? room.players : [];
-    players.forEach(p => {
-      const row = document.createElement("div");
-      row.className = "playerRow";
-      row.innerHTML = `<div class="playerLabel">Gracz:</div><div class="playerName">${escapeHtml(p)}</div>`;
-      playersListEl.appendChild(row);
-    });
-
-    // debug: żeby było widać, że wersja żyje
-    roomDebug.textContent = `DEBUG: BUILD ${BUILD} • URL: ${location.href.split("?")[0]} • ${new Date().toLocaleString()}`;
-
-    showScreen("room");
-  }
-
-  // Create / Join / Leave
-  function doCreateRoom() {
-    const nick = getNick();
-    const name = normalizeRoomName(createRoomNameInput.value);
-    if (!name) { alert("Podaj nazwę pokoju."); return; }
-
-    const rooms = loadRooms();
-    const code = genRoomCode6(rooms);
-    const room = { code, name, admin: nick, players: [] };
-    addPlayerIfMissing(room, nick);
-
-    rooms[code] = room;
-    saveRooms(rooms);
-
-    setActiveRoomCode(code);
-    closeCreateRoomModal();
-    renderNick();
-    renderRoom(code);
-  }
-
-  function doJoinRoom() {
-    const nick = getNick();
-    const code = normalizeCode(joinRoomCodeInput.value);
-    if (code.length !== 6) { alert("Kod musi mieć dokładnie 6 znaków."); return; }
-
-    const rooms = loadRooms();
-    const room = rooms[code];
-    if (!room) { alert("Nie znaleziono pokoju o takim kodzie (lokalnie)."); return; }
-
-    addPlayerIfMissing(room, nick);
-    rooms[code] = room;
-    saveRooms(rooms);
-
-    setActiveRoomCode(code);
-    closeJoinRoomModal();
-    renderNick();
-    renderRoom(code);
-  }
-
-  function leaveRoom() {
-    const code = getActiveRoomCode();
-    if (!code) { showScreen("rooms"); return; }
-
-    const rooms = loadRooms();
-    const room = rooms[code];
-    const nick = getNick();
-
-    if (room && Array.isArray(room.players)) {
-      room.players = room.players.filter(p => p !== nick);
-      rooms[code] = room;
-      saveRooms(rooms);
-    }
-    setActiveRoomCode("");
-    showScreen("rooms");
-  }
-
-  // Fixtures (TEST)
-  function fmtDateTimeLocal(dateObj) {
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
-  }
-
-  function toDateFromTSD(ev) {
-    const d = (ev?.dateEvent || "").trim();
-    if (!d) return null;
-    const t = (ev?.strTime || "").trim();
-    if (t) {
-      const dt = new Date(`${d}T${t}`);
-      if (!isNaN(dt.getTime())) return dt;
-    }
-    const dt2 = new Date(`${d}T00:00:00`);
-    if (!isNaN(dt2.getTime())) return dt2;
-    return null;
-  }
-
-  async function fetchEkstraklasaNextEvents() {
-    const url = `https://www.thesportsdb.com/api/v1/json/${TSD_API_KEY}/eventsnextleague.php?id=${TSD_EKSTRAKLASA_LEAGUE_ID}`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const events = Array.isArray(data?.events) ? data.events : [];
-    return events;
-  }
-
-  function filterNext7Days(events) {
-    const now = new Date();
-    const end = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return events
-      .map(ev => {
-        const dt = toDateFromTSD(ev);
-        if (!dt) return null;
-        return {
-          id: ev.idEvent || `${ev.strEvent || ""}-${dt.getTime()}`,
-          dt: dt.getTime(),
-          dateText: fmtDateTimeLocal(dt),
-          home: ev.strHomeTeam || "",
-          away: ev.strAwayTeam || ""
-        };
-      })
-      .filter(Boolean)
-      .filter(x => x.dt >= now.getTime() && x.dt <= end.getTime())
-      .sort((a, b) => a.dt - b.dt);
-  }
-
-  function renderFixturesList(items) {
-    fixturesList.innerHTML = "";
-    if (!items || items.length === 0) {
-      const div = document.createElement("div");
-      div.className = "hintSmall";
-      div.textContent = "Brak meczów w najbliższych 7 dniach lub API nic nie zwróciło.";
-      fixturesList.appendChild(div);
-      return;
-    }
-
-    items.forEach(x => {
-      const row = document.createElement("div");
-      row.className = "fixtureRow";
-      row.innerHTML = `
-        <div class="fxTop">
-          <div>${escapeHtml(x.dateText)}</div>
-          <div>Ekstraklasa</div>
-        </div>
-        <div class="fxTeams">
-          <span>${escapeHtml(x.home)}</span>
-          <span class="fxVs">vs</span>
-          <span>${escapeHtml(x.away)}</span>
-        </div>
-      `;
-      fixturesList.appendChild(row);
-    });
-  }
-
-  async function openFixturesScreen(forceRefresh = false) {
-    const roomCode = getActiveRoomCode();
-    if (!roomCode) { alert("Brak aktywnego pokoju."); return; }
-
-    const rooms = loadRooms();
-    const room = rooms[roomCode];
-    fixturesRoomLabel.textContent = room ? (room.name || roomCode) : roomCode;
-
-    const weekId = isoWeekId(new Date());
-    fixturesTitle.textContent = `Ekstraklasa — najbliższe 7 dni (${weekId})`;
-
-    showScreen("fixtures");
-
-    const cached = !forceRefresh ? loadFixturesForRoomWeek(roomCode, weekId) : null;
-    if (cached) {
-      fixturesInfo.textContent = "Wczytano kolejkę z pamięci lokalnej (ten tydzień).";
-      renderFixturesList(cached);
-      return;
-    }
-
-    fixturesInfo.textContent = "Pobieram mecze z API…";
-    renderFixturesList([]);
-
-    try {
-      const events = await fetchEkstraklasaNextEvents();
-      const list = filterNext7Days(events);
-      saveFixturesForRoomWeek(roomCode, weekId, list);
-      fixturesInfo.textContent = `OK: pobrano ${list.length} meczów i zapisano lokalnie.`;
-      renderFixturesList(list);
-    } catch (e) {
-      fixturesInfo.textContent = "BŁĄD pobierania z API (zobacz szczegóły poniżej).";
-      const div = document.createElement("div");
-      div.className = "hintSmall";
-      div.textContent = `Szczegóły: ${String(e?.message || e)}`;
-      fixturesList.appendChild(div);
-    }
-  }
-
-  // Cache fix
-  async function hardRefreshFix() {
-    try {
-      if ("serviceWorker" in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r => r.unregister()));
-      }
-      if (window.caches) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k => caches.delete(k)));
-      }
-    } catch {}
-    const url = new URL(location.href);
-    url.searchParams.set("v", String(BUILD));
-    url.searchParams.set("t", String(Date.now()));
-    location.replace(url.toString());
-  }
-
-  // ========= events =========
-  changeNickBtn.addEventListener("click", () => askNick(true));
-
-  btnLiga.addEventListener("click", () => {
-    if (!getNick()) {
-      const res = askNick(false);
-      if (!res) return;
-    }
-    renderNick();
-    showScreen("rooms");
+  const v = await openModal({
+    title: "Podaj nick",
+    desc: "Ustaw nick (będzie widoczny w lidze i pokojach).",
+    placeholder: "np. Mariusz",
+    value: "",
+    okText: "Zapisz"
   });
 
-  btnStats.addEventListener("click", () => alert("Statystyki — zrobimy później."));
-  btnExit.addEventListener("click", () => alert("Wyjście: w przeglądarce zamknij kartę. W Android dodamy finish()."));
-  btnRefresh.addEventListener("click", hardRefreshFix);
+  if (!v) return null;
+  saveNick(v);
+  updateNickUI();
+  return v;
+}
 
-  backToMenuBtn.addEventListener("click", () => showScreen("menu"));
-  btnNewRoom.addEventListener("click", () => {
-    if (!getNick()) { const res = askNick(false); if (!res) return; }
-    openCreateRoomModal();
-  });
-  btnJoinRoom.addEventListener("click", () => {
-    if (!getNick()) { const res = askNick(false); if (!res) return; }
-    openJoinRoomModal();
-  });
-  btnRefresh2.addEventListener("click", hardRefreshFix);
+async function createRoomFlow(){
+  const nick = await ensureNick();
+  if (!nick) return;
 
-  backToRoomsBtn.addEventListener("click", () => showScreen("rooms"));
-  btnRefresh3.addEventListener("click", hardRefreshFix);
-
-  btnCopyCode.addEventListener("click", async () => {
-    const code = getActiveRoomCode();
-    if (!code) return;
-    try {
-      await navigator.clipboard.writeText(code);
-      alert("Skopiowano kod pokoju.");
-    } catch {
-      const temp = document.createElement("textarea");
-      temp.value = code;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      document.body.removeChild(temp);
-      alert("Skopiowano kod pokoju.");
-    }
+  const name = await openModal({
+    title: "Nowy pokój",
+    desc: "Nadaj nazwę pokoju (będzie widoczna po prawej).",
+    placeholder: "np. szkoła / rodzina",
+    value: "",
+    okText: "Utwórz"
   });
 
-  btnLeaveRoom.addEventListener("click", () => {
-    if (confirm("Opuścić pokój?")) leaveRoom();
+  if (!name) return;
+
+  const room = {
+    code: genCode6(),
+    name,
+    admin: nick,
+    players: [nick]
+  };
+  saveRoom(room);
+  location.hash = "#pokoj";
+  showRoom(room);
+}
+
+async function joinRoomFlow(){
+  const nick = await ensureNick();
+  if (!nick) return;
+
+  const code = await openModal({
+    title: "Dołącz do pokoju",
+    desc: "Wpisz 6-znakowy kod pokoju.",
+    placeholder: "np. AB12CD",
+    value: "",
+    okText: "Dołącz"
   });
+  if (!code) return;
 
-  btnFixtures.addEventListener("click", () => openFixturesScreen(false));
+  // na razie „join” lokalny – zapisujemy, że jesteś w pokoju o takim kodzie
+  const room = {
+    code: code.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6),
+    name: "(dołączony pokój)",
+    admin: "(nieznany)",
+    players: [nick]
+  };
+  saveRoom(room);
+  location.hash = "#pokoj";
+  showRoom(room);
+}
 
-  backToRoomBtn.addEventListener("click", () => showScreen("room"));
-  btnRefresh4.addEventListener("click", hardRefreshFix);
+async function ligaClick(){
+  const nick = await ensureNick();
+  if (!nick) return;
 
-  btnLoadFixtures.addEventListener("click", () => openFixturesScreen(true));
-  btnClearFixtures.addEventListener("click", () => {
-    const roomCode = getActiveRoomCode();
-    if (!roomCode) return;
-    const weekId = isoWeekId(new Date());
-    if (confirm("Wyczyścić kolejkę tygodnia dla tego pokoju?")) {
-      clearFixturesForRoomWeek(roomCode, weekId);
-      fixturesInfo.textContent = "Wyczyszczono lokalną kolejkę.";
-      renderFixturesList([]);
-    }
-  });
-
-  createRoomCancelBtn.addEventListener("click", closeCreateRoomModal);
-  createRoomOkBtn.addEventListener("click", doCreateRoom);
-  createRoomNameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doCreateRoom(); });
-
-  joinRoomCancelBtn.addEventListener("click", closeJoinRoomModal);
-  joinRoomOkBtn.addEventListener("click", doJoinRoom);
-  joinRoomCodeInput.addEventListener("input", () => { joinRoomCodeInput.value = normalizeCode(joinRoomCodeInput.value).slice(0, 6); });
-  joinRoomCodeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doJoinRoom(); });
-
-  let resizeTimer = null;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(setBgImages, 140);
-  });
-
-  // ========= init =========
-  console.log("Typer BUILD", BUILD);
-  renderNick();
-  setBgImages();
-  showScreen("menu");
-  startSplash();
-
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  // jeśli jest zapisany pokój -> wchodzimy
+  const existing = loadRoom();
+  if (existing && existing.code) {
+    location.hash = "#pokoj";
+    showRoom(existing);
+    return;
   }
+
+  // jeśli nie ma pokoju, pokaż ekran wyboru: Nowy / Dołącz
+  const choice = await openModal({
+    title: "Liga typerów",
+    desc: "Wybierz: utworzyć nowy pokój czy dołączyć do istniejącego.",
+    placeholder: "Wpisz: nowy / dolacz",
+    value: "nowy",
+    okText: "Dalej"
+  });
+
+  if (!choice) return;
+  const c = choice.toLowerCase();
+  if (c.startsWith("n")) return createRoomFlow();
+  if (c.startsWith("d")) return joinRoomFlow();
+
+  // jeśli ktoś wpisze coś innego – pokaż jeszcze raz prościej:
+  const again = await openModal({
+    title: "Wybierz opcję",
+    desc: "Wpisz dokładnie: nowy albo dolacz",
+    placeholder: "nowy / dolacz",
+    value: "",
+    okText: "OK"
+  });
+  if (!again) return;
+  return again.toLowerCase().startsWith("n") ? createRoomFlow() : joinRoomFlow();
+}
+
+function updateNickUI(){
+  const n = loadNick();
+  nickText.textContent = n || "—";
+  nickBox.style.display = "inline-flex";
+}
+
+function applyRoute(){
+  const hash = (location.hash || "#menu").replace("#","");
+  const room = loadRoom();
+
+  if (hash === "pokoj" && room && room.code) {
+    showRoom(room);
+    return;
+  }
+  showMenu();
+}
+
+/** SUPER WAŻNE: twardy reset SW + cache */
+async function hardReset(){
+  statusPill.textContent = "Czyszczenie cache…";
+  try{
+    // unregister service workers
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) await r.unregister();
+    }
+    // clear caches
+    if (window.caches) {
+      const keys = await caches.keys();
+      for (const k of keys) await caches.delete(k);
+    }
+  }catch(e){
+    // nic
+  }finally{
+    // reload z parametrem aby przeglądarka nie dała starego
+    const u = new URL(location.href);
+    u.searchParams.set("r", Date.now().toString());
+    location.href = u.toString();
+  }
+}
+
+/** Rejestracja SW – ale tylko jeśli nie jesteśmy w trybie "raw github.com" */
+async function registerSW(){
+  if (!("serviceWorker" in navigator)) return;
+  try{
+    // cache-bust sw.js
+    const reg = await navigator.serviceWorker.register(`sw.js?v=${encodeURIComponent(APP_VERSION)}`);
+    // wymuś update
+    reg.update?.();
+  }catch(e){
+    // jeśli SW nie działa – aplikacja i tak ma działać online
+  }
+}
+
+/** SPLASH: 7 sekund, potem route */
+function runSplash(){
+  setBg(IMG_SPLASH);
+  titleLeft.textContent = "Start";
+  subLeft.textContent = "Ekran startowy (7s)…";
+  statusPill.textContent = `Wersja ${APP_VERSION}`;
+
+  menuButtons.style.display = "none";
+  roomGrid.style.display = "none";
+  btnBack.style.display = "none";
+
+  setTimeout(() => {
+    applyRoute();
+  }, 7000);
+}
+
+/* ======= LISTENERS ======= */
+window.addEventListener("hashchange", applyRoute);
+window.addEventListener("resize", () => {
+  // odśwież tło w zależności od orientacji
+  if ((location.hash || "#menu") === "#menu") setBg(pickMenuBg());
+  else setBg(pickMenuBg());
+});
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-go]");
+  if (!btn) return;
+  const go = btn.getAttribute("data-go");
+
+  if (go === "liga") return ligaClick();
+  if (go === "stats") {
+    alert("Statystyki — zrobimy w następnym kroku.");
+    return;
+  }
+  if (go === "exit") {
+    alert("Wyjście: w przeglądarce zamknij kartę; w aplikacji Android dodamy finish().");
+    return;
+  }
+});
+
+btnBack.addEventListener("click", () => {
+  location.hash = "#menu";
+  showMenu();
+});
+
+btnChangeNick.addEventListener("click", async () => {
+  const current = loadNick();
+  const v = await openModal({
+    title: "Zmień nick",
+    desc: "Wpisz nowy nick.",
+    placeholder: "np. Mariusz",
+    value: current || "",
+    okText: "Zapisz"
+  });
+  if (!v) return;
+  saveNick(v);
+  updateNickUI();
+
+  // jeśli jesteś w pokoju lokalnie – zaktualizuj admina gdy to Ty go stworzyłeś
+  const room = loadRoom();
+  if (room && room.admin && room.admin !== "(nieznany)" && room.admin !== "(nieznany)") {
+    // nic nie ruszamy na siłę, bo to tylko lokalny prototyp
+  }
+});
+
+btnCopy.addEventListener("click", async () => {
+  const code = roomCode.textContent.trim();
+  try{
+    await navigator.clipboard.writeText(code);
+    statusPill.textContent = "Skopiowano kod pokoju.";
+    setTimeout(()=>statusPill.textContent="Pokój aktywny", 1400);
+  }catch{
+    alert("Nie mogę skopiować. Skopiuj ręcznie: " + code);
+  }
+});
+
+btnLeaveRoom.addEventListener("click", () => {
+  clearRoom();
+  location.hash = "#menu";
+  showMenu();
+});
+
+btnFix.addEventListener("click", hardReset);
+
+/* ======= START ======= */
+(async function start(){
+  updateNickUI();
+  await registerSW();
+  runSplash();
 })();
