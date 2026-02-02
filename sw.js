@@ -1,45 +1,82 @@
-const CACHE_NAME = "typer-cache-v1000";
-const ASSETS = [
+// sw.js
+const CACHE_NAME = "typer-cache-v1002"; // podbij jak robisz większe zmiany
+const CORE_ASSETS = [
   "./",
   "./index.html",
-  "./app.js?v=1000",
   "./manifest.json",
-  "./img_starter.png",
   "./img_menu.png",
   "./img_menu_pc.png",
+  "./img_starter.png"
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
   );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-    )).then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+  const url = new URL(req.url);
 
-  // HTML: network-first (żeby szybciej widzieć zmiany)
-  if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put("./", copy)).catch(()=>{});
-        return res;
-      }).catch(() => caches.match("./"))
-    );
+  // tylko własny origin
+  if (url.origin !== location.origin) return;
+
+  // NAVIGATION/HTML -> network-first
+  if (req.mode === "navigate" || req.destination === "document") {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req, { cache: "no-store" });
+        const cache = await caches.open(CACHE_NAME);
+        cache.put("./index.html", fresh.clone());
+        return fresh;
+      } catch {
+        const cached = await caches.match("./index.html");
+        return cached || Response.error();
+      }
+    })());
     return;
   }
 
-  // reszta: cache-first
+  // JS/CSS -> network-first (żeby nie “trzymało” starych plików)
+  if (req.destination === "script" || req.destination === "style") {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req, { cache: "no-store" });
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, fresh.clone());
+        return fresh;
+      } catch {
+        return caches.match(req);
+      }
+    })());
+    return;
+  }
+
+  // IMAGES -> cache-first
+  if (req.destination === "image") {
+    event.respondWith((async () => {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      const fresh = await fetch(req);
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(req, fresh.clone());
+      return fresh;
+    })());
+    return;
+  }
+
+  // reszta -> cache-first fallback to network
   event.respondWith(
-    caches.match(req).then(cached => cached || fetch(req))
+    caches.match(req).then((cached) => cached || fetch(req))
   );
 });
