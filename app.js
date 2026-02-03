@@ -1,337 +1,350 @@
 (() => {
-  const BUILD = 1006;
-  const APP_VERSION = "20260202-02";
+  /**
+   * BUILD – podbijaj przy zmianach.
+   * Musi się zgadzać z index.html (app.js?v=....).
+   */
+  const BUILD = 1010;
 
   const KEY_NICK = "typer_nick_v1";
-  const KEY_ROOMS = "typer_rooms_v1";
+  const KEY_ROOMS = "typer_rooms_v1";        // lokalna baza pokoi (na urządzeniu)
   const KEY_ACTIVE_ROOM = "typer_active_room_v1";
   const SPLASH_MS = 7000;
 
   const MENU_PHONE = "img_menu.png";
   const MENU_PC = "img_menu_pc.png";
 
-  // -------- SAFE STORAGE (gdy localStorage zablokowany) --------
-  const memStore = {};
-  const storage = {
-    get(key) {
-      try { return localStorage.getItem(key); }
-      catch { return (key in memStore) ? memStore[key] : null; }
-    },
-    set(key, val) {
-      try { localStorage.setItem(key, val); }
-      catch { memStore[key] = String(val); }
-    }
-  };
-
   const el = (id) => document.getElementById(id);
 
-  // Screens
-  const splash = el("splash");
-  const app = el("app");
+  // screens
+  const splashOverlay = el("splashOverlay");
+  const splashHint = el("splashHint");
   const menuScreen = el("menuScreen");
   const roomsScreen = el("roomsScreen");
-  const roomScreen = el("roomScreen");
 
-  // UI
-  const bgImg = el("bgImg");
-  const screenBadge = el("screenBadge");
-  const nickBig = el("nickBig");
-  const backBtn = el("backBtn");
+  // backgrounds
+  const menuImg = el("menuImg");
+  const roomsBg = el("roomsBg");
+
+  // nick labels
+  const nickText = el("nickText");
+  const nickTextRooms = el("nickTextRooms");
+
+  // menu buttons
   const changeNickBtn = el("changeNickBtn");
-
-  const statusText = el("statusText");
-  const debugBox = el("debugBox");
-
-  // Buttons
   const btnLiga = el("btnLiga");
   const btnStats = el("btnStats");
   const btnExit = el("btnExit");
 
-  // Rooms UI
+  // rooms buttons / inputs
+  const changeNickBtn2 = el("changeNickBtn2");
+  const backToMenuBtn = el("backToMenuBtn");
   const newRoomName = el("newRoomName");
   const createRoomBtn = el("createRoomBtn");
-  const joinCode = el("joinCode");
+  const joinRoomCode = el("joinRoomCode");
   const joinRoomBtn = el("joinRoomBtn");
+  const debugBox = el("debugBox");
+  const statusText = el("statusText");
+  const roomsStatusText = el("roomsStatusText");
 
-  // Room UI
-  const playersList = el("playersList");
-  const roomTitle = el("roomTitle");
-  const roomAdmin = el("roomAdmin");
-  const roomCode = el("roomCode");
-  const copyCodeBtn = el("copyCodeBtn");
-  const leaveRoomBtn = el("leaveRoomBtn");
-
-  // Modal
-  const nickModal = el("nickModal");
-  const nickInput = el("nickInput");
-  const nickCancel = el("nickCancel");
-  const nickSave = el("nickSave");
-
-  // --------- Debug / Errors ---------
-  const setStatus = (txt) => { if (statusText) statusText.textContent = txt; };
-  const setDebug = (txt) => { if (debugBox) debugBox.textContent = txt; };
-
-  window.addEventListener("error", (e) => {
-    setStatus("Błąd: " + (e.message || "unknown"));
-    setDebug("JS error: " + (e.message || "unknown"));
-  });
-
-  // --- Helpers ---
+  // ----------------------------
+  // helpers
+  // ----------------------------
   const isLandscape = () => window.matchMedia("(orientation: landscape)").matches;
-  const pickMenuBg = () => (isLandscape() ? MENU_PC : MENU_PHONE);
+  const pickMenuSrc = () => (isLandscape() ? MENU_PC : MENU_PHONE);
 
-  const show = (screen) => {
-    [menuScreen, roomsScreen, roomScreen].forEach(s => s && s.classList.remove("active"));
-    screen && screen.classList.add("active");
-  };
+  function setBgImages() {
+    const src = pickMenuSrc();
+    if (menuImg) menuImg.src = src + "?b=" + BUILD;
+    if (roomsBg) roomsBg.src = src + "?b=" + BUILD;
+  }
 
-  const setBadge = (txt) => { if (screenBadge) screenBadge.textContent = txt; };
+  function showScreen(name) {
+    menuScreen.classList.toggle("active", name === "menu");
+    roomsScreen.classList.toggle("active", name === "rooms");
+  }
 
-  const refreshBg = () => {
-    if (!bgImg) return;
-    bgImg.src = "./" + pickMenuBg() + "?v=" + BUILD;
-  };
+  function logDebug(msg) {
+    if (!debugBox) return;
+    const now = new Date().toLocaleTimeString();
+    debugBox.textContent = `[${now}] ${msg}\n` + debugBox.textContent;
+  }
 
-  const loadNick = () => storage.get(KEY_NICK) || "";
-  const saveNick = (v) => storage.set(KEY_NICK, v);
+  function normalizeCode(s) {
+    return String(s || "")
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+  }
 
-  const loadRooms = () => {
-    try { return JSON.parse(storage.get(KEY_ROOMS) || "[]"); } catch { return []; }
-  };
-  const saveRooms = (rooms) => storage.set(KEY_ROOMS, JSON.stringify(rooms));
-
-  const setActiveRoom = (code) => storage.set(KEY_ACTIVE_ROOM, code || "");
-  const getActiveRoom = () => storage.get(KEY_ACTIVE_ROOM) || "";
-
-  const genCode6 = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  function makeCode6() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // bez mylących 0 O 1 I
     let out = "";
     for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
     return out;
-  };
+  }
 
-  const renderNick = () => {
-    const n = loadNick();
-    if (nickBig) nickBig.textContent = n ? `Nick: ${n}` : "Nick: —";
-  };
+  function loadNick() {
+    const n = localStorage.getItem(KEY_NICK);
+    return (n && n.trim()) ? n.trim() : "";
+  }
 
-  const openNickModal = (prefill = "") => {
-    if (!nickModal || !nickInput) return;
-    nickInput.value = prefill;
-    nickModal.classList.add("active");
-    setTimeout(() => nickInput.focus(), 80);
-  };
-  const closeNickModal = () => nickModal && nickModal.classList.remove("active");
+  function saveNick(nick) {
+    localStorage.setItem(KEY_NICK, nick);
+  }
 
-  const ensureNickThen = (onOk) => {
-    const n = loadNick();
-    if (n) { onOk(n); return; }
+  /**
+   * NAJWAŻNIEJSZE: migracja rooms → zawsze tablica.
+   * Obsługujemy:
+   * - null -> []
+   * - tablica -> ok
+   * - obiekt {code:..., name:...} -> [obiekt]
+   * - obiekt map {ABC123:{...}, ...} -> Object.values(...)
+   */
+  function loadRooms() {
+    let raw = localStorage.getItem(KEY_ROOMS);
+    if (!raw) return [];
 
-    openNickModal("");
-    const handler = () => {
-      nickSave.removeEventListener("click", handler);
-      const nn = loadNick();
-      if (nn) onOk(nn);
-    };
-    nickSave.addEventListener("click", handler);
-  };
-
-  // --- Rooms logic (lokalnie na urządzeniu) ---
-  const createRoom = (name, adminNick) => {
-    const rooms = loadRooms();
-    let code = genCode6();
-    while (rooms.some(r => r.code === code)) code = genCode6();
-
-    const room = {
-      code,
-      name: (name || "Nowy pokój").trim(),
-      admin: adminNick,
-      players: [adminNick],
-      createdAt: Date.now()
-    };
-    rooms.unshift(room);
-    saveRooms(rooms);
-    setActiveRoom(code);
-    return room;
-  };
-
-  const joinRoom = (code, playerNick) => {
-    const rooms = loadRooms();
-    const r = rooms.find(x => x.code === code);
-    if (!r) return null;
-    if (!r.players.includes(playerNick)) r.players.push(playerNick);
-    saveRooms(rooms);
-    setActiveRoom(code);
-    return r;
-  };
-
-  const getRoom = (code) => loadRooms().find(r => r.code === code) || null;
-
-  const leaveRoom = (code, playerNick) => {
-    const rooms = loadRooms();
-    const r = rooms.find(x => x.code === code);
-    if (!r) return;
-
-    r.players = r.players.filter(p => p !== playerNick);
-    if (r.admin === playerNick) r.admin = r.players[0] || "";
-
-    const filtered = rooms.filter(x => x.code !== code);
-    if (r.players.length > 0) filtered.unshift(r);
-    saveRooms(filtered);
-    setActiveRoom("");
-  };
-
-  const renderRoom = (room) => {
-    setBadge("Pokój");
-    show(roomScreen);
-
-    if (roomTitle) roomTitle.textContent = room.name || "—";
-    if (roomAdmin) roomAdmin.textContent = "Admin: " + (room.admin || "—");
-    if (roomCode) roomCode.textContent = room.code || "------";
-
-    if (!playersList) return;
-    playersList.innerHTML = "";
-
-    const me = loadNick();
-    if (!room.players || room.players.length === 0) {
-      playersList.textContent = "Brak graczy…";
-      return;
-    }
-
-    const wrap = document.createElement("div");
-    wrap.style.display = "flex";
-    wrap.style.flexDirection = "column";
-    wrap.style.gap = "8px";
-
-    room.players.forEach(p => {
-      const line = document.createElement("div");
-      line.className = "pill";
-      line.textContent = "Gracz: " + p + (p === me ? " (Ty)" : "");
-      wrap.appendChild(line);
-    });
-    playersList.appendChild(wrap);
-  };
-
-  // --- Navigation ---
-  const goMenu = () => {
-    refreshBg();
-    setBadge("Menu");
-    show(menuScreen);
-    setStatus(`BUILD ${BUILD} (${APP_VERSION})`);
-    setDebug(`NickKey=${KEY_NICK} rooms=${loadRooms().length}`);
-  };
-
-  const goRooms = () => {
-    refreshBg();
-    setBadge("Liga");
-    show(roomsScreen);
-    setStatus("Wybierz: nowy pokój lub dołącz");
-    setDebug(`rooms=${loadRooms().length} localStorageOK=${testLocalStorage()}`);
-  };
-
-  function testLocalStorage() {
     try {
-      localStorage.setItem("__t", "1");
-      localStorage.removeItem("__t");
-      return "TAK";
+      const parsed = JSON.parse(raw);
+
+      if (Array.isArray(parsed)) return parsed;
+
+      // pojedynczy pokój jako obiekt
+      if (parsed && typeof parsed === "object" && parsed.code) {
+        return [parsed];
+      }
+
+      // mapka kod->pokój
+      if (parsed && typeof parsed === "object") {
+        return Object.values(parsed).filter(x => x && typeof x === "object" && x.code);
+      }
+
+      return [];
     } catch {
-      return "NIE (fallback RAM)";
+      return [];
     }
   }
 
-  // --- Events ---
-  window.addEventListener("resize", refreshBg);
+  function saveRooms(rooms) {
+    // tylko tablica
+    if (!Array.isArray(rooms)) rooms = [];
+    localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
+  }
 
-  backBtn && backBtn.addEventListener("click", () => {
-    if (roomScreen && roomScreen.classList.contains("active")) { goRooms(); return; }
-    if (roomsScreen && roomsScreen.classList.contains("active")) { goMenu(); return; }
-  });
+  function setActiveRoom(code) {
+    localStorage.setItem(KEY_ACTIVE_ROOM, code);
+  }
 
-  changeNickBtn && changeNickBtn.addEventListener("click", () => openNickModal(loadNick()));
+  function updateNickUI() {
+    const nick = loadNick();
+    const shown = nick ? nick : "—";
+    if (nickText) nickText.textContent = `Nick: ${shown}`;
+    if (nickTextRooms) nickTextRooms.textContent = `Nick: ${shown}`;
+  }
 
-  nickCancel && nickCancel.addEventListener("click", () => closeNickModal());
-  nickSave && nickSave.addEventListener("click", () => {
-    const v = (nickInput?.value || "").trim();
-    if (!v) { setStatus("Wpisz nick"); return; }
-    saveNick(v);
-    renderNick();
-    closeNickModal();
-    setStatus("Nick zapisany");
-  });
-
-  btnLiga && btnLiga.addEventListener("click", () => ensureNickThen(() => goRooms()));
-  btnStats && btnStats.addEventListener("click", () => alert("Statystyki – później."));
-  btnExit && btnExit.addEventListener("click", () => alert("Wyjście: w PWA zamknij kartę."));
-
-  // *** NAJWAŻNIEJSZE: UTWÓRZ POKÓJ ***
-  createRoomBtn && createRoomBtn.addEventListener("click", () => {
-    try {
-      ensureNickThen((nick) => {
-        const nm = (newRoomName?.value || "").trim();
-        const r = createRoom(nm, nick);
-        if (newRoomName) newRoomName.value = "";
-        renderRoom(r);
-        setStatus("Utworzono pokój: " + r.code);
-        setDebug("OK createRoom code=" + r.code);
-      });
-    } catch (err) {
-      setStatus("Błąd tworzenia pokoju");
-      setDebug("createRoom exception: " + (err?.message || String(err)));
+  function promptNick(force = false) {
+    let nick = loadNick();
+    if (!nick || force) {
+      const input = prompt("Podaj nick / imię:", nick || "");
+      if (input === null) return ""; // anuluj
+      const cleaned = input.trim().replace(/\s+/g, " ");
+      if (!cleaned) {
+        alert("Nick nie może być pusty.");
+        return "";
+      }
+      const oldNick = nick;
+      nick = cleaned;
+      saveNick(nick);
+      migrateNickInRooms(oldNick, nick);
+      updateNickUI();
     }
-  });
+    return nick;
+  }
 
-  joinCode && joinCode.addEventListener("input", () => {
-    joinCode.value = joinCode.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0,6);
-  });
+  function migrateNickInRooms(oldNick, newNick) {
+    if (!oldNick || !newNick || oldNick === newNick) return;
 
-  joinRoomBtn && joinRoomBtn.addEventListener("click", () => {
-    ensureNickThen((nick) => {
-      const code = (joinCode?.value || "").trim().toUpperCase();
-      if (code.length !== 6) { alert("Kod musi mieć 6 znaków."); return; }
-      const r = joinRoom(code, nick);
-      if (!r) { alert("Nie znaleziono pokoju o takim kodzie (lokalnie)."); return; }
-      renderRoom(r);
-      setStatus("Dołączono do pokoju");
-      setDebug("OK joinRoom code=" + code);
+    const rooms = loadRooms();
+    let changed = false;
+
+    for (const r of rooms) {
+      if (!r) continue;
+
+      if (r.admin === oldNick) {
+        r.admin = newNick;
+        changed = true;
+      }
+      if (Array.isArray(r.players)) {
+        const idx = r.players.indexOf(oldNick);
+        if (idx >= 0) {
+          r.players[idx] = newNick;
+          changed = true;
+        }
+      }
+    }
+    if (changed) saveRooms(rooms);
+  }
+
+  // ----------------------------
+  // rooms actions
+  // ----------------------------
+  function createRoom() {
+    try {
+      const nick = loadNick();
+      if (!nick) {
+        roomsStatusText.textContent = "Brak nicku.";
+        logDebug("createRoom: brak nicku, proszę podać.");
+        return;
+      }
+
+      const name = (newRoomName.value || "").trim().replace(/\s+/g, " ");
+      if (!name) {
+        alert("Podaj nazwę pokoju.");
+        return;
+      }
+
+      // WAŻNE: rooms zawsze tablica
+      const rooms = loadRooms();
+      if (!Array.isArray(rooms)) {
+        logDebug("createRoom: rooms nie było tablicą -> naprawiam na []");
+      }
+
+      // generuj unikalny kod
+      let code = makeCode6();
+      let guard = 0;
+      while (rooms.some(r => r && r.code === code) && guard < 40) {
+        code = makeCode6();
+        guard++;
+      }
+
+      const room = {
+        code,
+        name,
+        admin: nick,
+        players: [nick],
+        createdAt: Date.now()
+      };
+
+      rooms.unshift(room);
+      saveRooms(rooms);
+      setActiveRoom(code);
+
+      roomsStatusText.textContent = `Utworzono pokój ${code}`;
+      logDebug(`createRoom ok: ${code} (${name}) admin=${nick}`);
+
+      alert(`Utworzono pokój!\nNazwa: ${name}\nKod: ${code}`);
+    } catch (e) {
+      roomsStatusText.textContent = "Błąd tworzenia pokoju";
+      logDebug(`createRoom exception: ${e && e.message ? e.message : String(e)}`);
+    }
+  }
+
+  function joinRoom() {
+    try {
+      const nick = loadNick();
+      if (!nick) {
+        roomsStatusText.textContent = "Brak nicku.";
+        logDebug("joinRoom: brak nicku.");
+        return;
+      }
+
+      const code = normalizeCode(joinRoomCode.value);
+      if (code.length !== 6) {
+        alert("Kod musi mieć 6 znaków.");
+        return;
+      }
+
+      const rooms = loadRooms();
+
+      const room = rooms.find(r => r && r.code === code);
+      if (!room) {
+        alert("Nie znaleziono pokoju o takim kodzie (na tym urządzeniu).");
+        roomsStatusText.textContent = "Nie znaleziono pokoju.";
+        logDebug(`joinRoom: brak pokoju ${code}`);
+        return;
+      }
+
+      // dopisz gracza jeśli nie ma
+      if (!Array.isArray(room.players)) room.players = [];
+      if (!room.players.includes(nick)) room.players.push(nick);
+
+      saveRooms(rooms);
+      setActiveRoom(code);
+
+      roomsStatusText.textContent = `Dołączono do ${code}`;
+      logDebug(`joinRoom ok: ${code} gracz=${nick}`);
+
+      alert(`Dołączono do pokoju!\nNazwa: ${room.name}\nKod: ${room.code}`);
+    } catch (e) {
+      roomsStatusText.textContent = "Błąd dołączania";
+      logDebug(`joinRoom exception: ${e && e.message ? e.message : String(e)}`);
+    }
+  }
+
+  // ----------------------------
+  // menu handlers
+  // ----------------------------
+  function openLiga() {
+    const nick = promptNick(false);
+    if (!nick) return;
+    showScreen("rooms");
+    roomsStatusText.textContent = "—";
+    logDebug(`openLiga (BUILD ${BUILD})`);
+  }
+
+  function initHandlers() {
+    // menu
+    changeNickBtn.addEventListener("click", () => promptNick(true));
+    btnLiga.addEventListener("click", openLiga);
+
+    btnStats.addEventListener("click", () => alert("Statystyki – zrobimy w następnym kroku."));
+    btnExit.addEventListener("click", () => alert("Wyjście: w przeglądarce zamknij kartę, w Androidzie dodamy finish()."));
+
+    // rooms
+    changeNickBtn2.addEventListener("click", () => promptNick(true));
+    backToMenuBtn.addEventListener("click", () => showScreen("menu"));
+
+    createRoomBtn.addEventListener("click", createRoom);
+    joinRoomBtn.addEventListener("click", joinRoom);
+
+    // enter = tworzenie/dołączanie
+    newRoomName.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") createRoom();
     });
-  });
+    joinRoomCode.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") joinRoom();
+    });
 
-  copyCodeBtn && copyCodeBtn.addEventListener("click", async () => {
-    const code = roomCode?.textContent || "";
-    try {
-      await navigator.clipboard.writeText(code);
-      setStatus("Skopiowano kod");
-    } catch {
-      alert("Nie mogę skopiować – schowek zablokowany.");
-    }
-  });
+    // uppercase input
+    joinRoomCode.addEventListener("input", () => {
+      joinRoomCode.value = normalizeCode(joinRoomCode.value).slice(0, 6);
+    });
 
-  leaveRoomBtn && leaveRoomBtn.addEventListener("click", () => {
-    const n = loadNick();
-    const code = roomCode?.textContent || "";
-    if (!code || code.length !== 6) return;
-    leaveRoom(code, n);
-    goRooms();
-    setStatus("Opuszczono pokój");
-  });
+    window.addEventListener("resize", setBgImages);
+  }
 
-  // --- Splash timing ---
-  const startApp = () => {
-    splash && splash.classList.remove("active");
-    app && app.classList.add("active");
+  // ----------------------------
+  // splash + start
+  // ----------------------------
+  function boot() {
+    setBgImages();
+    updateNickUI();
 
-    refreshBg();
-    renderNick();
+    // migracja rooms przy starcie (naprawa starego formatu)
+    const rooms = loadRooms();
+    saveRooms(rooms);
+    logDebug(`boot ok (BUILD ${BUILD}) rooms=${rooms.length}`);
 
-    const active = getActiveRoom();
-    if (active) {
-      const r = getRoom(active);
-      if (r) { renderRoom(r); setStatus("Wczytano pokój"); return; }
-      setActiveRoom("");
-    }
-    goMenu();
-  };
+    initHandlers();
 
-  setStatus(`Splash… BUILD ${BUILD} (${APP_VERSION})`);
-  setTimeout(startApp, SPLASH_MS);
+    // pokaż menu po 7s
+    if (splashHint) splashHint.textContent = "Ekran startowy (7s)…";
+    setTimeout(() => {
+      if (splashOverlay) splashOverlay.style.display = "none";
+      showScreen("menu");
+      if (statusText) statusText.textContent = `Menu gotowe. BUILD ${BUILD}`;
+    }, SPLASH_MS);
+  }
+
+  boot();
 })();

@@ -3,379 +3,369 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1730" />
-  <title>Typer</title>
+  <meta name="theme-color" content="#0b1f3a" />
+  <title>Typer PWA</title>
 
-  <link rel="manifest" href="./manifest.json?v=1006" />
-
+  <link rel="manifest" href="manifest.json?v=1010" />
   <style>
     :root{
-      --bg:#071225;
-      --glass: rgba(9, 27, 55, .60);
-      --glass2: rgba(9, 27, 55, .45);
-      --border: rgba(255,255,255,.12);
+      --bg1:#061428;
+      --panel: rgba(7, 27, 52, 0.72);
+      --panel2: rgba(7, 27, 52, 0.62);
+      --stroke: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.70);
-      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --muted: rgba(255,255,255,.72);
+      --btn: rgba(45, 93, 132, .75);
+      --btn2: rgba(45, 93, 132, .60);
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
       --radius: 18px;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    body{overflow:hidden}
 
-    .bgWrap{
-      position:fixed; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      background: radial-gradient(1200px 800px at 50% 40%, #0e2a55 0%, #061022 60%, #040a14 100%);
-    }
-    .bgImg{
-      position:absolute; inset:0;
-      width:100%; height:100%;
-      object-fit:cover;
-      filter: saturate(1.05);
-      transform: scale(1.01);
-    }
-
-    .shell{
-      position:relative;
-      width:min(1120px, 94vw);
-      height:min(760px, 92vh);
-      border-radius: calc(var(--radius) + 8px);
-      background: rgba(0,0,0,.20);
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,.10);
+    html,body{
+      height:100%;
+      margin:0;
+      background: radial-gradient(1200px 600px at 50% 0%, rgba(32,98,155,.35), rgba(0,0,0,0)) , var(--bg1);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       overflow:hidden;
     }
 
-    .topBar{
-      position:absolute; left:14px; right:14px; top:12px;
-      height:44px;
-      display:flex; align-items:center; justify-content:space-between;
+    /* screen container */
+    .screen{
+      position:fixed;
+      inset:0;
+      display:none;
+    }
+    .screen.active{ display:block; }
+
+    /* background image */
+    .bg{
+      position:absolute;
+      inset:0;
+      background: radial-gradient(900px 500px at 50% 40%, rgba(255,255,255,.05), rgba(0,0,0,.55));
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .bg img{
+      width: min(1200px, 96vw);
+      height: min(740px, 92vh);
+      object-fit: cover;
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    /* overlay content area inside image */
+    .content{
+      position:absolute;
+      inset: 0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 16px;
+      pointer-events:none;
+    }
+    .card{
+      width: min(1200px, 96vw);
+      height: min(740px, 92vh);
+      border-radius: 22px;
+      pointer-events:auto;
+      position:relative;
+    }
+
+    /* Top bar */
+    .topbar{
+      position:absolute;
+      left: 14px;
+      right: 14px;
+      top: 10px;
+      height: 46px;
+      display:flex;
+      align-items:center;
       gap:10px;
       padding: 8px 10px;
       border-radius: 14px;
-      background: rgba(8, 20, 40, .55);
+      background: rgba(7, 27, 52, 0.55);
       border: 1px solid rgba(255,255,255,.10);
-      backdrop-filter: blur(8px);
-      z-index:10;
+      backdrop-filter: blur(10px);
     }
-    .titleLeft{
-      display:flex; align-items:center; gap:10px;
-      min-width: 0;
-    }
-    .badge{
-      padding:6px 10px;
+    .pill{
+      padding: 6px 10px;
       border-radius: 999px;
       background: rgba(255,255,255,.08);
       border: 1px solid rgba(255,255,255,.10);
-      font-weight:700;
-      font-size: 13px;
-    }
-    .nickBig{
-      font-size: 16px;
-      font-weight: 800;
+      font-weight: 700;
+      font-size: 14px;
       white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 50vw;
     }
-    .actionsRight{
-      display:flex; align-items:center; gap:10px;
+    .title{
+      font-weight:800;
+      font-size: 16px;
+      opacity:.95;
+      white-space:nowrap;
+    }
+    .spacer{ flex:1; }
+    .nick{
+      font-weight:900;
+      font-size: 18px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      max-width: 52vw;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space:nowrap;
     }
 
     .btn{
-      appearance:none; border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.08);
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.10);
       color: var(--text);
-      padding:10px 14px;
+      padding: 8px 12px;
       border-radius: 14px;
-      font-weight:800;
+      font-weight: 800;
       cursor:pointer;
-      transition: transform .05s ease, background .2s ease;
-      user-select:none;
     }
-    .btn:active{ transform: scale(.98); }
-    .btn.primary{ background: rgba(50,160,255,.16); }
-    .btn.danger{ background: rgba(255,80,80,.14); }
+    .btn:hover{ background: rgba(255,255,255,.14); }
+    .btn.primary{
+      background: var(--btn);
+      border-color: rgba(255,255,255,.14);
+    }
+    .btn.primary:hover{ background: rgba(45, 93, 132, .88); }
 
-    .screen{ position:absolute; inset:0; display:none; }
-    .screen.active{ display:block; }
-
-    #splash{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: radial-gradient(900px 600px at 50% 35%, #173a7a 0%, #061022 55%, #030812 100%);
-    }
-    .splashBox{
-      width:min(520px, 88vw);
-      height:min(720px, 90vh);
-      border-radius: 26px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.20);
-      box-shadow: var(--shadow);
-      display:flex;
-      flex-direction:column;
-    }
-    .splashImg{
-      flex:1;
-      width:100%; height:100%;
-      object-fit: cover;
-      display:block;
-    }
-    .splashHint{
-      padding: 10px 14px;
-      font-size: 13px;
-      color: var(--muted);
-      background: rgba(0,0,0,.25);
-      border-top: 1px solid rgba(255,255,255,.10);
-    }
-
-    .menuCenter{
-      position:absolute;
-      inset: 70px 14px 70px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
+    /* Menu buttons */
     .menuButtons{
-      width:min(620px, 92vw);
+      position:absolute;
+      left:50%;
+      transform: translateX(-50%);
+      top: 45%;
+      width: min(760px, 86%);
       display:flex;
       flex-direction:column;
-      gap: 18px;
+      gap:18px;
     }
-    .menuBtn{
-      height:64px;
-      border-radius: 18px;
+    .menuBig{
+      height: 62px;
+      border-radius: 16px;
       font-size: 18px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      background: rgba(5, 35, 70, .55);
-      border: 1px solid rgba(255,255,255,.16);
+      letter-spacing:.2px;
+      background: rgba(45,93,132,.62);
+      border: 1px solid rgba(255,255,255,.14);
       backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-    .menuBtn.dim{ background: rgba(5, 30, 60, .45); }
-
-    .bottomBar{
-      position:absolute; left:14px; right:14px; bottom:12px;
-      height:44px;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-      padding: 8px 10px;
-      border-radius: 14px;
-      background: rgba(8, 20, 40, .55);
-      border: 1px solid rgba(255,255,255,.10);
-      backdrop-filter: blur(8px);
-      z-index:10;
-      color: rgba(255,255,255,.75);
-      font-size: 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.20);
     }
 
-    .roomsGrid{
+    /* Rooms layout */
+    .roomsWrap{
       position:absolute;
-      inset: 70px 14px 70px 14px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      align-content:start;
-      overflow:auto;
-      padding-right: 6px;
+      left: 14px;
+      right: 14px;
+      top: 70px;
+      bottom: 56px;
+      display:flex;
+      flex-direction:column;
+      gap: 16px;
     }
-
-    .card{
-      border-radius: 18px;
-      background: rgba(8, 25, 55, .55);
-      border: 1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(0,0,0,.20);
-      padding: 14px;
+    .panel{
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.22);
     }
-    .card h3{ margin:0 0 8px 0; font-size: 16px; }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .panel h3{
+      margin:0 0 12px 0;
+      font-size: 22px;
+      letter-spacing:.2px;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
     .input{
-      width: min(420px, 100%);
-      padding: 12px 12px;
+      flex: 1;
+      min-width: 260px;
+      height: 46px;
+      padding: 0 14px;
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.25);
       color: var(--text);
       outline:none;
       font-weight: 700;
+      font-size: 16px;
     }
-    .hint{ color: rgba(255,255,255,.70); font-size: 12px; margin-top: 8px; }
-
-    .roomLayout{
-      position:absolute;
-      inset: 70px 14px 70px 14px;
-      display:grid;
-      grid-template-columns: 1.5fr .9fr;
-      gap: 14px;
+    .hint{
+      margin-top:10px;
+      color: var(--muted);
+      font-size: 14px;
     }
-    @media (max-width: 860px){
-      .shell{ width: 96vw; height: 92vh; }
-      .roomLayout{ grid-template-columns: 1fr; }
-      .nickBig{ max-width: 45vw; font-size: 15px; }
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.12);
-      font-weight: 800;
-      font-size: 12px;
-    }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .6px; }
-
-    .modal{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:1000;
-    }
-    .modal.active{ display:flex; }
-    .modalBox{
-      width: min(520px, 92vw);
-      border-radius: 18px;
-      background: rgba(10, 30, 60, .92);
-      border: 1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
+    .debug{
+      background: rgba(0,0,0,.28);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
       padding: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      color: rgba(255,255,255,.82);
     }
-    .modalBox h2{ margin:0 0 10px 0; font-size: 18px; }
-    .modalActions{ margin-top: 10px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+
+    /* Footer */
+    .footer{
+      position:absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 10px;
+      height: 38px;
+      display:flex;
+      align-items:center;
+      padding: 0 12px;
+      border-radius: 14px;
+      background: rgba(7,27,52,.45);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+    }
+    .footer .right{ margin-left:auto; }
+
+    /* Splash */
+    #splashOverlay{
+      position:fixed;
+      inset:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: radial-gradient(900px 500px at 50% 40%, rgba(255,255,255,.05), rgba(0,0,0,.55)), var(--bg1);
+      z-index:9999;
+    }
+    #splashOverlay .splashCard{
+      width: min(520px, 92vw);
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(7,27,52,.65);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      text-align:center;
+      backdrop-filter: blur(12px);
+    }
+    #splashOverlay .splashHint{
+      margin-top: 10px;
+      color: rgba(255,255,255,.78);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    /* small devices */
+    @media (max-width: 520px){
+      .topbar{ height: 44px; }
+      .nick{ font-size: 16px; }
+      .menuBig{ height: 58px; font-size: 17px; }
+      .panel h3{ font-size: 20px; }
+    }
   </style>
 </head>
+
 <body>
-
-  <div id="splash" class="screen active">
-    <div class="splashBox">
-      <img class="splashImg" src="./img_starter.png" alt="starter">
-      <div id="splashHint" class="splashHint">Ekran startowy (7s)…</div>
+  <!-- Splash overlay -->
+  <div id="splashOverlay">
+    <div class="splashCard">
+      <div style="font-weight:900;font-size:20px;">Ładowanie…</div>
+      <div class="splashHint" id="splashHint">Ekran startowy (7s)…</div>
     </div>
   </div>
 
-  <div id="app" class="screen">
-    <div class="bgWrap">
-      <img id="bgImg" class="bgImg" src="./img_menu.png" alt="bg">
-      <div class="shell">
-
-        <div class="topBar">
-          <div class="titleLeft">
-            <div id="screenBadge" class="badge">Menu</div>
-            <div id="nickBig" class="nickBig">Nick: —</div>
-          </div>
-          <div class="actionsRight">
-            <button id="changeNickBtn" class="btn">Zmień nick</button>
-            <button id="backBtn" class="btn">Wróć</button>
-          </div>
+  <!-- MENU -->
+  <div class="screen active" id="menuScreen">
+    <div class="bg">
+      <img id="menuImg" alt="menu" src="img_menu.png" />
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="topbar">
+          <span class="pill">Menu</span>
+          <span class="title">Wybierz opcję</span>
+          <span class="spacer"></span>
+          <span class="nick" id="nickText">Nick: —</span>
+          <button class="btn" id="changeNickBtn">Zmień nick</button>
         </div>
 
-        <div id="menuScreen" class="screen active">
-          <div class="menuCenter">
-            <div class="menuButtons">
-              <button id="btnLiga" class="btn menuBtn primary">Liga typerów</button>
-              <button id="btnStats" class="btn menuBtn dim">Statystyki</button>
-              <button id="btnExit" class="btn menuBtn danger">Wyjście</button>
-            </div>
-          </div>
+        <div class="menuButtons">
+          <button class="btn primary menuBig" id="btnLiga">Liga typerów</button>
+          <button class="btn primary menuBig" id="btnStats">Statystyki</button>
+          <button class="btn primary menuBig" id="btnExit">Wyjście</button>
         </div>
 
-        <div id="roomsScreen" class="screen">
-          <div class="roomsGrid">
-            <div class="card">
-              <h3>Nowy pokój</h3>
-              <div class="row">
-                <input id="newRoomName" class="input" placeholder="Nazwa pokoju (np. Pokój rodzinny)" maxlength="24">
-                <button id="createRoomBtn" class="btn primary">Utwórz</button>
-              </div>
-              <div class="hint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
-            </div>
-
-            <div class="card">
-              <h3>Dołącz do pokoju</h3>
-              <div class="row">
-                <input id="joinCode" class="input mono" placeholder="Wpisz kod (np. AB12CD)" maxlength="6">
-                <button id="joinRoomBtn" class="btn primary">Dołącz</button>
-              </div>
-              <div class="hint">Uwaga: na razie pokoje są lokalne na urządzeniu (test).</div>
-            </div>
-
-            <div class="card">
-              <h3>Debug</h3>
-              <div id="debugBox" class="hint">—</div>
-            </div>
-          </div>
+        <div class="footer">
+          <span>Copyright 2026 RN_APS Mariusz Gębka</span>
+          <span class="right" id="statusText">Menu gotowe.</span>
         </div>
-
-        <div id="roomScreen" class="screen">
-          <div class="roomLayout">
-            <div class="card">
-              <h3>Gracze</h3>
-              <div id="playersList" class="hint">Brak graczy…</div>
-            </div>
-
-            <div class="card">
-              <h3>Informacje</h3>
-              <div class="row" style="justify-content:space-between; gap:8px;">
-                <div>
-                  <div id="roomTitle" style="font-size:18px;font-weight:900;">—</div>
-                  <div id="roomAdmin" class="hint" style="margin-top:4px;">Admin: —</div>
-                </div>
-              </div>
-
-              <div style="height:10px"></div>
-
-              <div class="pill">Kod pokoju: <span id="roomCode" class="mono" style="font-size:16px">------</span></div>
-
-              <div style="height:10px"></div>
-
-              <div class="row">
-                <button id="copyCodeBtn" class="btn">Kopiuj</button>
-                <button id="leaveRoomBtn" class="btn danger">Opuść pokój</button>
-              </div>
-
-              <div class="hint" style="margin-top:10px;">Na razie test: nick + pokoje lokalnie.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bottomBar">
-          <div id="copyrightText">Copyright 2026 RN_APS Mariusz Gębka</div>
-          <div id="statusText">—</div>
-        </div>
-
       </div>
     </div>
   </div>
 
-  <div id="nickModal" class="modal">
-    <div class="modalBox">
-      <h2>Podaj nick / imię</h2>
-      <input id="nickInput" class="input" placeholder="np. Mariusz" maxlength="20">
-      <div class="hint">Nick zapisujemy lokalnie w urządzeniu.</div>
-      <div class="modalActions">
-        <button id="nickCancel" class="btn">Anuluj</button>
-        <button id="nickSave" class="btn primary">Zapisz</button>
+  <!-- ROOMS -->
+  <div class="screen" id="roomsScreen">
+    <div class="bg">
+      <img id="roomsBg" alt="menu" src="img_menu.png" />
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="topbar">
+          <span class="pill">Liga</span>
+          <span class="nick" id="nickTextRooms">Nick: —</span>
+          <span class="spacer"></span>
+          <button class="btn" id="changeNickBtn2">Zmień nick</button>
+          <button class="btn" id="backToMenuBtn">Wróć</button>
+        </div>
+
+        <div class="roomsWrap">
+          <div class="panel">
+            <h3>Nowy pokój</h3>
+            <div class="row">
+              <input class="input" id="newRoomName" maxlength="24" placeholder="np. Pokój rodzinny" />
+              <button class="btn primary" id="createRoomBtn">Utwórz</button>
+            </div>
+            <div class="hint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+          </div>
+
+          <div class="panel">
+            <h3>Dołącz do pokoju</h3>
+            <div class="row">
+              <input class="input" id="joinRoomCode" maxlength="6" placeholder="Wpisz kod (np. AB12CD)" />
+              <button class="btn primary" id="joinRoomBtn">Dołącz</button>
+            </div>
+            <div class="hint">Uwaga: na razie pokoje są lokalne na urządzeniu (test).</div>
+          </div>
+
+          <div class="panel">
+            <h3>Debug</h3>
+            <div class="debug" id="debugBox">—</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <span>Copyright 2026 RN_APS Mariusz Gębka</span>
+          <span class="right" id="roomsStatusText">—</span>
+        </div>
       </div>
     </div>
   </div>
 
+  <script src="app.js?v=1010"></script>
   <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js?v=1006").catch(()=>{});
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js?v=1010').catch(()=>{});
       });
     }
   </script>
-
-  <script src="./app.js?v=1006"></script>
 </body>
 </html>
