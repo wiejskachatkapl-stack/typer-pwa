@@ -1,73 +1,50 @@
-/* Service Worker - twarde wersjonowanie cache */
-const VERSION = "20260202-01";
-const CACHE = `typer-cache-${VERSION}`;
+/* Service Worker - cache z wersją BUILD */
+const BUILD = 1005;
+const CACHE_NAME = `typer-cache-${BUILD}`;
 
-const CORE = [
+const ASSETS = [
   "./",
-  `./index.html?v=${VERSION}`,
-  `./app.js?v=${VERSION}`,
-  `./manifest.json?v=${VERSION}`,
-  "./img_starter.png",
-  "./img_menu.png",
-  "./img_menu_pc.png",
-  // jeśli masz dodatkowe:
-  "./img_typowanie.png",
-  "./img_typowanie_pc.png",
+  "./index.html?v=1005",
+  "./app.js?v=1005",
+  "./manifest.json?v=1005",
+  "./img_starter.png?v=1005",
+  "./img_menu.png?v=1005",
+  "./img_menu_pc.png?v=1005",
 ];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(CORE).catch(()=>{}))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).catch(()=>{})
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k !== CACHE ? caches.delete(k) : Promise.resolve())));
+    await Promise.all(keys.map(k => (k !== CACHE_NAME ? caches.delete(k) : null)));
     await self.clients.claim();
   })());
 });
 
+// Prosty fetch: cache-first dla assetów, ale index/app dzięki ?v=BUILD i tak się odświeża
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // tylko nasza domena
-  if (url.origin !== location.origin) return;
+  // tylko to co nasze (ten sam origin)
+  if (url.origin !== self.location.origin) return;
 
-  // Network-first dla HTML/JS żeby nie wisiało na starym
-  const isHTML = req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html");
-  const isJS = url.pathname.endsWith(".js");
-
-  if (isHTML || isJS) {
-    event.respondWith(networkFirst(req));
-    return;
-  }
-
-  // reszta: cache-first
-  event.respondWith(cacheFirst(req));
-});
-
-async function networkFirst(req){
-  try{
-    const fresh = await fetch(req, { cache: "no-store" });
-    const cache = await caches.open(CACHE);
-    cache.put(req, fresh.clone());
-    return fresh;
-  }catch{
+  event.respondWith((async () => {
     const cached = await caches.match(req);
-    return cached || new Response("Offline", { status: 503, headers: { "Content-Type":"text/plain" } });
-  }
-}
+    if (cached) return cached;
 
-async function cacheFirst(req){
-  const cached = await caches.match(req);
-  if (cached) return cached;
-
-  const fresh = await fetch(req);
-  const cache = await caches.open(CACHE);
-  cache.put(req, fresh.clone());
-  return fresh;
-}
+    const res = await fetch(req);
+    // cacheuj tylko GET
+    if (req.method === "GET") {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(req, res.clone()).catch(()=>{});
+    }
+    return res;
+  })());
+});

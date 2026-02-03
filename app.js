@@ -1,398 +1,321 @@
-/* Typer PWA - wersja cache-bust */
-const APP_VERSION = "20260202-01";
+(() => {
+  /**
+   * Wersja aplikacji:
+   * - BUILD podbijaj przy zmianach
+   * - musi się zgadzać z index.html (app.js?v=BUILD oraz sw.js?v=BUILD)
+   */
+  const BUILD = 1005;
+  const APP_VERSION = "20260202-01";
 
-const NICK_KEY = "typer.nick.v1";
-const ROOM_KEY = "typer.room.v1"; // {code,name,admin,players[]}
+  const KEY_NICK = "typer_nick_v1";
+  const KEY_ROOMS = "typer_rooms_v1";
+  const KEY_ACTIVE_ROOM = "typer_active_room_v1";
+  const SPLASH_MS = 7000;
 
-const IMG_MENU_PHONE = "img_menu.png";
-const IMG_MENU_PC = "img_menu_pc.png";
-const IMG_SPLASH = "img_starter.png";
+  const MENU_PHONE = "img_menu.png";
+  const MENU_PC = "img_menu_pc.png";
 
-const $ = (id) => document.getElementById(id);
+  const el = (id) => document.getElementById(id);
 
-const bgImg = $("bgImg");
-const titleLeft = $("titleLeft");
-const subLeft = $("subLeft");
-const nickText = $("nickText");
-const nickBox = $("nickBox");
-const btnChangeNick = $("btnChangeNick");
-const btnBack = $("btnBack");
-const menuButtons = $("menuButtons");
-const roomGrid = $("roomGrid");
-const playersBox = $("playersBox");
-const roomName = $("roomName");
-const roomAdmin = $("roomAdmin");
-const roomCode = $("roomCode");
-const btnCopy = $("btnCopy");
-const btnLeaveRoom = $("btnLeaveRoom");
-const statusPill = $("statusPill");
-const btnFix = $("btnFix");
+  // Screens
+  const splash = el("splash");
+  const app = el("app");
+  const menuScreen = el("menuScreen");
+  const roomsScreen = el("roomsScreen");
+  const roomScreen = el("roomScreen");
 
-const modalBack = $("modalBack");
-const modalTitle = $("modalTitle");
-const modalDesc = $("modalDesc");
-const modalInput = $("modalInput");
-const modalOk = $("modalOk");
-const modalCancel = $("modalCancel");
+  // UI
+  const bgImg = el("bgImg");
+  const screenBadge = el("screenBadge");
+  const nickBig = el("nickBig");
+  const backBtn = el("backBtn");
+  const changeNickBtn = el("changeNickBtn");
 
-function isLandscape(){
-  return window.matchMedia && window.matchMedia("(orientation: landscape)").matches;
-}
-function pickMenuBg(){
-  // PC/poziom -> PC obraz, inaczej telefon
-  return isLandscape() ? IMG_MENU_PC : IMG_MENU_PHONE;
-}
+  const statusText = el("statusText");
 
-function loadNick(){
-  return (localStorage.getItem(NICK_KEY) || "").trim();
-}
-function saveNick(nick){
-  localStorage.setItem(NICK_KEY, nick.trim());
-}
-function loadRoom(){
-  try { return JSON.parse(localStorage.getItem(ROOM_KEY) || "null"); } catch { return null; }
-}
-function saveRoom(room){
-  localStorage.setItem(ROOM_KEY, JSON.stringify(room));
-}
-function clearRoom(){
-  localStorage.removeItem(ROOM_KEY);
-}
+  // Buttons
+  const btnLiga = el("btnLiga");
+  const btnStats = el("btnStats");
+  const btnExit = el("btnExit");
 
-function setBg(src){
-  // twardy cache-bust na obrazach też
-  bgImg.src = `${src}?v=${encodeURIComponent(APP_VERSION)}&t=${Date.now()}`;
-  bgImg.onerror = () => { /* jak obraz nie dojdzie, zostaw tło */ };
-}
+  // Rooms UI
+  const newRoomName = el("newRoomName");
+  const createRoomBtn = el("createRoomBtn");
+  const joinCode = el("joinCode");
+  const joinRoomBtn = el("joinRoomBtn");
 
-function showMenu(){
-  titleLeft.textContent = "Menu";
-  subLeft.textContent = "Wybierz opcję";
-  btnBack.style.display = "none";
+  // Room UI
+  const playersList = el("playersList");
+  const roomTitle = el("roomTitle");
+  const roomAdmin = el("roomAdmin");
+  const roomCode = el("roomCode");
+  const copyCodeBtn = el("copyCodeBtn");
+  const leaveRoomBtn = el("leaveRoomBtn");
 
-  setBg(pickMenuBg());
-  menuButtons.style.display = "flex";
-  roomGrid.style.display = "none";
+  // Modal
+  const nickModal = el("nickModal");
+  const nickInput = el("nickInput");
+  const nickCancel = el("nickCancel");
+  const nickSave = el("nickSave");
 
-  statusPill.textContent = "Gotowe";
-}
-function showRoom(room){
-  titleLeft.textContent = "Pokój";
-  subLeft.textContent = "";
-  btnBack.style.display = "inline-block";
+  // --- Helpers ---
+  const isLandscape = () => window.matchMedia("(orientation: landscape)").matches;
+  const pickMenuBg = () => (isLandscape() ? MENU_PC : MENU_PHONE);
 
-  setBg(pickMenuBg());
-  menuButtons.style.display = "none";
-  roomGrid.style.display = "grid";
-
-  roomName.textContent = room.name || "—";
-  roomAdmin.textContent = `Admin: ${room.admin || "—"}`;
-  roomCode.textContent = room.code || "------";
-
-  renderPlayers(room);
-  statusPill.textContent = "Pokój aktywny";
-}
-
-function renderPlayers(room){
-  const nick = loadNick() || "Gracz";
-  const players = Array.isArray(room.players) ? room.players : [nick];
-  // prosto: lista, na razie lokalnie
-  playersBox.innerHTML = `
-    <div class="kv"><div class="k">Gracz:</div><div class="v">${escapeHtml(nick)}</div></div>
-    <div style="margin-top:10px; color:rgba(255,255,255,.55); font-size:12px;">
-      (Na razie lokalnie. Multiplayer dołożymy później.)
-    </div>
-  `;
-}
-
-function escapeHtml(s){
-  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-
-function openModal({title, desc, placeholder, value, okText="OK"}){
-  return new Promise((resolve) => {
-    modalTitle.textContent = title;
-    modalDesc.textContent = desc;
-    modalInput.placeholder = placeholder || "";
-    modalInput.value = value || "";
-    modalOk.textContent = okText;
-
-    modalBack.style.display = "flex";
-    setTimeout(() => modalInput.focus(), 10);
-
-    const close = (val) => {
-      modalBack.style.display = "none";
-      modalOk.onclick = null;
-      modalCancel.onclick = null;
-      modalBack.onclick = null;
-      resolve(val);
-    };
-
-    modalOk.onclick = () => close(modalInput.value.trim());
-    modalCancel.onclick = () => close(null);
-    modalBack.onclick = (e) => { if (e.target === modalBack) close(null); };
-
-    modalInput.onkeydown = (e) => {
-      if (e.key === "Enter") modalOk.click();
-      if (e.key === "Escape") close(null);
-    };
-  });
-}
-
-function genCode6(){
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
-  return out;
-}
-
-async function ensureNick(){
-  let nick = loadNick();
-  if (nick) return nick;
-
-  const v = await openModal({
-    title: "Podaj nick",
-    desc: "Ustaw nick (będzie widoczny w lidze i pokojach).",
-    placeholder: "np. Mariusz",
-    value: "",
-    okText: "Zapisz"
-  });
-
-  if (!v) return null;
-  saveNick(v);
-  updateNickUI();
-  return v;
-}
-
-async function createRoomFlow(){
-  const nick = await ensureNick();
-  if (!nick) return;
-
-  const name = await openModal({
-    title: "Nowy pokój",
-    desc: "Nadaj nazwę pokoju (będzie widoczna po prawej).",
-    placeholder: "np. szkoła / rodzina",
-    value: "",
-    okText: "Utwórz"
-  });
-
-  if (!name) return;
-
-  const room = {
-    code: genCode6(),
-    name,
-    admin: nick,
-    players: [nick]
+  const show = (screen) => {
+    [menuScreen, roomsScreen, roomScreen].forEach(s => s.classList.remove("active"));
+    screen.classList.add("active");
   };
-  saveRoom(room);
-  location.hash = "#pokoj";
-  showRoom(room);
-}
 
-async function joinRoomFlow(){
-  const nick = await ensureNick();
-  if (!nick) return;
+  const setBadge = (txt) => { screenBadge.textContent = txt; };
 
-  const code = await openModal({
-    title: "Dołącz do pokoju",
-    desc: "Wpisz 6-znakowy kod pokoju.",
-    placeholder: "np. AB12CD",
-    value: "",
-    okText: "Dołącz"
-  });
-  if (!code) return;
+  const setStatus = (txt) => { statusText.textContent = txt; };
 
-  // na razie „join” lokalny – zapisujemy, że jesteś w pokoju o takim kodzie
-  const room = {
-    code: code.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6),
-    name: "(dołączony pokój)",
-    admin: "(nieznany)",
-    players: [nick]
+  const loadNick = () => localStorage.getItem(KEY_NICK) || "";
+  const saveNick = (v) => localStorage.setItem(KEY_NICK, v);
+
+  const loadRooms = () => {
+    try { return JSON.parse(localStorage.getItem(KEY_ROOMS) || "[]"); } catch { return []; }
   };
-  saveRoom(room);
-  location.hash = "#pokoj";
-  showRoom(room);
-}
+  const saveRooms = (rooms) => localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
 
-async function ligaClick(){
-  const nick = await ensureNick();
-  if (!nick) return;
+  const setActiveRoom = (code) => localStorage.setItem(KEY_ACTIVE_ROOM, code || "");
+  const getActiveRoom = () => localStorage.getItem(KEY_ACTIVE_ROOM) || "";
 
-  // jeśli jest zapisany pokój -> wchodzimy
-  const existing = loadRoom();
-  if (existing && existing.code) {
-    location.hash = "#pokoj";
-    showRoom(existing);
-    return;
-  }
+  const genCode6 = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let out = "";
+    for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  };
 
-  // jeśli nie ma pokoju, pokaż ekran wyboru: Nowy / Dołącz
-  const choice = await openModal({
-    title: "Liga typerów",
-    desc: "Wybierz: utworzyć nowy pokój czy dołączyć do istniejącego.",
-    placeholder: "Wpisz: nowy / dolacz",
-    value: "nowy",
-    okText: "Dalej"
-  });
+  const openNickModal = (prefill = "") => {
+    nickInput.value = prefill;
+    nickModal.classList.add("active");
+    setTimeout(() => nickInput.focus(), 60);
+  };
+  const closeNickModal = () => nickModal.classList.remove("active");
 
-  if (!choice) return;
-  const c = choice.toLowerCase();
-  if (c.startsWith("n")) return createRoomFlow();
-  if (c.startsWith("d")) return joinRoomFlow();
+  const refreshBg = () => {
+    bgImg.src = "./" + pickMenuBg() + "?v=" + BUILD;
+  };
 
-  // jeśli ktoś wpisze coś innego – pokaż jeszcze raz prościej:
-  const again = await openModal({
-    title: "Wybierz opcję",
-    desc: "Wpisz dokładnie: nowy albo dolacz",
-    placeholder: "nowy / dolacz",
-    value: "",
-    okText: "OK"
-  });
-  if (!again) return;
-  return again.toLowerCase().startsWith("n") ? createRoomFlow() : joinRoomFlow();
-}
+  const renderNick = () => {
+    const n = loadNick();
+    nickBig.textContent = n ? `Nick: ${n}` : "Nick: —";
+  };
 
-function updateNickUI(){
-  const n = loadNick();
-  nickText.textContent = n || "—";
-  nickBox.style.display = "inline-flex";
-}
+  const ensureNickThen = (onOk) => {
+    const n = loadNick();
+    if (n) { onOk(n); return; }
+    openNickModal("");
+    const handler = () => {
+      nickSave.removeEventListener("click", handler);
+      const nn = loadNick();
+      if (nn) onOk(nn);
+    };
+    nickSave.addEventListener("click", handler);
+  };
 
-function applyRoute(){
-  const hash = (location.hash || "#menu").replace("#","");
-  const room = loadRoom();
+  // --- Rooms logic (lokalnie na urządzeniu) ---
+  const createRoom = (name, adminNick) => {
+    const rooms = loadRooms();
+    let code = genCode6();
+    // unikaj kolizji
+    while (rooms.some(r => r.code === code)) code = genCode6();
 
-  if (hash === "pokoj" && room && room.code) {
-    showRoom(room);
-    return;
-  }
-  showMenu();
-}
+    const room = {
+      code,
+      name: (name || "Nowy pokój").trim(),
+      admin: adminNick,
+      players: [adminNick],
+      createdAt: Date.now()
+    };
+    rooms.unshift(room);
+    saveRooms(rooms);
+    setActiveRoom(code);
+    return room;
+  };
 
-/** SUPER WAŻNE: twardy reset SW + cache */
-async function hardReset(){
-  statusPill.textContent = "Czyszczenie cache…";
-  try{
-    // unregister service workers
-    if ("serviceWorker" in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const r of regs) await r.unregister();
+  const joinRoom = (code, playerNick) => {
+    const rooms = loadRooms();
+    const r = rooms.find(x => x.code === code);
+    if (!r) return null;
+    if (!r.players.includes(playerNick)) r.players.push(playerNick);
+    saveRooms(rooms);
+    setActiveRoom(code);
+    return r;
+  };
+
+  const getRoom = (code) => loadRooms().find(r => r.code === code) || null;
+
+  const leaveRoom = (code, playerNick) => {
+    const rooms = loadRooms();
+    const r = rooms.find(x => x.code === code);
+    if (!r) return;
+
+    r.players = r.players.filter(p => p !== playerNick);
+
+    // jeśli admin wyszedł – przejmie pierwszy gracz
+    if (r.admin === playerNick) {
+      r.admin = r.players[0] || "";
     }
-    // clear caches
-    if (window.caches) {
-      const keys = await caches.keys();
-      for (const k of keys) await caches.delete(k);
+
+    // jeśli pusty, usuń pokój
+    const filtered = rooms.filter(x => x.code !== code);
+    if (r.players.length > 0) filtered.unshift(r);
+    saveRooms(filtered);
+
+    setActiveRoom("");
+  };
+
+  const renderRoom = (room) => {
+    const n = loadNick();
+    setBadge("Pokój");
+    show(roomScreen);
+
+    roomTitle.textContent = room.name || "—";
+    roomAdmin.textContent = "Admin: " + (room.admin || "—");
+    roomCode.textContent = room.code || "------";
+
+    playersList.innerHTML = "";
+    if (!room.players || room.players.length === 0) {
+      playersList.textContent = "Brak graczy…";
+      return;
     }
-  }catch(e){
-    // nic
-  }finally{
-    // reload z parametrem aby przeglądarka nie dała starego
-    const u = new URL(location.href);
-    u.searchParams.set("r", Date.now().toString());
-    location.href = u.toString();
-  }
-}
 
-/** Rejestracja SW – ale tylko jeśli nie jesteśmy w trybie "raw github.com" */
-async function registerSW(){
-  if (!("serviceWorker" in navigator)) return;
-  try{
-    // cache-bust sw.js
-    const reg = await navigator.serviceWorker.register(`sw.js?v=${encodeURIComponent(APP_VERSION)}`);
-    // wymuś update
-    reg.update?.();
-  }catch(e){
-    // jeśli SW nie działa – aplikacja i tak ma działać online
-  }
-}
+    const ul = document.createElement("div");
+    ul.style.display = "flex";
+    ul.style.flexDirection = "column";
+    ul.style.gap = "8px";
+    room.players.forEach(p => {
+      const line = document.createElement("div");
+      line.className = "pill";
+      line.textContent = "Gracz: " + p + (p === n ? " (Ty)" : "");
+      ul.appendChild(line);
+    });
+    playersList.appendChild(ul);
+  };
 
-/** SPLASH: 7 sekund, potem route */
-function runSplash(){
-  setBg(IMG_SPLASH);
-  titleLeft.textContent = "Start";
-  subLeft.textContent = "Ekran startowy (7s)…";
-  statusPill.textContent = `Wersja ${APP_VERSION}`;
+  // --- Navigation ---
+  const goMenu = () => {
+    refreshBg();
+    setBadge("Menu");
+    show(menuScreen);
+    setStatus(`BUILD ${BUILD} (${APP_VERSION})`);
+  };
 
-  menuButtons.style.display = "none";
-  roomGrid.style.display = "none";
-  btnBack.style.display = "none";
+  const goRooms = () => {
+    refreshBg(); // na razie ta sama grafika co menu
+    setBadge("Liga");
+    show(roomsScreen);
+    setStatus("Wybierz: nowy pokój lub dołącz");
+  };
 
-  setTimeout(() => {
-    applyRoute();
-  }, 7000);
-}
+  // --- Events ---
+  window.addEventListener("resize", refreshBg);
 
-/* ======= LISTENERS ======= */
-window.addEventListener("hashchange", applyRoute);
-window.addEventListener("resize", () => {
-  // odśwież tło w zależności od orientacji
-  if ((location.hash || "#menu") === "#menu") setBg(pickMenuBg());
-  else setBg(pickMenuBg());
-});
-
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-go]");
-  if (!btn) return;
-  const go = btn.getAttribute("data-go");
-
-  if (go === "liga") return ligaClick();
-  if (go === "stats") {
-    alert("Statystyki — zrobimy w następnym kroku.");
-    return;
-  }
-  if (go === "exit") {
-    alert("Wyjście: w przeglądarce zamknij kartę; w aplikacji Android dodamy finish().");
-    return;
-  }
-});
-
-btnBack.addEventListener("click", () => {
-  location.hash = "#menu";
-  showMenu();
-});
-
-btnChangeNick.addEventListener("click", async () => {
-  const current = loadNick();
-  const v = await openModal({
-    title: "Zmień nick",
-    desc: "Wpisz nowy nick.",
-    placeholder: "np. Mariusz",
-    value: current || "",
-    okText: "Zapisz"
+  backBtn.addEventListener("click", () => {
+    const active = getActiveRoom();
+    if (roomScreen.classList.contains("active")) {
+      // z pokoju do wyboru pokoi
+      goRooms();
+      return;
+    }
+    if (roomsScreen.classList.contains("active")) {
+      goMenu();
+      return;
+    }
+    // z menu nic
   });
-  if (!v) return;
-  saveNick(v);
-  updateNickUI();
 
-  // jeśli jesteś w pokoju lokalnie – zaktualizuj admina gdy to Ty go stworzyłeś
-  const room = loadRoom();
-  if (room && room.admin && room.admin !== "(nieznany)" && room.admin !== "(nieznany)") {
-    // nic nie ruszamy na siłę, bo to tylko lokalny prototyp
-  }
-});
+  changeNickBtn.addEventListener("click", () => {
+    openNickModal(loadNick());
+  });
 
-btnCopy.addEventListener("click", async () => {
-  const code = roomCode.textContent.trim();
-  try{
-    await navigator.clipboard.writeText(code);
-    statusPill.textContent = "Skopiowano kod pokoju.";
-    setTimeout(()=>statusPill.textContent="Pokój aktywny", 1400);
-  }catch{
-    alert("Nie mogę skopiować. Skopiuj ręcznie: " + code);
-  }
-});
+  nickCancel.addEventListener("click", () => closeNickModal());
+  nickSave.addEventListener("click", () => {
+    const v = (nickInput.value || "").trim();
+    if (!v) return;
+    saveNick(v);
+    renderNick();
+    closeNickModal();
+    setStatus("Nick zapisany");
+  });
 
-btnLeaveRoom.addEventListener("click", () => {
-  clearRoom();
-  location.hash = "#menu";
-  showMenu();
-});
+  btnLiga.addEventListener("click", () => {
+    ensureNickThen(() => goRooms());
+  });
 
-btnFix.addEventListener("click", hardReset);
+  btnStats.addEventListener("click", () => alert("Statystyki – zrobimy w następnym kroku."));
+  btnExit.addEventListener("click", () => alert("Wyjście: w PWA zamknij kartę. W Android (WebView) dodamy finish()."));
 
-/* ======= START ======= */
-(async function start(){
-  updateNickUI();
-  await registerSW();
-  runSplash();
+  createRoomBtn.addEventListener("click", () => {
+    ensureNickThen((nick) => {
+      const nm = (newRoomName.value || "").trim();
+      const r = createRoom(nm, nick);
+      newRoomName.value = "";
+      renderRoom(r);
+      setStatus("Utworzono pokój");
+    });
+  });
+
+  joinCode.addEventListener("input", () => {
+    joinCode.value = joinCode.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0,6);
+  });
+
+  joinRoomBtn.addEventListener("click", () => {
+    ensureNickThen((nick) => {
+      const code = (joinCode.value || "").trim().toUpperCase();
+      if (code.length !== 6) { alert("Kod musi mieć 6 znaków."); return; }
+      const r = joinRoom(code, nick);
+      if (!r) { alert("Nie znaleziono pokoju o takim kodzie (lokalna baza)."); return; }
+      renderRoom(r);
+      setStatus("Dołączono do pokoju");
+    });
+  });
+
+  copyCodeBtn.addEventListener("click", async () => {
+    const code = roomCode.textContent || "";
+    try {
+      await navigator.clipboard.writeText(code);
+      setStatus("Skopiowano kod");
+    } catch {
+      alert("Nie mogę skopiować – przeglądarka zablokowała schowek.");
+    }
+  });
+
+  leaveRoomBtn.addEventListener("click", () => {
+    const n = loadNick();
+    const code = roomCode.textContent || "";
+    if (!code || code.length !== 6) return;
+    leaveRoom(code, n);
+    goRooms();
+    setStatus("Opuszczono pokój");
+  });
+
+  // --- Splash timing ---
+  const startApp = () => {
+    // ukryj splash, pokaż app
+    splash.classList.remove("active");
+    app.classList.add("active");
+
+    refreshBg();
+    renderNick();
+
+    // jeśli był aktywny pokój, wejdź od razu
+    const active = getActiveRoom();
+    if (active) {
+      const r = getRoom(active);
+      if (r) { renderRoom(r); setStatus("Wczytano pokój"); return; }
+      setActiveRoom("");
+    }
+    goMenu();
+  };
+
+  // uruchom po 7s
+  setTimeout(startApp, SPLASH_MS);
+
+  // status początkowy (dla testu)
+  setStatus(`Splash… BUILD ${BUILD} (${APP_VERSION})`);
 })();

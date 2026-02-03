@@ -3,335 +3,390 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1a3a" />
+  <meta name="theme-color" content="#0b1730" />
   <title>Typer</title>
-  <link rel="manifest" href="manifest.json?v=20260202-01" />
+
+  <link rel="manifest" href="./manifest.json?v=1005" />
+
   <style>
     :root{
-      --bg1:#050b18;
-      --bg2:#0b1a3a;
-      --card: rgba(18, 28, 48, 0.55);
-      --card2: rgba(18, 28, 48, 0.35);
-      --stroke: rgba(255,255,255,.12);
-      --txt: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.65);
-      --btn: rgba(40, 70, 110, 0.50);
-      --btn2: rgba(40, 70, 110, 0.70);
+      --bg:#071225;
+      --glass: rgba(9, 27, 55, .60);
+      --glass2: rgba(9, 27, 55, .45);
+      --border: rgba(255,255,255,.12);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius: 18px;
     }
-    *{ box-sizing: border-box; }
-    html,body{ height:100%; margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--txt); background: radial-gradient(1200px 700px at 50% 20%, #1d2f62 0%, var(--bg1) 55%, #000 100%); }
-    .app{
-      min-height:100%;
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    body{overflow:hidden}
+
+    /* FULLSCREEN BACKGROUND IMAGE (dla menu/rooms/pokój) */
+    .bgWrap{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      background: radial-gradient(1200px 800px at 50% 40%, #0e2a55 0%, #061022 60%, #040a14 100%);
+    }
+    .bgImg{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      filter: saturate(1.05);
+      transform: scale(1.01);
+    }
+
+    /* CONTENT CARD */
+    .shell{
+      position:relative;
+      width:min(1120px, 94vw);
+      height:min(760px, 92vh);
+      border-radius: calc(var(--radius) + 8px);
+      background: rgba(0,0,0,.20);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+
+    /* TOP BAR - mały pasek (żeby nie był wielki na telefonie) */
+    .topBar{
+      position:absolute; left:14px; right:14px; top:12px;
+      height:44px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(8, 20, 40, .55);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(8px);
+      z-index:10;
+    }
+    .titleLeft{
+      display:flex; align-items:center; gap:10px;
+      min-width: 0;
+    }
+    .badge{
+      padding:6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      font-weight:700;
+      font-size: 13px;
+    }
+    .nickBig{
+      font-size: 16px;
+      font-weight: 800;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 50vw;
+    }
+    .actionsRight{
+      display:flex; align-items:center; gap:10px;
+    }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      padding:10px 14px;
+      border-radius: 14px;
+      font-weight:800;
+      cursor:pointer;
+      transition: transform .05s ease, background .2s ease;
+      user-select:none;
+    }
+    .btn:active{ transform: scale(.98); }
+    .btn.primary{ background: rgba(50,160,255,.16); }
+    .btn.danger{ background: rgba(255,80,80,.14); }
+
+    /* Screens */
+    .screen{ position:absolute; inset:0; display:none; }
+    .screen.active{ display:block; }
+
+    /* SPLASH */
+    #splash{
       display:flex;
       align-items:center;
       justify-content:center;
-      padding: 18px;
+      background: radial-gradient(900px 600px at 50% 35%, #173a7a 0%, #061022 55%, #030812 100%);
     }
-    .frame{
-      width:min(1100px, 96vw);
-      border-radius: 22px;
-      background: var(--card);
-      border: 1px solid var(--stroke);
-      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    .splashBox{
+      width:min(520px, 88vw);
+      height:min(720px, 90vh);
+      border-radius: 26px;
       overflow:hidden;
-      position:relative;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20);
+      box-shadow: var(--shadow);
+      display:flex;
+      flex-direction:column;
     }
-    /* tło ekranu (obraz) */
-    .hero{
-      position:relative;
-      width:100%;
-      aspect-ratio: 16 / 9;
-      background: #071024;
-      overflow:hidden;
-    }
-    .hero img{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
+    .splashImg{
+      flex:1;
+      width:100%; height:100%;
       object-fit: cover;
-      transform: scale(1.001);
+      display:block;
+    }
+    .splashHint{
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,.25);
+      border-top: 1px solid rgba(255,255,255,.10);
     }
 
-    /* pasek u góry */
-    .topbar{
+    /* MENU content */
+    .menuCenter{
       position:absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
+      inset: 70px 14px 70px 14px;
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      pointer-events:none;
+      justify-content:center;
     }
-    .chip{
-      pointer-events:auto;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding: 8px 12px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.25);
-      border:1px solid var(--stroke);
-      backdrop-filter: blur(10px);
-    }
-    .chip strong{ font-weight: 700; }
-    .btnSmall{
-      pointer-events:auto;
-      border:1px solid var(--stroke);
-      background: rgba(0,0,0,.25);
-      color: var(--txt);
-      padding: 8px 12px;
-      border-radius: 12px;
-      cursor:pointer;
-      backdrop-filter: blur(10px);
-    }
-    .btnSmall:hover{ background: rgba(0,0,0,.35); }
-
-    /* przyciski menu */
-    .centerButtons{
-      position:absolute;
-      left: 50%;
-      top: 55%;
-      transform: translate(-50%,-50%);
-      width:min(720px, 78vw);
+    .menuButtons{
+      width:min(620px, 92vw);
       display:flex;
       flex-direction:column;
       gap: 18px;
-      align-items:center;
     }
-    .bigBtn{
-      width:100%;
-      max-width: 720px;
-      padding: 18px 18px;
-      border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: rgba(40,70,110,.45);
-      color: var(--txt);
-      font-weight: 700;
-      letter-spacing:.2px;
-      cursor:pointer;
-      backdrop-filter: blur(12px);
-    }
-    .bigBtn:hover{ background: rgba(40,70,110,.60); }
-    .bigBtn:active{ transform: translateY(1px); }
-
-    /* stopka */
-    .footer{
-      position:absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:center;
-      pointer-events:none;
-    }
-    .footer .pill{
-      pointer-events:auto;
-      padding: 8px 12px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.25);
-      border:1px solid var(--stroke);
+    .menuBtn{
+      height:64px;
+      border-radius: 18px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      background: rgba(5, 35, 70, .55);
+      border: 1px solid rgba(255,255,255,.16);
       backdrop-filter: blur(10px);
-      font-size: 12px;
-      color: var(--muted);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
     }
-    .footer .pill button{
-      margin-left: 10px;
-      padding: 6px 10px;
-      border-radius: 10px;
-      border:1px solid var(--stroke);
-      background: rgba(255,255,255,.08);
-      color: var(--txt);
-      cursor:pointer;
-    }
-    .footer .pill button:hover{ background: rgba(255,255,255,.14); }
+    .menuBtn.dim{ background: rgba(5, 30, 60, .45); }
 
-    /* modal */
-    .modalBack{
-      position:fixed;
-      inset:0;
+    /* Bottom bar */
+    .bottomBar{
+      position:absolute; left:14px; right:14px; bottom:12px;
+      height:44px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(8, 20, 40, .55);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(8px);
+      z-index:10;
+      color: rgba(255,255,255,.75);
+      font-size: 12px;
+    }
+
+    /* ROOMS SCREEN */
+    .roomsGrid{
+      position:absolute;
+      inset: 70px 14px 70px 14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      align-content:start;
+    }
+    .card{
+      border-radius: 18px;
+      background: rgba(8, 25, 55, .55);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.20);
+      padding: 14px;
+    }
+    .card h3{ margin:0 0 8px 0; font-size: 16px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .input{
+      width: min(420px, 100%);
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline:none;
+      font-weight: 700;
+    }
+    .hint{ color: rgba(255,255,255,.70); font-size: 12px; margin-top: 8px; }
+
+    /* ROOM SCREEN layout PC */
+    .roomLayout{
+      position:absolute;
+      inset: 70px 14px 70px 14px;
+      display:grid;
+      grid-template-columns: 1.5fr .9fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px){
+      .shell{ width: 96vw; height: 92vh; }
+      .roomLayout{ grid-template-columns: 1fr; }
+      .nickBig{ max-width: 45vw; font-size: 15px; }
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .6px; }
+
+    /* MODAL for nick prompt */
+    .modal{
+      position:fixed; inset:0;
       background: rgba(0,0,0,.55);
       display:none;
       align-items:center;
       justify-content:center;
-      padding:18px;
-      z-index:999;
+      z-index:1000;
     }
-    .modal{
-      width:min(520px, 92vw);
+    .modal.active{ display:flex; }
+    .modalBox{
+      width: min(520px, 92vw);
       border-radius: 18px;
-      background: rgba(10,16,32,.92);
-      border: 1px solid var(--stroke);
-      box-shadow: 0 22px 70px rgba(0,0,0,.65);
-      padding: 16px;
+      background: rgba(10, 30, 60, .92);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      padding: 14px;
     }
-    .modal h3{ margin: 0 0 8px; }
-    .modal p{ margin: 0 0 12px; color: var(--muted); }
-    .row{ display:flex; gap:10px; align-items:center; }
-    .row input{
-      flex:1;
-      padding: 12px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.06);
-      color: var(--txt);
-      outline:none;
-    }
-    .row button{
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--stroke);
-      background: rgba(40,70,110,.75);
-      color: var(--txt);
-      font-weight: 700;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-    .row button:hover{ background: rgba(40,70,110,.90); }
-
-    /* układ "Pokój" */
-    .roomGrid{
-      position:absolute;
-      left: 12px;
-      right: 12px;
-      top: 70px;
-      bottom: 56px;
-      display:grid;
-      grid-template-columns: 1.25fr .75fr;
-      gap: 14px;
-    }
-    .panel{
-      border-radius: 18px;
-      border: 1px solid var(--stroke);
-      background: rgba(10,16,32,.28);
-      backdrop-filter: blur(14px);
-      overflow:hidden;
-    }
-    .panelHeader{
-      padding: 12px 12px 8px;
-      font-weight: 800;
-      color: var(--txt);
-    }
-    .panelBody{ padding: 10px 12px 12px; color: var(--muted); font-size: 14px; }
-    .kv{ display:flex; gap:10px; align-items:center; margin: 8px 0; }
-    .kv .k{ width: 92px; color: var(--muted); font-size: 12px; }
-    .kv .v{ color: var(--txt); font-weight: 700; }
-    .codeBox{
-      display:flex; gap:10px; align-items:center; justify-content:space-between;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.06);
-      margin-top: 8px;
-    }
-    .codeBox .code{ font-size: 18px; font-weight: 900; letter-spacing:2px; }
-    .miniBtn{
-      padding: 8px 10px;
-      border-radius: 12px;
-      border:1px solid var(--stroke);
-      background: rgba(255,255,255,.08);
-      color: var(--txt);
-      cursor:pointer;
-      font-weight: 700;
-    }
-    .miniBtn:hover{ background: rgba(255,255,255,.14); }
-    .stackBtn{
-      display:flex; flex-direction:column; gap:10px; margin-top: 10px;
-    }
-
-    /* mobile tweaks */
-    @media (max-width: 720px){
-      .frame{ width: min(520px, 96vw); }
-      .hero{ aspect-ratio: 9 / 16; }
-      .centerButtons{ width:min(360px, 86vw); top: 62%; }
-      .roomGrid{ grid-template-columns: 1fr; top: 70px; bottom: 56px; }
-    }
+    .modalBox h2{ margin:0 0 10px 0; font-size: 18px; }
+    .modalActions{ margin-top: 10px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="frame">
-      <div class="hero">
-        <img id="bgImg" alt="tło" />
-      </div>
 
-      <div class="topbar">
-        <div class="chip">
-          <strong id="titleLeft">Menu</strong>
-          <span style="color:var(--muted); font-size:12px;" id="subLeft"></span>
+  <!-- Splash -->
+  <div id="splash" class="screen active">
+    <div class="splashBox">
+      <img class="splashImg" src="./img_starter.png" alt="starter">
+      <div id="splashHint" class="splashHint">Ekran startowy (7s)…</div>
+    </div>
+  </div>
+
+  <!-- App wrapper with background -->
+  <div id="app" class="screen">
+    <div class="bgWrap">
+      <img id="bgImg" class="bgImg" src="./img_menu.png" alt="bg">
+      <div class="shell">
+
+        <!-- top bar -->
+        <div class="topBar">
+          <div class="titleLeft">
+            <div id="screenBadge" class="badge">Menu</div>
+            <div id="nickBig" class="nickBig">Nick: —</div>
+          </div>
+          <div class="actionsRight">
+            <button id="changeNickBtn" class="btn">Zmień nick</button>
+            <button id="backBtn" class="btn">Wróć</button>
+          </div>
         </div>
 
-        <div class="chip" id="nickBox" style="gap:8px;">
-          <strong>Nick:</strong>
-          <span id="nickText" style="font-weight:900;"></span>
-        </div>
-
-        <div class="chip" id="rightActions" style="gap:8px;">
-          <button class="btnSmall" id="btnChangeNick">Zmień nick</button>
-          <button class="btnSmall" id="btnBack" style="display:none;">Wróć</button>
-        </div>
-      </div>
-
-      <!-- MENU -->
-      <div class="centerButtons" id="menuButtons">
-        <button class="bigBtn" data-go="liga">Liga typerów</button>
-        <button class="bigBtn" data-go="stats">Statystyki</button>
-        <button class="bigBtn" data-go="exit">Wyjście</button>
-      </div>
-
-      <!-- POKÓJ -->
-      <div class="roomGrid" id="roomGrid" style="display:none;">
-        <div class="panel">
-          <div class="panelHeader">Gracze</div>
-          <div class="panelBody" id="playersBox"></div>
-        </div>
-        <div class="panel">
-          <div class="panelHeader">Informacje</div>
-          <div class="panelBody">
-            <div style="font-weight:900; font-size:16px; color:var(--txt);" id="roomName">—</div>
-            <div style="margin-top:4px; color:var(--muted);" id="roomAdmin">Admin: —</div>
-
-            <div style="margin-top:10px; color:var(--muted); font-size:12px;">Kod pokoju</div>
-            <div class="codeBox">
-              <div class="code" id="roomCode">------</div>
-              <button class="miniBtn" id="btnCopy">Kopiuj</button>
-            </div>
-
-            <div class="stackBtn">
-              <button class="miniBtn" id="btnLeaveRoom">Opuść pokój</button>
+        <!-- MENU -->
+        <div id="menuScreen" class="screen active">
+          <div class="menuCenter">
+            <div class="menuButtons">
+              <button id="btnLiga" class="btn menuBtn primary">Liga typerów</button>
+              <button id="btnStats" class="btn menuBtn dim">Statystyki</button>
+              <button id="btnExit" class="btn menuBtn danger">Wyjście</button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="footer">
-        <div class="pill" id="copyrightPill">Copyright 2026 RN_APS Mariusz Gębka</div>
-        <div class="pill">
-          <span id="statusPill">Gotowe</span>
-          <button id="btnFix">Odśwież / napraw</button>
+        <!-- ROOMS (nowy/dołącz) -->
+        <div id="roomsScreen" class="screen">
+          <div class="roomsGrid">
+            <div class="card">
+              <h3>Nowy pokój</h3>
+              <div class="row">
+                <input id="newRoomName" class="input" placeholder="Nazwa pokoju (np. Pokój rodzinny)" maxlength="24">
+                <button id="createRoomBtn" class="btn primary">Utwórz</button>
+              </div>
+              <div class="hint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            </div>
+
+            <div class="card">
+              <h3>Dołącz do pokoju</h3>
+              <div class="row">
+                <input id="joinCode" class="input mono" placeholder="Wpisz kod (np. AB12CD)" maxlength="6">
+                <button id="joinRoomBtn" class="btn primary">Dołącz</button>
+              </div>
+              <div class="hint">Po dołączeniu zobaczysz nazwę pokoju po prawej i listę graczy po lewej.</div>
+            </div>
+          </div>
         </div>
+
+        <!-- ROOM -->
+        <div id="roomScreen" class="screen">
+          <div class="roomLayout">
+            <div class="card">
+              <h3>Gracze</h3>
+              <div id="playersList" class="hint">Brak graczy…</div>
+            </div>
+
+            <div class="card">
+              <h3>Informacje</h3>
+              <div class="row" style="justify-content:space-between; gap:8px;">
+                <div>
+                  <div id="roomTitle" style="font-size:18px;font-weight:900;">—</div>
+                  <div id="roomAdmin" class="hint" style="margin-top:4px;">Admin: —</div>
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+
+              <div class="pill">Kod pokoju: <span id="roomCode" class="mono" style="font-size:16px">------</span></div>
+
+              <div style="height:10px"></div>
+
+              <div class="row">
+                <button id="copyCodeBtn" class="btn">Kopiuj</button>
+                <button id="leaveRoomBtn" class="btn danger">Opuść pokój</button>
+              </div>
+
+              <div class="hint" style="margin-top:10px;">Na razie test: nick + pokoje lokalnie na urządzeniu.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- bottom -->
+        <div class="bottomBar">
+          <div id="copyrightText">Copyright 2026 RN_APS Mariusz Gębka</div>
+          <div id="statusText">—</div>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- MODAL -->
-  <div class="modalBack" id="modalBack">
-    <div class="modal">
-      <h3 id="modalTitle">—</h3>
-      <p id="modalDesc">—</p>
-      <div class="row">
-        <input id="modalInput" placeholder="Wpisz..." />
-        <button id="modalOk">OK</button>
-        <button id="modalCancel" style="background:rgba(255,255,255,.08)">Anuluj</button>
+  <!-- Nick modal -->
+  <div id="nickModal" class="modal">
+    <div class="modalBox">
+      <h2>Podaj nick / imię</h2>
+      <input id="nickInput" class="input" placeholder="np. Mariusz" maxlength="20">
+      <div class="hint">Nick zapisujemy lokalnie w urządzeniu.</div>
+      <div class="modalActions">
+        <button id="nickCancel" class="btn">Anuluj</button>
+        <button id="nickSave" class="btn primary">Zapisz</button>
       </div>
     </div>
   </div>
 
-  <!-- cache-bust -->
-  <script src="app.js?v=20260202-01"></script>
+  <script>
+    // Rejestracja SW Z WERSJĄ (żeby zawsze aktualizował)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js?v=1005").catch(()=>{});
+      });
+    }
+  </script>
+
+  <script src="./app.js?v=1005"></script>
 </body>
 </html>
