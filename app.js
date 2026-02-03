@@ -3,7 +3,7 @@
    * BUILD – podbijaj przy zmianach.
    * Musi się zgadzać z index.html (app.js?v=....).
    */
-  const BUILD = 1013;
+  const BUILD = 1014;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -64,6 +64,7 @@
 
   // matches UI
   const addMatchBtn = el("addMatchBtn");
+  const addRoundBtn = el("addRoundBtn");
   const matchesList = el("matchesList");
 
   // ----------------------------
@@ -195,7 +196,7 @@
         }
       }
 
-      // dodatkowo: przenieś tipy na nowy nick (jeśli istnieją)
+      // przenieś tipy
       if (Array.isArray(r.matches)) {
         for (const m of r.matches) {
           if (m && m.tips && typeof m.tips === "object") {
@@ -231,8 +232,100 @@
   }
 
   // ----------------------------
-  // MATCHES (test) – zapis w obiekcie pokoju
-  // room.matches = [{id, home, away, kick, tips:{[nick]:{h,a,ts}} }]
+  // LEAGUE TEST: Ekstraklasa (static list – test)
+  // ----------------------------
+  const EKSTRA_TEAMS_TEST = [
+    "Legia Warszawa",
+    "Lech Poznań",
+    "Raków",
+    "Pogoń Szczecin",
+    "Jagiellonia",
+    "Śląsk Wrocław",
+    "Górnik Zabrze",
+    "Cracovia",
+    "Widzew",
+    "Radomiak",
+    "Korona",
+    "Piast",
+    "Zagłębie Lubin",
+    "Stal Mielec",
+    "Puszcza",
+    "Ruch Chorzów",
+    "ŁKS",
+    "Warta Poznań"
+  ];
+
+  function hashString32(str){
+    let h = 2166136261;
+    for (let i=0;i<str.length;i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function mulberry32(seed){
+    return function(){
+      let t = seed += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function seededShuffle(arr, seed){
+    const a = arr.slice();
+    const rnd = mulberry32(seed >>> 0);
+    for (let i=a.length-1;i>0;i--){
+      const j = Math.floor(rnd() * (i+1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // circle method (round-robin) – wylicza pary dla konkretnej kolejki (1..n-1)
+  function roundRobinPairs(teams, roundIndexZeroBased){
+    let list = teams.slice();
+    if (list.length % 2 === 1) list.push("BYE");
+    const n = list.length;
+
+    // wykonaj rotację roundIndexZeroBased razy
+    for (let r=0; r<roundIndexZeroBased; r++){
+      const fixed = list[0];
+      const rest = list.slice(1);
+      const last = rest.pop();
+      rest.unshift(last);
+      list = [fixed, ...rest];
+    }
+
+    const pairs = [];
+    for (let i=0;i<n/2;i++){
+      const a = list[i];
+      const b = list[n-1-i];
+      if (a === "BYE" || b === "BYE") continue;
+
+      // przeplatanie gospodarza/gościa
+      const swap = (roundIndexZeroBased % 2 === 1) && (i % 2 === 0);
+      pairs.push(swap ? [b,a] : [a,b]);
+    }
+    return pairs;
+  }
+
+  function nextSaturdayBaseTs(){
+    const now = new Date();
+    const d = new Date(now);
+    d.setHours(12, 0, 0, 0); // start 12:00
+
+    // JS: 0=nd, 6=sob
+    const day = d.getDay();
+    let add = (6 - day + 7) % 7;
+    if (add === 0 && now.getTime() > d.getTime()) add = 7; // jeśli już po 12:00 w sobotę → następna sobota
+    d.setDate(d.getDate() + add);
+    return d.getTime();
+  }
+
+  // ----------------------------
+  // MATCHES – zapis w obiekcie pokoju
   // ----------------------------
   function ensureRoomMatches(room){
     if (!room.matches) room.matches = [];
@@ -262,7 +355,6 @@
     const away = prompt("Gość (np. Korona):", "Korona");
     if (away === null) return;
 
-    // prosto: dzisiaj + 2h
     const kick = Date.now() + 2*60*60*1000;
 
     ensureRoomMatches(room);
@@ -273,12 +365,75 @@
       home: home.trim().replace(/\s+/g," "),
       away: away.trim().replace(/\s+/g," "),
       kick,
-      tips: {}
+      tips: {},
+      league: "Test",
+      round: null
     });
 
     saveRooms(rooms);
     renderRoom(code);
     roomStatusText.textContent = "Dodano mecz (test)";
+  }
+
+  // AUTOMAT: dodaj całą kolejkę Ekstraklasy (test)
+  function addRoundTest(){
+    const code = getActiveRoomCode();
+    const rooms = loadRooms();
+    const room = rooms.find(r => r && r.code === code);
+    if (!room) return;
+
+    ensureRoomMatches(room);
+
+    // ustawienia ligi (test)
+    room.league = room.league || "Ekstraklasa (test)";
+
+    // stabilna kolejność drużyn per pokój (seed = kod pokoju)
+    const seed = hashString32(room.code || "room");
+    room.teams = room.teams || seededShuffle(EKSTRA_TEAMS_TEST, seed);
+
+    const teams = Array.isArray(room.teams) && room.teams.length >= 8 ? room.teams : seededShuffle(EKSTRA_TEAMS_TEST, seed);
+
+    // kolejka numerowana od 1
+    const nextRound = Number.isFinite(room.nextRound) ? room.nextRound : (room.nextRound = 1);
+
+    // nie dodawaj drugi raz tej samej kolejki
+    const already = room.matches.some(m => m && m.league === "Ekstraklasa (test)" && m.round === nextRound);
+    if (already){
+      roomStatusText.textContent = `Kolejka ${nextRound} już istnieje`;
+      logDebug(`addRound: kolejka ${nextRound} już była`);
+      return;
+    }
+
+    const roundIndex0 = nextRound - 1;
+    const pairs = roundRobinPairs(teams, roundIndex0);
+
+    // czas startu: najbliższa sobota 12:00 + (roundIndex0 * 7 dni)
+    const base = nextSaturdayBaseTs() + roundIndex0 * 7 * 24 * 60 * 60 * 1000;
+
+    // dodajemy mecze, odstęp co 2 godziny
+    let i = 0;
+    for (const [home, away] of pairs){
+      const id = `ek_${room.code}_${nextRound}_${i}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      const kick = base + i * 2 * 60 * 60 * 1000;
+
+      room.matches.push({
+        id,
+        home,
+        away,
+        kick,
+        tips: {},
+        league: "Ekstraklasa (test)",
+        round: nextRound
+      });
+      i++;
+    }
+
+    room.nextRound = nextRound + 1;
+
+    saveRooms(rooms);
+    renderRoom(code);
+    roomStatusText.textContent = `Dodano kolejkę ${nextRound} (${pairs.length} meczów)`;
+    logDebug(`addRound ok: kolejka ${nextRound} mecze=${pairs.length}`);
   }
 
   function deleteMatch(matchId){
@@ -345,23 +500,31 @@
     ensureRoomMatches(room);
     const nick = loadNick();
 
-    if (room.matches.length === 0){
+    // sortuj: najpierw po dacie
+    const list = room.matches.slice().sort((a,b) => (a?.kick||0) - (b?.kick||0));
+
+    if (list.length === 0){
       const div = document.createElement("div");
       div.className = "matchRow";
       div.innerHTML = `<div class="matchMain">
         <div class="matchTeams" style="color:rgba(255,255,255,.75);font-weight:800;">Brak spotkań</div>
-        <div class="matchMeta">Kliknij „Dodaj mecz (test)”.</div>
+        <div class="matchMeta">Kliknij „Dodaj kolejkę (test)” albo „Dodaj mecz (test)”.</div>
       </div>`;
       matchesList.appendChild(div);
       return;
     }
 
-    for (const m of room.matches){
+    for (const m of list){
       ensureMatchTips(m);
 
       const tip = nick ? m.tips[nick] : null;
       const tipText = tip ? `Twój typ: ${tip.h}:${tip.a}` : "Twój typ: —";
       const tipTime = tip && tip.ts ? ` • zapis: ${fmtKick(tip.ts)}` : "";
+
+      const leagueRound =
+        (m.league && m.round)
+          ? `${m.league} • Kolejka ${m.round}`
+          : (m.league ? m.league : "—");
 
       const row = document.createElement("div");
       row.className = "matchRow";
@@ -369,7 +532,7 @@
       row.innerHTML = `
         <div class="matchMain">
           <div class="matchTeams">${escapeHtml(m.home)} <span style="opacity:.7;">vs</span> ${escapeHtml(m.away)}</div>
-          <div class="matchMeta">${fmtKick(m.kick)} • ID: ${escapeHtml(m.id).slice(0,10)}…</div>
+          <div class="matchMeta">${leagueRound} • ${fmtKick(m.kick)} • ID: ${escapeHtml(m.id).slice(0,10)}…</div>
 
           <div class="matchTipRow">
             <input class="scoreInput" inputmode="numeric" pattern="[0-9]*" maxlength="2"
@@ -435,12 +598,15 @@
       return;
     }
 
-    // info
     roomNameText.textContent = room.name || "—";
     roomAdminText.textContent = `Admin: ${room.admin || "—"}`;
     roomCodeText.textContent = room.code || "------";
     roomStatusText.textContent = `W pokoju: ${room.code}`;
-    roomStatusHint.textContent = "Pokoje są lokalne (test). Następny krok: backend / współdzielenie.";
+
+    const league = room.league || "—";
+    const nextRound = Number.isFinite(room.nextRound) ? room.nextRound : 1;
+    roomStatusHint.textContent =
+      `Pokoje są lokalne (test). Liga: ${league}. Następna kolejka do dodania: ${nextRound}.`;
 
     // players
     const players = Array.isArray(room.players) ? room.players : [];
@@ -460,7 +626,6 @@
       }
     }
 
-    // matches
     renderMatches(room);
   }
 
@@ -504,7 +669,9 @@
         admin: nick,
         players: [nick],
         matches: [],
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        league: "Ekstraklasa (test)",
+        nextRound: 1
       };
 
       rooms.unshift(room);
@@ -549,6 +716,10 @@
       if (!Array.isArray(room.players)) room.players = [];
       if (!room.players.includes(nick)) room.players.push(nick);
       ensureRoomMatches(room);
+
+      // domyślnie ustaw (jeśli brak)
+      room.league = room.league || "Ekstraklasa (test)";
+      if (!Number.isFinite(room.nextRound)) room.nextRound = 1;
 
       saveRooms(rooms);
 
@@ -669,6 +840,7 @@
     });
 
     if (addMatchBtn) addMatchBtn.addEventListener("click", addMatchTest);
+    if (addRoundBtn) addRoundBtn.addEventListener("click", addRoundTest);
 
     // resize bg
     window.addEventListener("resize", setBgImages);

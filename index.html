@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b1f3a" />
   <title>Typer PWA</title>
 
-  <link rel="manifest" href="manifest.json?v=1013" />
+  <link rel="manifest" href="manifest.json?v=1014" />
   <style>
     :root{
       --bg1:#061428;
@@ -108,6 +108,7 @@
       border-radius: 14px;
       font-weight: 800;
       cursor:pointer;
+      white-space:nowrap;
     }
     .btn:hover{ background: rgba(255,255,255,.14); }
     .btn.primary{
@@ -475,11 +476,16 @@
             </div>
 
             <div class="panel" style="flex:1 1 auto;">
-              <div class="row" style="justify-content:space-between;">
+              <div class="row" style="justify-content:space-between; align-items:center;">
                 <h3 style="margin:0;">Spotkania</h3>
-                <button class="btn primary" id="addMatchBtn">Dodaj mecz (test)</button>
+                <div class="row" style="gap:10px;">
+                  <button class="btn primary" id="addRoundBtn">Dodaj kolejkę (test)</button>
+                  <button class="btn primary" id="addMatchBtn">Dodaj mecz (test)</button>
+                </div>
               </div>
-              <div class="hint" style="margin-top:8px;">Typuj wynik i kliknij „Zapisz”. Na razie lokalnie (test).</div>
+              <div class="hint" style="margin-top:8px;">
+                Kolejka (test) generuje automatycznie pary Ekstraklasy. Typuj wynik i kliknij „Zapisz”.
+              </div>
               <div class="matchList" id="matchesList"></div>
             </div>
           </div>
@@ -513,11 +519,11 @@
     </div>
   </div>
 
-  <script src="app.js?v=1013"></script>
+  <script src="app.js?v=1014"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1013').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js?v=1014').catch(()=>{});
       });
     }
   </script>
