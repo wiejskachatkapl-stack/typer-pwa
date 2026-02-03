@@ -3,7 +3,7 @@
    * BUILD – podbijaj przy zmianach.
    * Musi się zgadzać z index.html (app.js?v=....).
    */
-  const BUILD = 1012;
+  const BUILD = 1013;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -194,6 +194,19 @@
           changed = true;
         }
       }
+
+      // dodatkowo: przenieś tipy na nowy nick (jeśli istnieją)
+      if (Array.isArray(r.matches)) {
+        for (const m of r.matches) {
+          if (m && m.tips && typeof m.tips === "object") {
+            if (m.tips[oldNick] && !m.tips[newNick]) {
+              m.tips[newNick] = m.tips[oldNick];
+              delete m.tips[oldNick];
+              changed = true;
+            }
+          }
+        }
+      }
     }
     if (changed) saveRooms(rooms);
   }
@@ -219,11 +232,16 @@
 
   // ----------------------------
   // MATCHES (test) – zapis w obiekcie pokoju
-  // room.matches = [{id, home, away, kick}]
+  // room.matches = [{id, home, away, kick, tips:{[nick]:{h,a,ts}} }]
   // ----------------------------
   function ensureRoomMatches(room){
     if (!room.matches) room.matches = [];
     if (!Array.isArray(room.matches)) room.matches = [];
+  }
+
+  function ensureMatchTips(match){
+    if (!match.tips) match.tips = {};
+    if (typeof match.tips !== "object") match.tips = {};
   }
 
   function fmtKick(ts){
@@ -239,9 +257,9 @@
     const room = rooms.find(r => r && r.code === code);
     if (!room) return;
 
-    const home = prompt("Gospodarz (np. Legia):", "Legia");
+    const home = prompt("Gospodarz (np. Radomiak):", "Radomiak");
     if (home === null) return;
-    const away = prompt("Gość (np. Lech):", "Lech");
+    const away = prompt("Gość (np. Korona):", "Korona");
     if (away === null) return;
 
     // prosto: dzisiaj + 2h
@@ -254,7 +272,8 @@
       id,
       home: home.trim().replace(/\s+/g," "),
       away: away.trim().replace(/\s+/g," "),
-      kick
+      kick,
+      tips: {}
     });
 
     saveRooms(rooms);
@@ -276,11 +295,55 @@
     roomStatusText.textContent = "Usunięto mecz";
   }
 
+  function readScoreValue(v){
+    const s = String(v ?? "").trim();
+    if (s === "") return null;
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    if (n < 0) return null;
+    if (n > 99) return null;
+    return Math.floor(n);
+  }
+
+  function saveTip(matchId, homeScoreRaw, awayScoreRaw){
+    const nick = loadNick();
+    if (!nick) {
+      alert("Brak nicku. Podaj nick.");
+      promptNick(true);
+      return;
+    }
+
+    const h = readScoreValue(homeScoreRaw);
+    const a = readScoreValue(awayScoreRaw);
+
+    if (h === null || a === null) {
+      alert("Wpisz poprawne liczby (0–99) dla obu drużyn.");
+      return;
+    }
+
+    const code = getActiveRoomCode();
+    const rooms = loadRooms();
+    const room = rooms.find(r => r && r.code === code);
+    if (!room) return;
+
+    ensureRoomMatches(room);
+    const match = room.matches.find(m => m && m.id === matchId);
+    if (!match) return;
+
+    ensureMatchTips(match);
+    match.tips[nick] = { h, a, ts: Date.now() };
+
+    saveRooms(rooms);
+    renderRoom(code);
+    roomStatusText.textContent = `Zapisano typ: ${h}:${a}`;
+  }
+
   function renderMatches(room){
     if (!matchesList) return;
     matchesList.innerHTML = "";
 
     ensureRoomMatches(room);
+    const nick = loadNick();
 
     if (room.matches.length === 0){
       const div = document.createElement("div");
@@ -294,6 +357,12 @@
     }
 
     for (const m of room.matches){
+      ensureMatchTips(m);
+
+      const tip = nick ? m.tips[nick] : null;
+      const tipText = tip ? `Twój typ: ${tip.h}:${tip.a}` : "Twój typ: —";
+      const tipTime = tip && tip.ts ? ` • zapis: ${fmtKick(tip.ts)}` : "";
+
       const row = document.createElement("div");
       row.className = "matchRow";
 
@@ -301,11 +370,48 @@
         <div class="matchMain">
           <div class="matchTeams">${escapeHtml(m.home)} <span style="opacity:.7;">vs</span> ${escapeHtml(m.away)}</div>
           <div class="matchMeta">${fmtKick(m.kick)} • ID: ${escapeHtml(m.id).slice(0,10)}…</div>
+
+          <div class="matchTipRow">
+            <input class="scoreInput" inputmode="numeric" pattern="[0-9]*" maxlength="2"
+                   data-h="${escapeHtml(m.id)}" placeholder="0" value="${tip ? tip.h : ""}">
+            <span class="vs">:</span>
+            <input class="scoreInput" inputmode="numeric" pattern="[0-9]*" maxlength="2"
+                   data-a="${escapeHtml(m.id)}" placeholder="0" value="${tip ? tip.a : ""}">
+            <button class="btn primary" data-save="${escapeHtml(m.id)}">Zapisz</button>
+            <span class="tipSaved">${escapeHtml(tipText)}${escapeHtml(tipTime)}</span>
+          </div>
         </div>
+
         <button class="btn" data-del="${escapeHtml(m.id)}">Usuń</button>
       `;
+
       matchesList.appendChild(row);
     }
+
+    // input sanitize
+    matchesList.querySelectorAll("input.scoreInput").forEach(inp => {
+      inp.addEventListener("input", () => {
+        inp.value = String(inp.value).replace(/[^0-9]/g, "").slice(0,2);
+      });
+      inp.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const id = inp.getAttribute("data-h") || inp.getAttribute("data-a");
+          if (!id) return;
+          const hEl = matchesList.querySelector(`input[data-h="${CSS.escape(id)}"]`);
+          const aEl = matchesList.querySelector(`input[data-a="${CSS.escape(id)}"]`);
+          saveTip(id, hEl ? hEl.value : "", aEl ? aEl.value : "");
+        }
+      });
+    });
+
+    matchesList.querySelectorAll("button[data-save]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-save");
+        const hEl = matchesList.querySelector(`input[data-h="${CSS.escape(id)}"]`);
+        const aEl = matchesList.querySelector(`input[data-a="${CSS.escape(id)}"]`);
+        saveTip(id, hEl ? hEl.value : "", aEl ? aEl.value : "");
+      });
+    });
 
     matchesList.querySelectorAll("button[data-del]").forEach(btn => {
       btn.addEventListener("click", () => deleteMatch(btn.getAttribute("data-del")));

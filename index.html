@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b1f3a" />
   <title>Typer PWA</title>
 
-  <link rel="manifest" href="manifest.json?v=1012" />
+  <link rel="manifest" href="manifest.json?v=1013" />
   <style>
     :root{
       --bg1:#061428;
@@ -276,7 +276,7 @@
       display:flex;
       gap:10px;
       align-items:center;
-      padding: 10px 12px;
+      padding: 12px;
       border-radius: 14px;
       background: rgba(0,0,0,.18);
       border: 1px solid rgba(255,255,255,.10);
@@ -285,7 +285,7 @@
       flex:1;
       display:flex;
       flex-direction:column;
-      gap:2px;
+      gap:4px;
       min-width: 0;
     }
     .matchTeams{
@@ -293,11 +293,41 @@
       overflow:hidden;
       text-overflow: ellipsis;
       white-space:nowrap;
+      font-size: 16px;
     }
     .matchMeta{
       color: rgba(255,255,255,.72);
       font-size: 12px;
       font-weight: 700;
+    }
+    .matchTipRow{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top: 6px;
+    }
+    .scoreInput{
+      width: 64px;
+      height: 36px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      font-size: 16px;
+      text-align:center;
+      outline:none;
+    }
+    .vs{
+      color: rgba(255,255,255,.70);
+      font-weight: 900;
+      padding: 0 4px;
+    }
+    .tipSaved{
+      color: rgba(255,255,255,.78);
+      font-size: 12px;
+      font-weight: 800;
     }
 
     /* Splash */
@@ -449,7 +479,7 @@
                 <h3 style="margin:0;">Spotkania</h3>
                 <button class="btn primary" id="addMatchBtn">Dodaj mecz (test)</button>
               </div>
-              <div class="hint" style="margin-top:8px;">Na razie ręcznie (test). Później zrobimy import z ligi.</div>
+              <div class="hint" style="margin-top:8px;">Typuj wynik i kliknij „Zapisz”. Na razie lokalnie (test).</div>
               <div class="matchList" id="matchesList"></div>
             </div>
           </div>
@@ -483,11 +513,11 @@
     </div>
   </div>
 
-  <script src="app.js?v=1012"></script>
+  <script src="app.js?v=1013"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1012').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js?v=1013').catch(()=>{});
       });
     }
   </script>
