@@ -3,7 +3,7 @@
    * BUILD – podbijaj przy zmianach.
    * Musi się zgadzać z index.html (app.js?v=XXXX).
    */
-  const BUILD = 1011;
+  const BUILD = 1012;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";       // local rooms (device)
@@ -62,6 +62,7 @@
   const roomStatus = el("roomStatus");
 
   const addRoundBtn = el("addRoundBtn");
+  const saveAllTipsBtn = el("saveAllTipsBtn");
   const matchesList = el("matchesList");
 
   // ---------- helpers ----------
@@ -654,6 +655,50 @@
     renderMatches(room);
   }
 
+
+  function saveAllTips() {
+    const nick = getNick();
+    const code = getActiveRoomCode();
+    if (!code) return;
+
+    const rooms = readRooms();
+    const room = findRoomByCode(rooms, code);
+    if (!room) return;
+
+    room.matches = Array.isArray(room.matches) ? room.matches : [];
+
+    // Walidacja: nie zapisujemy "połówek" (np. tylko gospodarze)
+    for (const m of room.matches) {
+      const t = state.tips && state.tips[m.id];
+      if (!t) continue;
+      const hasH = t.h !== null && t.h !== "" && !Number.isNaN(Number(t.h));
+      const hasA = t.a !== null && t.a !== "" && !Number.isNaN(Number(t.a));
+      if (hasH !== hasA) {
+        statusRoom(`Uzupełnij wynik: ${m.home} vs ${m.away}`);
+        return;
+      }
+    }
+
+    const ts = Date.now();
+    let savedCount = 0;
+
+    for (const m of room.matches) {
+      const t = state.tips && state.tips[m.id];
+      if (!t) continue;
+      const h = Number(t.h);
+      const a = Number(t.a);
+      if (Number.isNaN(h) || Number.isNaN(a)) continue;
+
+      m.tips = m.tips || {};
+      m.tips[nick] = { h, a, ts };
+      savedCount++;
+    }
+
+    saveRooms(rooms);
+    statusRoom(savedCount ? "Zapisano typy" : "Brak typów do zapisu");
+    renderMatches(room);
+  }
+
   function addRoundTest() {
     const nick = getNick();
     const code = getActiveRoomCode();
@@ -756,6 +801,7 @@
   refreshRoomBtn.addEventListener("click", refreshRoom);
 
   addRoundBtn.addEventListener("click", addRoundTest);
+  saveAllTipsBtn.addEventListener("click", saveAllTips);
 
   // Web app install prompt (optional)
   let deferredPrompt = null;

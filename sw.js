@@ -1,10 +1,10 @@
 /* Simple cache for GitHub Pages. Bump CACHE when you want hard refresh. */
-const CACHE = "typer-cache-v1011";
+const CACHE = "typer-cache-v1012";
 
 const ASSETS = [
   "./",
   "index.html",
-  "app.js?v=1011",
+  "app.js?v=1012",
   "manifest.json",
   "img_starter.png",
   "img_menu.png",
