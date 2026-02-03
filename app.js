@@ -1,11 +1,6 @@
 (() => {
-  /**
-   * Wersja aplikacji:
-   * - BUILD podbijaj przy zmianach
-   * - musi się zgadzać z index.html (app.js?v=BUILD oraz sw.js?v=BUILD)
-   */
-  const BUILD = 1005;
-  const APP_VERSION = "20260202-01";
+  const BUILD = 1006;
+  const APP_VERSION = "20260202-02";
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -14,6 +9,19 @@
 
   const MENU_PHONE = "img_menu.png";
   const MENU_PC = "img_menu_pc.png";
+
+  // -------- SAFE STORAGE (gdy localStorage zablokowany) --------
+  const memStore = {};
+  const storage = {
+    get(key) {
+      try { return localStorage.getItem(key); }
+      catch { return (key in memStore) ? memStore[key] : null; }
+    },
+    set(key, val) {
+      try { localStorage.setItem(key, val); }
+      catch { memStore[key] = String(val); }
+    }
+  };
 
   const el = (id) => document.getElementById(id);
 
@@ -32,6 +40,7 @@
   const changeNickBtn = el("changeNickBtn");
 
   const statusText = el("statusText");
+  const debugBox = el("debugBox");
 
   // Buttons
   const btnLiga = el("btnLiga");
@@ -58,29 +67,41 @@
   const nickCancel = el("nickCancel");
   const nickSave = el("nickSave");
 
+  // --------- Debug / Errors ---------
+  const setStatus = (txt) => { if (statusText) statusText.textContent = txt; };
+  const setDebug = (txt) => { if (debugBox) debugBox.textContent = txt; };
+
+  window.addEventListener("error", (e) => {
+    setStatus("Błąd: " + (e.message || "unknown"));
+    setDebug("JS error: " + (e.message || "unknown"));
+  });
+
   // --- Helpers ---
   const isLandscape = () => window.matchMedia("(orientation: landscape)").matches;
   const pickMenuBg = () => (isLandscape() ? MENU_PC : MENU_PHONE);
 
   const show = (screen) => {
-    [menuScreen, roomsScreen, roomScreen].forEach(s => s.classList.remove("active"));
-    screen.classList.add("active");
+    [menuScreen, roomsScreen, roomScreen].forEach(s => s && s.classList.remove("active"));
+    screen && screen.classList.add("active");
   };
 
-  const setBadge = (txt) => { screenBadge.textContent = txt; };
+  const setBadge = (txt) => { if (screenBadge) screenBadge.textContent = txt; };
 
-  const setStatus = (txt) => { statusText.textContent = txt; };
+  const refreshBg = () => {
+    if (!bgImg) return;
+    bgImg.src = "./" + pickMenuBg() + "?v=" + BUILD;
+  };
 
-  const loadNick = () => localStorage.getItem(KEY_NICK) || "";
-  const saveNick = (v) => localStorage.setItem(KEY_NICK, v);
+  const loadNick = () => storage.get(KEY_NICK) || "";
+  const saveNick = (v) => storage.set(KEY_NICK, v);
 
   const loadRooms = () => {
-    try { return JSON.parse(localStorage.getItem(KEY_ROOMS) || "[]"); } catch { return []; }
+    try { return JSON.parse(storage.get(KEY_ROOMS) || "[]"); } catch { return []; }
   };
-  const saveRooms = (rooms) => localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
+  const saveRooms = (rooms) => storage.set(KEY_ROOMS, JSON.stringify(rooms));
 
-  const setActiveRoom = (code) => localStorage.setItem(KEY_ACTIVE_ROOM, code || "");
-  const getActiveRoom = () => localStorage.getItem(KEY_ACTIVE_ROOM) || "";
+  const setActiveRoom = (code) => storage.set(KEY_ACTIVE_ROOM, code || "");
+  const getActiveRoom = () => storage.get(KEY_ACTIVE_ROOM) || "";
 
   const genCode6 = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -89,25 +110,23 @@
     return out;
   };
 
-  const openNickModal = (prefill = "") => {
-    nickInput.value = prefill;
-    nickModal.classList.add("active");
-    setTimeout(() => nickInput.focus(), 60);
-  };
-  const closeNickModal = () => nickModal.classList.remove("active");
-
-  const refreshBg = () => {
-    bgImg.src = "./" + pickMenuBg() + "?v=" + BUILD;
-  };
-
   const renderNick = () => {
     const n = loadNick();
-    nickBig.textContent = n ? `Nick: ${n}` : "Nick: —";
+    if (nickBig) nickBig.textContent = n ? `Nick: ${n}` : "Nick: —";
   };
+
+  const openNickModal = (prefill = "") => {
+    if (!nickModal || !nickInput) return;
+    nickInput.value = prefill;
+    nickModal.classList.add("active");
+    setTimeout(() => nickInput.focus(), 80);
+  };
+  const closeNickModal = () => nickModal && nickModal.classList.remove("active");
 
   const ensureNickThen = (onOk) => {
     const n = loadNick();
     if (n) { onOk(n); return; }
+
     openNickModal("");
     const handler = () => {
       nickSave.removeEventListener("click", handler);
@@ -121,7 +140,6 @@
   const createRoom = (name, adminNick) => {
     const rooms = loadRooms();
     let code = genCode6();
-    // unikaj kolizji
     while (rooms.some(r => r.code === code)) code = genCode6();
 
     const room = {
@@ -155,46 +173,43 @@
     if (!r) return;
 
     r.players = r.players.filter(p => p !== playerNick);
+    if (r.admin === playerNick) r.admin = r.players[0] || "";
 
-    // jeśli admin wyszedł – przejmie pierwszy gracz
-    if (r.admin === playerNick) {
-      r.admin = r.players[0] || "";
-    }
-
-    // jeśli pusty, usuń pokój
     const filtered = rooms.filter(x => x.code !== code);
     if (r.players.length > 0) filtered.unshift(r);
     saveRooms(filtered);
-
     setActiveRoom("");
   };
 
   const renderRoom = (room) => {
-    const n = loadNick();
     setBadge("Pokój");
     show(roomScreen);
 
-    roomTitle.textContent = room.name || "—";
-    roomAdmin.textContent = "Admin: " + (room.admin || "—");
-    roomCode.textContent = room.code || "------";
+    if (roomTitle) roomTitle.textContent = room.name || "—";
+    if (roomAdmin) roomAdmin.textContent = "Admin: " + (room.admin || "—");
+    if (roomCode) roomCode.textContent = room.code || "------";
 
+    if (!playersList) return;
     playersList.innerHTML = "";
+
+    const me = loadNick();
     if (!room.players || room.players.length === 0) {
       playersList.textContent = "Brak graczy…";
       return;
     }
 
-    const ul = document.createElement("div");
-    ul.style.display = "flex";
-    ul.style.flexDirection = "column";
-    ul.style.gap = "8px";
+    const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.gap = "8px";
+
     room.players.forEach(p => {
       const line = document.createElement("div");
       line.className = "pill";
-      line.textContent = "Gracz: " + p + (p === n ? " (Ty)" : "");
-      ul.appendChild(line);
+      line.textContent = "Gracz: " + p + (p === me ? " (Ty)" : "");
+      wrap.appendChild(line);
     });
-    playersList.appendChild(ul);
+    playersList.appendChild(wrap);
   };
 
   // --- Navigation ---
@@ -203,91 +218,97 @@
     setBadge("Menu");
     show(menuScreen);
     setStatus(`BUILD ${BUILD} (${APP_VERSION})`);
+    setDebug(`NickKey=${KEY_NICK} rooms=${loadRooms().length}`);
   };
 
   const goRooms = () => {
-    refreshBg(); // na razie ta sama grafika co menu
+    refreshBg();
     setBadge("Liga");
     show(roomsScreen);
     setStatus("Wybierz: nowy pokój lub dołącz");
+    setDebug(`rooms=${loadRooms().length} localStorageOK=${testLocalStorage()}`);
   };
+
+  function testLocalStorage() {
+    try {
+      localStorage.setItem("__t", "1");
+      localStorage.removeItem("__t");
+      return "TAK";
+    } catch {
+      return "NIE (fallback RAM)";
+    }
+  }
 
   // --- Events ---
   window.addEventListener("resize", refreshBg);
 
-  backBtn.addEventListener("click", () => {
-    const active = getActiveRoom();
-    if (roomScreen.classList.contains("active")) {
-      // z pokoju do wyboru pokoi
-      goRooms();
-      return;
-    }
-    if (roomsScreen.classList.contains("active")) {
-      goMenu();
-      return;
-    }
-    // z menu nic
+  backBtn && backBtn.addEventListener("click", () => {
+    if (roomScreen && roomScreen.classList.contains("active")) { goRooms(); return; }
+    if (roomsScreen && roomsScreen.classList.contains("active")) { goMenu(); return; }
   });
 
-  changeNickBtn.addEventListener("click", () => {
-    openNickModal(loadNick());
-  });
+  changeNickBtn && changeNickBtn.addEventListener("click", () => openNickModal(loadNick()));
 
-  nickCancel.addEventListener("click", () => closeNickModal());
-  nickSave.addEventListener("click", () => {
-    const v = (nickInput.value || "").trim();
-    if (!v) return;
+  nickCancel && nickCancel.addEventListener("click", () => closeNickModal());
+  nickSave && nickSave.addEventListener("click", () => {
+    const v = (nickInput?.value || "").trim();
+    if (!v) { setStatus("Wpisz nick"); return; }
     saveNick(v);
     renderNick();
     closeNickModal();
     setStatus("Nick zapisany");
   });
 
-  btnLiga.addEventListener("click", () => {
-    ensureNickThen(() => goRooms());
+  btnLiga && btnLiga.addEventListener("click", () => ensureNickThen(() => goRooms()));
+  btnStats && btnStats.addEventListener("click", () => alert("Statystyki – później."));
+  btnExit && btnExit.addEventListener("click", () => alert("Wyjście: w PWA zamknij kartę."));
+
+  // *** NAJWAŻNIEJSZE: UTWÓRZ POKÓJ ***
+  createRoomBtn && createRoomBtn.addEventListener("click", () => {
+    try {
+      ensureNickThen((nick) => {
+        const nm = (newRoomName?.value || "").trim();
+        const r = createRoom(nm, nick);
+        if (newRoomName) newRoomName.value = "";
+        renderRoom(r);
+        setStatus("Utworzono pokój: " + r.code);
+        setDebug("OK createRoom code=" + r.code);
+      });
+    } catch (err) {
+      setStatus("Błąd tworzenia pokoju");
+      setDebug("createRoom exception: " + (err?.message || String(err)));
+    }
   });
 
-  btnStats.addEventListener("click", () => alert("Statystyki – zrobimy w następnym kroku."));
-  btnExit.addEventListener("click", () => alert("Wyjście: w PWA zamknij kartę. W Android (WebView) dodamy finish()."));
-
-  createRoomBtn.addEventListener("click", () => {
-    ensureNickThen((nick) => {
-      const nm = (newRoomName.value || "").trim();
-      const r = createRoom(nm, nick);
-      newRoomName.value = "";
-      renderRoom(r);
-      setStatus("Utworzono pokój");
-    });
-  });
-
-  joinCode.addEventListener("input", () => {
+  joinCode && joinCode.addEventListener("input", () => {
     joinCode.value = joinCode.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0,6);
   });
 
-  joinRoomBtn.addEventListener("click", () => {
+  joinRoomBtn && joinRoomBtn.addEventListener("click", () => {
     ensureNickThen((nick) => {
-      const code = (joinCode.value || "").trim().toUpperCase();
+      const code = (joinCode?.value || "").trim().toUpperCase();
       if (code.length !== 6) { alert("Kod musi mieć 6 znaków."); return; }
       const r = joinRoom(code, nick);
-      if (!r) { alert("Nie znaleziono pokoju o takim kodzie (lokalna baza)."); return; }
+      if (!r) { alert("Nie znaleziono pokoju o takim kodzie (lokalnie)."); return; }
       renderRoom(r);
       setStatus("Dołączono do pokoju");
+      setDebug("OK joinRoom code=" + code);
     });
   });
 
-  copyCodeBtn.addEventListener("click", async () => {
-    const code = roomCode.textContent || "";
+  copyCodeBtn && copyCodeBtn.addEventListener("click", async () => {
+    const code = roomCode?.textContent || "";
     try {
       await navigator.clipboard.writeText(code);
       setStatus("Skopiowano kod");
     } catch {
-      alert("Nie mogę skopiować – przeglądarka zablokowała schowek.");
+      alert("Nie mogę skopiować – schowek zablokowany.");
     }
   });
 
-  leaveRoomBtn.addEventListener("click", () => {
+  leaveRoomBtn && leaveRoomBtn.addEventListener("click", () => {
     const n = loadNick();
-    const code = roomCode.textContent || "";
+    const code = roomCode?.textContent || "";
     if (!code || code.length !== 6) return;
     leaveRoom(code, n);
     goRooms();
@@ -296,14 +317,12 @@
 
   // --- Splash timing ---
   const startApp = () => {
-    // ukryj splash, pokaż app
-    splash.classList.remove("active");
-    app.classList.add("active");
+    splash && splash.classList.remove("active");
+    app && app.classList.add("active");
 
     refreshBg();
     renderNick();
 
-    // jeśli był aktywny pokój, wejdź od razu
     const active = getActiveRoom();
     if (active) {
       const r = getRoom(active);
@@ -313,9 +332,6 @@
     goMenu();
   };
 
-  // uruchom po 7s
-  setTimeout(startApp, SPLASH_MS);
-
-  // status początkowy (dla testu)
   setStatus(`Splash… BUILD ${BUILD} (${APP_VERSION})`);
+  setTimeout(startApp, SPLASH_MS);
 })();

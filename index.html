@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b1730" />
   <title>Typer</title>
 
-  <link rel="manifest" href="./manifest.json?v=1005" />
+  <link rel="manifest" href="./manifest.json?v=1006" />
 
   <style>
     :root{
@@ -23,7 +23,6 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
     body{overflow:hidden}
 
-    /* FULLSCREEN BACKGROUND IMAGE (dla menu/rooms/pokój) */
     .bgWrap{
       position:fixed; inset:0;
       display:flex; align-items:center; justify-content:center;
@@ -37,7 +36,6 @@
       transform: scale(1.01);
     }
 
-    /* CONTENT CARD */
     .shell{
       position:relative;
       width:min(1120px, 94vw);
@@ -49,7 +47,6 @@
       overflow:hidden;
     }
 
-    /* TOP BAR - mały pasek (żeby nie był wielki na telefonie) */
     .topBar{
       position:absolute; left:14px; right:14px; top:12px;
       height:44px;
@@ -101,11 +98,9 @@
     .btn.primary{ background: rgba(50,160,255,.16); }
     .btn.danger{ background: rgba(255,80,80,.14); }
 
-    /* Screens */
     .screen{ position:absolute; inset:0; display:none; }
     .screen.active{ display:block; }
 
-    /* SPLASH */
     #splash{
       display:flex;
       align-items:center;
@@ -137,7 +132,6 @@
       border-top: 1px solid rgba(255,255,255,.10);
     }
 
-    /* MENU content */
     .menuCenter{
       position:absolute;
       inset: 70px 14px 70px 14px;
@@ -164,7 +158,6 @@
     }
     .menuBtn.dim{ background: rgba(5, 30, 60, .45); }
 
-    /* Bottom bar */
     .bottomBar{
       position:absolute; left:14px; right:14px; bottom:12px;
       height:44px;
@@ -180,7 +173,6 @@
       font-size: 12px;
     }
 
-    /* ROOMS SCREEN */
     .roomsGrid{
       position:absolute;
       inset: 70px 14px 70px 14px;
@@ -188,7 +180,10 @@
       grid-template-columns: 1fr;
       gap: 14px;
       align-content:start;
+      overflow:auto;
+      padding-right: 6px;
     }
+
     .card{
       border-radius: 18px;
       background: rgba(8, 25, 55, .55);
@@ -211,7 +206,6 @@
     }
     .hint{ color: rgba(255,255,255,.70); font-size: 12px; margin-top: 8px; }
 
-    /* ROOM SCREEN layout PC */
     .roomLayout{
       position:absolute;
       inset: 70px 14px 70px 14px;
@@ -237,7 +231,6 @@
     }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .6px; }
 
-    /* MODAL for nick prompt */
     .modal{
       position:fixed; inset:0;
       background: rgba(0,0,0,.55);
@@ -262,7 +255,6 @@
 </head>
 <body>
 
-  <!-- Splash -->
   <div id="splash" class="screen active">
     <div class="splashBox">
       <img class="splashImg" src="./img_starter.png" alt="starter">
@@ -270,13 +262,11 @@
     </div>
   </div>
 
-  <!-- App wrapper with background -->
   <div id="app" class="screen">
     <div class="bgWrap">
       <img id="bgImg" class="bgImg" src="./img_menu.png" alt="bg">
       <div class="shell">
 
-        <!-- top bar -->
         <div class="topBar">
           <div class="titleLeft">
             <div id="screenBadge" class="badge">Menu</div>
@@ -288,7 +278,6 @@
           </div>
         </div>
 
-        <!-- MENU -->
         <div id="menuScreen" class="screen active">
           <div class="menuCenter">
             <div class="menuButtons">
@@ -299,7 +288,6 @@
           </div>
         </div>
 
-        <!-- ROOMS (nowy/dołącz) -->
         <div id="roomsScreen" class="screen">
           <div class="roomsGrid">
             <div class="card">
@@ -317,12 +305,16 @@
                 <input id="joinCode" class="input mono" placeholder="Wpisz kod (np. AB12CD)" maxlength="6">
                 <button id="joinRoomBtn" class="btn primary">Dołącz</button>
               </div>
-              <div class="hint">Po dołączeniu zobaczysz nazwę pokoju po prawej i listę graczy po lewej.</div>
+              <div class="hint">Uwaga: na razie pokoje są lokalne na urządzeniu (test).</div>
+            </div>
+
+            <div class="card">
+              <h3>Debug</h3>
+              <div id="debugBox" class="hint">—</div>
             </div>
           </div>
         </div>
 
-        <!-- ROOM -->
         <div id="roomScreen" class="screen">
           <div class="roomLayout">
             <div class="card">
@@ -350,12 +342,11 @@
                 <button id="leaveRoomBtn" class="btn danger">Opuść pokój</button>
               </div>
 
-              <div class="hint" style="margin-top:10px;">Na razie test: nick + pokoje lokalnie na urządzeniu.</div>
+              <div class="hint" style="margin-top:10px;">Na razie test: nick + pokoje lokalnie.</div>
             </div>
           </div>
         </div>
 
-        <!-- bottom -->
         <div class="bottomBar">
           <div id="copyrightText">Copyright 2026 RN_APS Mariusz Gębka</div>
           <div id="statusText">—</div>
@@ -365,7 +356,6 @@
     </div>
   </div>
 
-  <!-- Nick modal -->
   <div id="nickModal" class="modal">
     <div class="modalBox">
       <h2>Podaj nick / imię</h2>
@@ -379,14 +369,13 @@
   </div>
 
   <script>
-    // Rejestracja SW Z WERSJĄ (żeby zawsze aktualizował)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js?v=1005").catch(()=>{});
+        navigator.serviceWorker.register("./sw.js?v=1006").catch(()=>{});
       });
     }
   </script>
 
-  <script src="./app.js?v=1005"></script>
+  <script src="./app.js?v=1006"></script>
 </body>
 </html>
