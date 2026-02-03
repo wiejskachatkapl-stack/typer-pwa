@@ -3,10 +3,10 @@
    * BUILD – podbijaj przy zmianach.
    * Musi się zgadzać z index.html (app.js?v=....).
    */
-  const BUILD = 1011;
+  const BUILD = 1012;
 
   const KEY_NICK = "typer_nick_v1";
-  const KEY_ROOMS = "typer_rooms_v1";        // lokalna baza pokoi (na urządzeniu)
+  const KEY_ROOMS = "typer_rooms_v1";
   const KEY_ACTIVE_ROOM = "typer_active_room_v1";
   const SPLASH_MS = 7000;
 
@@ -50,7 +50,7 @@
   const debugBox = el("debugBox");
   const roomsStatusText = el("roomsStatusText");
 
-  // room (inside room)
+  // room
   const roomBackBtn = el("roomBackBtn");
   const playersList = el("playersList");
   const roomNameText = el("roomNameText");
@@ -61,6 +61,10 @@
   const repairBtn = el("repairBtn");
   const roomStatusHint = el("roomStatusHint");
   const roomStatusText = el("roomStatusText");
+
+  // matches UI
+  const addMatchBtn = el("addMatchBtn");
+  const matchesList = el("matchesList");
 
   // ----------------------------
   // helpers
@@ -88,6 +92,15 @@
     debugBox.textContent = `[${now}] ${msg}\n` + debugBox.textContent;
   }
 
+  function escapeHtml(s){
+    return String(s || "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
   function normalizeCode(s) {
     return String(s || "")
       .trim()
@@ -96,7 +109,7 @@
   }
 
   function makeCode6() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // bez mylących 0 O 1 I
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let out = "";
     for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
     return out;
@@ -121,12 +134,10 @@
 
       if (Array.isArray(parsed)) return parsed;
 
-      // pojedynczy pokój jako obiekt
       if (parsed && typeof parsed === "object" && parsed.code) {
         return [parsed];
       }
 
-      // mapka kod->pokój
       if (parsed && typeof parsed === "object") {
         return Object.values(parsed).filter(x => x && typeof x === "object" && x.code);
       }
@@ -191,7 +202,7 @@
     let nick = loadNick();
     if (!nick || force) {
       const input = prompt("Podaj nick / imię:", nick || "");
-      if (input === null) return ""; // anuluj
+      if (input === null) return "";
       const cleaned = input.trim().replace(/\s+/g, " ");
       if (!cleaned) {
         alert("Nick nie może być pusty.");
@@ -207,7 +218,102 @@
   }
 
   // ----------------------------
-  // RENDER POKOJU (to było brakujące)
+  // MATCHES (test) – zapis w obiekcie pokoju
+  // room.matches = [{id, home, away, kick}]
+  // ----------------------------
+  function ensureRoomMatches(room){
+    if (!room.matches) room.matches = [];
+    if (!Array.isArray(room.matches)) room.matches = [];
+  }
+
+  function fmtKick(ts){
+    if (!ts) return "—";
+    const d = new Date(ts);
+    const pad = (n) => String(n).padStart(2,"0");
+    return `${pad(d.getDate())}.${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function addMatchTest(){
+    const code = getActiveRoomCode();
+    const rooms = loadRooms();
+    const room = rooms.find(r => r && r.code === code);
+    if (!room) return;
+
+    const home = prompt("Gospodarz (np. Legia):", "Legia");
+    if (home === null) return;
+    const away = prompt("Gość (np. Lech):", "Lech");
+    if (away === null) return;
+
+    // prosto: dzisiaj + 2h
+    const kick = Date.now() + 2*60*60*1000;
+
+    ensureRoomMatches(room);
+    const id = `m_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+    room.matches.unshift({
+      id,
+      home: home.trim().replace(/\s+/g," "),
+      away: away.trim().replace(/\s+/g," "),
+      kick
+    });
+
+    saveRooms(rooms);
+    renderRoom(code);
+    roomStatusText.textContent = "Dodano mecz (test)";
+  }
+
+  function deleteMatch(matchId){
+    const code = getActiveRoomCode();
+    const rooms = loadRooms();
+    const room = rooms.find(r => r && r.code === code);
+    if (!room) return;
+
+    ensureRoomMatches(room);
+    room.matches = room.matches.filter(m => m && m.id !== matchId);
+
+    saveRooms(rooms);
+    renderRoom(code);
+    roomStatusText.textContent = "Usunięto mecz";
+  }
+
+  function renderMatches(room){
+    if (!matchesList) return;
+    matchesList.innerHTML = "";
+
+    ensureRoomMatches(room);
+
+    if (room.matches.length === 0){
+      const div = document.createElement("div");
+      div.className = "matchRow";
+      div.innerHTML = `<div class="matchMain">
+        <div class="matchTeams" style="color:rgba(255,255,255,.75);font-weight:800;">Brak spotkań</div>
+        <div class="matchMeta">Kliknij „Dodaj mecz (test)”.</div>
+      </div>`;
+      matchesList.appendChild(div);
+      return;
+    }
+
+    for (const m of room.matches){
+      const row = document.createElement("div");
+      row.className = "matchRow";
+
+      row.innerHTML = `
+        <div class="matchMain">
+          <div class="matchTeams">${escapeHtml(m.home)} <span style="opacity:.7;">vs</span> ${escapeHtml(m.away)}</div>
+          <div class="matchMeta">${fmtKick(m.kick)} • ID: ${escapeHtml(m.id).slice(0,10)}…</div>
+        </div>
+        <button class="btn" data-del="${escapeHtml(m.id)}">Usuń</button>
+      `;
+      matchesList.appendChild(row);
+    }
+
+    matchesList.querySelectorAll("button[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => deleteMatch(btn.getAttribute("data-del")));
+    });
+  }
+
+  // ----------------------------
+  // RENDER POKOJU
   // ----------------------------
   function renderRoom(code) {
     const room = getRoomByCode(code);
@@ -219,6 +325,7 @@
       if (roomNameText) roomNameText.textContent = "—";
       if (roomAdminText) roomAdminText.textContent = "Admin: —";
       if (roomCodeText) roomCodeText.textContent = "------";
+      if (matchesList) matchesList.innerHTML = "";
       return;
     }
 
@@ -227,7 +334,6 @@
     roomAdminText.textContent = `Admin: ${room.admin || "—"}`;
     roomCodeText.textContent = room.code || "------";
     roomStatusText.textContent = `W pokoju: ${room.code}`;
-
     roomStatusHint.textContent = "Pokoje są lokalne (test). Następny krok: backend / współdzielenie.";
 
     // players
@@ -239,24 +345,17 @@
       div.className = "playerRow";
       div.innerHTML = `<span class="label">Gracz:</span><span class="name">—</span>`;
       playersList.appendChild(div);
-      return;
+    } else {
+      for (const p of players) {
+        const div = document.createElement("div");
+        div.className = "playerRow";
+        div.innerHTML = `<span class="label">Gracz:</span><span class="name">${escapeHtml(p)}</span>`;
+        playersList.appendChild(div);
+      }
     }
 
-    for (const p of players) {
-      const div = document.createElement("div");
-      div.className = "playerRow";
-      div.innerHTML = `<span class="label">Gracz:</span><span class="name">${escapeHtml(p)}</span>`;
-      playersList.appendChild(div);
-    }
-  }
-
-  function escapeHtml(s){
-    return String(s || "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+    // matches
+    renderMatches(room);
   }
 
   function openRoom(code) {
@@ -286,7 +385,6 @@
 
       const rooms = loadRooms();
 
-      // unikalny kod
       let code = makeCode6();
       let guard = 0;
       while (rooms.some(r => r && r.code === code) && guard < 60) {
@@ -299,6 +397,7 @@
         name,
         admin: nick,
         players: [nick],
+        matches: [],
         createdAt: Date.now()
       };
 
@@ -308,7 +407,6 @@
       roomsStatusText.textContent = `Utworzono pokój ${code}`;
       logDebug(`createRoom ok: ${code} (${name}) admin=${nick}`);
 
-      // KLUCZ: po utworzeniu przejdź do widoku POKOJU
       openRoom(code);
     } catch (e) {
       roomsStatusText.textContent = "Błąd tworzenia pokoju";
@@ -344,13 +442,13 @@
 
       if (!Array.isArray(room.players)) room.players = [];
       if (!room.players.includes(nick)) room.players.push(nick);
+      ensureRoomMatches(room);
 
       saveRooms(rooms);
 
       roomsStatusText.textContent = `Dołączono do ${code}`;
       logDebug(`joinRoom ok: ${code} gracz=${nick}`);
 
-      // KLUCZ: po dołączeniu przejdź do widoku POKOJU
       openRoom(code);
     } catch (e) {
       roomsStatusText.textContent = "Błąd dołączania";
@@ -373,12 +471,10 @@
     if (room && Array.isArray(room.players) && nick) {
       room.players = room.players.filter(p => p !== nick);
 
-      // jeśli admin wyszedł i ktoś został -> przekaż admina pierwszemu
       if (room.admin === nick && room.players.length > 0) {
         room.admin = room.players[0];
       }
 
-      // jeśli nikt nie został -> usuń pokój (lokalny test)
       if (room.players.length === 0) {
         const idx = rooms.indexOf(room);
         if (idx >= 0) rooms.splice(idx, 1);
@@ -402,7 +498,6 @@
     navigator.clipboard?.writeText(code).then(() => {
       roomStatusText.textContent = `Skopiowano ${code}`;
     }).catch(() => {
-      // fallback
       try {
         const ta = document.createElement("textarea");
         ta.value = code;
@@ -459,7 +554,6 @@
     copyCodeBtn.addEventListener("click", copyCode);
     leaveRoomBtn.addEventListener("click", leaveRoom);
     repairBtn.addEventListener("click", () => {
-      // szybka naprawa + render
       const rooms = loadRooms();
       saveRooms(rooms);
       const code = getActiveRoomCode();
@@ -467,6 +561,8 @@
       roomStatusText.textContent = "Odświeżono";
       logDebug("repair: migrated rooms + rerender");
     });
+
+    if (addMatchBtn) addMatchBtn.addEventListener("click", addMatchTest);
 
     // resize bg
     window.addEventListener("resize", setBgImages);
@@ -479,7 +575,6 @@
     setBgImages();
     updateNickUI();
 
-    // napraw format rooms przy starcie
     const rooms = loadRooms();
     saveRooms(rooms);
 
@@ -487,12 +582,10 @@
 
     initHandlers();
 
-    // po 7s chowamy splash i pokazujemy menu lub ostatni pokój
     if (splashHint) splashHint.textContent = "Ekran startowy (7s)…";
     setTimeout(() => {
       if (splashOverlay) splashOverlay.style.display = "none";
 
-      // jeśli był aktywny pokój, to od razu go pokaż
       if (!restoreLastRoomIfAny()) {
         showScreen("menu");
       }
