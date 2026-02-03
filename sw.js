@@ -1,73 +1,55 @@
-/* Service Worker - twarde wersjonowanie cache */
-const VERSION = "20260202-01";
-const CACHE = `typer-cache-${VERSION}`;
+/* Simple cache for GitHub Pages. Bump CACHE when you want hard refresh. */
+const CACHE = "typer-cache-v1011";
 
-const CORE = [
+const ASSETS = [
   "./",
-  `./index.html?v=${VERSION}`,
-  `./app.js?v=${VERSION}`,
-  `./manifest.json?v=${VERSION}`,
-  "./img_starter.png",
-  "./img_menu.png",
-  "./img_menu_pc.png",
-  // jeśli masz dodatkowe:
-  "./img_typowanie.png",
-  "./img_typowanie_pc.png",
+  "index.html",
+  "app.js?v=1011",
+  "manifest.json",
+  "img_starter.png",
+  "img_menu.png",
+  "img_menu_pc.png",
+  // optional screens (if you have them)
+  "img_typowanie.png",
+  "img_typowanie_pc.png"
 ];
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(CORE).catch(()=>{}))
+    caches.open(CACHE).then((cache) => cache.addAll(ASSETS.map(a => new Request(a, { cache: "reload" })))).catch(() => {})
   );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k !== CACHE ? caches.delete(k) : Promise.resolve())));
-    await self.clients.claim();
-  })());
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.map((k) => (k !== CACHE ? caches.delete(k) : null))))
+  );
+  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // tylko nasza domena
-  if (url.origin !== location.origin) return;
-
-  // Network-first dla HTML/JS żeby nie wisiało na starym
-  const isHTML = req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html");
-  const isJS = url.pathname.endsWith(".js");
-
-  if (isHTML || isJS) {
-    event.respondWith(networkFirst(req));
+  // For logos and images: cache-first
+  if (url.pathname.includes("/logos/") || url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg") || url.pathname.endsWith(".jpeg")) {
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => cached))
+    );
     return;
   }
 
-  // reszta: cache-first
-  event.respondWith(cacheFirst(req));
+  // For HTML/JS: network-first, then cache
+  event.respondWith(
+    fetch(req).then((res) => {
+      const copy = res.clone();
+      caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+      return res;
+    }).catch(() => caches.match(req))
+  );
 });
-
-async function networkFirst(req){
-  try{
-    const fresh = await fetch(req, { cache: "no-store" });
-    const cache = await caches.open(CACHE);
-    cache.put(req, fresh.clone());
-    return fresh;
-  }catch{
-    const cached = await caches.match(req);
-    return cached || new Response("Offline", { status: 503, headers: { "Content-Type":"text/plain" } });
-  }
-}
-
-async function cacheFirst(req){
-  const cached = await caches.match(req);
-  if (cached) return cached;
-
-  const fresh = await fetch(req);
-  const cache = await caches.open(CACHE);
-  cache.put(req, fresh.clone());
-  return fresh;
-}

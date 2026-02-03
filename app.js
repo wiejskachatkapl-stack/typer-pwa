@@ -1,911 +1,781 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=....).
+   * Musi się zgadzać z index.html (app.js?v=XXXX).
    */
-  const BUILD = 1015;
+  const BUILD = 1011;
 
   const KEY_NICK = "typer_nick_v1";
-  const KEY_ROOMS = "typer_rooms_v1";
+  const KEY_ROOMS = "typer_rooms_v1";       // local rooms (device)
   const KEY_ACTIVE_ROOM = "typer_active_room_v1";
+
   const SPLASH_MS = 7000;
 
   const MENU_PHONE = "img_menu.png";
   const MENU_PC = "img_menu_pc.png";
 
+  const LOGO_DIR = "logos";
+
   const el = (id) => document.getElementById(id);
 
   // screens
-  const splashOverlay = el("splashOverlay");
+  const splash = el("splash");
   const splashHint = el("splashHint");
-
   const menuScreen = el("menuScreen");
   const roomsScreen = el("roomsScreen");
   const roomScreen = el("roomScreen");
 
-  // backgrounds
+  // bg
+  const bgImage = el("bgImage");
   const menuImg = el("menuImg");
-  const roomsBg = el("roomsBg");
-  const roomBg = el("roomBg");
 
-  // nick labels
-  const nickText = el("nickText");
-  const nickTextRooms = el("nickTextRooms");
-  const nickTextRoom = el("nickTextRoom");
-
-  // menu buttons
+  // menu ui
+  const nickChip = el("nickChip");
   const changeNickBtn = el("changeNickBtn");
   const btnLiga = el("btnLiga");
   const btnStats = el("btnStats");
   const btnExit = el("btnExit");
-  const statusText = el("statusText");
 
-  // rooms buttons / inputs
+  // rooms ui
+  const nickChipRooms = el("nickChipRooms");
   const changeNickBtn2 = el("changeNickBtn2");
-  const backToMenuBtn = el("backToMenuBtn");
-  const newRoomName = el("newRoomName");
+  const backToMenu1 = el("backToMenu1");
+  const roomNameInput = el("roomNameInput");
   const createRoomBtn = el("createRoomBtn");
-  const joinRoomCode = el("joinRoomCode");
+  const joinCodeInput = el("joinCodeInput");
   const joinRoomBtn = el("joinRoomBtn");
-  const debugBox = el("debugBox");
-  const roomsStatusText = el("roomsStatusText");
+  const debugCard = el("debugCard");
+  const debugLog = el("debugLog");
+  const buildLabel = el("buildLabel");
+  const roomsStatus = el("roomsStatus");
 
-  // room
-  const roomBackBtn = el("roomBackBtn");
+  // room ui
+  const nickChipRoom = el("nickChipRoom");
+  const backToRooms = el("backToRooms");
   const playersList = el("playersList");
-  const roomNameText = el("roomNameText");
-  const roomAdminText = el("roomAdminText");
-  const roomCodeText = el("roomCodeText");
+  const roomTitle = el("roomTitle");
+  const roomAdmin = el("roomAdmin");
+  const roomCodeInput = el("roomCodeInput");
   const copyCodeBtn = el("copyCodeBtn");
   const leaveRoomBtn = el("leaveRoomBtn");
-  const repairBtn = el("repairBtn");
-  const roomStatusHint = el("roomStatusHint");
-  const roomStatusText = el("roomStatusText");
+  const refreshRoomBtn = el("refreshRoomBtn");
+  const roomStatus = el("roomStatus");
 
-  // matches UI
-  const addMatchBtn = el("addMatchBtn");
   const addRoundBtn = el("addRoundBtn");
   const matchesList = el("matchesList");
 
-  // ----------------------------
-  // helpers
-  // ----------------------------
-  const isLandscape = () => window.matchMedia("(orientation: landscape)").matches;
+  // ---------- helpers ----------
+
+  const isLandscape = () => window.matchMedia && window.matchMedia("(orientation: landscape)").matches;
   const pickMenuSrc = () => (isLandscape() ? MENU_PC : MENU_PHONE);
 
-  function setBgImages() {
-    const src = pickMenuSrc();
-    const bust = `?b=${BUILD}`;
-    if (menuImg) menuImg.src = src + bust;
-    if (roomsBg) roomsBg.src = src + bust;
-    if (roomBg) roomBg.src = src + bust;
+  function showScreen(which) {
+    [splash, menuScreen, roomsScreen, roomScreen].forEach(s => s.classList.remove("active"));
+    which.classList.add("active");
   }
 
-  function showScreen(name) {
-    menuScreen.classList.toggle("active", name === "menu");
-    roomsScreen.classList.toggle("active", name === "rooms");
-    roomScreen.classList.toggle("active", name === "room");
+  function clampNick(n) {
+    n = (n || "").trim();
+    if (!n) return "";
+    n = n.replace(/\s+/g, " ");
+    if (n.length > 16) n = n.slice(0, 16);
+    return n;
   }
 
-  function logDebug(msg) {
-    if (!debugBox) return;
-    const now = new Date().toLocaleTimeString();
-    debugBox.textContent = `[${now}] ${msg}\n` + debugBox.textContent;
+  function getNick() {
+    return clampNick(localStorage.getItem(KEY_NICK) || "");
   }
 
-  function escapeHtml(s){
-    return String(s || "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function normalizeCode(s) {
-    return String(s || "")
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-  }
-
-  function makeCode6() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let out = "";
-    for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
-    return out;
-  }
-
-  function loadNick() {
-    const n = localStorage.getItem(KEY_NICK);
-    return (n && n.trim()) ? n.trim() : "";
-  }
-
-  function saveNick(nick) {
+  function setNick(nick) {
+    nick = clampNick(nick);
+    if (!nick) return false;
     localStorage.setItem(KEY_NICK, nick);
+    return true;
   }
 
-  // MIGRACJA rooms → zawsze tablica
-  function loadRooms() {
-    let raw = localStorage.getItem(KEY_ROOMS);
-    if (!raw) return [];
+  function ensureNickOrAsk() {
+    const current = getNick();
+    if (current) return current;
+    let n = prompt("Podaj nick (max 16 znaków):", "");
+    if (!n) return "";
+    n = clampNick(n);
+    if (!n) return "";
+    setNick(n);
+    return n;
+  }
 
+  function readRooms() {
     try {
+      const raw = localStorage.getItem(KEY_ROOMS);
+      if (!raw) return [];
       const parsed = JSON.parse(raw);
-
-      if (Array.isArray(parsed)) return parsed;
-
-      if (parsed && typeof parsed === "object" && parsed.code) {
-        return [parsed];
-      }
-
-      if (parsed && typeof parsed === "object") {
-        return Object.values(parsed).filter(x => x && typeof x === "object" && x.code);
-      }
-
-      return [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
   }
 
   function saveRooms(rooms) {
-    if (!Array.isArray(rooms)) rooms = [];
     localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
   }
 
-  function setActiveRoom(code) {
+  function getActiveRoomCode() {
+    return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
+  }
+
+  function setActiveRoomCode(code) {
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
   }
 
-  function getActiveRoomCode() {
-    return localStorage.getItem(KEY_ACTIVE_ROOM) || "";
+  function genCode6() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let s = "";
+    for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
   }
 
-  function getRoomByCode(code) {
-    const rooms = loadRooms();
-    return rooms.find(r => r && r.code === code) || null;
+  function nowHHMM() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
   }
 
-  function updateNickUI() {
-    const nick = loadNick();
-    const shown = nick ? nick : "—";
-    if (nickText) nickText.textContent = `Nick: ${shown}`;
-    if (nickTextRooms) nickTextRooms.textContent = `Nick: ${shown}`;
-    if (nickTextRoom) nickTextRoom.textContent = `Nick: ${shown}`;
+  function log(msg) {
+    debugCard.style.display = "block";
+    debugLog.textContent = `[${nowHHMM()}] ${msg}\n` + debugLog.textContent;
   }
 
-  function migrateNickInRooms(oldNick, newNick) {
-    if (!oldNick || !newNick || oldNick === newNick) return;
-
-    const rooms = loadRooms();
-    let changed = false;
-
-    for (const r of rooms) {
-      if (!r) continue;
-
-      if (r.admin === oldNick) {
-        r.admin = newNick;
-        changed = true;
-      }
-      if (Array.isArray(r.players)) {
-        const idx = r.players.indexOf(oldNick);
-        if (idx >= 0) {
-          r.players[idx] = newNick;
-          changed = true;
-        }
-      }
-
-      // przenieś tipy
-      if (Array.isArray(r.matches)) {
-        for (const m of r.matches) {
-          if (m && m.tips && typeof m.tips === "object") {
-            if (m.tips[oldNick] && !m.tips[newNick]) {
-              m.tips[newNick] = m.tips[oldNick];
-              delete m.tips[oldNick];
-              changed = true;
-            }
-          }
-        }
-      }
-    }
-    if (changed) saveRooms(rooms);
+  function statusRooms(msg) {
+    roomsStatus.textContent = msg;
   }
 
-  function promptNick(force = false) {
-    let nick = loadNick();
-    if (!nick || force) {
-      const input = prompt("Podaj nick / imię:", nick || "");
-      if (input === null) return "";
-      const cleaned = input.trim().replace(/\s+/g, " ");
-      if (!cleaned) {
-        alert("Nick nie może być pusty.");
-        return "";
-      }
-      const oldNick = nick;
-      nick = cleaned;
-      saveNick(nick);
-      migrateNickInRooms(oldNick, nick);
-      updateNickUI();
-    }
-    return nick;
+  function statusRoom(msg) {
+    roomStatus.textContent = msg;
   }
 
-  // ----------------------------
-  // TEAM LOGO (badge) helpers
-  // ----------------------------
-  function hashString32(str){
-    let h = 2166136261;
-    for (let i=0;i<str.length;i++){
-      h ^= str.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
+  function escapeHtml(str) {
+    return (str || "").replace(/[&<>\"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
   }
 
-  function teamAbbr(name){
-    const s = String(name || "").trim();
-    if (!s) return "??";
-    const words = s.split(/\s+/).filter(Boolean);
+  function normalizeSlug(s) {
+    // normalize: lowercase, remove diacritics, keep a-z0-9
+    return (s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "")
+      .trim();
+  }
 
-    // np. "ŁKS" zostawiamy
-    if (words.length === 1 && words[0].length <= 4) {
-      return words[0].toUpperCase();
+  // Map team name -> file base
+  const TEAM_LOGO_MAP = {
+    "legia": "legia",
+    "lech": "lech",
+    "rakow": "raków",          // file has Polish char
+    "jagiellonia": "jagiellonia",
+    "cracovia": "cracovia",
+    "widzew": "widzew",
+    "korona": "korona",
+    "radomiak": "radomiak",
+    "piast": "piast",
+    "pogon": "pogon",          // .jpg
+    "gornik": "gornik",
+    "lechia": "lechia",
+    "motor": "motor",
+    "zaglebie": "lubin",       // Zagłębie Lubin -> lubin.png
+    "katowice": "katowice",    // GKS Katowice
+    "plock": "płock",          // Wisła Płock -> płock.png
+    "arka": "arka",
+    "brukbet": "brukbet",
+  };
+
+  function logoCandidates(teamName) {
+    const n = normalizeSlug(teamName);
+
+    // special cases by keyword
+    const candidates = [];
+
+    if (n.includes("rakow")) candidates.push("raków");
+    if (n.includes("plock")) candidates.push("płock");
+    if (n.includes("zaglebie") || n.includes("lubin")) candidates.push("lubin");
+    if (n.includes("katowice") || n.includes("gks")) candidates.push("katowice");
+
+    // direct map by first token / full
+    const first = n;
+    if (TEAM_LOGO_MAP[first]) candidates.push(TEAM_LOGO_MAP[first]);
+
+    // try last word (city/club)
+    const parts = (teamName || "").toLowerCase().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      const last = normalizeSlug(parts[parts.length - 1]);
+      if (TEAM_LOGO_MAP[last]) candidates.push(TEAM_LOGO_MAP[last]);
+      candidates.push(parts[parts.length - 1]);
     }
 
-    // bierzemy pierwsze litery pierwszych 2 wyrazów
-    const a = (words[0]?.[0] || "?").toUpperCase();
-    const b = (words[1]?.[0] || (words[0]?.[1] || "?")).toUpperCase();
-    return (a + b).replace(/[^A-ZĄĆĘŁŃÓŚŹŻ0-9]/g, "").slice(0,2) || "??";
+    // fallback: full normalized (rare)
+    candidates.push(n);
+
+    // de-dup keep order
+    return [...new Set(candidates.filter(Boolean))];
   }
 
-  function teamColorHsl(name){
-    const h = hashString32(name) % 360;
-    // ciemny, ale żywy (pod badge)
-    return `hsl(${h} 55% 42% / 0.85)`;
+  function buildLogoUrl(base) {
+    return `${LOGO_DIR}/${base}`;
   }
 
-  // ----------------------------
-  // LEAGUE TEST: Ekstraklasa (static list – test)
-  // ----------------------------
-  const EKSTRA_TEAMS_TEST = [
-    "Legia Warszawa",
-    "Lech Poznań",
+  function makeLogoImg(teamName) {
+    const img = document.createElement("img");
+    img.className = "logo";
+    img.alt = teamName;
+
+    const tries = [];
+    for (const base of logoCandidates(teamName)) {
+      // prefer png, but allow jpg
+      tries.push(buildLogoUrl(`${base}.png`));
+      tries.push(buildLogoUrl(`${base}.jpg`));
+      tries.push(buildLogoUrl(`${base}.jpeg`));
+    }
+
+    let idx = 0;
+    const setNext = () => {
+      if (idx >= tries.length) {
+        img.style.visibility = "hidden";
+        return;
+      }
+      img.src = tries[idx++];
+    };
+    img.onerror = () => setNext();
+    setNext();
+    return img;
+  }
+
+  // Ekstraklasa-ish list (test) – we only use teams you likely have logos for.
+  const EKSTRA_TEAMS = [
+    "Legia",
+    "Lech",
     "Raków",
-    "Pogoń Szczecin",
     "Jagiellonia",
-    "Śląsk Wrocław",
-    "Górnik Zabrze",
     "Cracovia",
     "Widzew",
-    "Radomiak",
     "Korona",
+    "Radomiak",
     "Piast",
+    "Pogoń",
+    "Górnik",
+    "Lechia",
+    "Motor",
     "Zagłębie Lubin",
-    "Stal Mielec",
-    "Puszcza",
-    "Ruch Chorzów",
-    "ŁKS",
-    "Warta Poznań"
+    "GKS Katowice",
+    "Wisła Płock",
+    "Arka",
+    "Bruk-Bet",
   ];
 
-  function mulberry32(seed){
-    return function(){
-      let t = seed += 0x6D2B79F5;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  function seededShuffle(arr, seed){
+  function shuffle(arr) {
     const a = arr.slice();
-    const rnd = mulberry32(seed >>> 0);
-    for (let i=a.length-1;i>0;i--){
-      const j = Math.floor(rnd() * (i+1));
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
   }
 
-  // circle method (round-robin) – wylicza pary dla konkretnej kolejki (1..n-1)
-  function roundRobinPairs(teams, roundIndexZeroBased){
-    let list = teams.slice();
-    if (list.length % 2 === 1) list.push("BYE");
-    const n = list.length;
-
-    // wykonaj rotację roundIndexZeroBased razy
-    for (let r=0; r<roundIndexZeroBased; r++){
-      const fixed = list[0];
-      const rest = list.slice(1);
-      const last = rest.pop();
-      rest.unshift(last);
-      list = [fixed, ...rest];
-    }
-
+  function genRound10() {
+    // pick 20 unique teams if possible
+    const pool = shuffle(EKSTRA_TEAMS);
     const pairs = [];
-    for (let i=0;i<n/2;i++){
-      const a = list[i];
-      const b = list[n-1-i];
-      if (a === "BYE" || b === "BYE") continue;
-
-      // przeplatanie gospodarza/gościa
-      const swap = (roundIndexZeroBased % 2 === 1) && (i % 2 === 0);
-      pairs.push(swap ? [b,a] : [a,b]);
-    }
-    return pairs;
-  }
-
-  function nextSaturdayBaseTs(){
-    const now = new Date();
-    const d = new Date(now);
-    d.setHours(12, 0, 0, 0); // start 12:00
-
-    // JS: 0=nd, 6=sob
-    const day = d.getDay();
-    let add = (6 - day + 7) % 7;
-    if (add === 0 && now.getTime() > d.getTime()) add = 7; // jeśli już po 12:00 w sobotę → następna sobota
-    d.setDate(d.getDate() + add);
-    return d.getTime();
-  }
-
-  // ----------------------------
-  // MATCHES – zapis w obiekcie pokoju
-  // ----------------------------
-  function ensureRoomMatches(room){
-    if (!room.matches) room.matches = [];
-    if (!Array.isArray(room.matches)) room.matches = [];
-  }
-
-  function ensureMatchTips(match){
-    if (!match.tips) match.tips = {};
-    if (typeof match.tips !== "object") match.tips = {};
-  }
-
-  function fmtKick(ts){
-    if (!ts) return "—";
-    const d = new Date(ts);
-    const pad = (n) => String(n).padStart(2ীৱ,"0");
-    return `${pad(d.getDate())}.${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-
-  function addMatchTest(){
-    const code = getActiveRoomCode();
-    const rooms = loadRooms();
-    const room = rooms.find(r => r && r.code === code);
-    if (!room) return;
-
-    const home = prompt("Gospodarz (np. Radomiak):", "Radomiak");
-    if (home === null) return;
-    const away = prompt("Gość (np. Korona):", "Korona");
-    if (away === null) return;
-
-    const kick = Date.now() + 2*60*60*1000;
-
-    ensureRoomMatches(room);
-    const id = `m_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-
-    room.matches.unshift({
-      id,
-      home: home.trim().replace(/\s+/g," "),
-      away: away.trim().replace(/\s+/g," "),
-      kick,
-      tips: {},
-      league: "Test",
-      round: null
-    });
-
-    saveRooms(rooms);
-    renderRoom(code);
-    roomStatusText.textContent = "Dodano mecz (test)";
-  }
-
-  // AUTOMAT: dodaj całą kolejkę Ekstraklasy (test)
-  function addRoundTest(){
-    const code = getActiveRoomCode();
-    const rooms = loadRooms();
-    const room = rooms.find(r => r && r.code === code);
-    if (!room) return;
-
-    ensureRoomMatches(room);
-
-    room.league = room.league || "Ekstraklasa (test)";
-
-    const seed = hashString32(room.code || "room");
-    room.teams = room.teams || seededShuffle(EKSTRA_TEAMS_TEST, seed);
-
-    const teams = Array.isArray(room.teams) && room.teams.length >= 8 ? room.teams : seededShuffle(EKSTRA_TEAMS_TEST, seed);
-
-    const nextRound = Number.isFinite(room.nextRound) ? room.nextRound : (room.nextRound = 1);
-
-    const already = room.matches.some(m => m && m.league === "Ekstraklasa (test)" && m.round === nextRound);
-    if (already){
-      roomStatusText.textContent = `Kolejka ${nextRound} już istnieje`;
-      logDebug(`addRound: kolejka ${nextRound} już była`);
-      return;
+    for (let i = 0; i + 1 < pool.length && pairs.length < 10; i += 2) {
+      pairs.push([pool[i], pool[i + 1]]);
     }
 
-    const roundIndex0 = nextRound - 1;
-    const pairs = roundRobinPairs(teams, roundIndex0);
+    // time: next day 18:00 + index*15min
+    const base = new Date();
+    base.setMinutes(0, 0, 0);
+    base.setHours(18);
+    base.setDate(base.getDate() + 1);
 
-    const base = nextSaturdayBaseTs() + roundIndex0 * 7 * 24 * 60 * 60 * 1000;
-
-    let i = 0;
-    for (const [home, away] of pairs){
-      const id = `ek_${room.code}_${nextRound}_${i}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-      const kick = base + i * 2 * 60 * 60 * 1000;
-
-      room.matches.push({
-        id,
-        home,
-        away,
-        kick,
+    return pairs.map((p, idx) => {
+      const d = new Date(base.getTime() + idx * 15 * 60 * 1000);
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      return {
+        id: `m_${Date.now()}_${idx}`,
+        league: "Ekstraklasa",
+        home: p[0],
+        away: p[1],
+        time: `${dd}.${mm} ${hh}:${mi}`,
         tips: {},
-        league: "Ekstraklasa (test)",
-        round: nextRound
-      });
-      i++;
-    }
-
-    room.nextRound = nextRound + 1;
-
-    saveRooms(rooms);
-    renderRoom(code);
-    roomStatusText.textContent = `Dodano kolejkę ${nextRound} (${pairs.length} meczów)`;
-    logDebug(`addRound ok: kolejka ${nextRound} mecze=${pairs.length}`);
-  }
-
-  function deleteMatch(matchId){
-    const code = getActiveRoomCode();
-    const rooms = loadRooms();
-    const room = rooms.find(r => r && r.code === code);
-    if (!room) return;
-
-    ensureRoomMatches(room);
-    room.matches = room.matches.filter(m => m && m.id !== matchId);
-
-    saveRooms(rooms);
-    renderRoom(code);
-    roomStatusText.textContent = "Usunięto mecz";
-  }
-
-  function readScoreValue(v){
-    const s = String(v ?? "").trim();
-    if (s === "") return null;
-    const n = Number(s);
-    if (!Number.isFinite(n)) return null;
-    if (n < 0) return null;
-    if (n > 99) return null;
-    return Math.floor(n);
-  }
-
-  function saveTip(matchId, homeScoreRaw, awayScoreRaw){
-    const nick = loadNick();
-    if (!nick) {
-      alert("Brak nicku. Podaj nick.");
-      promptNick(true);
-      return;
-    }
-
-    const h = readScoreValue(homeScoreRaw);
-    const a = readScoreValue(awayScoreRaw);
-
-    if (h === null || a === null) {
-      alert("Wpisz poprawne liczby (0–99) dla obu drużyn.");
-      return;
-    }
-
-    const code = getActiveRoomCode();
-    const rooms = loadRooms();
-    const room = rooms.find(r => r && r.code === code);
-    if (!room) return;
-
-    ensureRoomMatches(room);
-    const match = room.matches.find(m => m && m.id === matchId);
-    if (!match) return;
-
-    ensureMatchTips(match);
-    match.tips[nick] = { h, a, ts: Date.now() };
-
-    saveRooms(rooms);
-    renderRoom(code);
-    roomStatusText.textContent = `Zapisano typ: ${h}:${a}`;
-  }
-
-  function renderMatches(room){
-    if (!matchesList) return;
-    matchesList.innerHTML = "";
-
-    ensureRoomMatches(room);
-    const nick = loadNick();
-
-    const list = room.matches.slice().sort((a,b) => (a?.kick||0) - (b?.kick||0));
-
-    if (list.length === 0){
-      const div = document.createElement("div");
-      div.className = "matchRow";
-      div.innerHTML = `<div class="matchMain">
-        <div class="matchMeta" style="font-weight:900;">Brak spotkań</div>
-        <div class="matchMeta">Kliknij „Dodaj kolejkę (test)” albo „Dodaj mecz (test)”.</div>
-      </div>`;
-      matchesList.appendChild(div);
-      return;
-    }
-
-    for (const m of list){
-      ensureMatchTips(m);
-
-      const tip = nick ? m.tips[nick] : null;
-      const tipText = tip ? `Twój typ: ${tip.h}:${tip.a}` : "Twój typ: —";
-
-      const leagueRound =
-        (m.league && m.round)
-          ? `${m.league} • Kolejka ${m.round}`
-          : (m.league ? m.league : "—");
-
-      const homeAb = teamAbbr(m.home);
-      const awayAb = teamAbbr(m.away);
-
-      const homeCol = teamColorHsl(m.home);
-      const awayCol = teamColorHsl(m.away);
-
-      const row = document.createElement("div");
-      row.className = "matchRow";
-
-      row.innerHTML = `
-        <div class="matchMain">
-          <div class="teamsLine">
-            <div class="teamPill" title="${escapeHtml(m.home)}">
-              <div class="logo" style="background:${homeCol};">${escapeHtml(homeAb)}</div>
-              <div class="teamName">${escapeHtml(m.home)}</div>
-            </div>
-
-            <div class="vs">vs</div>
-
-            <div class="teamPill" title="${escapeHtml(m.away)}">
-              <div class="logo" style="background:${awayCol};">${escapeHtml(awayAb)}</div>
-              <div class="teamName">${escapeHtml(m.away)}</div>
-            </div>
-          </div>
-
-          <div class="matchMeta">${leagueRound} • ${fmtKick(m.kick)} • ID: ${escapeHtml(m.id).slice(0,10)}…</div>
-
-          <div class="matchTipRow">
-            <input class="scoreInput" inputmode="numeric" pattern="[0-9]*" maxlength="2"
-                   data-h="${escapeHtml(m.id)}" placeholder="0" value="${tip ? tip.h : ""}">
-            <span class="vs">:</span>
-            <input class="scoreInput" inputmode="numeric" pattern="[0-9]*" maxlength="2"
-                   data-a="${escapeHtml(m.id)}" placeholder="0" value="${tip ? tip.a : ""}">
-            <button class="btn primary" data-save="${escapeHtml(m.id)}">Zapisz</button>
-            <span class="tipSaved">${escapeHtml(tipText)}</span>
-          </div>
-        </div>
-
-        <button class="btn" data-del="${escapeHtml(m.id)}">Usuń</button>
-      `;
-
-      matchesList.appendChild(row);
-    }
-
-    matchesList.querySelectorAll("input.scoreInput").forEach(inp => {
-      inp.addEventListener("input", () => {
-        inp.value = String(inp.value).replace(/[^0-9]/g, "").slice(0,2);
-      });
-      inp.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const id = inp.getAttribute("data-h") || inp.getAttribute("data-a");
-          if (!id) return;
-          const hEl = matchesList.querySelector(`input[data-h="${CSS.escape(id)}"]`);
-          const aEl = matchesList.querySelector(`input[data-a="${CSS.escape(id)}"]`);
-          saveTip(id, hEl ? hEl.value : "", aEl ? aEl.value : "");
-        }
-      });
-    });
-
-    matchesList.querySelectorAll("button[data-save]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-save");
-        const hEl = matchesList.querySelector(`input[data-h="${CSS.escape(id)}"]`);
-        const aEl = matchesList.querySelector(`input[data-a="${CSS.escape(id)}"]`);
-        saveTip(id, hEl ? hEl.value : "", aEl ? aEl.value : "");
-      });
-    });
-
-    matchesList.querySelectorAll("button[data-del]").forEach(btn => {
-      btn.addEventListener("click", () => deleteMatch(btn.getAttribute("data-del")));
+      };
     });
   }
 
-  // ----------------------------
-  // RENDER POKOJU
-  // ----------------------------
-  function renderRoom(code) {
-    const room = getRoomByCode(code);
+  // ---------- rendering ----------
 
-    if (!room) {
-      roomStatusText.textContent = "Brak pokoju";
-      roomStatusHint.textContent = "Nie znaleziono pokoju (lokalnie). Wróć i spróbuj ponownie.";
-      if (playersList) playersList.innerHTML = "";
-      if (roomNameText) roomNameText.textContent = "—";
-      if (roomAdminText) roomAdminText.textContent = "Admin: —";
-      if (roomCodeText) roomCodeText.textContent = "------";
-      if (matchesList) matchesList.innerHTML = "";
-      return;
-    }
+  function renderNick() {
+    const n = getNick();
+    const t = n ? `Nick: ${n}` : "Nick: —";
+    nickChip.textContent = t;
+    nickChipRooms.textContent = t;
+    nickChipRoom.textContent = t;
+  }
 
-    roomNameText.textContent = room.name || "—";
-    roomAdminText.textContent = `Admin: ${room.admin || "—"}`;
-    roomCodeText.textContent = room.code || "------";
-    roomStatusText.textContent = `W pokoju: ${room.code}`;
+  function refreshMenuImage() {
+    const src = pickMenuSrc();
+    // menu panel
+    menuImg.src = src;
+    // background blur (soft)
+    bgImage.style.backgroundImage = `url('${src}')`;
+  }
 
-    const league = room.league || "—";
-    const nextRound = Number.isFinite(room.nextRound) ? room.nextRound : 1;
-    roomStatusHint.textContent =
-      `Pokoje są lokalne (test). Liga: ${league}. Następna kolejka: ${nextRound}.`;
+  function renderRoomsDebugInfo(rooms) {
+    buildLabel.textContent = String(BUILD);
+    statusRooms(`Pokoje: ${rooms.length}`);
+  }
 
-    // players (PRAWA strona)
-    const players = Array.isArray(room.players) ? room.players : [];
+  function findRoomByCode(rooms, code) {
+    return rooms.find(r => (r.code || "").toUpperCase() === code.toUpperCase()) || null;
+  }
+
+  function ensurePlayer(room, nick) {
+    room.players = Array.isArray(room.players) ? room.players : [];
+    if (!room.players.includes(nick)) room.players.push(nick);
+  }
+
+  function renderPlayers(room) {
     playersList.innerHTML = "";
+    const list = Array.isArray(room.players) ? room.players : [];
 
-    if (players.length === 0) {
-      const div = document.createElement("div");
-      div.className = "playerRow";
-      div.innerHTML = `<span class="label">Gracz:</span><span class="name">—</span>`;
-      playersList.appendChild(div);
-    } else {
-      for (const p of players) {
-        const div = document.createElement("div");
-        div.className = "playerRow";
-        div.innerHTML = `<span class="label">Gracz:</span><span class="name">${escapeHtml(p)}</span>`;
-        playersList.appendChild(div);
-      }
+    list.forEach(p => {
+      const row = document.createElement("div");
+      row.className = "pill";
+      const left = document.createElement("div");
+      left.textContent = "Gracz:";
+      left.style.opacity = ".85";
+      const right = document.createElement("div");
+      right.textContent = p;
+      row.append(left, right);
+      playersList.appendChild(row);
+    });
+
+    if (list.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "muted";
+      empty.textContent = "Brak graczy";
+      playersList.appendChild(empty);
+    }
+  }
+
+  function renderMatches(room) {
+    matchesList.innerHTML = "";
+    const matches = Array.isArray(room.matches) ? room.matches : [];
+    const nick = getNick();
+
+    if (matches.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "muted";
+      empty.textContent = "Brak spotkań. Admin może dodać kolejkę testową.";
+      matchesList.appendChild(empty);
+      return;
     }
 
-    // matches (LEWA strona)
-    renderMatches(room);
+    // show up to 10 (as requested)
+    matches.slice(0, 10).forEach((m) => {
+      const wrap = document.createElement("div");
+      wrap.className = "matchRow";
+
+      const home = document.createElement("div");
+      home.className = "team";
+      home.appendChild(makeLogoImg(m.home));
+      const homeName = document.createElement("div");
+      homeName.className = "teamName";
+      homeName.textContent = m.home;
+      home.appendChild(homeName);
+
+      const tip = document.createElement("div");
+      tip.className = "tipBox";
+      const inH = document.createElement("input");
+      inH.className = "scoreInput";
+      inH.type = "number";
+      inH.min = "0";
+      inH.max = "20";
+      inH.inputMode = "numeric";
+
+      const colon = document.createElement("div");
+      colon.className = "colon";
+      colon.textContent = ":";
+
+      const inA = document.createElement("input");
+      inA.className = "scoreInput";
+      inA.type = "number";
+      inA.min = "0";
+      inA.max = "20";
+      inA.inputMode = "numeric";
+
+      const saveBtn = document.createElement("button");
+      saveBtn.className = "miniBtn";
+      saveBtn.textContent = "Zapisz";
+
+      // preload existing tip
+      const t = (m.tips && nick && m.tips[nick]) ? m.tips[nick] : null;
+      if (t) {
+        inH.value = String(t.h);
+        inA.value = String(t.a);
+      }
+
+      saveBtn.addEventListener("click", () => {
+        const h = Number(inH.value);
+        const a = Number(inA.value);
+        if (!Number.isFinite(h) || !Number.isFinite(a) || h < 0 || a < 0) {
+          statusRoom("Podaj poprawny typ");
+          return;
+        }
+        saveTip(room.code, m.id, nick, h, a);
+      });
+
+      tip.append(inH, colon, inA, saveBtn);
+
+      const away = document.createElement("div");
+      away.className = "team";
+      // away: name then logo right (looks nicer in tight grid)
+      const awayName = document.createElement("div");
+      awayName.className = "teamName";
+      awayName.textContent = m.away;
+      away.appendChild(awayName);
+      away.appendChild(makeLogoImg(m.away));
+      away.style.justifyContent = "flex-end";
+
+      const tipInfo = document.createElement("div");
+      tipInfo.className = "muted";
+      tipInfo.style.fontSize = "12px";
+      tipInfo.style.gridColumn = "1 / -1";
+      const myTip = (m.tips && nick && m.tips[nick]) ? `${m.tips[nick].h}:${m.tips[nick].a}` : "—";
+      tipInfo.textContent = `${m.league || ""}${m.time ? ` • ${m.time}` : ""} • Twój typ: ${myTip}`;
+
+      wrap.append(home, tip, away);
+      wrap.appendChild(tipInfo);
+
+      matchesList.appendChild(wrap);
+    });
+
+    if (matches.length > 10) {
+      const more = document.createElement("div");
+      more.className = "muted";
+      more.style.fontSize = "12px";
+      more.textContent = `Pokazuję 10 z ${matches.length} spotkań (na razie).`;
+      matchesList.appendChild(more);
+    }
+  }
+
+  // ---------- actions ----------
+
+  function openMenu() {
+    renderNick();
+    refreshMenuImage();
+    showScreen(menuScreen);
+    statusRooms("");
+  }
+
+  function openRooms() {
+    const nick = ensureNickOrAsk();
+    if (!nick) {
+      alert("Bez nicku nie wejdziesz do ligi.");
+      return;
+    }
+    renderNick();
+    refreshMenuImage();
+
+    const rooms = readRooms();
+    renderRoomsDebugInfo(rooms);
+
+    showScreen(roomsScreen);
   }
 
   function openRoom(code) {
-    setActiveRoom(code);
-    showScreen("room");
-    renderRoom(code);
-    logDebug(`openRoom: ${code}`);
-  }
+    const nick = ensureNickOrAsk();
+    if (!nick) return;
 
-  // ----------------------------
-  // actions
-  // ----------------------------
-  function createRoom() {
-    try {
-      const nick = loadNick();
-      if (!nick) {
-        roomsStatusText.textContent = "Brak nicku.";
-        logDebug("createRoom: brak nicku, proszę podać.");
-        return;
-      }
-
-      const name = (newRoomName.value || "").trim().replace(/\s+/g, " ");
-      if (!name) {
-        alert("Podaj nazwę pokoju.");
-        return;
-      }
-
-      const rooms = loadRooms();
-
-      let code = makeCode6();
-      let guard = 0;
-      while (rooms.some(r => r && r.code === code) && guard < 60) {
-        code = makeCode6();
-        guard++;
-      }
-
-      const room = {
-        code,
-        name,
-        admin: nick,
-        players: [nick],
-        matches: [],
-        createdAt: Date.now(),
-        league: "Ekstraklasa (test)",
-        nextRound: 1
-      };
-
-      rooms.unshift(room);
-      saveRooms(rooms);
-
-      roomsStatusText.textContent = `Utworzono pokój ${code}`;
-      logDebug(`createRoom ok: ${code} (${name}) admin=${nick}`);
-
-      openRoom(code);
-    } catch (e) {
-      roomsStatusText.textContent = "Błąd tworzenia pokoju";
-      logDebug(`createRoom exception: ${e && e.message ? e.message : String(e)}`);
-      alert("Błąd tworzenia pokoju");
-    }
-  }
-
-  function joinRoom() {
-    try {
-      const nick = loadNick();
-      if (!nick) {
-        roomsStatusText.textContent = "Brak nicku.";
-        logDebug("joinRoom: brak nicku.");
-        return;
-      }
-
-      const code = normalizeCode(joinRoomCode.value);
-      if (code.length !== 6) {
-        alert("Kod musi mieć 6 znaków.");
-        return;
-      }
-
-      const rooms = loadRooms();
-      const room = rooms.find(r => r && r.code === code);
-
-      if (!room) {
-        roomsStatusText.textContent = "Nie znaleziono pokoju.";
-        logDebug(`joinRoom: brak pokoju ${code}`);
-        alert("Nie znaleziono pokoju o takim kodzie (na tym urządzeniu).");
-        return;
-      }
-
-      if (!Array.isArray(room.players)) room.players = [];
-      if (!room.players.includes(nick)) room.players.push(nick);
-      ensureRoomMatches(room);
-
-      room.league = room.league || "Ekstraklasa (test)";
-      if (!Number.isFinite(room.nextRound)) room.nextRound = 1;
-
-      saveRooms(rooms);
-
-      roomsStatusText.textContent = `Dołączono do ${code}`;
-      logDebug(`joinRoom ok: ${code} gracz=${nick}`);
-
-      openRoom(code);
-    } catch (e) {
-      roomsStatusText.textContent = "Błąd dołączania";
-      logDebug(`joinRoom exception: ${e && e.message ? e.message : String(e)}`);
-      alert("Błąd dołączania do pokoju");
-    }
-  }
-
-  function leaveRoom() {
-    const code = getActiveRoomCode();
-    if (!code) {
-      showScreen("rooms");
+    const rooms = readRooms();
+    const room = findRoomByCode(rooms, code);
+    if (!room) {
+      statusRooms("Nie znaleziono pokoju");
       return;
     }
 
-    const nick = loadNick();
-    const rooms = loadRooms();
-    const room = rooms.find(r => r && r.code === code);
+    ensurePlayer(room, nick);
+    room.matches = Array.isArray(room.matches) ? room.matches : [];
+    saveRooms(rooms);
 
-    if (room && Array.isArray(room.players) && nick) {
+    setActiveRoomCode(room.code);
+
+    // render
+    roomTitle.textContent = room.name || "(bez nazwy)";
+    roomAdmin.textContent = `Admin: ${room.admin || "—"}`;
+    roomCodeInput.value = room.code;
+
+    // admin-only addRound
+    addRoundBtn.style.display = (room.admin === nick) ? "inline-flex" : "none";
+
+    renderPlayers(room);
+    renderMatches(room);
+
+    renderNick();
+    refreshMenuImage();
+    showScreen(roomScreen);
+    statusRoom(`W pokoju: ${room.code}`);
+  }
+
+  function createRoom() {
+    const nick = ensureNickOrAsk();
+    if (!nick) return;
+
+    const name = (roomNameInput.value || "").trim();
+    if (!name) {
+      statusRooms("Podaj nazwę pokoju");
+      return;
+    }
+
+    const rooms = readRooms();
+
+    // generate unique code
+    let code = genCode6();
+    let guard = 0;
+    while (findRoomByCode(rooms, code) && guard++ < 50) code = genCode6();
+
+    const room = {
+      code,
+      name: name.toUpperCase(),
+      admin: nick,
+      players: [nick],
+      matches: [],
+    };
+
+    rooms.unshift(room);
+    saveRooms(rooms);
+
+    log(`createRoom ok: ${code} (${name}) admin=${nick}`);
+    statusRooms(`Utworzono pokój ${code}`);
+
+    openRoom(code);
+  }
+
+  function joinRoom() {
+    const nick = ensureNickOrAsk();
+    if (!nick) return;
+
+    const code = (joinCodeInput.value || "").trim().toUpperCase();
+    if (code.length !== 6) {
+      statusRooms("Kod musi mieć 6 znaków");
+      return;
+    }
+
+    const rooms = readRooms();
+    const room = findRoomByCode(rooms, code);
+    if (!room) {
+      statusRooms("Nie ma takiego pokoju (lokalnie)");
+      return;
+    }
+
+    ensurePlayer(room, nick);
+    saveRooms(rooms);
+
+    log(`joinRoom ok: ${code} gracz=${nick}`);
+    statusRooms(`Dołączono do ${code}`);
+
+    openRoom(code);
+  }
+
+  function leaveRoom() {
+    const nick = getNick();
+    const code = getActiveRoomCode();
+    if (!code) {
+      openRooms();
+      return;
+    }
+
+    const rooms = readRooms();
+    const room = findRoomByCode(rooms, code);
+    if (room && Array.isArray(room.players)) {
       room.players = room.players.filter(p => p !== nick);
-
-      if (room.admin === nick && room.players.length > 0) {
-        room.admin = room.players[0];
-      }
-
-      if (room.players.length === 0) {
-        const idx = rooms.indexOf(room);
-        if (idx >= 0) rooms.splice(idx, 1);
-      }
-
       saveRooms(rooms);
     }
 
-    roomStatusText.textContent = "Opuściłeś pokój";
-    roomStatusHint.textContent = "Wrócono do ekranu Lig.";
-    logDebug(`leaveRoom: ${code}`);
+    setActiveRoomCode("");
+    statusRoom("Opuszczono pokój");
+    openRooms();
+  }
 
-    localStorage.removeItem(KEY_ACTIVE_ROOM);
-    showScreen("rooms");
+  function refreshRoom() {
+    const code = getActiveRoomCode();
+    if (!code) {
+      openRooms();
+      return;
+    }
+    openRoom(code);
   }
 
   function copyCode() {
+    const code = (roomCodeInput.value || "").trim();
+    if (!code) return;
+    navigator.clipboard?.writeText(code).then(() => {
+      statusRoom("Skopiowano kod");
+    }).catch(() => {
+      // fallback
+      try {
+        roomCodeInput.focus();
+        roomCodeInput.select();
+        document.execCommand("copy");
+        statusRoom("Skopiowano kod");
+      } catch {
+        statusRoom("Nie udało się skopiować");
+      }
+    });
+  }
+
+  function saveTip(roomCode, matchId, nick, h, a) {
+    const rooms = readRooms();
+    const room = findRoomByCode(rooms, roomCode);
+    if (!room) {
+      statusRoom("Brak pokoju");
+      return;
+    }
+    const m = (room.matches || []).find(x => x.id === matchId);
+    if (!m) {
+      statusRoom("Brak meczu");
+      return;
+    }
+    m.tips = m.tips || {};
+    m.tips[nick] = { h, a, ts: Date.now() };
+    saveRooms(rooms);
+
+    statusRoom(`Zapisano typ ${h}:${a}`);
+    renderMatches(room);
+  }
+
+  function addRoundTest() {
+    const nick = getNick();
     const code = getActiveRoomCode();
     if (!code) return;
 
-    navigator.clipboard?.writeText(code).then(() => {
-      roomStatusText.textContent = `Skopiowano ${code}`;
-    }).catch(() => {
-      try {
-        const ta = document.createElement("textarea");
-        ta.value = code;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-        roomStatusText.textContent = `Skopiowano ${code}`;
-      } catch {
-        roomStatusText.textContent = "Nie udało się skopiować";
-      }
-    });
-  }
+    const rooms = readRooms();
+    const room = findRoomByCode(rooms, code);
+    if (!room) return;
 
-  function openLiga() {
-    const nick = promptNick(false);
-    if (!nick) return;
-    showScreen("rooms");
-    roomsStatusText.textContent = "—";
-    logDebug(`openLiga (BUILD ${BUILD})`);
-  }
-
-  function restoreLastRoomIfAny() {
-    const code = getActiveRoomCode();
-    if (code && getRoomByCode(code)) {
-      openRoom(code);
-      return true;
+    if (room.admin !== nick) {
+      statusRoom("Tylko admin może dodać kolejkę");
+      return;
     }
-    return false;
-  }
 
-  // ----------------------------
-  // handlers
-  // ----------------------------
-  function initHandlers() {
-    // menu
-    changeNickBtn.addEventListener("click", () => promptNick(true));
-    btnLiga.addEventListener("click", openLiga);
-    btnStats.addEventListener("click", () => alert("Statystyki – zrobimy w następnym kroku."));
-    btnExit.addEventListener("click", () => alert("Wyjście: w przeglądarce zamknij kartę, w Androidzie dodamy finish()."));
+    room.matches = Array.isArray(room.matches) ? room.matches : [];
 
-    // rooms
-    changeNickBtn2.addEventListener("click", () => promptNick(true));
-    backToMenuBtn.addEventListener("click", () => showScreen("menu"));
-    createRoomBtn.addEventListener("click", createRoom);
-    joinRoomBtn.addEventListener("click", joinRoom);
+    // add 10 matches (append)
+    const round = genRound10();
+    room.matches = round.concat(room.matches);
 
-    newRoomName.addEventListener("keydown", (e) => { if (e.key === "Enter") createRoom(); });
-    joinRoomCode.addEventListener("keydown", (e) => { if (e.key === "Enter") joinRoom(); });
-    joinRoomCode.addEventListener("input", () => { joinRoomCode.value = normalizeCode(joinRoomCode.value).slice(0, 6); });
-
-    // room
-    roomBackBtn.addEventListener("click", () => showScreen("rooms"));
-    copyCodeBtn.addEventListener("click", copyCode);
-    leaveRoomBtn.addEventListener("click", leaveRoom);
-    repairBtn.addEventListener("click", () => {
-      const rooms = loadRooms();
-      saveRooms(rooms);
-      const code = getActiveRoomCode();
-      renderRoom(code);
-      roomStatusText.textContent = "Odświeżono";
-      logDebug("repair: migrated rooms + rerender");
-    });
-
-    if (addMatchBtn) addMatchBtn.addEventListener("click", addMatchTest);
-    if (addRoundBtn) addRoundBtn.addEventListener("click", addRoundTest);
-
-    // resize bg
-    window.addEventListener("resize", setBgImages);
-  }
-
-  // ----------------------------
-  // boot
-  // ----------------------------
-  function boot() {
-    setBgImages();
-    updateNickUI();
-
-    const rooms = loadRooms();
     saveRooms(rooms);
+    statusRoom("Dodano kolejkę (test)");
+    renderMatches(room);
+  }
 
-    logDebug(`boot ok (BUILD ${BUILD}) rooms=${rooms.length}`);
+  // ---------- navigation ----------
 
-    initHandlers();
+  function showSplashThenMenu() {
+    showScreen(splash);
+    renderNick();
+    refreshMenuImage();
+    splashHint.textContent = `Ekran startowy (${Math.round(SPLASH_MS / 1000)}s)…`;
 
-    if (splashHint) splashHint.textContent = "Ekran startowy (7s)…";
+    // after SPLASH_MS go to correct screen
     setTimeout(() => {
-      if (splashOverlay) splashOverlay.style.display = "none";
-
-      if (!restoreLastRoomIfAny()) {
-        showScreen("menu");
+      const code = getActiveRoomCode();
+      if (code) {
+        openRoom(code);
+      } else {
+        openMenu();
       }
-
-      if (statusText) statusText.textContent = `Menu gotowe. BUILD ${BUILD}`;
     }, SPLASH_MS);
   }
 
-  boot();
+  // ---------- events ----------
+
+  window.addEventListener("resize", refreshMenuImage);
+
+  changeNickBtn.addEventListener("click", () => {
+    const n = prompt("Nowy nick:", getNick() || "");
+    if (!n) return;
+    if (setNick(n)) {
+      renderNick();
+      statusRoom("Zmieniono nick");
+      statusRooms("Zmieniono nick");
+    }
+  });
+
+  changeNickBtn2.addEventListener("click", () => changeNickBtn.click());
+
+  btnLiga.addEventListener("click", () => {
+    openRooms();
+  });
+
+  btnStats.addEventListener("click", () => {
+    alert("Statystyki – zrobimy w następnym kroku.");
+  });
+
+  btnExit.addEventListener("click", () => {
+    alert("Wyjście: w aplikacji Android dodamy finish().");
+  });
+
+  backToMenu1.addEventListener("click", () => openMenu());
+  backToRooms.addEventListener("click", () => openRooms());
+
+  createRoomBtn.addEventListener("click", () => {
+    try {
+      createRoom();
+    } catch (e) {
+      log(`createRoom exception: ${e?.message || e}`);
+      statusRooms("Błąd tworzenia pokoju");
+    }
+  });
+
+  joinRoomBtn.addEventListener("click", () => {
+    try {
+      joinRoom();
+    } catch (e) {
+      log(`joinRoom exception: ${e?.message || e}`);
+      statusRooms("Błąd dołączania");
+    }
+  });
+
+  joinCodeInput.addEventListener("input", () => {
+    joinCodeInput.value = joinCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  });
+
+  copyCodeBtn.addEventListener("click", copyCode);
+  leaveRoomBtn.addEventListener("click", leaveRoom);
+  refreshRoomBtn.addEventListener("click", refreshRoom);
+
+  addRoundBtn.addEventListener("click", addRoundTest);
+
+  // Web app install prompt (optional)
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+
+  // Service worker
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+
+  // ---------- boot ----------
+
+  buildLabel.textContent = String(BUILD);
+  refreshMenuImage();
+  renderNick();
+  showSplashThenMenu();
+
 })();

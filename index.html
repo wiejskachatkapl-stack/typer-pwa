@@ -2,586 +2,447 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1f3a" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b2349" />
   <title>Typer PWA</title>
-
-  <link rel="manifest" href="manifest.json?v=1015" />
+  <link rel="manifest" href="manifest.json" />
   <style>
     :root{
-      --bg1:#061428;
-      --panel: rgba(7, 27, 52, 0.72);
-      --stroke: rgba(255,255,255,.12);
+      --glass: rgba(12, 32, 70, .62);
+      --glass2: rgba(10, 26, 55, .72);
+      --stroke: rgba(255,255,255,.10);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --btn: rgba(45, 93, 132, .75);
-      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --muted: rgba(255,255,255,.70);
+      --btn: rgba(255,255,255,.10);
+      --btn2: rgba(255,255,255,.18);
+      --shadow: 0 18px 50px rgba(0,0,0,.55);
       --radius: 18px;
+      --radius2: 22px;
+      --pad: 18px;
+      --maxw: 1180px;
+      --topbar-h: 64px;
     }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; background:#06142f; color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+    body{overflow:hidden}
 
-    html,body{
-      height:100%;
-      margin:0;
-      background: radial-gradient(1200px 600px at 50% 0%, rgba(32,98,155,.35), rgba(0,0,0,0)) , var(--bg1);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      overflow:hidden;
-    }
-
-    .screen{ position:fixed; inset:0; display:none; }
-    .screen.active{ display:block; }
-
+    /* background */
     .bg{
-      position:absolute; inset:0;
-      background: radial-gradient(900px 500px at 50% 40%, rgba(255,255,255,.05), rgba(0,0,0,.55));
-      display:flex; justify-content:center; align-items:center;
+      position:fixed; inset:0; background:#06142f;
+      background-image: radial-gradient(1200px 800px at 50% 0%, rgba(50,130,255,.18), transparent 60%),
+                        radial-gradient(900px 600px at 50% 120%, rgba(60,200,160,.10), transparent 60%);
     }
-    .bg img{
-      width: min(1200px, 96vw);
-      height: min(740px, 92vh);
-      object-fit: cover;
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,.10);
+    .bgImage{
+      position:fixed; inset:0;
+      background-position:center;
+      background-repeat:no-repeat;
+      background-size:cover;
+      filter: blur(0px);
+      transform: scale(1.02);
     }
-
-    .content{
-      position:absolute; inset:0;
-      display:flex; justify-content:center; align-items:center;
-      padding: 16px;
+    .vignette{
+      position:fixed; inset:0;
+      background: radial-gradient(80% 70% at 50% 40%, rgba(0,0,0,.15), rgba(0,0,0,.72));
       pointer-events:none;
     }
-    .card{
-      width: min(1200px, 96vw);
-      height: min(740px, 92vh);
-      border-radius: 22px;
-      pointer-events:auto;
+
+    /* app shell */
+    .app{position:relative; height:100%; display:flex; align-items:center; justify-content:center; padding:18px;}
+    .frame{
+      width:min(var(--maxw), calc(100vw - 36px));
+      height:min(780px, calc(100vh - 36px));
+      border-radius: 28px;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+      overflow:hidden;
       position:relative;
     }
 
+    /* Top bar */
     .topbar{
-      position:absolute;
-      left: 14px; right: 14px; top: 10px;
-      height: 46px;
+      position:absolute; left:12px; right:12px; top:12px;
+      height: var(--topbar-h);
       display:flex; align-items:center; gap:10px;
-      padding: 8px 10px;
-      border-radius: 14px;
-      background: rgba(7, 27, 52, 0.55);
-      border: 1px solid rgba(255,255,255,.10);
-      backdrop-filter: blur(10px);
-    }
-    .pill{
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.10);
-      font-weight: 700;
-      font-size: 14px;
-      white-space:nowrap;
-    }
-    .title{
-      font-weight:800;
-      font-size: 16px;
-      opacity:.95;
-      white-space:nowrap;
-    }
-    .spacer{ flex:1; }
-    .nick{
-      font-weight:900;
-      font-size: 18px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.10);
-      max-width: 52vw;
-      overflow:hidden;
-      text-overflow: ellipsis;
-      white-space:nowrap;
-    }
-
-    .btn{
-      appearance:none;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.10);
-      color: var(--text);
-      padding: 8px 12px;
-      border-radius: 14px;
-      font-weight: 800;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-    .btn:hover{ background: rgba(255,255,255,.14); }
-    .btn.primary{
-      background: var(--btn);
-      border-color: rgba(255,255,255,.14);
-    }
-    .btn.primary:hover{ background: rgba(45, 93, 132, .88); }
-
-    .menuButtons{
-      position:absolute;
-      left:50%;
-      transform: translateX(-50%);
-      top: 45%;
-      width: min(760px, 86%);
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-    }
-    .menuBig{
-      height: 62px;
-      border-radius: 16px;
-      font-size: 18px;
-      letter-spacing:.2px;
-      background: rgba(45,93,132,.62);
-      border: 1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 24px rgba(0,0,0,.20);
-    }
-
-    .footer{
-      position:absolute;
-      left: 14px; right: 14px; bottom: 10px;
-      height: 38px;
-      display:flex; align-items:center;
-      padding: 0 12px;
-      border-radius: 14px;
-      background: rgba(7,27,52,.45);
-      border: 1px solid rgba(255,255,255,.10);
-      backdrop-filter: blur(10px);
-      font-size: 12px;
-      color: rgba(255,255,255,.75);
-    }
-    .footer .right{ margin-left:auto; }
-
-    /* ROOMS screen */
-    .roomsWrap{
-      position:absolute;
-      left: 14px; right: 14px;
-      top: 70px; bottom: 56px;
-      display:flex;
-      flex-direction:column;
-      gap: 16px;
-    }
-    .panel{
-      background: rgba(7, 27, 52, 0.72);
-      border: 1px solid rgba(255,255,255,.10);
+      padding:10px 12px;
       border-radius: 18px;
-      padding: 16px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.22);
+      background: rgba(10, 26, 55, .55);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index:5;
     }
-    .panel h3{
-      margin:0 0 12px 0;
-      font-size: 22px;
-      letter-spacing:.2px;
-    }
-    .row{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .input{
-      flex: 1;
-      min-width: 260px;
-      height: 46px;
-      padding: 0 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.25);
-      color: var(--text);
-      outline:none;
-      font-weight: 700;
-      font-size: 16px;
-    }
-    .hint{
-      margin-top:10px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .debug{
-      background: rgba(0,0,0,.28);
-      border: 1px solid rgba(255,255,255,.10);
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 14px;
       border-radius: 16px;
-      padding: 14px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 13px;
-      white-space: pre-wrap;
-      color: rgba(255,255,255,.82);
-    }
-
-    /* ROOM screen layout (NOWE) */
-    .roomWrap{
-      position:absolute;
-      left: 14px; right: 14px;
-      top: 70px; bottom: 56px;
-      display:flex;
-      gap:16px;
-    }
-
-    /* LEWA: spotkania */
-    .colMatches{
-      flex: 2.1;
-      min-width: 360px;
-      display:flex;
-      flex-direction:column;
-    }
-
-    /* PRAWA: gracze + info */
-    .colSide{
-      flex: 1;
-      min-width: 300px;
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-
-    .list{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:10px;
-      max-height: 240px;
-      overflow:auto;
-      padding-right: 6px;
-    }
-    .playerRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .playerRow .label{ color: rgba(255,255,255,.72); font-weight:800; }
-    .playerRow .name{ font-weight:900; }
-
-    .kv{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin: 10px 0;
-    }
-    .kv .k{
-      width: 92px;
-      color: rgba(255,255,255,.72);
-      font-weight:800;
-    }
-    .codeBox{
-      flex:1;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-      font-weight: 900;
-      letter-spacing: .8px;
-    }
-
-    /* Matches — mniejsze, ciaśniejsze (NOWE) */
-    .matchList{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      margin-top:10px;
-      overflow:auto;
-      padding-right:6px;
-      /* żeby weszło ~10 meczów bez przewijania na typowym desktopie */
-      max-height: calc(100% - 92px);
-    }
-    .matchRow{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      padding: 10px 10px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .matchMain{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      min-width: 0;
-    }
-
-    /* LOGA (badge) */
-    .teamsLine{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .teamPill{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width: 0;
-    }
-    .logo{
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 950;
-      font-size: 11px;
-      letter-spacing: .3px;
-      border: 1px solid rgba(255,255,255,.18);
-      box-shadow: 0 6px 14px rgba(0,0,0,.18);
-      flex: 0 0 auto;
-    }
-    .teamName{
-      font-weight: 900;
-      font-size: 14px; /* mniejsza czcionka */
-      overflow:hidden;
-      text-overflow: ellipsis;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      font-weight:700;
       white-space:nowrap;
-      max-width: 220px;
     }
-    .vs{
-      opacity:.7;
-      font-weight: 900;
-      padding: 0 4px;
-      flex: 0 0 auto;
+    .chip.small{padding:8px 12px; font-weight:700; opacity:.95}
+    .spacer{flex:1}
+    .btn{
+      cursor:pointer; user-select:none;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:10px 14px;
+      border-radius: 16px;
+      background: var(--btn);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      font-weight:700;
     }
+    .btn:hover{background: var(--btn2)}
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{background: rgba(80,170,255,.22); border-color: rgba(120,200,255,.25)}
 
-    .matchMeta{
-      color: rgba(255,255,255,.72);
-      font-size: 11px; /* mniejsza */
-      font-weight: 700;
-    }
-
-    .matchTipRow{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top: 6px;
-    }
-    .scoreInput{
-      width: 56px;
-      height: 32px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.22);
-      color: rgba(255,255,255,.92);
-      font-weight: 900;
-      font-size: 15px;
-      text-align:center;
-      outline:none;
-    }
-    .tipSaved{
-      color: rgba(255,255,255,.78);
-      font-size: 11px;
-      font-weight: 800;
-    }
+    /* Screens */
+    .screen{position:absolute; inset:0; display:none;}
+    .screen.active{display:block;}
 
     /* Splash */
-    #splashOverlay{
-      position:fixed; inset:0;
-      display:flex; justify-content:center; align-items:center;
-      background: radial-gradient(900px 500px at 50% 40%, rgba(255,255,255,.05), rgba(0,0,0,.55)), var(--bg1);
-      z-index:9999;
+    #splash{display:flex; align-items:center; justify-content:center;}
+    .splashWrap{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+    .splashArt{
+      width: min(520px, 78vw);
+      height: min(700px, 78vh);
+      border-radius: 26px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      box-shadow: 0 18px 50px rgba(0,0,0,.55);
     }
-    #splashOverlay .splashCard{
-      width: min(520px, 92vw);
-      padding: 16px;
+    .splashArt img{width:100%; height:100%; object-fit:cover; display:block}
+    .splashHint{position:absolute; bottom:18px; left:18px; right:18px; text-align:center; color:rgba(255,255,255,.85); font-weight:600;}
+
+    /* Content area */
+    .content{
+      position:absolute;
+      inset: calc(12px + var(--topbar-h) + 12px) 12px 12px 12px;
+      padding: 0;
+      overflow:auto;
+      border-radius: 22px;
+    }
+
+    /* Cards */
+    .card{
+      background: var(--glass);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: var(--pad);
+    }
+    .card h2{margin:0 0 10px 0; font-size: 28px; letter-spacing:.2px}
+    .card h3{margin:0 0 10px 0; font-size: 22px}
+    .muted{color: var(--muted)}
+
+    /* Menu screen */
+    .menuWrap{height:100%; display:flex; flex-direction:column; gap:12px;}
+    .menuMain{flex:1; display:flex; align-items:center; justify-content:center;}
+    .menuPanel{
+      width: min(860px, 100%);
+      height: min(520px, 100%);
+      border-radius: 22px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+      position:relative;
+    }
+    .menuPanel img{width:100%; height:100%; object-fit:cover; display:block;}
+    .menuButtons{
+      position:absolute; left:0; right:0; top:0; bottom:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:18px; padding: 28px;
+    }
+    .bigBtn{
+      width: min(620px, 90%);
+      height: 64px;
       border-radius: 18px;
-      background: rgba(7,27,52,.65);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: var(--shadow);
+      font-size: 18px;
+      letter-spacing:.2px;
+      background: rgba(8, 40, 80, .45);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      color: rgba(255,255,255,.92);
+      font-weight:800;
+      cursor:pointer;
+    }
+    .bigBtn:hover{background: rgba(10, 55, 105, .50)}
+    .bigBtn:active{transform: translateY(1px)}
+
+    /* Rooms (create/join) */
+    .roomsWrap{display:flex; flex-direction:column; gap:14px; padding: 12px;}
+    .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+    .input{
+      flex:1;
+      min-width: 240px;
+      height: 52px;
+      padding: 0 14px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      font-size: 18px;
+      outline:none;
+    }
+    .input::placeholder{color: rgba(255,255,255,.55)}
+
+    /* Room screen layout */
+    .roomWrap{height:100%; padding: 12px; display:grid; grid-template-columns: 1.6fr 1fr; gap: 14px; align-content:start;}
+    .col{display:flex; flex-direction:column; gap:14px;}
+
+    /* Players card */
+    .playersList{display:flex; flex-direction:column; gap:8px;}
+    .pill{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      font-weight:700;
+    }
+
+    /* Matches */
+    .matchesHeader{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .matchesHeader h3{margin:0}
+    .matchesHint{margin:0; font-size: 13px; color: rgba(255,255,255,.70)}
+
+    .matchesList{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+    .matchRow{
+      display:grid;
+      grid-template-columns: 1fr auto 1fr auto;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .team{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+    .logo{
+      width:28px; height:28px;
+      object-fit:contain;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
+      flex:0 0 auto;
+    }
+    .teamName{font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .when{grid-column: 1 / -1; font-size:12px; color: rgba(255,255,255,.70); margin-top:6px;}
+
+    .tipBox{display:flex; align-items:center; gap:6px; justify-content:center;}
+    .scoreInput{
+      width:44px; height:36px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--text);
       text-align:center;
-      backdrop-filter: blur(12px);
-    }
-    #splashOverlay .splashHint{
-      margin-top: 10px;
-      color: rgba(255,255,255,.78);
-      font-weight: 700;
+      font-weight:800;
       font-size: 14px;
+      outline:none;
     }
-
-    /* Responsywność */
-    @media (max-width: 980px){
-      .roomWrap{ flex-direction:column; }
-      .colMatches{ min-width: 0; }
-      .colSide{ min-width: 0; }
-      .matchList{ max-height: 340px; }
+    .colon{opacity:.9; font-weight:900}
+    .miniBtn{
+      height:36px; padding:0 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      font-weight:800;
+      cursor:pointer;
     }
-    @media (max-width: 520px){
-      .topbar{ height: 44px; }
-      .nick{ font-size: 16px; }
-      .menuBig{ height: 58px; font-size: 17px; }
-      .panel h3{ font-size: 20px; }
+    .miniBtn:hover{background: rgba(255,255,255,.16)}
 
-      .teamName{ max-width: 170px; }
-      .logo{ width: 26px; height: 26px; font-size: 10px; }
+    .savedTip{font-size:12px; color: rgba(255,255,255,.75); margin-left:10px;}
+
+    /* Footer bar */
+    .footer{
+      position:absolute; left:12px; right:12px; bottom:12px;
+      height: 46px;
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(10, 26, 55, .45);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index:4;
+      color: rgba(255,255,255,.78);
+      font-size: 13px;
+    }
+    .footer .right{margin-left:auto}
+
+    /* Responsive: phone */
+    @media (max-width: 860px){
+      :root{--topbar-h: 58px;}
+      .frame{height: calc(100vh - 24px); width: calc(100vw - 24px); border-radius: 22px;}
+      .roomWrap{grid-template-columns: 1fr;}
+      .menuPanel{height: min(560px, 100%);} /* bigger on phone */
+      .bigBtn{height: 62px; font-size: 18px;}
     }
   </style>
 </head>
-
 <body>
-  <!-- Splash overlay -->
-  <div id="splashOverlay">
-    <div class="splashCard">
-      <div style="font-weight:900;font-size:20px;">Ładowanie…</div>
-      <div class="splashHint" id="splashHint">Ekran startowy (7s)…</div>
-    </div>
-  </div>
+  <div class="bg"></div>
+  <div id="bgImage" class="bgImage"></div>
+  <div class="vignette"></div>
 
-  <!-- MENU -->
-  <div class="screen active" id="menuScreen">
-    <div class="bg">
-      <img id="menuImg" alt="menu" src="img_menu.png" />
-    </div>
-    <div class="content">
-      <div class="card">
-        <div class="topbar">
-          <span class="pill">Menu</span>
-          <span class="title">Wybierz opcję</span>
-          <span class="spacer"></span>
-          <span class="nick" id="nickText">Nick: —</span>
-          <button class="btn" id="changeNickBtn">Zmień nick</button>
-        </div>
+  <div class="app">
+    <div class="frame">
 
-        <div class="menuButtons">
-          <button class="btn primary menuBig" id="btnLiga">Liga typerów</button>
-          <button class="btn primary menuBig" id="btnStats">Statystyki</button>
-          <button class="btn primary menuBig" id="btnExit">Wyjście</button>
-        </div>
-
-        <div class="footer">
-          <span>Copyright 2026 RN_APS Mariusz Gębka</span>
-          <span class="right" id="statusText">Menu gotowe.</span>
+      <!-- Splash -->
+      <div id="splash" class="screen active">
+        <div class="splashWrap">
+          <div class="splashArt"><img id="splashImg" src="img_starter.png" alt="Start" /></div>
+          <div id="splashHint" class="splashHint">Ładowanie…</div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ROOMS -->
-  <div class="screen" id="roomsScreen">
-    <div class="bg">
-      <img id="roomsBg" alt="tło" src="img_menu.png" />
-    </div>
-    <div class="content">
-      <div class="card">
+      <!-- MENU -->
+      <div id="menuScreen" class="screen">
         <div class="topbar">
-          <span class="pill">Liga</span>
-          <span class="nick" id="nickTextRooms">Nick: —</span>
-          <span class="spacer"></span>
-          <button class="btn" id="changeNickBtn2">Zmień nick</button>
-          <button class="btn" id="backToMenuBtn">Wróć</button>
+          <div class="chip">Menu</div>
+          <div id="nickChip" class="chip small">Nick: —</div>
+          <div class="spacer"></div>
+          <button id="changeNickBtn" class="btn">Zmień nick</button>
         </div>
 
-        <div class="roomsWrap">
-          <div class="panel">
-            <h3>Nowy pokój</h3>
-            <div class="row">
-              <input class="input" id="newRoomName" maxlength="24" placeholder="np. Pokój rodzinny" />
-              <button class="btn primary" id="createRoomBtn">Utwórz</button>
-            </div>
-            <div class="hint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
-          </div>
-
-          <div class="panel">
-            <h3>Dołącz do pokoju</h3>
-            <div class="row">
-              <input class="input" id="joinRoomCode" maxlength="6" placeholder="Wpisz kod (np. AB12CD)" />
-              <button class="btn primary" id="joinRoomBtn">Dołącz</button>
-            </div>
-            <div class="hint">Uwaga: na razie pokoje są lokalne na urządzeniu (test).</div>
-          </div>
-
-          <div class="panel">
-            <h3>Debug</h3>
-            <div class="debug" id="debugBox">—</div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <span>Copyright 2026 RN_APS Mariusz Gębka</span>
-          <span class="right" id="roomsStatusText">—</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ROOM -->
-  <div class="screen" id="roomScreen">
-    <div class="bg">
-      <img id="roomBg" alt="tło" src="img_menu.png" />
-    </div>
-    <div class="content">
-      <div class="card">
-        <div class="topbar">
-          <span class="pill">Pokój</span>
-          <span class="nick" id="nickTextRoom">Nick: —</span>
-          <span class="spacer"></span>
-          <button class="btn" id="roomBackBtn">Wróć</button>
-        </div>
-
-        <div class="roomWrap">
-          <!-- LEWA: spotkania -->
-          <div class="panel colMatches">
-            <div class="row" style="justify-content:space-between; align-items:center;">
-              <h3 style="margin:0;">Spotkania</h3>
-              <div class="row" style="gap:10px;">
-                <button class="btn primary" id="addRoundBtn">Dodaj kolejkę (test)</button>
-                <button class="btn primary" id="addMatchBtn">Dodaj mecz (test)</button>
+        <div class="content">
+          <div class="menuWrap">
+            <div class="menuMain">
+              <div class="menuPanel">
+                <img id="menuImg" src="img_menu.png" alt="Menu" />
+                <div class="menuButtons">
+                  <button id="btnLiga" class="bigBtn">Liga typerów</button>
+                  <button id="btnStats" class="bigBtn">Statystyki</button>
+                  <button id="btnExit" class="bigBtn">Wyjście</button>
+                </div>
               </div>
-            </div>
-            <div class="hint" style="margin-top:8px;">
-              Kolejka (test) generuje automatycznie pary Ekstraklasy. Typuj wynik i kliknij „Zapisz”.
-            </div>
-            <div class="matchList" id="matchesList"></div>
-          </div>
-
-          <!-- PRAWA: gracze + info -->
-          <div class="colSide">
-            <div class="panel" style="flex:0 0 auto;">
-              <h3>Gracze</h3>
-              <div class="list" id="playersList"></div>
-            </div>
-
-            <div class="panel" style="flex:1 1 auto;">
-              <h3>Informacje</h3>
-
-              <div style="font-weight:900;font-size:18px;margin-top:6px;" id="roomNameText">—</div>
-              <div style="color:rgba(255,255,255,.75);margin-top:4px;" id="roomAdminText">Admin: —</div>
-
-              <div class="kv" style="margin-top:14px;">
-                <div class="k">Kod pokoju</div>
-                <div class="codeBox" id="roomCodeText">------</div>
-                <button class="btn" id="copyCodeBtn">Kopiuj</button>
-              </div>
-
-              <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn" id="leaveRoomBtn">Opuść pokój</button>
-                <button class="btn" id="repairBtn">Odśwież / napraw</button>
-              </div>
-
-              <div class="hint" id="roomStatusHint" style="margin-top:12px;">—</div>
             </div>
           </div>
         </div>
 
         <div class="footer">
-          <span>Copyright 2026 RN_APS Mariusz Gębka</span>
-          <span class="right" id="roomStatusText">—</span>
+          <div id="footerLeft">Copyright 2026 RN_APS Mariusz Gębka</div>
+          <div class="right" id="footerRight">Menu gotowe.</div>
         </div>
       </div>
+
+      <!-- ROOMS (create/join) -->
+      <div id="roomsScreen" class="screen">
+        <div class="topbar">
+          <div class="chip">Liga</div>
+          <div id="nickChipRooms" class="chip small">Nick: —</div>
+          <div class="spacer"></div>
+          <button id="changeNickBtn2" class="btn">Zmień nick</button>
+          <button id="backToMenu1" class="btn">Wróć</button>
+        </div>
+
+        <div class="content">
+          <div class="roomsWrap">
+            <div class="card">
+              <h3>Nowy pokój</h3>
+              <div class="row">
+                <input id="roomNameInput" class="input" placeholder="Nazwa pokoju (np. Domek)" maxlength="24" />
+                <button id="createRoomBtn" class="btn primary">Utwórz</button>
+              </div>
+              <div class="muted" style="margin-top:8px; font-size:13px;">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            </div>
+
+            <div class="card">
+              <h3>Dołącz do pokoju</h3>
+              <div class="row">
+                <input id="joinCodeInput" class="input" placeholder="Wpisz kod (np. AB12CD)" maxlength="6" />
+                <button id="joinRoomBtn" class="btn primary">Dołącz</button>
+              </div>
+              <div class="muted" style="margin-top:8px; font-size:13px;">Uwaga: na razie pokoje są lokalne na urządzeniu (test).</div>
+            </div>
+
+            <div class="card" id="debugCard" style="display:none;">
+              <h3>Debug</h3>
+              <pre id="debugLog" style="margin:0; white-space:pre-wrap; font-size:12px; color:rgba(255,255,255,.85)"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div>v<span id="buildLabel">—</span></div>
+          <div class="right" id="roomsStatus">—</div>
+        </div>
+      </div>
+
+      <!-- ROOM (inside) -->
+      <div id="roomScreen" class="screen">
+        <div class="topbar">
+          <div class="chip">Pokój</div>
+          <div id="nickChipRoom" class="chip small">Nick: —</div>
+          <div class="spacer"></div>
+          <button id="backToRooms" class="btn">Wróć</button>
+        </div>
+
+        <div class="content">
+          <div class="roomWrap">
+            <!-- LEFT: matches -->
+            <div class="col">
+              <div class="card" id="matchesCard">
+                <div class="matchesHeader">
+                  <div>
+                    <h3>Spotkania</h3>
+                    <p class="matchesHint">Typuj wyniki. Docelowo dojdzie import ligi / kolejki.</p>
+                  </div>
+                  <div class="row" style="justify-content:flex-end; margin:0;">
+                    <button id="addRoundBtn" class="btn primary" title="Wrzuca 10 spotkań testowych">Dodaj kolejkę (test)</button>
+                  </div>
+                </div>
+                <div id="matchesList" class="matchesList"></div>
+              </div>
+            </div>
+
+            <!-- RIGHT: players + info -->
+            <div class="col">
+              <div class="card">
+                <h3>Gracze</h3>
+                <div id="playersList" class="playersList"></div>
+              </div>
+
+              <div class="card">
+                <h3>Informacje</h3>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                  <div>
+                    <div style="font-size:22px; font-weight:900;" id="roomTitle">—</div>
+                    <div class="muted" id="roomAdmin">Admin: —</div>
+                  </div>
+                  <div class="row" style="margin:0;">
+                    <div style="font-weight:900;">Kod pokoju</div>
+                    <input id="roomCodeInput" class="input" style="height:44px; font-size:16px; flex:1; min-width:160px;" readonly />
+                    <button id="copyCodeBtn" class="btn">Kopiuj</button>
+                  </div>
+                  <div class="row" style="margin:0;">
+                    <button id="leaveRoomBtn" class="btn">Opuść pokój</button>
+                    <button id="refreshRoomBtn" class="btn">Odśwież / napraw</button>
+                  </div>
+                  <div class="muted" style="font-size:13px;">Pokoje są lokalne (test). Następny krok: backend / współdzielenie.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div>Copyright 2026 RN_APS Mariusz Gębka</div>
+          <div class="right" id="roomStatus">—</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <script src="app.js?v=1015"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1015').catch(()=>{});
-      });
-    }
-  </script>
+  <script src="app.js?v=1011"></script>
 </body>
 </html>

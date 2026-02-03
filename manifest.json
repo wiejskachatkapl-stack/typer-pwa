@@ -1,13 +1,13 @@
 {
-  "name": "Typer",
+  "name": "Typer PWA",
   "short_name": "Typer",
-  "start_url": "./?v=20260202-01",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b1a3a",
-  "theme_color": "#0b1a3a",
+  "background_color": "#06142f",
+  "theme_color": "#0b2349",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"}
   ]
 }
