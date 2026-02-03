@@ -1,47 +1,73 @@
-const BUILD = 1011;
-const CACHE_NAME = `typer-cache-${BUILD}`;
+/* Service Worker - twarde wersjonowanie cache */
+const VERSION = "20260202-01";
+const CACHE = `typer-cache-${VERSION}`;
 
-const ASSETS = [
+const CORE = [
   "./",
-  `./index.html?v=${BUILD}`,
-  `./app.js?v=${BUILD}`,
-  `./manifest.json?v=${BUILD}`,
+  `./index.html?v=${VERSION}`,
+  `./app.js?v=${VERSION}`,
+  `./manifest.json?v=${VERSION}`,
+  "./img_starter.png",
   "./img_menu.png",
   "./img_menu_pc.png",
-  "./img_starter.png"
+  // jeśli masz dodatkowe:
+  "./img_typowanie.png",
+  "./img_typowanie_pc.png",
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE).then((c) => c.addAll(CORE).catch(()=>{}))
   );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(k => (k !== CACHE_NAME ? caches.delete(k) : Promise.resolve())))
-    ).then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => (k !== CACHE ? caches.delete(k) : Promise.resolve())));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
+  // tylko nasza domena
   if (url.origin !== location.origin) return;
 
-  event.respondWith(
-    caches.match(req, { ignoreSearch: false }).then((cached) => {
-      if (cached) return cached;
+  // Network-first dla HTML/JS żeby nie wisiało na starym
+  const isHTML = req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html");
+  const isJS = url.pathname.endsWith(".js");
 
-      return fetch(req).then((res) => {
-        if (req.method === "GET" && res && res.status === 200) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(req, copy)).catch(()=>{});
-        }
-        return res;
-      }).catch(() => cached || new Response("Offline", { status: 503 }));
-    })
-  );
+  if (isHTML || isJS) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  // reszta: cache-first
+  event.respondWith(cacheFirst(req));
 });
+
+async function networkFirst(req){
+  try{
+    const fresh = await fetch(req, { cache: "no-store" });
+    const cache = await caches.open(CACHE);
+    cache.put(req, fresh.clone());
+    return fresh;
+  }catch{
+    const cached = await caches.match(req);
+    return cached || new Response("Offline", { status: 503, headers: { "Content-Type":"text/plain" } });
+  }
+}
+
+async function cacheFirst(req){
+  const cached = await caches.match(req);
+  if (cached) return cached;
+
+  const fresh = await fetch(req);
+  const cache = await caches.open(CACHE);
+  cache.put(req, fresh.clone());
+  return fresh;
+}

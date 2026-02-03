@@ -3,7 +3,7 @@
    * BUILD – podbijaj przy zmianach.
    * Musi się zgadzać z index.html (app.js?v=....).
    */
-  const BUILD = 1014;
+  const BUILD = 1015;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -232,6 +232,40 @@
   }
 
   // ----------------------------
+  // TEAM LOGO (badge) helpers
+  // ----------------------------
+  function hashString32(str){
+    let h = 2166136261;
+    for (let i=0;i<str.length;i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function teamAbbr(name){
+    const s = String(name || "").trim();
+    if (!s) return "??";
+    const words = s.split(/\s+/).filter(Boolean);
+
+    // np. "ŁKS" zostawiamy
+    if (words.length === 1 && words[0].length <= 4) {
+      return words[0].toUpperCase();
+    }
+
+    // bierzemy pierwsze litery pierwszych 2 wyrazów
+    const a = (words[0]?.[0] || "?").toUpperCase();
+    const b = (words[1]?.[0] || (words[0]?.[1] || "?")).toUpperCase();
+    return (a + b).replace(/[^A-ZĄĆĘŁŃÓŚŹŻ0-9]/g, "").slice(0,2) || "??";
+  }
+
+  function teamColorHsl(name){
+    const h = hashString32(name) % 360;
+    // ciemny, ale żywy (pod badge)
+    return `hsl(${h} 55% 42% / 0.85)`;
+  }
+
+  // ----------------------------
   // LEAGUE TEST: Ekstraklasa (static list – test)
   // ----------------------------
   const EKSTRA_TEAMS_TEST = [
@@ -254,15 +288,6 @@
     "ŁKS",
     "Warta Poznań"
   ];
-
-  function hashString32(str){
-    let h = 2166136261;
-    for (let i=0;i<str.length;i++){
-      h ^= str.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return h >>> 0;
-  }
 
   function mulberry32(seed){
     return function(){
@@ -340,7 +365,7 @@
   function fmtKick(ts){
     if (!ts) return "—";
     const d = new Date(ts);
-    const pad = (n) => String(n).padStart(2,"0");
+    const pad = (n) => String(n).padStart(2ীৱ,"0");
     return `${pad(d.getDate())}.${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
@@ -384,19 +409,15 @@
 
     ensureRoomMatches(room);
 
-    // ustawienia ligi (test)
     room.league = room.league || "Ekstraklasa (test)";
 
-    // stabilna kolejność drużyn per pokój (seed = kod pokoju)
     const seed = hashString32(room.code || "room");
     room.teams = room.teams || seededShuffle(EKSTRA_TEAMS_TEST, seed);
 
     const teams = Array.isArray(room.teams) && room.teams.length >= 8 ? room.teams : seededShuffle(EKSTRA_TEAMS_TEST, seed);
 
-    // kolejka numerowana od 1
     const nextRound = Number.isFinite(room.nextRound) ? room.nextRound : (room.nextRound = 1);
 
-    // nie dodawaj drugi raz tej samej kolejki
     const already = room.matches.some(m => m && m.league === "Ekstraklasa (test)" && m.round === nextRound);
     if (already){
       roomStatusText.textContent = `Kolejka ${nextRound} już istnieje`;
@@ -407,10 +428,8 @@
     const roundIndex0 = nextRound - 1;
     const pairs = roundRobinPairs(teams, roundIndex0);
 
-    // czas startu: najbliższa sobota 12:00 + (roundIndex0 * 7 dni)
     const base = nextSaturdayBaseTs() + roundIndex0 * 7 * 24 * 60 * 60 * 1000;
 
-    // dodajemy mecze, odstęp co 2 godziny
     let i = 0;
     for (const [home, away] of pairs){
       const id = `ek_${room.code}_${nextRound}_${i}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -500,14 +519,13 @@
     ensureRoomMatches(room);
     const nick = loadNick();
 
-    // sortuj: najpierw po dacie
     const list = room.matches.slice().sort((a,b) => (a?.kick||0) - (b?.kick||0));
 
     if (list.length === 0){
       const div = document.createElement("div");
       div.className = "matchRow";
       div.innerHTML = `<div class="matchMain">
-        <div class="matchTeams" style="color:rgba(255,255,255,.75);font-weight:800;">Brak spotkań</div>
+        <div class="matchMeta" style="font-weight:900;">Brak spotkań</div>
         <div class="matchMeta">Kliknij „Dodaj kolejkę (test)” albo „Dodaj mecz (test)”.</div>
       </div>`;
       matchesList.appendChild(div);
@@ -519,19 +537,37 @@
 
       const tip = nick ? m.tips[nick] : null;
       const tipText = tip ? `Twój typ: ${tip.h}:${tip.a}` : "Twój typ: —";
-      const tipTime = tip && tip.ts ? ` • zapis: ${fmtKick(tip.ts)}` : "";
 
       const leagueRound =
         (m.league && m.round)
           ? `${m.league} • Kolejka ${m.round}`
           : (m.league ? m.league : "—");
 
+      const homeAb = teamAbbr(m.home);
+      const awayAb = teamAbbr(m.away);
+
+      const homeCol = teamColorHsl(m.home);
+      const awayCol = teamColorHsl(m.away);
+
       const row = document.createElement("div");
       row.className = "matchRow";
 
       row.innerHTML = `
         <div class="matchMain">
-          <div class="matchTeams">${escapeHtml(m.home)} <span style="opacity:.7;">vs</span> ${escapeHtml(m.away)}</div>
+          <div class="teamsLine">
+            <div class="teamPill" title="${escapeHtml(m.home)}">
+              <div class="logo" style="background:${homeCol};">${escapeHtml(homeAb)}</div>
+              <div class="teamName">${escapeHtml(m.home)}</div>
+            </div>
+
+            <div class="vs">vs</div>
+
+            <div class="teamPill" title="${escapeHtml(m.away)}">
+              <div class="logo" style="background:${awayCol};">${escapeHtml(awayAb)}</div>
+              <div class="teamName">${escapeHtml(m.away)}</div>
+            </div>
+          </div>
+
           <div class="matchMeta">${leagueRound} • ${fmtKick(m.kick)} • ID: ${escapeHtml(m.id).slice(0,10)}…</div>
 
           <div class="matchTipRow">
@@ -541,7 +577,7 @@
             <input class="scoreInput" inputmode="numeric" pattern="[0-9]*" maxlength="2"
                    data-a="${escapeHtml(m.id)}" placeholder="0" value="${tip ? tip.a : ""}">
             <button class="btn primary" data-save="${escapeHtml(m.id)}">Zapisz</button>
-            <span class="tipSaved">${escapeHtml(tipText)}${escapeHtml(tipTime)}</span>
+            <span class="tipSaved">${escapeHtml(tipText)}</span>
           </div>
         </div>
 
@@ -551,7 +587,6 @@
       matchesList.appendChild(row);
     }
 
-    // input sanitize
     matchesList.querySelectorAll("input.scoreInput").forEach(inp => {
       inp.addEventListener("input", () => {
         inp.value = String(inp.value).replace(/[^0-9]/g, "").slice(0,2);
@@ -606,9 +641,9 @@
     const league = room.league || "—";
     const nextRound = Number.isFinite(room.nextRound) ? room.nextRound : 1;
     roomStatusHint.textContent =
-      `Pokoje są lokalne (test). Liga: ${league}. Następna kolejka do dodania: ${nextRound}.`;
+      `Pokoje są lokalne (test). Liga: ${league}. Następna kolejka: ${nextRound}.`;
 
-    // players
+    // players (PRAWA strona)
     const players = Array.isArray(room.players) ? room.players : [];
     playersList.innerHTML = "";
 
@@ -626,6 +661,7 @@
       }
     }
 
+    // matches (LEWA strona)
     renderMatches(room);
   }
 
@@ -717,7 +753,6 @@
       if (!room.players.includes(nick)) room.players.push(nick);
       ensureRoomMatches(room);
 
-      // domyślnie ustaw (jeśli brak)
       room.league = room.league || "Ekstraklasa (test)";
       if (!Number.isFinite(room.nextRound)) room.nextRound = 1;
 
