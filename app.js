@@ -3,7 +3,7 @@
    * BUILD – podbijaj przy zmianach.
    * Musi się zgadzać z index.html (app.js?v=....).
    */
-  const BUILD = 1010;
+  const BUILD = 1011;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";        // lokalna baza pokoi (na urządzeniu)
@@ -18,22 +18,27 @@
   // screens
   const splashOverlay = el("splashOverlay");
   const splashHint = el("splashHint");
+
   const menuScreen = el("menuScreen");
   const roomsScreen = el("roomsScreen");
+  const roomScreen = el("roomScreen");
 
   // backgrounds
   const menuImg = el("menuImg");
   const roomsBg = el("roomsBg");
+  const roomBg = el("roomBg");
 
   // nick labels
   const nickText = el("nickText");
   const nickTextRooms = el("nickTextRooms");
+  const nickTextRoom = el("nickTextRoom");
 
   // menu buttons
   const changeNickBtn = el("changeNickBtn");
   const btnLiga = el("btnLiga");
   const btnStats = el("btnStats");
   const btnExit = el("btnExit");
+  const statusText = el("statusText");
 
   // rooms buttons / inputs
   const changeNickBtn2 = el("changeNickBtn2");
@@ -43,8 +48,19 @@
   const joinRoomCode = el("joinRoomCode");
   const joinRoomBtn = el("joinRoomBtn");
   const debugBox = el("debugBox");
-  const statusText = el("statusText");
   const roomsStatusText = el("roomsStatusText");
+
+  // room (inside room)
+  const roomBackBtn = el("roomBackBtn");
+  const playersList = el("playersList");
+  const roomNameText = el("roomNameText");
+  const roomAdminText = el("roomAdminText");
+  const roomCodeText = el("roomCodeText");
+  const copyCodeBtn = el("copyCodeBtn");
+  const leaveRoomBtn = el("leaveRoomBtn");
+  const repairBtn = el("repairBtn");
+  const roomStatusHint = el("roomStatusHint");
+  const roomStatusText = el("roomStatusText");
 
   // ----------------------------
   // helpers
@@ -54,13 +70,16 @@
 
   function setBgImages() {
     const src = pickMenuSrc();
-    if (menuImg) menuImg.src = src + "?b=" + BUILD;
-    if (roomsBg) roomsBg.src = src + "?b=" + BUILD;
+    const bust = `?b=${BUILD}`;
+    if (menuImg) menuImg.src = src + bust;
+    if (roomsBg) roomsBg.src = src + bust;
+    if (roomBg) roomBg.src = src + bust;
   }
 
   function showScreen(name) {
     menuScreen.classList.toggle("active", name === "menu");
     roomsScreen.classList.toggle("active", name === "rooms");
+    roomScreen.classList.toggle("active", name === "room");
   }
 
   function logDebug(msg) {
@@ -92,14 +111,7 @@
     localStorage.setItem(KEY_NICK, nick);
   }
 
-  /**
-   * NAJWAŻNIEJSZE: migracja rooms → zawsze tablica.
-   * Obsługujemy:
-   * - null -> []
-   * - tablica -> ok
-   * - obiekt {code:..., name:...} -> [obiekt]
-   * - obiekt map {ABC123:{...}, ...} -> Object.values(...)
-   */
+  // MIGRACJA rooms → zawsze tablica
   function loadRooms() {
     let raw = localStorage.getItem(KEY_ROOMS);
     if (!raw) return [];
@@ -126,7 +138,6 @@
   }
 
   function saveRooms(rooms) {
-    // tylko tablica
     if (!Array.isArray(rooms)) rooms = [];
     localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
   }
@@ -135,30 +146,21 @@
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
   }
 
+  function getActiveRoomCode() {
+    return localStorage.getItem(KEY_ACTIVE_ROOM) || "";
+  }
+
+  function getRoomByCode(code) {
+    const rooms = loadRooms();
+    return rooms.find(r => r && r.code === code) || null;
+  }
+
   function updateNickUI() {
     const nick = loadNick();
     const shown = nick ? nick : "—";
     if (nickText) nickText.textContent = `Nick: ${shown}`;
     if (nickTextRooms) nickTextRooms.textContent = `Nick: ${shown}`;
-  }
-
-  function promptNick(force = false) {
-    let nick = loadNick();
-    if (!nick || force) {
-      const input = prompt("Podaj nick / imię:", nick || "");
-      if (input === null) return ""; // anuluj
-      const cleaned = input.trim().replace(/\s+/g, " ");
-      if (!cleaned) {
-        alert("Nick nie może być pusty.");
-        return "";
-      }
-      const oldNick = nick;
-      nick = cleaned;
-      saveNick(nick);
-      migrateNickInRooms(oldNick, nick);
-      updateNickUI();
-    }
-    return nick;
+    if (nickTextRoom) nickTextRoom.textContent = `Nick: ${shown}`;
   }
 
   function migrateNickInRooms(oldNick, newNick) {
@@ -185,8 +187,87 @@
     if (changed) saveRooms(rooms);
   }
 
+  function promptNick(force = false) {
+    let nick = loadNick();
+    if (!nick || force) {
+      const input = prompt("Podaj nick / imię:", nick || "");
+      if (input === null) return ""; // anuluj
+      const cleaned = input.trim().replace(/\s+/g, " ");
+      if (!cleaned) {
+        alert("Nick nie może być pusty.");
+        return "";
+      }
+      const oldNick = nick;
+      nick = cleaned;
+      saveNick(nick);
+      migrateNickInRooms(oldNick, nick);
+      updateNickUI();
+    }
+    return nick;
+  }
+
   // ----------------------------
-  // rooms actions
+  // RENDER POKOJU (to było brakujące)
+  // ----------------------------
+  function renderRoom(code) {
+    const room = getRoomByCode(code);
+
+    if (!room) {
+      roomStatusText.textContent = "Brak pokoju";
+      roomStatusHint.textContent = "Nie znaleziono pokoju (lokalnie). Wróć i spróbuj ponownie.";
+      if (playersList) playersList.innerHTML = "";
+      if (roomNameText) roomNameText.textContent = "—";
+      if (roomAdminText) roomAdminText.textContent = "Admin: —";
+      if (roomCodeText) roomCodeText.textContent = "------";
+      return;
+    }
+
+    // info
+    roomNameText.textContent = room.name || "—";
+    roomAdminText.textContent = `Admin: ${room.admin || "—"}`;
+    roomCodeText.textContent = room.code || "------";
+    roomStatusText.textContent = `W pokoju: ${room.code}`;
+
+    roomStatusHint.textContent = "Pokoje są lokalne (test). Następny krok: backend / współdzielenie.";
+
+    // players
+    const players = Array.isArray(room.players) ? room.players : [];
+    playersList.innerHTML = "";
+
+    if (players.length === 0) {
+      const div = document.createElement("div");
+      div.className = "playerRow";
+      div.innerHTML = `<span class="label">Gracz:</span><span class="name">—</span>`;
+      playersList.appendChild(div);
+      return;
+    }
+
+    for (const p of players) {
+      const div = document.createElement("div");
+      div.className = "playerRow";
+      div.innerHTML = `<span class="label">Gracz:</span><span class="name">${escapeHtml(p)}</span>`;
+      playersList.appendChild(div);
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s || "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function openRoom(code) {
+    setActiveRoom(code);
+    showScreen("room");
+    renderRoom(code);
+    logDebug(`openRoom: ${code}`);
+  }
+
+  // ----------------------------
+  // actions
   // ----------------------------
   function createRoom() {
     try {
@@ -203,16 +284,12 @@
         return;
       }
 
-      // WAŻNE: rooms zawsze tablica
       const rooms = loadRooms();
-      if (!Array.isArray(rooms)) {
-        logDebug("createRoom: rooms nie było tablicą -> naprawiam na []");
-      }
 
-      // generuj unikalny kod
+      // unikalny kod
       let code = makeCode6();
       let guard = 0;
-      while (rooms.some(r => r && r.code === code) && guard < 40) {
+      while (rooms.some(r => r && r.code === code) && guard < 60) {
         code = makeCode6();
         guard++;
       }
@@ -227,15 +304,16 @@
 
       rooms.unshift(room);
       saveRooms(rooms);
-      setActiveRoom(code);
 
       roomsStatusText.textContent = `Utworzono pokój ${code}`;
       logDebug(`createRoom ok: ${code} (${name}) admin=${nick}`);
 
-      alert(`Utworzono pokój!\nNazwa: ${name}\nKod: ${code}`);
+      // KLUCZ: po utworzeniu przejdź do widoku POKOJU
+      openRoom(code);
     } catch (e) {
       roomsStatusText.textContent = "Błąd tworzenia pokoju";
       logDebug(`createRoom exception: ${e && e.message ? e.message : String(e)}`);
+      alert("Błąd tworzenia pokoju");
     }
   }
 
@@ -255,35 +333,90 @@
       }
 
       const rooms = loadRooms();
-
       const room = rooms.find(r => r && r.code === code);
+
       if (!room) {
-        alert("Nie znaleziono pokoju o takim kodzie (na tym urządzeniu).");
         roomsStatusText.textContent = "Nie znaleziono pokoju.";
         logDebug(`joinRoom: brak pokoju ${code}`);
+        alert("Nie znaleziono pokoju o takim kodzie (na tym urządzeniu).");
         return;
       }
 
-      // dopisz gracza jeśli nie ma
       if (!Array.isArray(room.players)) room.players = [];
       if (!room.players.includes(nick)) room.players.push(nick);
 
       saveRooms(rooms);
-      setActiveRoom(code);
 
       roomsStatusText.textContent = `Dołączono do ${code}`;
       logDebug(`joinRoom ok: ${code} gracz=${nick}`);
 
-      alert(`Dołączono do pokoju!\nNazwa: ${room.name}\nKod: ${room.code}`);
+      // KLUCZ: po dołączeniu przejdź do widoku POKOJU
+      openRoom(code);
     } catch (e) {
       roomsStatusText.textContent = "Błąd dołączania";
       logDebug(`joinRoom exception: ${e && e.message ? e.message : String(e)}`);
+      alert("Błąd dołączania do pokoju");
     }
   }
 
-  // ----------------------------
-  // menu handlers
-  // ----------------------------
+  function leaveRoom() {
+    const code = getActiveRoomCode();
+    if (!code) {
+      showScreen("rooms");
+      return;
+    }
+
+    const nick = loadNick();
+    const rooms = loadRooms();
+    const room = rooms.find(r => r && r.code === code);
+
+    if (room && Array.isArray(room.players) && nick) {
+      room.players = room.players.filter(p => p !== nick);
+
+      // jeśli admin wyszedł i ktoś został -> przekaż admina pierwszemu
+      if (room.admin === nick && room.players.length > 0) {
+        room.admin = room.players[0];
+      }
+
+      // jeśli nikt nie został -> usuń pokój (lokalny test)
+      if (room.players.length === 0) {
+        const idx = rooms.indexOf(room);
+        if (idx >= 0) rooms.splice(idx, 1);
+      }
+
+      saveRooms(rooms);
+    }
+
+    roomStatusText.textContent = "Opuściłeś pokój";
+    roomStatusHint.textContent = "Wrócono do ekranu Lig.";
+    logDebug(`leaveRoom: ${code}`);
+
+    localStorage.removeItem(KEY_ACTIVE_ROOM);
+    showScreen("rooms");
+  }
+
+  function copyCode() {
+    const code = getActiveRoomCode();
+    if (!code) return;
+
+    navigator.clipboard?.writeText(code).then(() => {
+      roomStatusText.textContent = `Skopiowano ${code}`;
+    }).catch(() => {
+      // fallback
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = code;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        roomStatusText.textContent = `Skopiowano ${code}`;
+      } catch {
+        roomStatusText.textContent = "Nie udało się skopiować";
+      }
+    });
+  }
+
   function openLiga() {
     const nick = promptNick(false);
     if (!nick) return;
@@ -292,56 +425,78 @@
     logDebug(`openLiga (BUILD ${BUILD})`);
   }
 
+  function restoreLastRoomIfAny() {
+    const code = getActiveRoomCode();
+    if (code && getRoomByCode(code)) {
+      openRoom(code);
+      return true;
+    }
+    return false;
+  }
+
+  // ----------------------------
+  // handlers
+  // ----------------------------
   function initHandlers() {
     // menu
     changeNickBtn.addEventListener("click", () => promptNick(true));
     btnLiga.addEventListener("click", openLiga);
-
     btnStats.addEventListener("click", () => alert("Statystyki – zrobimy w następnym kroku."));
     btnExit.addEventListener("click", () => alert("Wyjście: w przeglądarce zamknij kartę, w Androidzie dodamy finish()."));
 
     // rooms
     changeNickBtn2.addEventListener("click", () => promptNick(true));
     backToMenuBtn.addEventListener("click", () => showScreen("menu"));
-
     createRoomBtn.addEventListener("click", createRoom);
     joinRoomBtn.addEventListener("click", joinRoom);
 
-    // enter = tworzenie/dołączanie
-    newRoomName.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") createRoom();
-    });
-    joinRoomCode.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") joinRoom();
+    newRoomName.addEventListener("keydown", (e) => { if (e.key === "Enter") createRoom(); });
+    joinRoomCode.addEventListener("keydown", (e) => { if (e.key === "Enter") joinRoom(); });
+    joinRoomCode.addEventListener("input", () => { joinRoomCode.value = normalizeCode(joinRoomCode.value).slice(0, 6); });
+
+    // room
+    roomBackBtn.addEventListener("click", () => showScreen("rooms"));
+    copyCodeBtn.addEventListener("click", copyCode);
+    leaveRoomBtn.addEventListener("click", leaveRoom);
+    repairBtn.addEventListener("click", () => {
+      // szybka naprawa + render
+      const rooms = loadRooms();
+      saveRooms(rooms);
+      const code = getActiveRoomCode();
+      renderRoom(code);
+      roomStatusText.textContent = "Odświeżono";
+      logDebug("repair: migrated rooms + rerender");
     });
 
-    // uppercase input
-    joinRoomCode.addEventListener("input", () => {
-      joinRoomCode.value = normalizeCode(joinRoomCode.value).slice(0, 6);
-    });
-
+    // resize bg
     window.addEventListener("resize", setBgImages);
   }
 
   // ----------------------------
-  // splash + start
+  // boot
   // ----------------------------
   function boot() {
     setBgImages();
     updateNickUI();
 
-    // migracja rooms przy starcie (naprawa starego formatu)
+    // napraw format rooms przy starcie
     const rooms = loadRooms();
     saveRooms(rooms);
+
     logDebug(`boot ok (BUILD ${BUILD}) rooms=${rooms.length}`);
 
     initHandlers();
 
-    // pokaż menu po 7s
+    // po 7s chowamy splash i pokazujemy menu lub ostatni pokój
     if (splashHint) splashHint.textContent = "Ekran startowy (7s)…";
     setTimeout(() => {
       if (splashOverlay) splashOverlay.style.display = "none";
-      showScreen("menu");
+
+      // jeśli był aktywny pokój, to od razu go pokaż
+      if (!restoreLastRoomIfAny()) {
+        showScreen("menu");
+      }
+
       if (statusText) statusText.textContent = `Menu gotowe. BUILD ${BUILD}`;
     }, SPLASH_MS);
   }
