@@ -1,4 +1,4 @@
-const BUILD = 1212;
+const BUILD = 1210;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -29,7 +29,7 @@ function showToast(msg){
 }
 
 function showScreen(id){
-  ["splash","menu","stats","rooms","room"].forEach(s=>{
+  ["splash","menu","rooms","room"].forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
@@ -82,6 +82,7 @@ async function ensureNick(){
 
 function refreshNickLabels(){
   const nick = getNick() || "—";
+  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
 }
@@ -92,23 +93,22 @@ function showContinueModal({ code, roomName }){
   const text = el("continueText");
   if (!modal || !text) return;
 
-  text.textContent =
-    `Grasz w pokoju:\n` +
-    `• ${roomName || "—"}\n` +
-    `• kod: ${code}\n\n` +
-    `Czy chcesz kontynuować?`;
+  const rn = el("continueRoomName");
+  const rc = el("continueRoomCode");
+  if(rn) rn.textContent = roomName || "—";
+  if(rc) rc.textContent = code || "—";
 
+  text.textContent = "Czy chcesz kontynuować w tym pokoju, czy wrócić do wyboru pokoju?";
   modal.style.display = "flex";
 }
+
 function hideContinueModal(){
   const modal = el("continueModal");
   if (modal) modal.style.display = "none";
 }
+
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
-}
-function getSavedRoomCode(){
-  return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
 }
 
 // ---------- Firebase ----------
@@ -141,18 +141,13 @@ function isCompletePicksObject(picksObj){
   }
   return true;
 }
+
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
     submittedByUid[uid] = isCompletePicksObject(picksObj);
   }
 }
-
-// ---------- Firestore paths ----------
-function roomRef(code){ return boot.doc(db, "rooms", code); }
-function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
 // ---------- boot ----------
 async function boot(){
@@ -196,30 +191,75 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
-  // start w menu z obrazkiem wyboru
+  // jeśli jest zapisany pokój -> pytanie kontynuacji
+  const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
+  if(saved && saved.length === 6){
+    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam nazwę…`);
+    try{
+      const snap = await boot.getDoc(roomRef(saved));
+      if(!snap.exists()){
+        clearSavedRoom();
+        showScreen("menu");
+        showToast("Zapisany pokój nie istnieje");
+        return;
+      }
+      const room = snap.data();
+      showScreen("menu");
+      prepareContinueModal(saved, room?.name || "—");
+      return;
+    }catch(e){
+      clearSavedRoom();
+      showScreen("menu");
+      showToast("Nie udało się sprawdzić pokoju");
+      return;
+    }
+  }
+
   showScreen("menu");
+}
+
+function prepareContinueModal(code, roomName){
+  const yes = el("btnContinueYes");
+  const no = el("btnContinueNo");
+  const forget = el("btnContinueForget");
+
+  if(yes){
+    yes.onclick = async ()=>{
+      hideContinueModal();
+      localStorage.setItem(KEY_ACTIVE_ROOM, code);
+      await openRoom(code, { silent:true, force:true });
+    };
+  }
+
+  if(no){
+    no.onclick = ()=>{
+      hideContinueModal();
+      showScreen("rooms"); // bardziej naturalne niż menu
+    };
+  }
+
+  if(forget){
+    forget.onclick = ()=>{
+      clearSavedRoom();
+      hideContinueModal();
+      showToast("Zapomniano pokój");
+      showScreen("menu");
+    };
+  }
+
+  showContinueModal({ code, roomName });
 }
 
 // ---------- UI binding ----------
 function bindUI(){
-  // MENU (obrazek wyboru) — podpięte kliknięcia
-  const hitRooms = el("hitRooms");
-  const hitStats = el("hitStats");
-  const hitExit  = el("hitExit");
-
-  if(hitRooms) hitRooms.onclick = async ()=>{ await openRoomsEntryFlow(); };
-  if(hitStats) hitStats.onclick = ()=>{ showScreen("stats"); };
-  if(hitExit)  hitExit.onclick  = ()=>{
-    try{
-      window.close();
-      setTimeout(()=>showToast("Jeśli karta się nie zamknęła: zamknij ją ręcznie (X)."), 200);
-    }catch{
-      showToast("Zamknij kartę ręcznie (X).");
-    }
+  // MENU
+  el("btnOpenRooms").onclick = async ()=>{ showScreen("rooms"); el("debugRooms").textContent = "—"; };
+  el("btnChangeNickMenu").onclick = async ()=>{
+    localStorage.removeItem(KEY_NICK);
+    await ensureNick();
+    refreshNickLabels();
+    showToast("Zmieniono nick");
   };
-
-  // STATS
-  el("btnBackFromStats").onclick = ()=> showScreen("menu");
 
   // ROOMS
   el("btnBackMenu").onclick = ()=> showScreen("menu");
@@ -248,34 +288,6 @@ function bindUI(){
     await joinRoom(code);
   };
 
-  // CONTINUE MODAL
-  const yes = el("btnContinueYes");
-  const no = el("btnContinueNo");
-  const forget = el("btnContinueForget");
-
-  if(yes){
-    yes.onclick = async ()=>{
-      const code = getSavedRoomCode();
-      hideContinueModal();
-      if(!code) { showScreen("rooms"); return; }
-      await openRoom(code, { silent:true, force:true });
-    };
-  }
-  if(no){
-    no.onclick = ()=>{
-      hideContinueModal();
-      showScreen("rooms");
-    };
-  }
-  if(forget){
-    forget.onclick = ()=>{
-      clearSavedRoom();
-      hideContinueModal();
-      showToast("Zapomniano pokój");
-      showScreen("rooms");
-    };
-  }
-
   // ROOM
   el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
   el("btnCopyCode").onclick = async ()=>{
@@ -293,30 +305,11 @@ function bindUI(){
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
 }
 
-// wejście do “Pokoje typerów” z pytaniem o kontynuację
-async function openRoomsEntryFlow(){
-  await ensureNick();
-  refreshNickLabels();
-
-  const saved = getSavedRoomCode();
-  if(saved && saved.length === 6){
-    try{
-      const snap = await boot.getDoc(roomRef(saved));
-      if(snap.exists()){
-        const room = snap.data();
-        showScreen("rooms");
-        showContinueModal({ code: saved, roomName: room?.name || "—" });
-        return;
-      }else{
-        clearSavedRoom();
-      }
-    }catch{
-      // jak coś padnie, idziemy normalnie
-    }
-  }
-  showScreen("rooms");
-  if (el("debugRooms")) el("debugRooms").textContent = "—";
-}
+// ---------- Firestore paths ----------
+function roomRef(code){ return boot.doc(db, "rooms", code); }
+function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
 // ---------- Rooms logic ----------
 async function createRoom(roomName){

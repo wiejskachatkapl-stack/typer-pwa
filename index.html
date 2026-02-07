@@ -104,46 +104,6 @@
       position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
     }
 
-    /* MENU as IMAGE */
-    #menu{position:relative;align-items:stretch;justify-content:center}
-    .menuFull{
-      position:absolute;inset:0;
-      background: #000 center/cover no-repeat;
-    }
-    .menuImg{
-      position:absolute;inset:0;
-      background: transparent center/cover no-repeat;
-      /* wstawiamy tu obraz wyboru */
-      background-image: url("img_wybor.png");
-    }
-    /* Klikalne strefy przycisków (procenty dopasowane do Twojej grafiki) */
-    .menuHit{
-      position:absolute;
-      border:0;
-      background:rgba(255,255,255,0.00);
-      cursor:pointer;
-      border-radius:18px;
-      outline:none;
-    }
-    .menuHit:hover{ background:rgba(255,255,255,0.06); }
-    .menuHit:active{ background:rgba(255,255,255,0.10); }
-
-    /* 3 przyciski w 1 rzędzie (środek ekranu) */
-    #hitRooms{ left:18.5%; top:46.5%; width:24.5%; height:12.5%; }
-    #hitStats{ left:37.8%; top:46.5%; width:24.5%; height:12.5%; }
-    #hitExit { left:57.2%; top:46.5%; width:24.5%; height:12.5%; }
-
-    /* ROOMS SCREEN */
-    #rooms{padding:16px;gap:14px}
-    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
-
-    /* STATS */
-    #stats{padding:16px}
-    .statsBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-
     /* ROOM LAYOUT */
     #room{padding:16px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
@@ -183,26 +143,133 @@
     }
     .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
 
-    /* CONTINUE MODAL */
+    /* ROOMS SCREEN */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* MENU */
+    #menu{padding:16px}
+    .menuBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+
+    /* CONTINUE MODAL (TYPUJ STYLE) */
     #continueModal{
       position:absolute; inset:0;
       display:none;
       align-items:center; justify-content:center;
       z-index:50;
-      background:rgba(0,0,0,.45);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      background:
+        radial-gradient(1200px 600px at 50% 35%, rgba(60,140,255,.14), rgba(0,0,0,.55)),
+        rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      animation:fadeIn .18s ease-out;
     }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
     #continueCard{
-      width:min(720px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(8,22,52,.72);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      padding:18px;
+      width:min(820px,94%);
+      border-radius:26px;
+      border:1px solid rgba(255,255,255,.16);
+      background:
+        linear-gradient(180deg, rgba(8,22,52,.86), rgba(8,22,52,.66));
+      box-shadow:
+        0 22px 85px rgba(0,0,0,.62),
+        0 0 0 1px rgba(255,255,255,.06) inset;
+      overflow:hidden;
+      transform: translateY(8px) scale(.98);
+      animation:popIn .18s ease-out forwards;
     }
-    #continueTitle{font-size:20px;font-weight:1000;margin:0 0 6px 0}
-    #continueText{color:rgba(255,255,255,.80);font-weight:800;white-space:pre-wrap;margin:0 0 14px 0}
+    @keyframes popIn{to{transform: translateY(0) scale(1)}}
+
+    .continueTop{
+      display:flex;align-items:center;gap:12px;
+      padding:16px 18px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.10);
+    }
+    .continueIcon{
+      width:44px;height:44px;border-radius:16px;
+      background:linear-gradient(180deg, rgba(70,170,255,.22), rgba(0,0,0,.20));
+      border:1px solid rgba(255,255,255,.14);
+      display:flex;align-items:center;justify-content:center;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      font-weight:1000;
+    }
+    .continueIcon span{font-size:20px;opacity:.95}
+    .continueTitleWrap{display:flex;flex-direction:column;gap:2px;min-width:0}
+    #continueTitle{
+      font-size:22px;font-weight:1000;margin:0;
+      letter-spacing:.2px;
+    }
+    .continueSub{
+      color:rgba(255,255,255,.70);
+      font-weight:800;font-size:13px;
+    }
+
+    .continueBody{
+      padding:16px 18px 14px 18px;
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .kv{
+      display:flex;gap:12px;flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:10px 12px;
+      border-radius:18px;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:900;
+    }
+    .pill b{opacity:.85}
+    .pillCode{
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.14));
+      border:1px solid rgba(255,255,255,.14);
+    }
+    .pillCode .code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: 1px;
+      font-weight:1000;
+      padding:4px 8px;
+      border-radius:12px;
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    #continueText{
+      margin:0;
+      color:rgba(255,255,255,.82);
+      font-weight:850;
+      white-space:pre-wrap;
+      line-height:1.35;
+    }
+
+    .continueActions{
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+      padding:14px 18px 18px 18px;
+      border-top:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.08);
+    }
+
+    /* ładniejsze przyciski do modala */
+    .btnOk{
+      background:linear-gradient(180deg, rgba(40,255,160,.22), rgba(255,255,255,.08));
+      border:1px solid rgba(60,255,170,.35);
+    }
+    .btnOk:hover{background:linear-gradient(180deg, rgba(40,255,160,.28), rgba(255,255,255,.10))}
+    .btnNo{
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+    }
+    .btnDanger{
+      margin-left:auto;
+      background:linear-gradient(180deg, rgba(255,80,80,.18), rgba(255,255,255,.06));
+      border:1px solid rgba(255,90,90,.35);
+    }
+    .btnDanger:hover{background:linear-gradient(180deg, rgba(255,80,80,.24), rgba(255,255,255,.08))}
   </style>
 </head>
 
@@ -215,13 +282,29 @@
       <!-- CONTINUE MODAL -->
       <div id="continueModal">
         <div id="continueCard">
-          <div id="continueTitle">Kontynuować?</div>
-          <p id="continueText">—</p>
-          <div class="row">
-            <button class="btn" id="btnContinueYes">Tak, kontynuuj</button>
-            <button class="btn" id="btnContinueNo">Nie, wybierz pokój</button>
+          <div class="continueTop">
+            <div class="continueIcon"><span>⏱️</span></div>
+            <div class="continueTitleWrap">
+              <div id="continueTitle">Kontynuować?</div>
+              <div class="continueSub">Wykryto wcześniejszą rozgrywkę</div>
+            </div>
             <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnContinueForget">Zapomnij pokój</button>
+            <div class="chip">Typer</div>
+          </div>
+
+          <div class="continueBody">
+            <div class="kv">
+              <div class="pill"><b>Pokój:</b> <span id="continueRoomName">—</span></div>
+              <div class="pill pillCode"><b>Kod:</b> <span class="code" id="continueRoomCode">—</span></div>
+            </div>
+
+            <p id="continueText">Czy chcesz kontynuować?</p>
+          </div>
+
+          <div class="continueActions">
+            <button class="btn btnOk" id="btnContinueYes">✅ Tak, kontynuuj</button>
+            <button class="btn btnNo" id="btnContinueNo">↩️ Nie, wybierz pokój</button>
+            <button class="btn btnDanger" id="btnContinueForget">🗑️ Zapomnij pokój</button>
           </div>
         </div>
       </div>
@@ -236,29 +319,28 @@
         </div>
       </section>
 
-      <!-- MENU (IMAGE) -->
+      <!-- MENU -->
       <section id="menu" class="screen">
-        <div class="menuFull">
-          <div class="menuImg"></div>
-
-          <!-- klikane strefy -->
-          <button class="menuHit" id="hitRooms" aria-label="Pokoje typerów"></button>
-          <button class="menuHit" id="hitStats" aria-label="Statystyki"></button>
-          <button class="menuHit" id="hitExit"  aria-label="Wyjście"></button>
-        </div>
-      </section>
-
-      <!-- STATS -->
-      <section id="stats" class="screen">
-        <div class="statsBox panel">
+        <div class="menuBox panel">
           <div class="row">
-            <div class="chip">Statystyka</div>
+            <div class="chip">Menu</div>
             <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnBackFromStats">Wróć</button>
+            <button class="btn btnSmall" id="btnChangeNickMenu">Zmień nick</button>
           </div>
+
           <div class="panel block">
-            <h2>Wkrótce</h2>
-            <div class="help">Tu zrobimy ranking/punkty/wyniki.</div>
+            <h2>Liga typerów</h2>
+            <div class="help">Wejście do pokoi (FireStore).</div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn" id="btnOpenRooms">Wejdź</button>
+              <div class="spacer"></div>
+              <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
+            </div>
+          </div>
+
+          <div class="panel block">
+            <h2>Info</h2>
+            <div class="help">To jest wersja z Firestore. Pokoje i gracze są współdzielone.</div>
           </div>
         </div>
       </section>
@@ -387,6 +469,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1212"></script>
+  <script type="module" src="./app.js?v=1210"></script>
 </body>
 </html>
