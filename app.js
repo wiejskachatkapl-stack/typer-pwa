@@ -1,4 +1,4 @@
-const BUILD = 1201;
+const BUILD = 1210;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -80,6 +80,37 @@ async function ensureNick(){
   return nick;
 }
 
+function refreshNickLabels(){
+  const nick = getNick() || "—";
+  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
+  if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
+  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
+}
+
+// ---------- CONTINUE MODAL ----------
+function showContinueModal({ code, roomName }){
+  const modal = el("continueModal");
+  const text = el("continueText");
+  if (!modal || !text) return;
+
+  text.textContent =
+    `Grasz w pokoju:\n` +
+    `• ${roomName || "—"}\n` +
+    `• kod: ${code}\n\n` +
+    `Czy chcesz kontynuować?`;
+
+  modal.style.display = "flex";
+}
+
+function hideContinueModal(){
+  const modal = el("continueModal");
+  if (modal) modal.style.display = "none";
+}
+
+function clearSavedRoom(){
+  localStorage.removeItem(KEY_ACTIVE_ROOM);
+}
+
 // ---------- Firebase ----------
 let app, auth, db;
 let userUid = null;
@@ -93,11 +124,9 @@ let currentRoomCode = null;
 let currentRoom = null;
 
 let matchesCache = [];   // [{id, home, away, idx}]
-let picksCache = {};     // matchId -> {h,a} (TY - wpisy w inputach)
-let picksDocByUid = {};  // uid -> picks object (z Firestore)
-let submittedByUid = {}; // uid -> boolean (czy komplet zapisany)
-
-// trzymamy ostatnią listę graczy, żeby móc prze-renderować po zmianie statusów
+let picksCache = {};     // matchId -> {h,a} (TY)
+let picksDocByUid = {};  // uid -> picks object
+let submittedByUid = {}; // uid -> boolean
 let lastPlayers = [];
 
 // ---------- status helpers ----------
@@ -162,24 +191,69 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
+  // NOWY START: jeśli jest zapisany pokój -> POKAŻ PYTANIE
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
-  if(saved){
+  if(saved && saved.length === 6){
+    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam nazwę…`);
     try{
-      await openRoom(saved, {silent:true});
+      const snap = await boot.getDoc(roomRef(saved));
+      if(!snap.exists()){
+        clearSavedRoom();
+        showScreen("menu");
+        showToast("Zapisany pokój nie istnieje");
+        return;
+      }
+      const room = snap.data();
+      // pokaż okienko
+      showScreen("menu"); // tło/ramka gotowe
+      prepareContinueModal(saved, room?.name || "—");
       return;
     }catch(e){
-      localStorage.removeItem(KEY_ACTIVE_ROOM);
+      clearSavedRoom();
+      showScreen("menu");
+      showToast("Nie udało się sprawdzić pokoju");
+      return;
     }
   }
 
   showScreen("menu");
 }
 
-function refreshNickLabels(){
-  const nick = getNick() || "—";
-  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
-  if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
-  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
+function prepareContinueModal(code, roomName){
+  // podpinamy przyciski modala
+  const yes = el("btnContinueYes");
+  const no = el("btnContinueNo");
+  const forget = el("btnContinueForget");
+
+  const goMenu = ()=>{
+    hideContinueModal();
+    showScreen("menu");
+  };
+
+  if(yes){
+    yes.onclick = async ()=>{
+      hideContinueModal();
+      localStorage.setItem(KEY_ACTIVE_ROOM, code);
+      await openRoom(code, { silent:true, force:true });
+    };
+  }
+
+  if(no){
+    no.onclick = ()=>{
+      hideContinueModal();
+      showScreen("menu");
+    };
+  }
+
+  if(forget){
+    forget.onclick = ()=>{
+      clearSavedRoom();
+      showToast("Zapomniano pokój");
+      goMenu();
+    };
+  }
+
+  showContinueModal({ code, roomName });
 }
 
 // ---------- UI binding ----------
@@ -381,8 +455,7 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // live picks (status przy nicku)
-  // każdy dokument: rooms/{code}/picks/{uid} -> { picks: {matchId:{h,a}} }
+  // live picks (status)
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -402,7 +475,6 @@ async function openRoom(code, opts={}){
     });
     matchesCache = arr;
 
-    // gdy zmieniły się mecze — przelicz statusy u wszystkich
     recomputeSubmittedMap();
     renderPlayers(lastPlayers);
 
@@ -467,7 +539,6 @@ function renderPlayers(players){
     const row = document.createElement("div");
     row.className = "playerRow";
 
-    // LEFT: Nick + status ✓/✗
     const left = document.createElement("div");
     left.style.display = "flex";
     left.style.alignItems = "center";
@@ -492,7 +563,6 @@ function renderPlayers(players){
     left.appendChild(name);
     left.appendChild(status);
 
-    // RIGHT: badges
     const right = document.createElement("div");
     right.className = "row";
     right.style.gap = "8px";
@@ -613,7 +683,7 @@ function updateSaveButtonState(){
   btn.disabled = !allMyPicksFilled();
 }
 
-// ---------- test queue (admin only) ----------
+// ---------- test queue ----------
 async function addTestQueue(){
   if(!currentRoomCode) return;
   if(currentRoom?.adminUid !== userUid){
