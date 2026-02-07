@@ -11,329 +11,41 @@
   <style>
     :root{
       --bg:#071229;
-      --glass: rgba(10, 30, 70, .55);
       --glass2: rgba(10, 30, 70, .38);
       --stroke: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.72);
-      --muted2: rgba(255,255,255,.55);
-      --btn: rgba(255,255,255,.10);
-      --btn2: rgba(255,255,255,.16);
-      --ok: rgba(80, 220, 150, .18);
-      --bad: rgba(255, 90, 90, .22);
       --shadow: 0 14px 50px rgba(0,0,0,.45);
-      --r: 18px;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      background: var(--bg);
-      overflow:hidden;
-    }
-
-    /* tło globalne */
-    #bg{
-      position:fixed; inset:0;
-      background: #071229 center/cover no-repeat;
-      filter: saturate(1.05) contrast(1.02);
-      z-index:0;
-    }
-
-    /* główny kontener */
-    #app{
-      position:fixed; inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:1;
-    }
-
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
+    #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
+    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;z-index:1}
     .frame{
-      width:min(1320px, 96vw);
-      height:min(820px, 92vh);
-      border:1px solid var(--stroke);
-      border-radius: 26px;
-      background: rgba(0,0,0,.10);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      overflow:hidden;
-      position:relative;
+      width:min(1320px,96vw);height:min(820px,92vh);
+      border:1px solid var(--stroke);border-radius:26px;
+      background:rgba(0,0,0,.10);box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      overflow:hidden;position:relative;
     }
-
-    .screen{display:none; height:100%}
-    .screen.active{display:block}
-
-    /* SPLASH */
-    #splash{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:100%;
-      padding:24px;
-    }
+    .screen{display:none;height:100%}
+    .screen.active{display:flex}
+    #splash{align-items:center;justify-content:center;padding:24px}
     .splashCard{
-      width:min(780px, 92%);
-      border:1px solid var(--stroke);
-      border-radius: 22px;
-      background: var(--glass2);
-      padding:26px;
-      text-align:left;
+      width:min(820px,92%);border:1px solid var(--stroke);
+      border-radius:22px;background:var(--glass2);padding:22px;
     }
     .spinner{
-      width:26px; height:26px;
-      border-radius:50%;
+      width:26px;height:26px;border-radius:50%;
       border:3px solid rgba(255,255,255,.25);
-      border-top-color: rgba(255,255,255,.9);
-      animation: spin 1s linear infinite;
-      margin:14px 0 0 0;
+      border-top-color:rgba(255,255,255,.9);
+      animation:spin 1s linear infinite;margin-top:12px;
     }
-    @keyframes spin { to { transform: rotate(360deg);} }
-
-    /* MENU */
-    #menu{
-      height:100%;
-      display:flex;
-      flex-direction:column;
-    }
-    .menuTop{
-      padding:18px 18px 10px 18px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      border:1px solid var(--stroke);
-      background: var(--glass2);
-      border-radius: 999px;
-      padding:10px 14px;
-      font-weight:700;
-    }
-    .btn{
-      border:1px solid var(--stroke);
-      background: var(--btn);
-      color:var(--text);
-      border-radius: 999px;
-      padding:10px 14px;
-      cursor:pointer;
-      font-weight:700;
-      transition:.12s ease;
-      user-select:none;
-    }
-    .btn:hover{ background: var(--btn2); }
-    .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-    .menuBody{
-      flex:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:14px 18px 18px 18px;
-    }
-    .menuCard{
-      width:min(920px, 98%);
-      border:1px solid var(--stroke);
-      border-radius: 22px;
-      background: var(--glass2);
-      padding:18px;
-    }
-    .menuTitle{font-size:26px; font-weight:900; margin:0 0 6px 0;}
-    .menuSub{color:var(--muted); margin:0 0 14px 0;}
-    .menuBtns{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-
-    /* ROOMS (Liga) */
-    #rooms{
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      padding:18px;
-      gap:14px;
-    }
-    .card{
-      border:1px solid var(--stroke);
-      border-radius: 22px;
-      background: var(--glass2);
-      padding:16px;
-    }
-    .row{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .input{
-      flex:1;
-      min-width:220px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-      color:var(--text);
-      border-radius: 999px;
-      padding:12px 14px;
-      outline:none;
-      font-weight:700;
-    }
-    .hint{color:var(--muted2); font-size:13px; margin-top:8px}
-
-    /* POKÓJ: układ 3 kolumny (LEWA = info+akcje, ŚRODEK = mecze, PRAWA = gracze) */
-    #room{
-      height:100%;
-      padding:14px;
-      display:grid;
-      grid-template-columns: 300px 1fr 300px;
-      gap:14px;
-    }
-
-    .panel{
-      border:1px solid var(--stroke);
-      border-radius: 22px;
-      background: var(--glass2);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
-    }
-    .panelHeader{
-      padding:14px 14px 10px 14px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .panelTitle{font-weight:900; font-size:20px;}
-    .panelBody{
-      padding:12px 14px 14px 14px;
-      overflow:auto;
-      min-height:0;
-    }
-
-    .kv{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:8px 0;
-      border-bottom:1px dashed rgba(255,255,255,.08);
-      color:var(--muted);
-      font-weight:700;
-    }
-    .kv span:last-child{color:var(--text); font-weight:900;}
-    .actions{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top:12px;
-    }
-
-    /* lista graczy */
-    .playerItem{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px 12px;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      background: rgba(0,0,0,.14);
-      margin-bottom:10px;
-      font-weight:800;
-    }
-
-    /* mecze */
-    .matchesTopRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-    .note{color:var(--muted2); font-size:13px}
-
-    .match{
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
-      border-radius: 18px;
-      padding:12px;
-      margin-bottom:10px;
-      display:grid;
-      grid-template-columns: 1fr 160px 1fr;
-      gap:10px;
-      align-items:center;
-    }
-    .team{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-    .logo{
-      width:28px; height:28px;
-      border-radius:8px;
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      object-fit:contain;
-      flex:0 0 auto;
-    }
-    .teamName{
-      font-weight:900;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .scoreBox{
-      display:flex; align-items:center; justify-content:center; gap:8px;
-    }
-    .scoreInput{
-      width:56px;
-      text-align:center;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.22);
-      color:var(--text);
-      border-radius: 14px;
-      padding:10px 10px;
-      outline:none;
-      font-weight:900;
-      font-size:16px;
-    }
-    .sep{font-weight:900; opacity:.8}
-
-    .toast{
-      position:absolute;
-      left:18px;
-      bottom:14px;
-      padding:10px 14px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.35);
-      border-radius: 999px;
-      color:var(--text);
-      font-weight:800;
-      display:none;
-      z-index:10;
-    }
-
-    .footer{
-      position:absolute;
-      right:18px;
-      bottom:14px;
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      font-weight:700;
-      z-index:2;
-    }
-
-    @media (max-width: 980px){
-      .frame{height: 94vh;}
-      #room{
-        grid-template-columns: 1fr;
-      }
-      #room .panel{height:auto;}
-    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
+    .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
+    .footer{position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:700}
   </style>
 </head>
 
@@ -342,140 +54,63 @@
 
   <div id="app">
     <div class="frame">
-      <div class="toast" id="toast"></div>
-      <div class="footer" id="footer">Copyright 2026 RN_APS Mariusz Gębka</div>
+      <div class="footer">Copyright 2026 RN_APS Mariusz Gębka</div>
 
       <!-- SPLASH -->
       <section id="splash" class="screen active">
         <div class="splashCard">
           <div style="font-size:22px;font-weight:900;">Typer</div>
-          <div style="margin-top:6px;color:var(--muted);font-weight:700;" id="splashHint">Ładowanie…</div>
+          <div class="hint" id="splashHint">Ładowanie…</div>
+          <div class="err" id="splashErr"></div>
           <div class="spinner"></div>
         </div>
       </section>
 
-      <!-- MENU -->
-      <section id="menu" class="screen">
-        <div class="menuTop">
-          <div class="pill">Nick: <span id="nickText">---</span></div>
-          <div class="row">
-            <button class="btn" id="btnChangeNick">Zmień nick</button>
-          </div>
-        </div>
-        <div class="menuBody">
-          <div class="menuCard">
-            <h2 class="menuTitle">Menu</h2>
-            <p class="menuSub">Wybierz opcję.</p>
-            <div class="menuBtns">
-              <button class="btn" id="btnLiga">Liga typerów</button>
-              <button class="btn" id="btnExit">Wyjście</button>
-            </div>
-            <div class="hint" id="debugInfo"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ROOMS -->
-      <section id="rooms" class="screen">
-        <div class="row" style="justify-content:space-between;">
-          <div class="pill">Liga • Nick: <span id="nickTextRooms">---</span></div>
-          <div class="row">
-            <button class="btn" id="btnChangeNick2">Zmień nick</button>
-            <button class="btn" id="btnBackFromRooms">Wróć</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div style="font-size:18px;font-weight:900;margin-bottom:10px;">Nowy pokój</div>
-          <div class="row">
-            <input class="input" id="roomNameInput" placeholder="Nazwa pokoju (np. domowy)" maxlength="24" />
-            <button class="btn" id="btnCreateRoom">Utwórz</button>
-          </div>
-          <div class="hint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
-        </div>
-
-        <div class="card">
-          <div style="font-size:18px;font-weight:900;margin-bottom:10px;">Dołącz do pokoju</div>
-          <div class="row">
-            <input class="input" id="joinCodeInput" placeholder="Wpisz kod (np. AB12CD)" maxlength="6" />
-            <button class="btn" id="btnJoinRoom">Dołącz</button>
-          </div>
-          <div class="hint">Teraz działa to przez Firebase/Firestore (czyli inni też mogą dołączyć).</div>
-        </div>
-
-        <div class="card" id="roomsDebugCard" style="display:none;">
-          <div style="font-size:18px;font-weight:900;margin-bottom:10px;">Debug</div>
-          <pre id="roomsDebug" style="margin:0;white-space:pre-wrap;color:rgba(255,255,255,.78)"></pre>
-        </div>
-      </section>
-
-      <!-- ROOM -->
-      <section id="room" class="screen">
-        <!-- LEWY PASEK: info + akcje + wróć -->
-        <aside class="panel" id="leftPanel">
-          <div class="panelHeader">
-            <div class="panelTitle">Pokój</div>
-            <button class="btn" id="btnBackFromRoom">Wróć</button>
-          </div>
-          <div class="panelBody">
-            <div class="kv"><span>Nick</span><span id="nickTextRoom">---</span></div>
-            <div class="kv"><span>Nazwa</span><span id="roomNameText">---</span></div>
-            <div class="kv"><span>Admin</span><span id="roomAdminText">---</span></div>
-            <div class="kv"><span>Kod</span><span id="roomCodeText">------</span></div>
-
-            <div class="actions">
-              <button class="btn" id="btnCopyCode">Kopiuj kod</button>
-              <button class="btn" id="btnLeaveRoom">Opuść</button>
-              <button class="btn" id="btnRefreshRoom">Odśwież</button>
-            </div>
-
-            <div style="height:14px;"></div>
-            <div style="font-size:16px;font-weight:900;">Akcje</div>
-            <div class="hint">Zapis typów aktywuje się dopiero, gdy uzupełnisz wszystkie mecze.</div>
-
-            <div class="actions" style="margin-top:10px;">
-              <button class="btn" id="btnSaveAllPicks" disabled>Zapisz typy</button>
-              <button class="btn" id="btnAddQueueTest">Dodaj kolejkę (test)</button>
-            </div>
-
-            <div style="height:12px;"></div>
-            <div class="hint" id="roomStatus">—</div>
-          </div>
-        </aside>
-
-        <!-- ŚRODEK: mecze (maksymalnie w górę i w dół) -->
-        <main class="panel" id="midPanel">
-          <div class="panelHeader">
-            <div class="panelTitle">Spotkania</div>
-            <div class="note" id="matchesNote">Wpisz wszystkie typy, potem “Zapisz typy”.</div>
-          </div>
-          <div class="panelBody" id="matchesList">
-            <!-- match cards -->
-          </div>
-        </main>
-
-        <!-- PRAWY PASEK: tylko gracze -->
-        <aside class="panel" id="rightPanel">
-          <div class="panelHeader">
-            <div class="panelTitle">Gracze</div>
-          </div>
-          <div class="panelBody" id="playersList">
-            <!-- players -->
-          </div>
-        </aside>
-      </section>
-
+      <!-- reszta ekranów: w tej wersji debug niepotrzebne, bo i tak przełącza je app.js -->
+      <section id="menu" class="screen"></section>
+      <section id="rooms" class="screen"></section>
+      <section id="room" class="screen"></section>
     </div>
   </div>
 
   <script>
-    // Service worker (zostawiamy jeśli masz sw.js)
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    // DEBUG: pokazuj błędy na splashu
+    const hint = document.getElementById("splashHint");
+    const errBox = document.getElementById("splashErr");
+
+    function showErr(title, msg){
+      hint.textContent = "STOP: wykryto błąd.";
+      errBox.style.display = "block";
+      errBox.textContent = title + "\n\n" + msg;
     }
+
+    window.addEventListener("error", (e) => {
+      showErr("window.error", (e?.message || "unknown") + "\n" + (e?.filename || "") + ":" + (e?.lineno || "?"));
+    });
+
+    window.addEventListener("unhandledrejection", (e) => {
+      showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
+    });
+
+    // Timeout informacyjny
+    setTimeout(() => {
+      if (hint.textContent.includes("Ładowanie")) {
+        hint.textContent =
+`Ładowanie trwa za długo (10s).
+Najczęściej to:
+1) Service Worker trzyma starą wersję
+2) błąd importu Firebase (moduły)
+3) błąd w app.js
+
+Jeśli widzisz tu czerwony błąd – wklej go do mnie.`;
+      }
+    }, 10000);
+
+    // UWAGA: na razie WYŁĄCZONE SW, żeby cache nie blokował zmian
+    // if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
   </script>
 
   <!-- app.js -->
-  <script type="module" src="./app.js?v=1101"></script>
+  <script type="module" src="./app.js?v=1102"></script>
 </body>
 </html>
