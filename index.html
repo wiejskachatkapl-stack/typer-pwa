@@ -154,6 +154,10 @@
     #menu{padding:16px}
     .menuBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
 
+    /* STATS */
+    #stats{padding:16px}
+    .statsBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+
     /* CONTINUE MODAL */
     #continueModal{
       position:absolute; inset:0;
@@ -190,7 +194,7 @@
           <p id="continueText">—</p>
           <div class="row">
             <button class="btn" id="btnContinueYes">Tak, kontynuuj</button>
-            <button class="btn" id="btnContinueNo">Nie, wróć do menu</button>
+            <button class="btn" id="btnContinueNo">Nie, wybierz pokój</button>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnContinueForget">Zapomnij pokój</button>
           </div>
@@ -214,21 +218,41 @@
             <div class="chip">Menu</div>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnChangeNickMenu">Zmień nick</button>
+            <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
           </div>
 
           <div class="panel block">
-            <h2>Liga typerów</h2>
-            <div class="help">Wejście do pokoi (FireStore).</div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn" id="btnOpenRooms">Wejdź</button>
+            <h2>Typer</h2>
+            <div class="help">Wybierz, gdzie chcesz wejść.</div>
+            <div class="row" style="margin-top:12px;gap:12px;flex-wrap:wrap">
+              <button class="btn" id="btnOpenRooms">Pokoje typerów</button>
+              <button class="btn" id="btnOpenStats">Statystyka</button>
+              <button class="btn" id="btnExit">Wyjście</button>
               <div class="spacer"></div>
-              <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
             </div>
           </div>
 
           <div class="panel block">
             <h2>Info</h2>
-            <div class="help">To jest wersja z Firestore. Pokoje i gracze są współdzielone.</div>
+            <div class="help">Pokoje są w Firestore. Mecze dodaje admin. Typy zapisujesz jednym przyciskiem.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STATS -->
+      <section id="stats" class="screen">
+        <div class="statsBox panel">
+          <div class="row">
+            <div class="chip">Statystyka</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnBackFromStats">Wróć</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Wkrótce</h2>
+            <div class="help">
+              Tu zrobimy: tabelę graczy, kto oddał typy, wyniki, punkty, ranking itd.
+            </div>
           </div>
         </div>
       </section>
@@ -357,6 +381,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1210"></script>
+  <script type="module" src="./app.js?v=1211"></script>
 </body>
 </html>

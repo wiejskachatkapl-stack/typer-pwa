@@ -1,4 +1,4 @@
-const BUILD = 1210;
+const BUILD = 1211;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -29,7 +29,7 @@ function showToast(msg){
 }
 
 function showScreen(id){
-  ["splash","menu","rooms","room"].forEach(s=>{
+  ["splash","menu","stats","rooms","room"].forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
@@ -109,6 +109,10 @@ function hideContinueModal(){
 
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
+}
+
+function getSavedRoomCode(){
+  return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
 }
 
 // ---------- Firebase ----------
@@ -191,75 +195,36 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
-  // NOWY START: jeśli jest zapisany pokój -> POKAŻ PYTANIE
-  const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
-  if(saved && saved.length === 6){
-    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam nazwę…`);
-    try{
-      const snap = await boot.getDoc(roomRef(saved));
-      if(!snap.exists()){
-        clearSavedRoom();
-        showScreen("menu");
-        showToast("Zapisany pokój nie istnieje");
-        return;
-      }
-      const room = snap.data();
-      // pokaż okienko
-      showScreen("menu"); // tło/ramka gotowe
-      prepareContinueModal(saved, room?.name || "—");
-      return;
-    }catch(e){
-      clearSavedRoom();
-      showScreen("menu");
-      showToast("Nie udało się sprawdzić pokoju");
-      return;
-    }
-  }
-
+  // WAŻNE: start zawsze w MENU
   showScreen("menu");
-}
-
-function prepareContinueModal(code, roomName){
-  // podpinamy przyciski modala
-  const yes = el("btnContinueYes");
-  const no = el("btnContinueNo");
-  const forget = el("btnContinueForget");
-
-  const goMenu = ()=>{
-    hideContinueModal();
-    showScreen("menu");
-  };
-
-  if(yes){
-    yes.onclick = async ()=>{
-      hideContinueModal();
-      localStorage.setItem(KEY_ACTIVE_ROOM, code);
-      await openRoom(code, { silent:true, force:true });
-    };
-  }
-
-  if(no){
-    no.onclick = ()=>{
-      hideContinueModal();
-      showScreen("menu");
-    };
-  }
-
-  if(forget){
-    forget.onclick = ()=>{
-      clearSavedRoom();
-      showToast("Zapomniano pokój");
-      goMenu();
-    };
-  }
-
-  showContinueModal({ code, roomName });
+  showToast("Gotowe ✅");
 }
 
 // ---------- UI binding ----------
 function bindUI(){
   // MENU
-  el("btnOpenRooms").onclick = async ()=>{ showScreen("rooms"); el("debugRooms").textContent = "—"; };
+  el("btnOpenRooms").onclick = async ()=>{ await openRoomsEntryFlow(); };
+
+  el("btnOpenStats").onclick = ()=>{
+    showScreen("stats");
+  };
+
+  el("btnBackFromStats").onclick = ()=>{
+    showScreen("menu");
+  };
+
+  el("btnExit").onclick = ()=>{
+    // W przeglądarce zwykle nie da się zamknąć karty programowo (ochrona).
+    try{
+      window.close();
+      setTimeout(()=>{
+        showToast("Jeśli karta się nie zamknęła: zamknij ją ręcznie (X) 🙂");
+      }, 200);
+    }catch{
+      showToast("Zamknij kartę ręcznie (X).");
+    }
+  };
+
   el("btnChangeNickMenu").onclick = async ()=>{
     localStorage.removeItem(KEY_NICK);
     await ensureNick();
@@ -294,6 +259,36 @@ function bindUI(){
     await joinRoom(code);
   };
 
+  // CONTINUE MODAL
+  const yes = el("btnContinueYes");
+  const no = el("btnContinueNo");
+  const forget = el("btnContinueForget");
+
+  if(yes){
+    yes.onclick = async ()=>{
+      const code = getSavedRoomCode();
+      hideContinueModal();
+      if(!code) { showScreen("rooms"); return; }
+      await openRoom(code, { silent:true, force:true });
+    };
+  }
+
+  if(no){
+    no.onclick = ()=>{
+      hideContinueModal();
+      showScreen("rooms");
+    };
+  }
+
+  if(forget){
+    forget.onclick = ()=>{
+      clearSavedRoom();
+      hideContinueModal();
+      showToast("Zapomniano pokój");
+      showScreen("rooms");
+    };
+  }
+
   // ROOM
   el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
   el("btnCopyCode").onclick = async ()=>{
@@ -309,6 +304,33 @@ function bindUI(){
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+}
+
+// po kliknięciu „Pokoje typerów”:
+async function openRoomsEntryFlow(){
+  await ensureNick();
+  refreshNickLabels();
+
+  const saved = getSavedRoomCode();
+  if(saved && saved.length === 6){
+    try{
+      const snap = await boot.getDoc(roomRef(saved));
+      if(snap.exists()){
+        const room = snap.data();
+        // pokazujemy ROOMS w tle + modal
+        showScreen("rooms");
+        showContinueModal({ code: saved, roomName: room?.name || "—" });
+        return;
+      }else{
+        clearSavedRoom();
+      }
+    }catch{
+      // jak coś padnie, idziemy normalnie do listy
+    }
+  }
+
+  showScreen("rooms");
+  if (el("debugRooms")) el("debugRooms").textContent = "—";
 }
 
 // ---------- Firestore paths ----------
@@ -586,18 +608,75 @@ function renderPlayers(players){
   });
 }
 
+// ---- LOGA: mapa wyjątków + kilka prób nazw ----
+const LOGO_ALIASES = {
+  // klucz = normalizeSlug(nazwa w aplikacji), wartość = "nazwa_pliku_bez_rozszerzenia"
+  "wisla_plock": "wisla_plock",
+  "gks_katowice": "gks_katowice",
+  "gornik": "gornik",
+  "zaglebie": "zaglebie",
+  "slask": "slask",
+  // dopisz tu kolejne jeśli trzeba:
+  // "legia": "legia",
+  // "radomiak": "radomiak",
+};
+
+function logoCandidates(teamName){
+  const base = normalizeSlug(teamName);
+  const parts = base.split("_").filter(Boolean);
+
+  const candidates = new Set();
+
+  // 1) wyjątek
+  if(LOGO_ALIASES[base]) candidates.add(LOGO_ALIASES[base]);
+
+  // 2) pełna nazwa
+  if(base) candidates.add(base);
+
+  // 3) pierwszy/ostatni człon
+  if(parts.length >= 2){
+    candidates.add(parts[0]);
+    candidates.add(parts[parts.length - 1]);
+  }
+
+  // 4) “wisla” bywa plikiem dla “Wisla Plock” (częsty przypadek)
+  if(base === "wisla_plock") candidates.add("wisla");
+  if(base === "gks_katowice"){ candidates.add("gks"); candidates.add("katowice"); }
+
+  return [...candidates];
+}
+
 function createLogoImg(teamName){
-  const slug = normalizeSlug(teamName);
   const img = document.createElement("img");
   img.className = "logo";
   img.alt = teamName;
 
-  img.src = `./logos/${slug}.png`;
-  img.onerror = () => {
-    if(img.dataset.try === "jpg"){ img.style.display="none"; return; }
-    img.dataset.try = "jpg";
-    img.src = `./logos/${slug}.jpg`;
+  const cands = logoCandidates(teamName);
+  let i = 0;
+  let ext = "png";
+
+  const tryNext = ()=>{
+    if(i >= cands.length){
+      img.style.display = "none";
+      return;
+    }
+    const slug = cands[i];
+    img.src = `./logos/${slug}.${ext}`;
   };
+
+  img.onerror = ()=>{
+    // najpierw png -> jpg, potem następny kandydat
+    if(ext === "png"){
+      ext = "jpg";
+      tryNext();
+    }else{
+      ext = "png";
+      i++;
+      tryNext();
+    }
+  };
+
+  tryNext();
   return img;
 }
 
