@@ -154,14 +154,16 @@
       outline:none;
     }
 
+    /* ====== ROOM LAYOUT ====== */
     .roomFrame{
       flex:1;
       min-height:0;
       display:grid;
-      grid-template-columns: 220px 1fr 360px;
+      grid-template-columns: 320px 1fr 300px;
       gap:12px;
     }
 
+    /* LEWY: full height */
     .leftRail{
       background: var(--glass2);
       border:1px solid var(--stroke);
@@ -172,8 +174,10 @@
       gap:10px;
       align-items:stretch;
       min-height:0;
+      overflow:auto;
     }
 
+    /* ŚRODEK: max height (lista przewijana) */
     .centerArea{
       background: var(--glass);
       border:1px solid var(--stroke);
@@ -184,6 +188,7 @@
       min-height:0;
     }
 
+    /* PRAWY: tylko gracze, full height */
     .rightRail{
       background: var(--glass2);
       border:1px solid var(--stroke);
@@ -191,8 +196,9 @@
       padding:14px;
       display:flex;
       flex-direction:column;
-      gap:12px;
+      gap:10px;
       min-height:0;
+      overflow:auto;
     }
 
     .matchesHeader{
@@ -257,11 +263,15 @@
     .playerRow b{ font-size:14px; }
     .playerRow span{ color: var(--muted); font-weight:800; }
 
+    .rowLine{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+
     @media (max-width: 980px){
       .roomFrame{ grid-template-columns: 1fr; }
-      .leftRail{ flex-direction:row; flex-wrap:wrap; justify-content:space-between; }
-      .rightRail{ order:3; }
+      .leftRail{ order:1; }
       .centerArea{ order:2; }
+      .rightRail{ order:3; }
       .matchRow{ grid-template-columns: 1fr; }
       .scoreBox{ justify-content:flex-start; }
     }
@@ -370,53 +380,59 @@
       <div class="card">
         <div class="cardInner">
           <div class="roomFrame">
+
+            <!-- LEWY PASEK: POKÓJ + INFO + AKCJE (FULL HEIGHT) -->
             <div class="leftRail">
               <div class="pill">Pokój</div>
               <div class="pill"><small>Nick:</small> <span id="nickTextRoom">—</span></div>
+
+              <div class="panel" style="background:rgba(0,0,0,0.10); border-radius:16px;">
+                <div style="font-size:20px; font-weight:900; margin-bottom:6px;" id="roomNameText">—</div>
+                <div style="color:var(--muted); font-weight:900;" id="roomAdminText">Admin: —</div>
+
+                <div class="rowLine" style="margin-top:10px;">
+                  <div style="color:var(--muted); font-weight:900; min-width:90px;">Kod</div>
+                  <input id="roomCodeText" class="scoreInput" style="width:100%; text-align:left; font-weight:900; letter-spacing:1px;" readonly />
+                  <button class="btn" id="copyCodeBtn">Kopiuj</button>
+                </div>
+
+                <div class="rowLine" style="margin-top:10px;">
+                  <button class="btn" id="leaveRoomBtn">Opuść</button>
+                  <button class="btn" id="refreshRoomBtn">Odśwież</button>
+                </div>
+
+                <div class="hintLine" style="margin-top:10px;">
+                  Pokoje są lokalne (test). Następny krok: backend / współdzielenie.
+                </div>
+              </div>
+
+              <div class="panel" style="background:rgba(0,0,0,0.10); border-radius:16px;">
+                <div style="font-weight:900; margin-bottom:8px;">Akcje</div>
+                <div class="rowLine">
+                  <button class="btn" id="saveAllBtn" disabled>Zapisz typy</button>
+                  <button class="btn" id="addQueueBtn">Dodaj kolejkę (test)</button>
+                </div>
+                <div class="hintLine">Zapisz typy aktywuje się dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              </div>
+
               <button class="btn" id="roomBackBtn" style="margin-top:auto;">Wróć</button>
             </div>
 
+            <!-- ŚRODEK: TYPY (MAX HEIGHT) -->
             <div class="centerArea">
               <div class="matchesHeader">
                 <div>
                   <div style="font-size:22px; font-weight:900;">Spotkania</div>
                   <div class="hintLine">Typuj wyniki. Docelowo dojdzie import ligi/kolejki.</div>
                 </div>
-                <div class="actions">
-                  <button class="btn" id="saveAllBtn" disabled>Zapisz typy</button>
-                  <button class="btn" id="addQueueBtn">Dodaj kolejkę (test)</button>
-                </div>
               </div>
-
               <div id="matchesList" class="matchesList"></div>
             </div>
 
+            <!-- PRAWY: TYLKO GRACZE (MAX HEIGHT) -->
             <div class="rightRail">
-              <div class="panel" style="background:transparent; padding:0; border:none;">
-                <div style="font-size:22px; font-weight:900; margin-bottom:10px;">Gracze</div>
-                <div id="playersList" class="playersList"></div>
-              </div>
-
-              <div class="panel" style="background:transparent; padding:0; border:none;">
-                <div style="font-size:22px; font-weight:900; margin-bottom:10px;">Informacje</div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                  <div style="font-size:22px; font-weight:900;" id="roomNameText">—</div>
-                  <div style="color:var(--muted); font-weight:900;" id="roomAdminText">Admin: —</div>
-
-                  <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
-                    <div style="color:var(--muted); font-weight:900; min-width:90px;">Kod pokoju</div>
-                    <input id="roomCodeText" class="scoreInput" style="width:100%; text-align:left; font-weight:900; letter-spacing:1px;" readonly />
-                    <button class="btn" id="copyCodeBtn">Kopiuj</button>
-                  </div>
-
-                  <div style="display:flex; gap:10px; align-items:center; margin-top:8px; flex-wrap:wrap;">
-                    <button class="btn" id="leaveRoomBtn">Opuść pokój</button>
-                    <button class="btn" id="refreshRoomBtn">Odśwież / napraw</button>
-                  </div>
-
-                  <div class="hintLine">Pokoje są lokalne (test). Następny krok: backend / współdzielenie.</div>
-                </div>
-              </div>
+              <div style="font-size:22px; font-weight:900;">Gracze</div>
+              <div id="playersList" class="playersList"></div>
             </div>
 
           </div>
@@ -430,7 +446,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=1016"></script>
+  <script src="app.js?v=1017"></script>
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(()=>{});

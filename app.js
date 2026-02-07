@@ -1,9 +1,9 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=1016).
+   * Musi się zgadzać z index.html (app.js?v=1017).
    */
-  const BUILD = 1016;
+  const BUILD = 1017;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -89,13 +89,14 @@
   };
 
   const logDebug = (msg) => {
+    if (!debugBox) return;
     const t = new Date();
     const hh = String(t.getHours()).padStart(2, "0");
     const mm = String(t.getMinutes()).padStart(2, "0");
     const ss = String(t.getSeconds()).padStart(2, "0");
     lastDebug.unshift(`[${hh}:${mm}:${ss}] ${msg}`);
     lastDebug = lastDebug.slice(0, 30);
-    if (debugBox) debugBox.textContent = lastDebug.join("\n");
+    debugBox.textContent = lastDebug.join("\n");
   };
 
   const saveRooms = () => localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
@@ -127,7 +128,7 @@
 
   const findRoom = (code) => rooms.find(r => r.code === code);
 
-  // TEST QUEUE (na razie ręczna/testowa – później podmienimy na realny import)
+  // TEST QUEUE
   const testQueue = () => ([
     { home: "Jagiellonia", away: "Piast" },
     { home: "Lechia", away: "Legia" },
@@ -179,7 +180,6 @@
       out.push(`logos/${a}.png`);
       out.push(`logos/${a}.jpg`);
       out.push(`logos/${a}.jpeg`);
-      // awaryjnie jeśli ktoś wrzucił loga do root:
       out.push(`${a}.png`);
       out.push(`${a}.jpg`);
     }
@@ -384,7 +384,6 @@
     activeRoomCode = code;
     saveActiveRoom(code);
 
-    // tylko img_tlo.png w pokoju
     setRoomBg();
 
     roomNameText.textContent = room.name || "—";
