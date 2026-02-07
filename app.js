@@ -1,9 +1,9 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=1014).
+   * Musi się zgadzać z index.html (app.js?v=1015).
    */
-  const BUILD = 1014;
+  const BUILD = 1015;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -15,7 +15,7 @@
   const MENU_PC = "img_menu_pc.png";
   const STARTER = "img_starter.png";
 
-  // >>> NAJWAŻNIEJSZE: w POKOJU ma być TYLKO to tło:
+  // W POKOJU MA ZOSTAĆ TYLKO TO:
   const ROOM_BG = "img_tlo.png";
 
   const el = (id) => document.getElementById(id);
@@ -80,6 +80,8 @@
   const isPhone = () => window.matchMedia("(max-width: 880px)").matches;
 
   const setBackground = (which) => {
+    // czyścimy i ustawiamy JEDNO tło
+    bg.style.backgroundImage = "none";
     bg.style.backgroundImage = `url('${which}')`;
   };
 
@@ -193,8 +195,6 @@
   };
 
   const setMenuBg = () => setBackground(isPhone() ? MENU_PHONE : MENU_PC);
-
-  // >>> kluczowa zmiana:
   const setRoomBg = () => setBackground(ROOM_BG);
 
   const renderPlayers = (room) => {
@@ -233,6 +233,7 @@
       const b = arr.find(x => x.getAttribute("data-side") === "away");
       if (!a || !b) return false;
       if (a.value.trim() === "" || b.value.trim() === "") return false;
+      meaning:
       if (!/^\d+$/.test(a.value.trim()) || !/^\d+$/.test(b.value.trim())) return false;
     }
     return true;
@@ -382,7 +383,7 @@
     activeRoomCode = code;
     saveActiveRoom(code);
 
-    // >>> TYLKO img_tlo.png
+    // >>> TYLKO img_tlo.png (czyścimy i ustawiamy)
     setRoomBg();
 
     roomNameText.textContent = room.name || "—";
@@ -497,7 +498,7 @@
     Object.keys(by).forEach(mid => {
       const h = by[mid].home;
       const a = by[mid].away;
-      tips[mid] = { h: Number(h), a: Number(a), at: Date.now() };
+      tips[mid] = { h: Number(h), a: Number(a), at: Date கொள்ள do
     });
 
     saveRooms();
