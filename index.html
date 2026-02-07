@@ -286,16 +286,14 @@
               </div>
             </div>
 
-            <div class="panel matchesWrap" id="matchesList">
-              <!-- match cards -->
-            </div>
+            <div class="panel matchesWrap" id="matchesList"></div>
           </div>
 
           <!-- RIGHT -->
           <div class="rightBar panel">
             <div>
               <div class="title">Gracze</div>
-              <div class="sub">Lista graczy w pokoju (na żywo).</div>
+              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
             </div>
             <div class="playersList" id="playersList"></div>
           </div>
@@ -309,7 +307,6 @@
   </div>
 
   <script>
-    // błędy na splashu
     const hint = document.getElementById("splashHint");
     const errBox = document.getElementById("splashErr");
     function showErr(title, msg){
@@ -323,11 +320,8 @@
     window.addEventListener("unhandledrejection", (e) => {
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
-
-    // na razie bez Service Workera (żeby cache nie blokował zmian)
-    // if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
   </script>
 
-  <script type="module" src="./app.js?v=1200"></script>
+  <script type="module" src="./app.js?v=1201"></script>
 </body>
 </html>

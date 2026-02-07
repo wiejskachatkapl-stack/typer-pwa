@@ -1,4 +1,4 @@
-const BUILD = 1200;
+const BUILD = 1201;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -87,12 +87,40 @@ let userUid = null;
 let unsubRoomDoc = null;
 let unsubPlayers = null;
 let unsubMatches = null;
+let unsubPicks = null;
 
 let currentRoomCode = null;
-let currentRoom = null; // {name, adminNick, ...}
-let matchesCache = [];  // [{id, home, away, idx}]
-let picksCache = {};    // matchId -> {h,a}
+let currentRoom = null;
 
+let matchesCache = [];   // [{id, home, away, idx}]
+let picksCache = {};     // matchId -> {h,a} (TY - wpisy w inputach)
+let picksDocByUid = {};  // uid -> picks object (z Firestore)
+let submittedByUid = {}; // uid -> boolean (czy komplet zapisany)
+
+// trzymamy ostatnią listę graczy, żeby móc prze-renderować po zmianie statusów
+let lastPlayers = [];
+
+// ---------- status helpers ----------
+function isCompletePicksObject(picksObj){
+  if(!matchesCache.length) return false;
+  if(!picksObj || typeof picksObj !== "object") return false;
+
+  for(const m of matchesCache){
+    const p = picksObj[m.id];
+    if(!p) return false;
+    if(!Number.isInteger(p.h) || !Number.isInteger(p.a)) return false;
+  }
+  return true;
+}
+
+function recomputeSubmittedMap(){
+  submittedByUid = {};
+  for(const [uid, picksObj] of Object.entries(picksDocByUid)){
+    submittedByUid[uid] = isCompletePicksObject(picksObj);
+  }
+}
+
+// ---------- boot ----------
 async function boot(){
   setBg(BG_TLO);
   setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
@@ -109,7 +137,6 @@ async function boot(){
   auth = getAuth(app);
   db = getFirestore(app);
 
-  // expose for inner functions
   boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
@@ -131,14 +158,10 @@ async function boot(){
   });
 
   setFooter(`BUILD ${BUILD}`);
-  setSplash(`OK ✅\nZalogowano.\nUID: ${userUid}\nStart UI…`);
-
   await ensureNick();
   refreshNickLabels();
-
   bindUI();
 
-  // jeżeli był aktywny pokój
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved){
     try{
@@ -225,7 +248,6 @@ async function createRoom(roomName){
   const nick = getNick();
   el("debugRooms").textContent = "Tworzę pokój…";
 
-  // spróbuj znaleźć wolny kod
   for(let tries=0; tries<12; tries++){
     const code = genCode6();
     const ref = roomRef(code);
@@ -239,11 +261,8 @@ async function createRoom(roomName){
       createdAt: boot.serverTimestamp()
     });
 
-    // dodaj siebie do players
     await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-      nick,
-      uid: userUid,
-      joinedAt: boot.serverTimestamp()
+      nick, uid: userUid, joinedAt: boot.serverTimestamp()
     });
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -266,11 +285,8 @@ async function joinRoom(code){
     return;
   }
 
-  // dodaj/odśwież player doc
   await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-    nick,
-    uid: userUid,
-    joinedAt: boot.serverTimestamp()
+    nick, uid: userUid, joinedAt: boot.serverTimestamp()
   }, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -281,17 +297,24 @@ async function joinRoom(code){
 async function leaveRoom(){
   if(!currentRoomCode) return;
   try{
-    // usuń siebie z players
     await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
   }catch{}
+
   localStorage.removeItem(KEY_ACTIVE_ROOM);
   cleanupRoomListeners();
+
   currentRoomCode = null;
   currentRoom = null;
+
   matchesCache = [];
   picksCache = {};
+  picksDocByUid = {};
+  submittedByUid = {};
+  lastPlayers = [];
+
   renderMatches();
   renderPlayers([]);
+
   showScreen("rooms");
   showToast("Opuszczono pokój");
 }
@@ -300,6 +323,7 @@ function cleanupRoomListeners(){
   if(unsubRoomDoc){ unsubRoomDoc(); unsubRoomDoc=null; }
   if(unsubPlayers){ unsubPlayers(); unsubPlayers=null; }
   if(unsubMatches){ unsubMatches(); unsubMatches=null; }
+  if(unsubPicks){ unsubPicks(); unsubPicks=null; }
 }
 
 // ---------- Open room + live ----------
@@ -317,9 +341,12 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
-  // reset UI
+  // reset
   matchesCache = [];
   picksCache = {};
+  picksDocByUid = {};
+  submittedByUid = {};
+  lastPlayers = [];
   renderMatches();
   renderPlayers([]);
 
@@ -336,7 +363,6 @@ async function openRoom(code, opts={}){
   const isAdmin = (currentRoom.adminUid === userUid);
   el("btnAddQueue").style.display = isAdmin ? "block" : "none";
 
-  // live room doc (np. admin zmieni coś)
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
     currentRoom = d.data();
@@ -351,7 +377,20 @@ async function openRoom(code, opts={}){
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
     qs.forEach(docu=> arr.push(docu.data()));
+    lastPlayers = arr;
     renderPlayers(arr);
+  });
+
+  // live picks (status przy nicku)
+  // każdy dokument: rooms/{code}/picks/{uid} -> { picks: {matchId:{h,a}} }
+  unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
+    picksDocByUid = {};
+    qs.forEach(d=>{
+      const data = d.data();
+      picksDocByUid[d.id] = data?.picks || {};
+    });
+    recomputeSubmittedMap();
+    renderPlayers(lastPlayers);
   });
 
   // live matches
@@ -362,17 +401,20 @@ async function openRoom(code, opts={}){
       arr.push({ id: docu.id, ...docu.data() });
     });
     matchesCache = arr;
-    await loadMyPicks(); // załaduj typy dla UID
+
+    // gdy zmieniły się mecze — przelicz statusy u wszystkich
+    recomputeSubmittedMap();
+    renderPlayers(lastPlayers);
+
+    await loadMyPicks();
     renderMatches();
   });
 
   if(!silent) showToast(`W pokoju: ${code}`);
 }
 
-// ---------- Picks ----------
+// ---------- Picks (TY) ----------
 async function loadMyPicks(){
-  // pobieramy jeden dokument: picks/{uid}
-  // struktura: { updatedAt, picks: { matchId: {h,a} } }
   try{
     const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
     const snap = await boot.getDoc(ref);
@@ -387,15 +429,8 @@ async function loadMyPicks(){
   }
 }
 
-function allPicksFilled(){
-  if(!matchesCache.length) return false;
-  for(const m of matchesCache){
-    const p = picksCache[m.id];
-    if(!p) return false;
-    if (p.h === null || p.h === undefined || p.a === null || p.a === undefined) return false;
-    if (!Number.isInteger(p.h) || !Number.isInteger(p.a)) return false;
-  }
-  return true;
+function allMyPicksFilled(){
+  return isCompletePicksObject(picksCache);
 }
 
 async function saveAllPicks(){
@@ -404,7 +439,7 @@ async function saveAllPicks(){
     showToast("Brak meczów");
     return;
   }
-  if(!allPicksFilled()){
+  if(!allMyPicksFilled()){
     showToast("Uzupełnij wszystkie typy");
     return;
   }
@@ -432,9 +467,32 @@ function renderPlayers(players){
     const row = document.createElement("div");
     row.className = "playerRow";
 
+    // LEFT: Nick + status ✓/✗
     const left = document.createElement("div");
-    left.textContent = p.nick || "—";
+    left.style.display = "flex";
+    left.style.alignItems = "center";
+    left.style.gap = "10px";
+    left.style.minWidth = "0";
 
+    const name = document.createElement("div");
+    name.textContent = p.nick || "—";
+    name.style.whiteSpace = "nowrap";
+    name.style.overflow = "hidden";
+    name.style.textOverflow = "ellipsis";
+
+    const status = document.createElement("div");
+    const ok = !!submittedByUid[p.uid];
+    status.textContent = ok ? "✓" : "✗";
+    status.style.fontWeight = "1000";
+    status.style.fontSize = "18px";
+    status.style.lineHeight = "1";
+    status.style.color = ok ? "#33ff88" : "#ff4d4d";
+    status.title = ok ? "Typy zapisane" : "Brak zapisanych typów";
+
+    left.appendChild(name);
+    left.appendChild(status);
+
+    // RIGHT: badges
     const right = document.createElement("div");
     right.className = "row";
     right.style.gap = "8px";
@@ -464,7 +522,6 @@ function createLogoImg(teamName){
   img.className = "logo";
   img.alt = teamName;
 
-  // próbujemy png -> jpg -> ukryj
   img.src = `./logos/${slug}.png`;
   img.onerror = () => {
     if(img.dataset.try === "jpg"){ img.style.display="none"; return; }
@@ -553,7 +610,7 @@ function renderMatches(){
 function updateSaveButtonState(){
   const btn = el("btnSaveAll");
   if(!btn) return;
-  btn.disabled = !allPicksFilled();
+  btn.disabled = !allMyPicksFilled();
 }
 
 // ---------- test queue (admin only) ----------
@@ -564,7 +621,6 @@ async function addTestQueue(){
     return;
   }
 
-  // przykładowe mecze — podmienisz później na prawdziwy import
   const sample = [
     ["Jagiellonia","Piast"],
     ["Lechia","Legia"],
