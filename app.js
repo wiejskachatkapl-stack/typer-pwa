@@ -1,21 +1,19 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=1017).
+   * Musi się zgadzać z index.html (app.js?v=1018).
    */
-  const BUILD = 1017;
+  const BUILD = 1018;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
   const KEY_ACTIVE_ROOM = "typer_active_room_v1";
   const SPLASH_MS = 7000;
 
-  // tła
   const MENU_PHONE = "img_menu.png";
   const MENU_PC = "img_menu_pc.png";
-  const STARTER = "img_starter.png";
 
-  // W POKOJU MA ZOSTAĆ TYLKO TO:
+  // W POKOJU (i splash) ma zostać tylko to:
   const ROOM_BG = "img_tlo.png";
 
   const el = (id) => document.getElementById(id);
@@ -26,9 +24,8 @@
   const roomsScreen = el("roomsScreen");
   const roomScreen = el("roomScreen");
 
-  // bg elements
+  // bg
   const bg = el("bg");
-  const splashImg = el("splashImg");
 
   // labels
   const splashHint = el("splashHint");
@@ -194,6 +191,8 @@
   };
 
   const setMenuBg = () => setBackground(isPhone() ? MENU_PHONE : MENU_PC);
+
+  // WAŻNE: tu wymuszamy tło pokoju = img_tlo.png (i to samo na splash)
   const setRoomBg = () => setBackground(ROOM_BG);
 
   const renderPlayers = (room) => {
@@ -256,6 +255,7 @@
       left.className = "team";
       const leftLogo = document.createElement("img");
       leftLogo.className = "logo";
+      leftLogo.alt = m "";
       leftLogo.alt = m.home;
       leftLogo.src = guessLogoCandidates(m.home)[0];
       leftLogo.onerror = () => {
@@ -553,9 +553,10 @@
 
   // init
   const boot = () => {
+    // splash bez obrazka – ale tło strony ustawiamy na img_tlo.png
+    setRoomBg();
     splashVer.textContent = `BUILD ${BUILD}`;
     splashHint.textContent = `Ekran startowy (7s)…`;
-    splashImg.style.backgroundImage = `url('${STARTER}')`;
 
     loadRooms();
     nick = loadNick();
@@ -577,7 +578,7 @@
 
   window.addEventListener("resize", () => {
     if (menuScreen.classList.contains("active") || roomsScreen.classList.contains("active")) setMenuBg();
-    if (roomScreen.classList.contains("active")) setRoomBg();
+    if (roomScreen.classList.contains("active") || splash.classList.contains("active")) setRoomBg();
   });
 
   // menu
