@@ -1,9 +1,9 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=1018).
+   * Musi się zgadzać z index.html (app.js?v=1019).
    */
-  const BUILD = 1018;
+  const BUILD = 1019;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -27,10 +27,11 @@
   // bg
   const bg = el("bg");
 
-  // labels
+  // splash labels
   const splashHint = el("splashHint");
   const splashVer = el("splashVer");
 
+  // nick labels
   const nickText = el("nickText");
   const nickTextRooms = el("nickTextRooms");
   const nickTextRoom = el("nickTextRoom");
@@ -73,7 +74,6 @@
   let activeRoomCode = "";
   let lastDebug = [];
 
-  // helpers
   const isPhone = () => window.matchMedia("(max-width: 880px)").matches;
 
   const setBackground = (which) => {
@@ -183,7 +183,6 @@
     return out;
   };
 
-  // UI
   const syncNickLabels = () => {
     nickText.textContent = nick || "—";
     nickTextRooms.textContent = nick || "—";
@@ -191,8 +190,6 @@
   };
 
   const setMenuBg = () => setBackground(isPhone() ? MENU_PHONE : MENU_PC);
-
-  // WAŻNE: tu wymuszamy tło pokoju = img_tlo.png (i to samo na splash)
   const setRoomBg = () => setBackground(ROOM_BG);
 
   const renderPlayers = (room) => {
@@ -251,12 +248,13 @@
       const row = document.createElement("div");
       row.className = "matchRow";
 
+      // LEFT TEAM
       const left = document.createElement("div");
       left.className = "team";
+
       const leftLogo = document.createElement("img");
       leftLogo.className = "logo";
-      leftLogo.alt = m "";
-      leftLogo.alt = m.home;
+      leftLogo.alt = m.home; // <-- POPRAWIONE
       leftLogo.src = guessLogoCandidates(m.home)[0];
       leftLogo.onerror = () => {
         const c = guessLogoCandidates(m.home);
@@ -269,12 +267,15 @@
           leftLogo.style.opacity = "0.0";
         }
       };
+
       const leftName = document.createElement("div");
       leftName.className = "teamName";
       leftName.textContent = m.home;
+
       left.appendChild(leftLogo);
       left.appendChild(leftName);
 
+      // SCORE
       const mid = document.createElement("div");
       mid.className = "scoreBox";
 
@@ -298,6 +299,19 @@
       inB.setAttribute("data-mid", m.id);
       inB.setAttribute("data-side", "away");
 
+      const onAnyInput = () => {
+        inA.value = inA.value.replace(/[^\d]/g, "");
+        inB.value = inB.value.replace(/[^\d]/g, "");
+        updateSaveAllState();
+      };
+      inA.addEventListener("input", onAnyInput);
+      inB.addEventListener("input", onAnyInput);
+
+      mid.appendChild(inA);
+      mid.appendChild(sep);
+      mid.appendChild(inB);
+
+      // RIGHT TEAM
       const right = document.createElement("div");
       right.className = "team";
       right.style.justifyContent = "flex-end";
@@ -326,18 +340,6 @@
       right.appendChild(rightName);
       right.appendChild(rightLogo);
 
-      const onAnyInput = () => {
-        inA.value = inA.value.replace(/[^\d]/g, "");
-        inB.value = inB.value.replace(/[^\d]/g, "");
-        updateSaveAllState();
-      };
-      inA.addEventListener("input", onAnyInput);
-      inB.addEventListener("input", onAnyInput);
-
-      mid.appendChild(inA);
-      mid.appendChild(sep);
-      mid.appendChild(inB);
-
       row.appendChild(left);
       row.appendChild(mid);
       row.appendChild(right);
@@ -348,7 +350,6 @@
     updateSaveAllState();
   };
 
-  // flow
   const askNickIfNeeded = () => {
     if (nick) return true;
     const n = prompt("Podaj nick:");
@@ -397,7 +398,6 @@
     showScreen(roomScreen);
   };
 
-  // rooms actions
   const createRoom = () => {
     try {
       const name = normalize(newRoomName.value);
@@ -455,7 +455,6 @@
     }
   };
 
-  // room actions
   const addQueue = () => {
     const room = findRoom(activeRoomCode);
     if (!room) return;
@@ -551,10 +550,8 @@
     }
   };
 
-  // init
   const boot = () => {
-    // splash bez obrazka – ale tło strony ustawiamy na img_tlo.png
-    setRoomBg();
+    setRoomBg(); // splash + room -> img_tlo.png
     splashVer.textContent = `BUILD ${BUILD}`;
     splashHint.textContent = `Ekran startowy (7s)…`;
 

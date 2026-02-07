@@ -1,8 +1,8 @@
-const CACHE_NAME = "typer-pwa-cache-v1018";
+const CACHE_NAME = "typer-pwa-cache-v1019";
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.js?v=1018",
+  "./app.js?v=1019",
   "./manifest.json",
   "./img_menu.png",
   "./img_menu_pc.png",
