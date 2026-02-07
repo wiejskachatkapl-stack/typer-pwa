@@ -9,15 +9,13 @@
   <style>
     :root{
       --glass: rgba(9, 24, 52, 0.62);
-      --glass2: rgba(9, 24, 52, 0.78);
-      --stroke: rgba(255,255,255,0.10);
       --txt: rgba(255,255,255,0.92);
       --muted: rgba(255,255,255,0.65);
+      --stroke: rgba(255,255,255,0.10);
       --btn: rgba(255,255,255,0.10);
       --btn2: rgba(255,255,255,0.14);
       --shadow: 0 18px 60px rgba(0,0,0,0.35);
       --radius: 22px;
-      --radius2: 16px;
     }
     *{ box-sizing:border-box; }
     body{
@@ -28,13 +26,11 @@
       overflow:hidden;
     }
 
-    /* full background image */
     .bg{
       position:fixed; inset:0;
       background-position:center;
       background-size:cover;
       background-repeat:no-repeat;
-      filter: saturate(1.05) contrast(1.02);
       transform: scale(1.02);
     }
     .vignette{
@@ -43,15 +39,10 @@
       pointer-events:none;
     }
 
-    /* screens */
     .screen{ position:fixed; inset:0; display:none; }
     .screen.active{ display:block; }
 
-    /* splash */
-    #splash{
-      display:flex; align-items:center; justify-content:center;
-      padding:18px;
-    }
+    #splash{ display:flex; align-items:center; justify-content:center; padding:18px; }
     .splashCard{
       width:min(980px, 96vw);
       height:min(560px, 92vh);
@@ -60,18 +51,11 @@
       border: 1px solid var(--stroke);
       box-shadow: var(--shadow);
       overflow:hidden;
+      position:relative;
       display:flex;
       align-items:flex-end;
-      justify-content:flex-start;
-      position:relative;
     }
-    .splashImg{
-      position:absolute; inset:0;
-      background-position:center;
-      background-size:cover;
-      background-repeat:no-repeat;
-      filter: saturate(1.05) contrast(1.02);
-    }
+    .splashImg{ position:absolute; inset:0; background:center/cover no-repeat; }
     .splashFooter{
       position:relative;
       width:100%;
@@ -84,7 +68,6 @@
       color: var(--muted);
     }
 
-    /* common */
     .wrap{
       padding:18px;
       height:100%;
@@ -102,7 +85,6 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      position:relative;
     }
     .cardInner{
       padding:16px;
@@ -110,6 +92,7 @@
       flex-direction:column;
       gap:12px;
       height:100%;
+      min-height:0;
     }
 
     .topBar{
@@ -121,7 +104,7 @@
       background: var(--glass);
       border: 1px solid var(--stroke);
       border-radius: 999px;
-      width: fit-content;               /* <= pasek po LEWEJ, nie na całą szerokość */
+      width: fit-content;
       max-width: 100%;
     }
     .pill{
@@ -136,6 +119,7 @@
       font-weight:700;
     }
     .pill small{ font-weight:600; color: var(--muted); }
+
     .btn{
       border:1px solid var(--stroke);
       background: var(--btn);
@@ -146,10 +130,7 @@
       cursor:pointer;
     }
     .btn:hover{ background: var(--btn2); }
-    .btn:disabled{
-      opacity:0.55;
-      cursor:not-allowed;
-    }
+    .btn:disabled{ opacity:0.55; cursor:not-allowed; }
 
     .footerBar{
       padding:12px 14px;
@@ -163,13 +144,6 @@
       background: rgba(0,0,0,0.10);
     }
 
-    .grid2{
-      display:grid;
-      grid-template-columns: 1.35fr 0.85fr;
-      gap:12px;
-      height:100%;
-      min-height:0;
-    }
     .panel{
       background: var(--glass);
       border:1px solid var(--stroke);
@@ -177,68 +151,27 @@
       padding:14px;
       min-height:0;
     }
-    .panelTitle{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:10px;
-    }
-    .panelTitle h2{
-      margin:0;
-      font-size:22px;
-      letter-spacing:0.2px;
-    }
-    .panelTitle p{
-      margin:4px 0 0 0;
-      color: var(--muted);
-      font-size:13px;
-    }
+    .hintLine{ margin-top:6px; font-size:12px; color: var(--muted); }
 
-    /* ROOM layout */
+    /* ROOM */
     .roomLayout{
       display:grid;
-      grid-template-columns: 1.55fr 0.80fr; /* spotkania lewa kolumna szerzej */
+      grid-template-columns: 1.60fr 0.78fr; /* lewe spotkania, prawa gracze+info */
       gap:12px;
       height:100%;
       min-height:0;
     }
-    .leftCol{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      min-height:0;
-    }
-    .rightCol{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      min-height:0;
-    }
+    .leftCol{ display:flex; flex-direction:column; gap:12px; min-height:0; }
+    .rightCol{ display:flex; flex-direction:column; gap:12px; min-height:0; }
 
-    /* matches list full height */
-    .matchesPanel{
-      flex: 1;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
-    }
+    .matchesPanel{ flex:1; display:flex; flex-direction:column; min-height:0; }
     .matchesHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
       margin-bottom:10px;
     }
-    .matchesHeader .actions{
-      display:flex; gap:10px; align-items:center;
-    }
-    .matchesList{
-      flex:1;
-      min-height:0;
-      overflow:auto;
-      padding-right:6px;
-    }
+    .matchesHeader .actions{ display:flex; gap:10px; align-items:center; }
+    .matchesList{ flex:1; min-height:0; overflow:auto; padding-right:6px; }
+
     .matchRow{
       border:1px solid rgba(255,255,255,0.10);
       background: rgba(0,0,0,0.10);
@@ -250,18 +183,9 @@
       align-items:center;
       gap:10px;
     }
-    .team{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-    .teamName{
-      font-weight:800;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
+    .team{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .teamName{ font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
     .logo{
       width:28px; height:28px;
       border-radius:8px;
@@ -270,12 +194,7 @@
       object-fit:contain;
       flex:0 0 auto;
     }
-    .scoreBox{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-    }
+    .scoreBox{ display:flex; align-items:center; justify-content:center; gap:8px; }
     .scoreInput{
       width:52px;
       padding:10px 10px;
@@ -289,23 +208,9 @@
     }
     .scoreSep{ font-weight:900; opacity:0.9; }
 
-    .hintLine{
-      margin-top:6px;
-      font-size:12px;
-      color: var(--muted);
-    }
-
-    /* players panel */
-    .playersList{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+    .playersList{ display:flex; flex-direction:column; gap:10px; }
     .playerRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
       padding:10px 12px;
       border-radius: 14px;
       border:1px solid rgba(255,255,255,0.10);
@@ -314,12 +219,9 @@
     .playerRow b{ font-size:14px; }
     .playerRow span{ color: var(--muted); font-weight:700; }
 
-    /* responsive phone */
     @media (max-width: 880px){
       .card{ height: 96vh; }
       .roomLayout{ grid-template-columns: 1fr; }
-      .rightCol{ order:2; }
-      .leftCol{ order:1; }
       .matchRow{ grid-template-columns: 1fr; gap:8px; }
       .scoreBox{ justify-content:flex-start; }
     }
@@ -340,7 +242,7 @@
     </div>
   </div>
 
-  <!-- MENU (zostaje jak było – app.js nim zarządza) -->
+  <!-- MENU -->
   <div id="menuScreen" class="screen">
     <div class="wrap">
       <div class="card">
@@ -372,7 +274,7 @@
     </div>
   </div>
 
-  <!-- LIGA/POKOJE (ekran tworzenia/dołączania) -->
+  <!-- LIGA/POKOJE -->
   <div id="roomsScreen" class="screen">
     <div class="wrap">
       <div class="card">
@@ -431,7 +333,7 @@
     <div class="wrap">
       <div class="card">
         <div class="cardInner" style="gap:12px;">
-          <!-- TOP BAR: po LEWEJ -->
+          <!-- pasek po LEWEJ -->
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
             <div class="topBar">
               <div class="pill">Pokój</div>
@@ -454,7 +356,6 @@
                     <button class="btn" id="addQueueBtn">Dodaj kolejkę (test)</button>
                   </div>
                 </div>
-
                 <div id="matchesList" class="matchesList"></div>
               </div>
             </div>
@@ -462,20 +363,12 @@
             <!-- RIGHT: Gracze + Informacje -->
             <div class="rightCol">
               <div class="panel">
-                <div class="panelTitle">
-                  <div>
-                    <h2>Gracze</h2>
-                  </div>
-                </div>
+                <div style="font-size:22px; font-weight:900; margin-bottom:10px;">Gracze</div>
                 <div id="playersList" class="playersList"></div>
               </div>
 
               <div class="panel">
-                <div class="panelTitle">
-                  <div>
-                    <h2>Informacje</h2>
-                  </div>
-                </div>
+                <div style="font-size:22px; font-weight:900; margin-bottom:10px;">Informacje</div>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                   <div style="font-size:22px; font-weight:900;" id="roomNameText">—</div>
                   <div style="color:var(--muted); font-weight:800;" id="roomAdminText">Admin: —</div>
@@ -506,7 +399,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=1013"></script>
+  <script src="app.js?v=1014"></script>
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(()=>{});

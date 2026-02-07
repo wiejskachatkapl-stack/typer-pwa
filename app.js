@@ -1,19 +1,22 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=1013).
+   * Musi się zgadzać z index.html (app.js?v=1014).
    */
-  const BUILD = 1013;
+  const BUILD = 1014;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
   const KEY_ACTIVE_ROOM = "typer_active_room_v1";
   const SPLASH_MS = 7000;
 
-  // tło
+  // tła
   const MENU_PHONE = "img_menu.png";
   const MENU_PC = "img_menu_pc.png";
   const STARTER = "img_starter.png";
+
+  // >>> NAJWAŻNIEJSZE: w POKOJU ma być TYLKO to tło:
+  const ROOM_BG = "img_tlo.png";
 
   const el = (id) => document.getElementById(id);
 
@@ -124,8 +127,7 @@
 
   const findRoom = (code) => rooms.find(r => r.code === code);
 
-  // -------------------- matches (test queue) --------------------
-  // Uwaga: to dalej TEST. Później podmienimy na prawdziwy import kolejki.
+  // -------------------- TEST QUEUE --------------------
   const testQueue = () => ([
     { home: "Jagiellonia", away: "Piast" },
     { home: "Lechia", away: "Legia" },
@@ -139,24 +141,15 @@
     { home: "Jagiellonia", away: "Lech" },
   ]);
 
-  // -------------------- logo resolver --------------------
-  // Zakładamy: loga w /logos/*.png lub *.jpg
-  // Najpierw próbujemy zmapować nazwę drużyny do pliku.
+  // -------------------- LOGO RESOLVER --------------------
   const slug = (name) => normalize(name)
     .toLowerCase()
-    .replaceAll("ł", "l")
-    .replaceAll("ś", "s")
-    .replaceAll("ć", "c")
-    .replaceAll("ń", "n")
-    .replaceAll("ó", "o")
-    .replaceAll("ż", "z")
-    .replaceAll("ź", "z")
-    .replaceAll("ą", "a")
+    .replaceAll("ł", "l").replaceAll("ś", "s").replaceAll("ć", "c").replaceAll("ń", "n")
+    .replaceAll("ó", "o").replaceAll("ż", "z").replaceAll("ź", "z").replaceAll("ą", "a")
     .replaceAll("ę", "e")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
-  // Jeśli Twoje pliki są nazwane inaczej – dopisz tu aliasy.
   const LOGO_ALIASES = {
     "jagiellonia": ["jagiellonia", "bialystok"],
     "piast": ["piast", "gliwice"],
@@ -181,13 +174,12 @@
   const guessLogoCandidates = (teamName) => {
     const s = slug(teamName);
     const aliases = LOGO_ALIASES[s] || [s];
-    // próbujemy png, potem jpg
     const out = [];
     for (const a of aliases) {
       out.push(`logos/${a}.png`);
       out.push(`logos/${a}.jpg`);
       out.push(`logos/${a}.jpeg`);
-      out.push(`${a}.png`);   // jeśli ktoś wrzucił do root (awaryjnie)
+      out.push(`${a}.png`);
       out.push(`${a}.jpg`);
     }
     return out;
@@ -200,14 +192,10 @@
     nickTextRoom.textContent = nick || "—";
   };
 
-  const setMenuBg = () => {
-    setBackground(isPhone() ? MENU_PHONE : MENU_PC);
-  };
+  const setMenuBg = () => setBackground(isPhone() ? MENU_PHONE : MENU_PC);
 
-  const setRoomBg = () => {
-    // W POKOJU ma być samo tło stadionu (takie jak menu), bez żadnego dodatkowego screenu
-    setBackground(isPhone() ? MENU_PHONE : MENU_PC);
-  };
+  // >>> kluczowa zmiana:
+  const setRoomBg = () => setBackground(ROOM_BG);
 
   const renderPlayers = (room) => {
     playersList.innerHTML = "";
@@ -232,7 +220,6 @@
     const inputs = [...matchesList.querySelectorAll("input[data-mid]")];
     if (inputs.length === 0) return false;
 
-    // grupujemy po mid
     const by = {};
     inputs.forEach(i => {
       const mid = i.getAttribute("data-mid");
@@ -240,10 +227,8 @@
       by[mid].push(i);
     });
 
-    // każdy mecz musi mieć 2 liczby
     for (const mid of Object.keys(by)) {
       const arr = by[mid];
-      if (arr.length < 2) return false;
       const a = arr.find(x => x.getAttribute("data-side") === "home");
       const b = arr.find(x => x.getAttribute("data-side") === "away");
       if (!a || !b) return false;
@@ -271,7 +256,6 @@
       leftLogo.className = "logo";
       leftLogo.alt = m.home;
       leftLogo.src = guessLogoCandidates(m.home)[0];
-      // fallback chain
       leftLogo.onerror = () => {
         const c = guessLogoCandidates(m.home);
         const idx = Number(leftLogo.dataset.idx || "0") + 1;
@@ -340,9 +324,7 @@
       right.appendChild(rightName);
       right.appendChild(rightLogo);
 
-      // listeners
       const onAnyInput = () => {
-        // cyfry only
         inA.value = inA.value.replace(/[^\d]/g, "");
         inB.value = inB.value.replace(/[^\d]/g, "");
         updateSaveAllState();
@@ -361,7 +343,6 @@
       matchesList.appendChild(row);
     });
 
-    // po renderze ustaw stan
     updateSaveAllState();
   };
 
@@ -401,18 +382,14 @@
     activeRoomCode = code;
     saveActiveRoom(code);
 
-    // tło ma być same (stadion), bez dodatkowego screenu
+    // >>> TYLKO img_tlo.png
     setRoomBg();
 
-    // info
     roomNameText.textContent = room.name || "—";
     roomAdminText.textContent = `Admin: ${room.admin || "—"}`;
     roomCodeText.value = room.code;
 
-    // gracze
     renderPlayers(room);
-
-    // mecze
     renderMatches(room);
 
     roomInfo.textContent = `W pokoju: ${room.code}`;
@@ -428,7 +405,6 @@
         return;
       }
 
-      // kod unikalny
       let code = genCode6();
       while (rooms.some(r => r.code === code)) code = genCode6();
 
@@ -484,7 +460,6 @@
     if (!room) return;
 
     const base = testQueue();
-    // nadawanie id
     const now = Date.now();
     const matches = base.slice(0, 10).map((m, idx) => ({
       id: `m_${now}_${idx}`,
@@ -510,8 +485,6 @@
     }
 
     const tips = getNickTipsForRoom(room);
-
-    // zbieramy
     const inputs = [...matchesList.querySelectorAll("input[data-mid]")];
     const by = {};
     inputs.forEach(i => {
@@ -559,7 +532,6 @@
     else openLiga();
   };
 
-  // -------------------- nick change --------------------
   const changeNick = () => {
     const n = prompt("Nowy nick:", nick || "");
     const nn = normalize(n);
@@ -568,7 +540,6 @@
     saveNick(nick);
     syncNickLabels();
 
-    // w testach: dopisz do aktywnego pokoju jako gracza
     const room = findRoom(activeRoomCode);
     if (room) {
       if (!room.players) room.players = [];
@@ -589,11 +560,9 @@
     nick = loadNick();
     activeRoomCode = loadActiveRoom();
 
-    // splash -> menu
     setTimeout(() => {
       setMenuBg();
       if (!nick) {
-        // pierwszy raz: pytamy
         const ok = askNickIfNeeded();
         if (!ok) {
           nick = "";
@@ -605,33 +574,22 @@
     }, SPLASH_MS);
   };
 
-  // -------------------- events --------------------
   window.addEventListener("resize", () => {
-    // zmiana tła zależna od szerokości
     if (menuScreen.classList.contains("active") || roomsScreen.classList.contains("active")) setMenuBg();
     if (roomScreen.classList.contains("active")) setRoomBg();
   });
 
   // menu
   changeNickBtn.addEventListener("click", changeNick);
-  btnLiga.addEventListener("click", () => {
-    if (!askNickIfNeeded()) return;
-    openLiga();
-  });
+  btnLiga.addEventListener("click", () => { if (!askNickIfNeeded()) return; openLiga(); });
   btnStats.addEventListener("click", () => alert("Statystyki: wkrótce"));
   btnExit.addEventListener("click", () => alert("Wyjście: w PWA zamknij kartę / aplikację."));
 
   // rooms
   changeNickBtnRooms.addEventListener("click", changeNick);
   backToMenuBtn.addEventListener("click", openMenu);
-  createRoomBtn.addEventListener("click", () => {
-    if (!askNickIfNeeded()) return;
-    createRoom();
-  });
-  joinRoomBtn.addEventListener("click", () => {
-    if (!askNickIfNeeded()) return;
-    joinRoom();
-  });
+  createRoomBtn.addEventListener("click", () => { if (!askNickIfNeeded()) return; createRoom(); });
+  joinRoomBtn.addEventListener("click", () => { if (!askNickIfNeeded()) return; joinRoom(); });
 
   // room
   roomBackBtn.addEventListener("click", openLiga);
@@ -642,6 +600,5 @@
   leaveRoomBtn.addEventListener("click", leaveRoom);
   refreshRoomBtn.addEventListener("click", refreshRoom);
 
-  // start
   boot();
 })();
