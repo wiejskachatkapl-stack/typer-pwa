@@ -3,33 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1630" />
-  <title>Typer PWA</title>
-
+  <meta name="theme-color" content="#08122a" />
+  <title>Typer</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
     :root{
       --bg:#071229;
-      --glass2: rgba(10, 30, 70, .38);
+      --glass: rgba(8, 22, 52, .55);
+      --glass2: rgba(8, 22, 52, .40);
       --stroke: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.72);
       --shadow: 0 14px 50px rgba(0,0,0,.45);
+      --r: 22px;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
     #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
-    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;z-index:1}
+    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:1}
     .frame{
-      width:min(1320px,96vw);height:min(820px,92vh);
-      border:1px solid var(--stroke);border-radius:26px;
-      background:rgba(0,0,0,.10);box-shadow:var(--shadow);
+      width:min(1580px,96vw);
+      height:min(920px,94vh);
+      border:1px solid var(--stroke);
+      border-radius:26px;
+      background:rgba(0,0,0,.10);
+      box-shadow:var(--shadow);
       backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
       overflow:hidden;position:relative;
     }
-    .screen{display:none;height:100%}
+    .screen{display:none;height:100%;width:100%}
     .screen.active{display:flex}
+
+    /* SPLASH */
     #splash{align-items:center;justify-content:center;padding:24px}
     .splashCard{
       width:min(820px,92%);border:1px solid var(--stroke);
@@ -45,7 +51,108 @@
     .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
     .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
       background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
-    .footer{position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:700}
+
+    /* COMMON UI */
+    .panel{
+      border:1px solid var(--stroke);
+      border-radius:var(--r);
+      background:var(--glass);
+      box-shadow:0 10px 30px rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.10);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:16px;
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{background:rgba(255,255,255,.14)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
+    .chip{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.12);font-weight:900}
+    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
+    .sub{color:var(--muted);font-weight:700;font-size:13px}
+    .row{display:flex;gap:10px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:10px}
+    .spacer{flex:1}
+
+    input{
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      outline:none;
+      font-weight:900;
+    }
+    input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+    .toast{
+      position:absolute;left:18px;bottom:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.85);
+      padding:10px 14px;border-radius:16px;font-weight:800;
+      display:none;
+    }
+    .footerRight{
+      position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
+    }
+
+    /* ROOM LAYOUT */
+    #room{padding:16px;gap:14px;align-items:stretch}
+    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
+    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+
+    .midHead{padding:14px}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
+    .matchCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:18px;
+      padding:12px 12px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .team{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      font-weight:1000;
+    }
+    .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .logo{
+      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      background:rgba(255,255,255,.10);
+      object-fit:contain;
+    }
+    .scoreBox{display:flex;align-items:center;gap:8px}
+    .scoreInput{width:48px;text-align:center}
+    .sep{font-weight:1000;opacity:.85}
+
+    .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .playerRow{
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;gap:10px;align-items:center;justify-content:space-between;
+      font-weight:900;
+    }
+    .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
+
+    /* ROOMS SCREEN */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* MENU */
+    #menu{padding:16px}
+    .menuBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
   </style>
 </head>
 
@@ -54,63 +161,173 @@
 
   <div id="app">
     <div class="frame">
-      <div class="footer">Copyright 2026 RN_APS Mariusz Gębka</div>
 
       <!-- SPLASH -->
       <section id="splash" class="screen active">
         <div class="splashCard">
-          <div style="font-size:22px;font-weight:900;">Typer</div>
+          <div style="font-size:22px;font-weight:1000;">Typer</div>
           <div class="hint" id="splashHint">Ładowanie…</div>
           <div class="err" id="splashErr"></div>
           <div class="spinner"></div>
         </div>
       </section>
 
-      <!-- reszta ekranów: w tej wersji debug niepotrzebne, bo i tak przełącza je app.js -->
-      <section id="menu" class="screen"></section>
-      <section id="rooms" class="screen"></section>
-      <section id="room" class="screen"></section>
+      <!-- MENU -->
+      <section id="menu" class="screen">
+        <div class="menuBox panel">
+          <div class="row">
+            <div class="chip">Menu</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnChangeNickMenu">Zmień nick</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Liga typerów</h2>
+            <div class="help">Wejście do pokoi (FireStore). Jeśli masz aktywny pokój — wejdzie od razu.</div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn" id="btnOpenRooms">Wejdź</button>
+              <div class="spacer"></div>
+              <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
+            </div>
+          </div>
+
+          <div class="panel block">
+            <h2>Info</h2>
+            <div class="help">To jest wersja z Firestore. Pokoje i gracze są współdzielone.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROOMS -->
+      <section id="rooms" class="screen">
+        <div class="roomsBox panel">
+          <div class="row">
+            <div class="chip">Liga</div>
+            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
+            <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Nowy pokój</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
+              <button class="btn" id="btnCreateRoom">Utwórz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Dołącz do pokoju</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
+              <button class="btn" id="btnJoinRoom">Dołącz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Wpisz kod od admina. Gracze pojawią się po prawej w pokoju.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Debug</h2>
+            <div class="help" id="debugRooms">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROOM -->
+      <section id="room" class="screen">
+        <div id="roomRoot" style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
+
+          <!-- LEFT -->
+          <div class="leftBar panel">
+            <div class="col" style="gap:10px">
+              <div class="chip">Pokój</div>
+              <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div class="title" id="roomName">—</div>
+              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
+              <div class="row" style="margin-top:10px">
+                <div class="chip" style="flex:1;justify-content:space-between;">
+                  Kod: <span id="roomCode">—</span>
+                </div>
+                <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
+              </div>
+              <div class="row" style="margin-top:10px">
+                <button class="btn btnSmall" id="btnLeave">Opuść</button>
+                <button class="btn btnSmall" id="btnRefresh">Odśwież</button>
+              </div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div class="title">Akcje</div>
+              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              <div class="col" style="margin-top:10px">
+                <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+                <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
+              </div>
+            </div>
+
+            <div class="spacer"></div>
+            <button class="btn" id="btnBackFromRoom">Wróć</button>
+          </div>
+
+          <!-- MIDDLE -->
+          <div class="mid">
+            <div class="panel midHead">
+              <div class="row">
+                <div>
+                  <div class="title">Spotkania</div>
+                  <div class="sub">Uzupełnij wyniki (0–20). Jedno zapisanie dla całej listy.</div>
+                </div>
+                <div class="spacer"></div>
+                <div class="chip">Mecze: <span id="matchesCount">0</span></div>
+              </div>
+            </div>
+
+            <div class="panel matchesWrap" id="matchesList">
+              <!-- match cards -->
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="rightBar panel">
+            <div>
+              <div class="title">Gracze</div>
+              <div class="sub">Lista graczy w pokoju (na żywo).</div>
+            </div>
+            <div class="playersList" id="playersList"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <div class="toast" id="toast"></div>
+      <div class="footerRight" id="footerRight">—</div>
     </div>
   </div>
 
   <script>
-    // DEBUG: pokazuj błędy na splashu
+    // błędy na splashu
     const hint = document.getElementById("splashHint");
     const errBox = document.getElementById("splashErr");
-
     function showErr(title, msg){
       hint.textContent = "STOP: wykryto błąd.";
       errBox.style.display = "block";
       errBox.textContent = title + "\n\n" + msg;
     }
-
     window.addEventListener("error", (e) => {
       showErr("window.error", (e?.message || "unknown") + "\n" + (e?.filename || "") + ":" + (e?.lineno || "?"));
     });
-
     window.addEventListener("unhandledrejection", (e) => {
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
 
-    // Timeout informacyjny
-    setTimeout(() => {
-      if (hint.textContent.includes("Ładowanie")) {
-        hint.textContent =
-`Ładowanie trwa za długo (10s).
-Najczęściej to:
-1) Service Worker trzyma starą wersję
-2) błąd importu Firebase (moduły)
-3) błąd w app.js
-
-Jeśli widzisz tu czerwony błąd – wklej go do mnie.`;
-      }
-    }, 10000);
-
-    // UWAGA: na razie WYŁĄCZONE SW, żeby cache nie blokował zmian
+    // na razie bez Service Workera (żeby cache nie blokował zmian)
     // if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
   </script>
 
-  <!-- app.js -->
-  <script type="module" src="./app.js?v=1102"></script>
+  <script type="module" src="./app.js?v=1200"></script>
 </body>
 </html>

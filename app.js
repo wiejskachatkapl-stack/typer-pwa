@@ -1,79 +1,607 @@
-const BUILD = 1102;
+const BUILD = 1200;
 const BG_TLO = "img_tlo.png";
 
-const splashHint = document.getElementById("splashHint");
+const KEY_NICK = "typer_nick_v2";
+const KEY_ACTIVE_ROOM = "typer_active_room_v2";
 
-function setHint(txt){
-  if (splashHint) splashHint.textContent = txt;
-  console.log(txt);
+const firebaseConfig = {
+  apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
+  authDomain: "typer-b3087.firebaseapp.com",
+  projectId: "typer-b3087",
+  storageBucket: "typer-b3087.firebasestorage.app",
+  messagingSenderId: "1032303131493",
+  appId: "1:1032303131493:web:8cc41341f3e42415d6ff8c",
+  measurementId: "G-5FBDH5G15N"
+};
+
+// ---------- helpers ----------
+const el = (id) => document.getElementById(id);
+const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
+const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
+
+function showToast(msg){
+  const t = el("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=> t.style.display="none", 2600);
 }
 
-function setBg(src){
-  const bg = document.getElementById("bg");
-  if (bg) bg.style.backgroundImage = `url("${src}")`;
+function showScreen(id){
+  ["splash","menu","rooms","room"].forEach(s=>{
+    const node = el(s);
+    if (node) node.classList.toggle("active", s===id);
+  });
 }
 
-// 1) Ustaw tło
-setBg(BG_TLO);
+function setSplash(msg){
+  const h = el("splashHint");
+  if (h) h.textContent = msg;
+  console.log(msg);
+}
 
-// 2) Główna sekwencja startowa z wyraźnymi krokami
-(async () => {
-  try{
-    setHint(`BUILD ${BUILD}\nKrok 1/5: start modułów…`);
+function normalizeSlug(s){
+  return (s||"")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/ł/g,"l")
+    .replace(/[^a-z0-9]+/g,"_")
+    .replace(/^_+|_+$/g,"");
+}
 
-    // >>> Najczęstsza przyczyna zwisu: import Firebase nie dochodzi / blokada
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
-    setHint(`BUILD ${BUILD}\nKrok 2/5: firebase-app OK`);
+function genCode6(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for(let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
 
-    const { getAuth, onAuthStateChanged, signInAnonymously } =
-      await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
-    setHint(`BUILD ${BUILD}\nKrok 3/5: firebase-auth OK`);
+function clampInt(v, min, max){
+  if (v === "" || v === null || v === undefined) return null;
+  const n = parseInt(String(v),10);
+  if (Number.isNaN(n)) return null;
+  return Math.max(min, Math.min(max, n));
+}
 
-    const { getFirestore } =
-      await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-    setHint(`BUILD ${BUILD}\nKrok 4/5: firebase-firestore OK`);
+function getNick(){
+  return (localStorage.getItem(KEY_NICK) || "").trim();
+}
 
-    // Twoje configi:
-    const firebaseConfig = {
-      apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
-      authDomain: "typer-b3087.firebaseapp.com",
-      projectId: "typer-b3087",
-      storageBucket: "typer-b3087.firebasestorage.app",
-      messagingSenderId: "1032303131493",
-      appId: "1:1032303131493:web:8cc41341f3e42415d6ff8c",
-      measurementId: "G-5FBDH5G15N"
-    };
+async function ensureNick(){
+  let nick = getNick();
+  while(!nick){
+    nick = prompt("Podaj nick (3–16 znaków):", "") || "";
+    nick = nick.trim();
+    if (nick.length < 3 || nick.length > 16) nick = "";
+    if (!nick) alert("Nick musi mieć 3–16 znaków.");
+  }
+  localStorage.setItem(KEY_NICK, nick);
+  return nick;
+}
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+// ---------- Firebase ----------
+let app, auth, db;
+let userUid = null;
 
-    setHint(`BUILD ${BUILD}\nKrok 5/5: Firebase zainicjalizowany\nCzekam na logowanie anonimowe…`);
+let unsubRoomDoc = null;
+let unsubPlayers = null;
+let unsubMatches = null;
 
-    await new Promise((resolve, reject) => {
-      const unsub = onAuthStateChanged(auth, async (user) => {
-        try{
-          if (user) {
-            unsub();
-            resolve(user);
-            return;
-          }
-          await signInAnonymously(auth);
-        }catch(e){
-          reject(e);
+let currentRoomCode = null;
+let currentRoom = null; // {name, adminNick, ...}
+let matchesCache = [];  // [{id, home, away, idx}]
+let picksCache = {};    // matchId -> {h,a}
+
+async function boot(){
+  setBg(BG_TLO);
+  setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
+
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+  const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+  const {
+    getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
+    collection, query, orderBy, onSnapshot,
+    writeBatch, deleteDoc
+  } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+
+  // expose for inner functions
+  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
+  boot.serverTimestamp = serverTimestamp;
+  boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
+  boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc;
+
+  await new Promise((resolve, reject)=>{
+    const unsub = onAuthStateChanged(auth, async(u)=>{
+      try{
+        if(u){
+          userUid = u.uid;
+          unsub();
+          resolve();
+          return;
         }
-      });
-      // jakby event nie przyszedł:
-      setTimeout(() => reject(new Error("Auth timeout (12s) – sprawdź czy Anonymous Auth jest włączone w Firebase.")), 12000);
+        await signInAnonymously(auth);
+      }catch(e){ reject(e); }
+    });
+    setTimeout(()=>reject(new Error("Auth timeout (12s)")), 12000);
+  });
+
+  setFooter(`BUILD ${BUILD}`);
+  setSplash(`OK ✅\nZalogowano.\nUID: ${userUid}\nStart UI…`);
+
+  await ensureNick();
+  refreshNickLabels();
+
+  bindUI();
+
+  // jeżeli był aktywny pokój
+  const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
+  if(saved){
+    try{
+      await openRoom(saved, {silent:true});
+      return;
+    }catch(e){
+      localStorage.removeItem(KEY_ACTIVE_ROOM);
+    }
+  }
+
+  showScreen("menu");
+}
+
+function refreshNickLabels(){
+  const nick = getNick() || "—";
+  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
+  if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
+  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
+}
+
+// ---------- UI binding ----------
+function bindUI(){
+  // MENU
+  el("btnOpenRooms").onclick = async ()=>{ showScreen("rooms"); el("debugRooms").textContent = "—"; };
+  el("btnChangeNickMenu").onclick = async ()=>{
+    localStorage.removeItem(KEY_NICK);
+    await ensureNick();
+    refreshNickLabels();
+    showToast("Zmieniono nick");
+  };
+
+  // ROOMS
+  el("btnBackMenu").onclick = ()=> showScreen("menu");
+  el("btnChangeNickRooms").onclick = async ()=>{
+    localStorage.removeItem(KEY_NICK);
+    await ensureNick();
+    refreshNickLabels();
+    showToast("Zmieniono nick");
+  };
+
+  el("btnCreateRoom").onclick = async ()=>{
+    const name = (el("inpRoomName").value || "").trim();
+    if(name.length < 2){
+      showToast("Podaj nazwę pokoju");
+      return;
+    }
+    await createRoom(name);
+  };
+
+  el("btnJoinRoom").onclick = async ()=>{
+    const code = (el("inpJoinCode").value || "").trim().toUpperCase();
+    if(code.length !== 6){
+      showToast("Kod musi mieć 6 znaków");
+      return;
+    }
+    await joinRoom(code);
+  };
+
+  // ROOM
+  el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
+  el("btnCopyCode").onclick = async ()=>{
+    if(!currentRoomCode) return;
+    try{
+      await navigator.clipboard.writeText(currentRoomCode);
+      showToast("Skopiowano kod");
+    }catch{
+      showToast("Nie udało się skopiować");
+    }
+  };
+  el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
+  el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
+  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
+  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+}
+
+// ---------- Firestore paths ----------
+function roomRef(code){ return boot.doc(db, "rooms", code); }
+function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
+
+// ---------- Rooms logic ----------
+async function createRoom(roomName){
+  const nick = getNick();
+  el("debugRooms").textContent = "Tworzę pokój…";
+
+  // spróbuj znaleźć wolny kod
+  for(let tries=0; tries<12; tries++){
+    const code = genCode6();
+    const ref = roomRef(code);
+    const snap = await boot.getDoc(ref);
+    if(snap.exists()) continue;
+
+    await boot.setDoc(ref, {
+      name: roomName,
+      adminUid: userUid,
+      adminNick: nick,
+      createdAt: boot.serverTimestamp()
     });
 
-    setHint(`OK ✅\nFirebase Auth działa.\nTeraz możemy wrócić do pełnego UI pokoju.`);
-    // Tu w kolejnym kroku wkleimy pełny UI (rooms/room) – najpierw musimy mieć pewność, że start przechodzi.
+    // dodaj siebie do players
+    await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
+      nick,
+      uid: userUid,
+      joinedAt: boot.serverTimestamp()
+    });
 
-  }catch(err){
-    console.error(err);
-    setHint("BŁĄD STARTU:\n" + (err?.message || String(err)));
-    // błąd i tak pokaże się też w index.html (czerwone pole)
-    throw err;
+    localStorage.setItem(KEY_ACTIVE_ROOM, code);
+    el("debugRooms").textContent = `Utworzono pokój ${code}`;
+    await openRoom(code);
+    return;
+  }
+  el("debugRooms").textContent = "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
+}
+
+async function joinRoom(code){
+  const nick = getNick();
+  el("debugRooms").textContent = "Dołączam…";
+
+  const ref = roomRef(code);
+  const snap = await boot.getDoc(ref);
+  if(!snap.exists()){
+    el("debugRooms").textContent = "Nie ma takiego pokoju.";
+    showToast("Nie ma takiego pokoju");
+    return;
+  }
+
+  // dodaj/odśwież player doc
+  await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
+    nick,
+    uid: userUid,
+    joinedAt: boot.serverTimestamp()
+  }, { merge:true });
+
+  localStorage.setItem(KEY_ACTIVE_ROOM, code);
+  el("debugRooms").textContent = `Dołączono do ${code}`;
+  await openRoom(code);
+}
+
+async function leaveRoom(){
+  if(!currentRoomCode) return;
+  try{
+    // usuń siebie z players
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
+  }catch{}
+  localStorage.removeItem(KEY_ACTIVE_ROOM);
+  cleanupRoomListeners();
+  currentRoomCode = null;
+  currentRoom = null;
+  matchesCache = [];
+  picksCache = {};
+  renderMatches();
+  renderPlayers([]);
+  showScreen("rooms");
+  showToast("Opuszczono pokój");
+}
+
+function cleanupRoomListeners(){
+  if(unsubRoomDoc){ unsubRoomDoc(); unsubRoomDoc=null; }
+  if(unsubPlayers){ unsubPlayers(); unsubPlayers=null; }
+  if(unsubMatches){ unsubMatches(); unsubMatches=null; }
+}
+
+// ---------- Open room + live ----------
+async function openRoom(code, opts={}){
+  const { silent=false, force=false } = opts;
+  code = (code||"").trim().toUpperCase();
+  if(!code || code.length!==6) throw new Error("Bad code");
+
+  if(!force && currentRoomCode === code){
+    showScreen("room");
+    return;
+  }
+
+  cleanupRoomListeners();
+  currentRoomCode = code;
+  showScreen("room");
+
+  // reset UI
+  matchesCache = [];
+  picksCache = {};
+  renderMatches();
+  renderPlayers([]);
+
+  const ref = roomRef(code);
+  const snap = await boot.getDoc(ref);
+  if(!snap.exists()) throw new Error("Room not found");
+  currentRoom = snap.data();
+
+  // UI left
+  el("roomName").textContent = currentRoom.name || "—";
+  el("roomAdmin").textContent = currentRoom.adminNick || "—";
+  el("roomCode").textContent = code;
+
+  const isAdmin = (currentRoom.adminUid === userUid);
+  el("btnAddQueue").style.display = isAdmin ? "block" : "none";
+
+  // live room doc (np. admin zmieni coś)
+  unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
+    if(!d.exists()) return;
+    currentRoom = d.data();
+    el("roomName").textContent = currentRoom.name || "—";
+    el("roomAdmin").textContent = currentRoom.adminNick || "—";
+    const isAdm = (currentRoom.adminUid === userUid);
+    el("btnAddQueue").style.display = isAdm ? "block" : "none";
+  });
+
+  // live players
+  const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
+  unsubPlayers = boot.onSnapshot(pq, (qs)=>{
+    const arr = [];
+    qs.forEach(docu=> arr.push(docu.data()));
+    renderPlayers(arr);
+  });
+
+  // live matches
+  const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
+  unsubMatches = boot.onSnapshot(mq, async (qs)=>{
+    const arr = [];
+    qs.forEach(docu=>{
+      arr.push({ id: docu.id, ...docu.data() });
+    });
+    matchesCache = arr;
+    await loadMyPicks(); // załaduj typy dla UID
+    renderMatches();
+  });
+
+  if(!silent) showToast(`W pokoju: ${code}`);
+}
+
+// ---------- Picks ----------
+async function loadMyPicks(){
+  // pobieramy jeden dokument: picks/{uid}
+  // struktura: { updatedAt, picks: { matchId: {h,a} } }
+  try{
+    const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
+    const snap = await boot.getDoc(ref);
+    if(!snap.exists()){
+      picksCache = {};
+      return;
+    }
+    const data = snap.data();
+    picksCache = data?.picks || {};
+  }catch{
+    picksCache = {};
+  }
+}
+
+function allPicksFilled(){
+  if(!matchesCache.length) return false;
+  for(const m of matchesCache){
+    const p = picksCache[m.id];
+    if(!p) return false;
+    if (p.h === null || p.h === undefined || p.a === null || p.a === undefined) return false;
+    if (!Number.isInteger(p.h) || !Number.isInteger(p.a)) return false;
+  }
+  return true;
+}
+
+async function saveAllPicks(){
+  if(!currentRoomCode) return;
+  if(!matchesCache.length){
+    showToast("Brak meczów");
+    return;
+  }
+  if(!allPicksFilled()){
+    showToast("Uzupełnij wszystkie typy");
+    return;
+  }
+
+  const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
+  await boot.setDoc(ref, {
+    uid: userUid,
+    nick: getNick(),
+    updatedAt: boot.serverTimestamp(),
+    picks: picksCache
+  }, { merge:true });
+
+  showToast("Zapisano typy ✅");
+}
+
+// ---------- Render ----------
+function renderPlayers(players){
+  const box = el("playersList");
+  if(!box) return;
+  box.innerHTML = "";
+
+  const adminUid = currentRoom?.adminUid;
+
+  players.forEach(p=>{
+    const row = document.createElement("div");
+    row.className = "playerRow";
+
+    const left = document.createElement("div");
+    left.textContent = p.nick || "—";
+
+    const right = document.createElement("div");
+    right.className = "row";
+    right.style.gap = "8px";
+
+    if(p.uid === adminUid){
+      const b = document.createElement("div");
+      b.className = "badge";
+      b.textContent = "ADMIN";
+      right.appendChild(b);
+    }
+    if(p.uid === userUid){
+      const b2 = document.createElement("div");
+      b2.className = "badge";
+      b2.textContent = "TY";
+      right.appendChild(b2);
+    }
+
+    row.appendChild(left);
+    row.appendChild(right);
+    box.appendChild(row);
+  });
+}
+
+function createLogoImg(teamName){
+  const slug = normalizeSlug(teamName);
+  const img = document.createElement("img");
+  img.className = "logo";
+  img.alt = teamName;
+
+  // próbujemy png -> jpg -> ukryj
+  img.src = `./logos/${slug}.png`;
+  img.onerror = () => {
+    if(img.dataset.try === "jpg"){ img.style.display="none"; return; }
+    img.dataset.try = "jpg";
+    img.src = `./logos/${slug}.jpg`;
+  };
+  return img;
+}
+
+function renderMatches(){
+  const list = el("matchesList");
+  if(!list) return;
+  list.innerHTML = "";
+
+  el("matchesCount").textContent = String(matchesCache.length || 0);
+
+  for(const m of matchesCache){
+    const card = document.createElement("div");
+    card.className = "matchCard";
+
+    const leftTeam = document.createElement("div");
+    leftTeam.className = "team";
+    const lLogo = createLogoImg(m.home);
+    const lName = document.createElement("div");
+    lName.className = "teamName";
+    lName.textContent = m.home || "—";
+    leftTeam.appendChild(lLogo);
+    leftTeam.appendChild(lName);
+
+    const rightTeam = document.createElement("div");
+    rightTeam.className = "team";
+    rightTeam.style.justifyContent = "flex-end";
+    const rName = document.createElement("div");
+    rName.className = "teamName";
+    rName.style.textAlign = "right";
+    rName.textContent = m.away || "—";
+    const rLogo = createLogoImg(m.away);
+    rightTeam.appendChild(rName);
+    rightTeam.appendChild(rLogo);
+
+    const score = document.createElement("div");
+    score.className = "scoreBox";
+
+    const inpH = document.createElement("input");
+    inpH.className = "scoreInput";
+    inpH.inputMode = "numeric";
+    inpH.placeholder = "0";
+    inpH.value = (picksCache[m.id]?.h ?? "") === "" ? "" : String(picksCache[m.id]?.h ?? "");
+    inpH.oninput = () => {
+      const v = clampInt(inpH.value, 0, 20);
+      picksCache[m.id] = picksCache[m.id] || {};
+      picksCache[m.id].h = v;
+      updateSaveButtonState();
+    };
+
+    const sep = document.createElement("div");
+    sep.className = "sep";
+    sep.textContent = ":";
+
+    const inpA = document.createElement("input");
+    inpA.className = "scoreInput";
+    inpA.inputMode = "numeric";
+    inpA.placeholder = "0";
+    inpA.value = (picksCache[m.id]?.a ?? "") === "" ? "" : String(picksCache[m.id]?.a ?? "");
+    inpA.oninput = () => {
+      const v = clampInt(inpA.value, 0, 20);
+      picksCache[m.id] = picksCache[m.id] || {};
+      picksCache[m.id].a = v;
+      updateSaveButtonState();
+    };
+
+    score.appendChild(inpH);
+    score.appendChild(sep);
+    score.appendChild(inpA);
+
+    card.appendChild(leftTeam);
+    card.appendChild(score);
+    card.appendChild(rightTeam);
+
+    list.appendChild(card);
+  }
+
+  updateSaveButtonState();
+}
+
+function updateSaveButtonState(){
+  const btn = el("btnSaveAll");
+  if(!btn) return;
+  btn.disabled = !allPicksFilled();
+}
+
+// ---------- test queue (admin only) ----------
+async function addTestQueue(){
+  if(!currentRoomCode) return;
+  if(currentRoom?.adminUid !== userUid){
+    showToast("Tylko admin");
+    return;
+  }
+
+  // przykładowe mecze — podmienisz później na prawdziwy import
+  const sample = [
+    ["Jagiellonia","Piast"],
+    ["Lechia","Legia"],
+    ["Wisla Plock","Radomiak"],
+    ["GKS Katowice","Gornik"],
+    ["Arka","Cracovia"],
+    ["Lech","Pogon"],
+    ["Motor","Rakow"],
+    ["Korona","Widzew"],
+    ["Slask","Zaglebie"],
+    ["Stal Mielec","Puszcza"]
+  ];
+
+  const b = boot.writeBatch(db);
+  sample.forEach((pair, idx)=>{
+    const id = `m_${Date.now()}_${idx}`;
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+    b.set(ref, {
+      idx,
+      home: pair[0],
+      away: pair[1],
+      createdAt: boot.serverTimestamp()
+    });
+  });
+  await b.commit();
+  showToast("Dodano kolejkę (test)");
+}
+
+// ---------- start ----------
+(async()=>{
+  try{
+    setBg(BG_TLO);
+    setSplash(`BUILD ${BUILD}\nŁadowanie…`);
+    await boot();
+  }catch(e){
+    console.error(e);
+    setSplash("BŁĄD:\n" + (e?.message || String(e)));
+    throw e;
   }
 })();
