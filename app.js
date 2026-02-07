@@ -1,4 +1,4 @@
-const BUILD = 1211;
+const BUILD = 1212;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -82,7 +82,6 @@ async function ensureNick(){
 
 function refreshNickLabels(){
   const nick = getNick() || "—";
-  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
 }
@@ -101,16 +100,13 @@ function showContinueModal({ code, roomName }){
 
   modal.style.display = "flex";
 }
-
 function hideContinueModal(){
   const modal = el("continueModal");
   if (modal) modal.style.display = "none";
 }
-
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
 }
-
 function getSavedRoomCode(){
   return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
 }
@@ -145,13 +141,18 @@ function isCompletePicksObject(picksObj){
   }
   return true;
 }
-
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
     submittedByUid[uid] = isCompletePicksObject(picksObj);
   }
 }
+
+// ---------- Firestore paths ----------
+function roomRef(code){ return boot.doc(db, "rooms", code); }
+function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
 // ---------- boot ----------
 async function boot(){
@@ -195,42 +196,30 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
-  // WAŻNE: start zawsze w MENU
+  // start w menu z obrazkiem wyboru
   showScreen("menu");
-  showToast("Gotowe ✅");
 }
 
 // ---------- UI binding ----------
 function bindUI(){
-  // MENU
-  el("btnOpenRooms").onclick = async ()=>{ await openRoomsEntryFlow(); };
+  // MENU (obrazek wyboru) — podpięte kliknięcia
+  const hitRooms = el("hitRooms");
+  const hitStats = el("hitStats");
+  const hitExit  = el("hitExit");
 
-  el("btnOpenStats").onclick = ()=>{
-    showScreen("stats");
-  };
-
-  el("btnBackFromStats").onclick = ()=>{
-    showScreen("menu");
-  };
-
-  el("btnExit").onclick = ()=>{
-    // W przeglądarce zwykle nie da się zamknąć karty programowo (ochrona).
+  if(hitRooms) hitRooms.onclick = async ()=>{ await openRoomsEntryFlow(); };
+  if(hitStats) hitStats.onclick = ()=>{ showScreen("stats"); };
+  if(hitExit)  hitExit.onclick  = ()=>{
     try{
       window.close();
-      setTimeout(()=>{
-        showToast("Jeśli karta się nie zamknęła: zamknij ją ręcznie (X) 🙂");
-      }, 200);
+      setTimeout(()=>showToast("Jeśli karta się nie zamknęła: zamknij ją ręcznie (X)."), 200);
     }catch{
       showToast("Zamknij kartę ręcznie (X).");
     }
   };
 
-  el("btnChangeNickMenu").onclick = async ()=>{
-    localStorage.removeItem(KEY_NICK);
-    await ensureNick();
-    refreshNickLabels();
-    showToast("Zmieniono nick");
-  };
+  // STATS
+  el("btnBackFromStats").onclick = ()=> showScreen("menu");
 
   // ROOMS
   el("btnBackMenu").onclick = ()=> showScreen("menu");
@@ -272,14 +261,12 @@ function bindUI(){
       await openRoom(code, { silent:true, force:true });
     };
   }
-
   if(no){
     no.onclick = ()=>{
       hideContinueModal();
       showScreen("rooms");
     };
   }
-
   if(forget){
     forget.onclick = ()=>{
       clearSavedRoom();
@@ -306,7 +293,7 @@ function bindUI(){
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
 }
 
-// po kliknięciu „Pokoje typerów”:
+// wejście do “Pokoje typerów” z pytaniem o kontynuację
 async function openRoomsEntryFlow(){
   await ensureNick();
   refreshNickLabels();
@@ -317,7 +304,6 @@ async function openRoomsEntryFlow(){
       const snap = await boot.getDoc(roomRef(saved));
       if(snap.exists()){
         const room = snap.data();
-        // pokazujemy ROOMS w tle + modal
         showScreen("rooms");
         showContinueModal({ code: saved, roomName: room?.name || "—" });
         return;
@@ -325,19 +311,12 @@ async function openRoomsEntryFlow(){
         clearSavedRoom();
       }
     }catch{
-      // jak coś padnie, idziemy normalnie do listy
+      // jak coś padnie, idziemy normalnie
     }
   }
-
   showScreen("rooms");
   if (el("debugRooms")) el("debugRooms").textContent = "—";
 }
-
-// ---------- Firestore paths ----------
-function roomRef(code){ return boot.doc(db, "rooms", code); }
-function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
 // ---------- Rooms logic ----------
 async function createRoom(roomName){
@@ -608,75 +587,18 @@ function renderPlayers(players){
   });
 }
 
-// ---- LOGA: mapa wyjątków + kilka prób nazw ----
-const LOGO_ALIASES = {
-  // klucz = normalizeSlug(nazwa w aplikacji), wartość = "nazwa_pliku_bez_rozszerzenia"
-  "wisla_plock": "wisla_plock",
-  "gks_katowice": "gks_katowice",
-  "gornik": "gornik",
-  "zaglebie": "zaglebie",
-  "slask": "slask",
-  // dopisz tu kolejne jeśli trzeba:
-  // "legia": "legia",
-  // "radomiak": "radomiak",
-};
-
-function logoCandidates(teamName){
-  const base = normalizeSlug(teamName);
-  const parts = base.split("_").filter(Boolean);
-
-  const candidates = new Set();
-
-  // 1) wyjątek
-  if(LOGO_ALIASES[base]) candidates.add(LOGO_ALIASES[base]);
-
-  // 2) pełna nazwa
-  if(base) candidates.add(base);
-
-  // 3) pierwszy/ostatni człon
-  if(parts.length >= 2){
-    candidates.add(parts[0]);
-    candidates.add(parts[parts.length - 1]);
-  }
-
-  // 4) “wisla” bywa plikiem dla “Wisla Plock” (częsty przypadek)
-  if(base === "wisla_plock") candidates.add("wisla");
-  if(base === "gks_katowice"){ candidates.add("gks"); candidates.add("katowice"); }
-
-  return [...candidates];
-}
-
 function createLogoImg(teamName){
+  const slug = normalizeSlug(teamName);
   const img = document.createElement("img");
   img.className = "logo";
   img.alt = teamName;
 
-  const cands = logoCandidates(teamName);
-  let i = 0;
-  let ext = "png";
-
-  const tryNext = ()=>{
-    if(i >= cands.length){
-      img.style.display = "none";
-      return;
-    }
-    const slug = cands[i];
-    img.src = `./logos/${slug}.${ext}`;
+  img.src = `./logos/${slug}.png`;
+  img.onerror = () => {
+    if(img.dataset.try === "jpg"){ img.style.display="none"; return; }
+    img.dataset.try = "jpg";
+    img.src = `./logos/${slug}.jpg`;
   };
-
-  img.onerror = ()=>{
-    // najpierw png -> jpg, potem następny kandydat
-    if(ext === "png"){
-      ext = "jpg";
-      tryNext();
-    }else{
-      ext = "png";
-      i++;
-      tryNext();
-    }
-  };
-
-  tryNext();
   return img;
 }
 

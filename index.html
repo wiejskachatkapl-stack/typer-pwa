@@ -104,6 +104,46 @@
       position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
     }
 
+    /* MENU as IMAGE */
+    #menu{position:relative;align-items:stretch;justify-content:center}
+    .menuFull{
+      position:absolute;inset:0;
+      background: #000 center/cover no-repeat;
+    }
+    .menuImg{
+      position:absolute;inset:0;
+      background: transparent center/cover no-repeat;
+      /* wstawiamy tu obraz wyboru */
+      background-image: url("img_wybor.png");
+    }
+    /* Klikalne strefy przycisków (procenty dopasowane do Twojej grafiki) */
+    .menuHit{
+      position:absolute;
+      border:0;
+      background:rgba(255,255,255,0.00);
+      cursor:pointer;
+      border-radius:18px;
+      outline:none;
+    }
+    .menuHit:hover{ background:rgba(255,255,255,0.06); }
+    .menuHit:active{ background:rgba(255,255,255,0.10); }
+
+    /* 3 przyciski w 1 rzędzie (środek ekranu) */
+    #hitRooms{ left:18.5%; top:46.5%; width:24.5%; height:12.5%; }
+    #hitStats{ left:37.8%; top:46.5%; width:24.5%; height:12.5%; }
+    #hitExit { left:57.2%; top:46.5%; width:24.5%; height:12.5%; }
+
+    /* ROOMS SCREEN */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* STATS */
+    #stats{padding:16px}
+    .statsBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+
     /* ROOM LAYOUT */
     #room{padding:16px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
@@ -142,21 +182,6 @@
       font-weight:900;
     }
     .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
-
-    /* ROOMS SCREEN */
-    #rooms{padding:16px;gap:14px}
-    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
-
-    /* MENU */
-    #menu{padding:16px}
-    .menuBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-
-    /* STATS */
-    #stats{padding:16px}
-    .statsBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
 
     /* CONTINUE MODAL */
     #continueModal{
@@ -211,31 +236,15 @@
         </div>
       </section>
 
-      <!-- MENU -->
+      <!-- MENU (IMAGE) -->
       <section id="menu" class="screen">
-        <div class="menuBox panel">
-          <div class="row">
-            <div class="chip">Menu</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnChangeNickMenu">Zmień nick</button>
-            <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
-          </div>
+        <div class="menuFull">
+          <div class="menuImg"></div>
 
-          <div class="panel block">
-            <h2>Typer</h2>
-            <div class="help">Wybierz, gdzie chcesz wejść.</div>
-            <div class="row" style="margin-top:12px;gap:12px;flex-wrap:wrap">
-              <button class="btn" id="btnOpenRooms">Pokoje typerów</button>
-              <button class="btn" id="btnOpenStats">Statystyka</button>
-              <button class="btn" id="btnExit">Wyjście</button>
-              <div class="spacer"></div>
-            </div>
-          </div>
-
-          <div class="panel block">
-            <h2>Info</h2>
-            <div class="help">Pokoje są w Firestore. Mecze dodaje admin. Typy zapisujesz jednym przyciskiem.</div>
-          </div>
+          <!-- klikane strefy -->
+          <button class="menuHit" id="hitRooms" aria-label="Pokoje typerów"></button>
+          <button class="menuHit" id="hitStats" aria-label="Statystyki"></button>
+          <button class="menuHit" id="hitExit"  aria-label="Wyjście"></button>
         </div>
       </section>
 
@@ -247,12 +256,9 @@
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnBackFromStats">Wróć</button>
           </div>
-
           <div class="panel block">
             <h2>Wkrótce</h2>
-            <div class="help">
-              Tu zrobimy: tabelę graczy, kto oddał typy, wyniki, punkty, ranking itd.
-            </div>
+            <div class="help">Tu zrobimy ranking/punkty/wyniki.</div>
           </div>
         </div>
       </section>
@@ -381,6 +387,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1211"></script>
+  <script type="module" src="./app.js?v=1212"></script>
 </body>
 </html>
