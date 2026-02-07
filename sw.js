@@ -1,8 +1,8 @@
-const CACHE_NAME = "typer-pwa-cache-v1015";
+const CACHE_NAME = "typer-pwa-cache-v1016";
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.js?v=1015",
+  "./app.js?v=1016",
   "./manifest.json",
   "./img_menu.png",
   "./img_menu_pc.png",
@@ -26,7 +26,6 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Network-first dla HTML/JS, żeby zawsze pobierało najnowsze
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);

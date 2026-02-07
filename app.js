@@ -1,9 +1,9 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=1015).
+   * Musi się zgadzać z index.html (app.js?v=1016).
    */
-  const BUILD = 1015;
+  const BUILD = 1016;
 
   const KEY_NICK = "typer_nick_v1";
   const KEY_ROOMS = "typer_rooms_v1";
@@ -76,12 +76,10 @@
   let activeRoomCode = "";
   let lastDebug = [];
 
-  // -------------------- helpers --------------------
+  // helpers
   const isPhone = () => window.matchMedia("(max-width: 880px)").matches;
 
   const setBackground = (which) => {
-    // czyścimy i ustawiamy JEDNO tło
-    bg.style.backgroundImage = "none";
     bg.style.backgroundImage = `url('${which}')`;
   };
 
@@ -129,7 +127,7 @@
 
   const findRoom = (code) => rooms.find(r => r.code === code);
 
-  // -------------------- TEST QUEUE --------------------
+  // TEST QUEUE (na razie ręczna/testowa – później podmienimy na realny import)
   const testQueue = () => ([
     { home: "Jagiellonia", away: "Piast" },
     { home: "Lechia", away: "Legia" },
@@ -143,7 +141,7 @@
     { home: "Jagiellonia", away: "Lech" },
   ]);
 
-  // -------------------- LOGO RESOLVER --------------------
+  // LOGO RESOLVER
   const slug = (name) => normalize(name)
     .toLowerCase()
     .replaceAll("ł", "l").replaceAll("ś", "s").replaceAll("ć", "c").replaceAll("ń", "n")
@@ -181,13 +179,14 @@
       out.push(`logos/${a}.png`);
       out.push(`logos/${a}.jpg`);
       out.push(`logos/${a}.jpeg`);
+      // awaryjnie jeśli ktoś wrzucił loga do root:
       out.push(`${a}.png`);
       out.push(`${a}.jpg`);
     }
     return out;
   };
 
-  // -------------------- UI render --------------------
+  // UI
   const syncNickLabels = () => {
     nickText.textContent = nick || "—";
     nickTextRooms.textContent = nick || "—";
@@ -232,9 +231,11 @@
       const a = arr.find(x => x.getAttribute("data-side") === "home");
       const b = arr.find(x => x.getAttribute("data-side") === "away");
       if (!a || !b) return false;
-      if (a.value.trim() === "" || b.value.trim() === "") return false;
-      meaning:
-      if (!/^\d+$/.test(a.value.trim()) || !/^\d+$/.test(b.value.trim())) return false;
+
+      const va = a.value.trim();
+      const vb = b.value.trim();
+      if (va === "" || vb === "") return false;
+      if (!/^\d+$/.test(va) || !/^\d+$/.test(vb)) return false;
     }
     return true;
   };
@@ -347,7 +348,7 @@
     updateSaveAllState();
   };
 
-  // -------------------- flow --------------------
+  // flow
   const askNickIfNeeded = () => {
     if (nick) return true;
     const n = prompt("Podaj nick:");
@@ -383,7 +384,7 @@
     activeRoomCode = code;
     saveActiveRoom(code);
 
-    // >>> TYLKO img_tlo.png (czyścimy i ustawiamy)
+    // tylko img_tlo.png w pokoju
     setRoomBg();
 
     roomNameText.textContent = room.name || "—";
@@ -397,7 +398,7 @@
     showScreen(roomScreen);
   };
 
-  // -------------------- rooms actions --------------------
+  // rooms actions
   const createRoom = () => {
     try {
       const name = normalize(newRoomName.value);
@@ -455,7 +456,7 @@
     }
   };
 
-  // -------------------- room actions --------------------
+  // room actions
   const addQueue = () => {
     const room = findRoom(activeRoomCode);
     if (!room) return;
@@ -495,11 +496,11 @@
       by[mid][side] = i.value.trim();
     });
 
-    Object.keys(by).forEach(mid => {
-      const h = by[mid].home;
-      const a = by[mid].away;
-      tips[mid] = { h: Number(h), a: Number(a), at: Date கொள்ள do
-    });
+    for (const mid of Object.keys(by)) {
+      const h = Number(by[mid].home);
+      const a = Number(by[mid].away);
+      tips[mid] = { h, a, at: Date.now() };
+    }
 
     saveRooms();
     roomInfo.textContent = "Zapisano wszystkie typy ✔";
@@ -551,7 +552,7 @@
     }
   };
 
-  // -------------------- init --------------------
+  // init
   const boot = () => {
     splashVer.textContent = `BUILD ${BUILD}`;
     splashHint.textContent = `Ekran startowy (7s)…`;
@@ -596,7 +597,6 @@
   roomBackBtn.addEventListener("click", openLiga);
   addQueueBtn.addEventListener("click", addQueue);
   saveAllBtn.addEventListener("click", saveAllTips);
-
   copyCodeBtn.addEventListener("click", copyCode);
   leaveRoomBtn.addEventListener("click", leaveRoom);
   refreshRoomBtn.addEventListener("click", refreshRoom);
