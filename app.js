@@ -1,827 +1,647 @@
 (() => {
   /**
    * BUILD – podbijaj przy zmianach.
-   * Musi się zgadzać z index.html (app.js?v=XXXX).
+   * Musi się zgadzać z index.html (app.js?v=1013).
    */
-  const BUILD = 1012;
+  const BUILD = 1013;
 
   const KEY_NICK = "typer_nick_v1";
-  const KEY_ROOMS = "typer_rooms_v1";       // local rooms (device)
+  const KEY_ROOMS = "typer_rooms_v1";
   const KEY_ACTIVE_ROOM = "typer_active_room_v1";
-
   const SPLASH_MS = 7000;
 
+  // tło
   const MENU_PHONE = "img_menu.png";
   const MENU_PC = "img_menu_pc.png";
-
-  const LOGO_DIR = "logos";
+  const STARTER = "img_starter.png";
 
   const el = (id) => document.getElementById(id);
 
   // screens
   const splash = el("splash");
-  const splashHint = el("splashHint");
   const menuScreen = el("menuScreen");
   const roomsScreen = el("roomsScreen");
   const roomScreen = el("roomScreen");
 
-  // bg
-  const bgImage = el("bgImage");
-  const menuImg = el("menuImg");
+  // bg elements
+  const bg = el("bg");
+  const splashImg = el("splashImg");
 
-  // menu ui
-  const nickChip = el("nickChip");
+  // labels
+  const splashHint = el("splashHint");
+  const splashVer = el("splashVer");
+
+  const nickText = el("nickText");
+  const nickTextRooms = el("nickTextRooms");
+  const nickTextRoom = el("nickTextRoom");
+
+  // menu buttons
   const changeNickBtn = el("changeNickBtn");
   const btnLiga = el("btnLiga");
   const btnStats = el("btnStats");
   const btnExit = el("btnExit");
+  const menuInfo = el("menuInfo");
 
-  // rooms ui
-  const nickChipRooms = el("nickChipRooms");
-  const changeNickBtn2 = el("changeNickBtn2");
-  const backToMenu1 = el("backToMenu1");
-  const roomNameInput = el("roomNameInput");
+  // rooms screen
+  const changeNickBtnRooms = el("changeNickBtnRooms");
+  const backToMenuBtn = el("backToMenuBtn");
+  const newRoomName = el("newRoomName");
   const createRoomBtn = el("createRoomBtn");
-  const joinCodeInput = el("joinCodeInput");
+  const joinRoomCode = el("joinRoomCode");
   const joinRoomBtn = el("joinRoomBtn");
-  const debugCard = el("debugCard");
-  const debugLog = el("debugLog");
-  const buildLabel = el("buildLabel");
-  const roomsStatus = el("roomsStatus");
+  const debugBox = el("debugBox");
+  const roomsInfo = el("roomsInfo");
 
-  // room ui
-  const nickChipRoom = el("nickChipRoom");
-  const backToRooms = el("backToRooms");
+  // room screen
+  const roomBackBtn = el("roomBackBtn");
+  const matchesList = el("matchesList");
+  const addQueueBtn = el("addQueueBtn");
+  const saveAllBtn = el("saveAllBtn");
+
   const playersList = el("playersList");
-  const roomTitle = el("roomTitle");
-  const roomAdmin = el("roomAdmin");
-  const roomCodeInput = el("roomCodeInput");
+  const roomNameText = el("roomNameText");
+  const roomAdminText = el("roomAdminText");
+  const roomCodeText = el("roomCodeText");
   const copyCodeBtn = el("copyCodeBtn");
   const leaveRoomBtn = el("leaveRoomBtn");
   const refreshRoomBtn = el("refreshRoomBtn");
-  const roomStatus = el("roomStatus");
+  const roomInfo = el("roomInfo");
 
-  const addRoundBtn = el("addRoundBtn");
-  const saveAllTipsBtn = el("saveAllTipsBtn");
-  const matchesList = el("matchesList");
+  // state
+  let nick = "";
+  let rooms = [];
+  let activeRoomCode = "";
+  let lastDebug = [];
 
-  // ---------- helpers ----------
+  // -------------------- helpers --------------------
+  const isPhone = () => window.matchMedia("(max-width: 880px)").matches;
 
-  const isLandscape = () => window.matchMedia && window.matchMedia("(orientation: landscape)").matches;
-  const pickMenuSrc = () => (isLandscape() ? MENU_PC : MENU_PHONE);
-
-  function showScreen(which) {
-    [splash, menuScreen, roomsScreen, roomScreen].forEach(s => s.classList.remove("active"));
-    which.classList.add("active");
-  }
-
-  function clampNick(n) {
-    n = (n || "").trim();
-    if (!n) return "";
-    n = n.replace(/\s+/g, " ");
-    if (n.length > 16) n = n.slice(0, 16);
-    return n;
-  }
-
-  function getNick() {
-    return clampNick(localStorage.getItem(KEY_NICK) || "");
-  }
-
-  function setNick(nick) {
-    nick = clampNick(nick);
-    if (!nick) return false;
-    localStorage.setItem(KEY_NICK, nick);
-    return true;
-  }
-
-  function ensureNickOrAsk() {
-    const current = getNick();
-    if (current) return current;
-    let n = prompt("Podaj nick (max 16 znaków):", "");
-    if (!n) return "";
-    n = clampNick(n);
-    if (!n) return "";
-    setNick(n);
-    return n;
-  }
-
-  function readRooms() {
-    try {
-      const raw = localStorage.getItem(KEY_ROOMS);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function saveRooms(rooms) {
-    localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
-  }
-
-  function getActiveRoomCode() {
-    return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
-  }
-
-  function setActiveRoomCode(code) {
-    localStorage.setItem(KEY_ACTIVE_ROOM, code);
-  }
-
-  function genCode6() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let s = "";
-    for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
-    return s;
-  }
-
-  function nowHHMM() {
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    return `${hh}:${mm}`;
-  }
-
-  function log(msg) {
-    debugCard.style.display = "block";
-    debugLog.textContent = `[${nowHHMM()}] ${msg}\n` + debugLog.textContent;
-  }
-
-  function statusRooms(msg) {
-    roomsStatus.textContent = msg;
-  }
-
-  function statusRoom(msg) {
-    roomStatus.textContent = msg;
-  }
-
-  function escapeHtml(str) {
-    return (str || "").replace(/[&<>\"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
-  }
-
-  function normalizeSlug(s) {
-    // normalize: lowercase, remove diacritics, keep a-z0-9
-    return (s || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "")
-      .trim();
-  }
-
-  // Map team name -> file base
-  const TEAM_LOGO_MAP = {
-    "legia": "legia",
-    "lech": "lech",
-    "rakow": "raków",          // file has Polish char
-    "jagiellonia": "jagiellonia",
-    "cracovia": "cracovia",
-    "widzew": "widzew",
-    "korona": "korona",
-    "radomiak": "radomiak",
-    "piast": "piast",
-    "pogon": "pogon",          // .jpg
-    "gornik": "gornik",
-    "lechia": "lechia",
-    "motor": "motor",
-    "zaglebie": "lubin",       // Zagłębie Lubin -> lubin.png
-    "katowice": "katowice",    // GKS Katowice
-    "plock": "płock",          // Wisła Płock -> płock.png
-    "arka": "arka",
-    "brukbet": "brukbet",
+  const setBackground = (which) => {
+    bg.style.backgroundImage = `url('${which}')`;
   };
 
-  function logoCandidates(teamName) {
-    const n = normalizeSlug(teamName);
+  const showScreen = (scr) => {
+    [splash, menuScreen, roomsScreen, roomScreen].forEach(s => s.classList.remove("active"));
+    scr.classList.add("active");
+  };
 
-    // special cases by keyword
-    const candidates = [];
+  const logDebug = (msg) => {
+    const t = new Date();
+    const hh = String(t.getHours()).padStart(2, "0");
+    const mm = String(t.getMinutes()).padStart(2, "0");
+    const ss = String(t.getSeconds()).padStart(2, "0");
+    lastDebug.unshift(`[${hh}:${mm}:${ss}] ${msg}`);
+    lastDebug = lastDebug.slice(0, 30);
+    if (debugBox) debugBox.textContent = lastDebug.join("\n");
+  };
 
-    if (n.includes("rakow")) candidates.push("raków");
-    if (n.includes("plock")) candidates.push("płock");
-    if (n.includes("zaglebie") || n.includes("lubin")) candidates.push("lubin");
-    if (n.includes("katowice") || n.includes("gks")) candidates.push("katowice");
-
-    // direct map by first token / full
-    const first = n;
-    if (TEAM_LOGO_MAP[first]) candidates.push(TEAM_LOGO_MAP[first]);
-
-    // try last word (city/club)
-    const parts = (teamName || "").toLowerCase().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) {
-      const last = normalizeSlug(parts[parts.length - 1]);
-      if (TEAM_LOGO_MAP[last]) candidates.push(TEAM_LOGO_MAP[last]);
-      candidates.push(parts[parts.length - 1]);
+  const saveRooms = () => localStorage.setItem(KEY_ROOMS, JSON.stringify(rooms));
+  const loadRooms = () => {
+    try {
+      const raw = localStorage.getItem(KEY_ROOMS);
+      rooms = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(rooms)) rooms = [];
+    } catch {
+      rooms = [];
     }
+  };
 
-    // fallback: full normalized (rare)
-    candidates.push(n);
+  const saveNick = (n) => localStorage.setItem(KEY_NICK, n);
+  const loadNick = () => (localStorage.getItem(KEY_NICK) || "").trim();
 
-    // de-dup keep order
-    return [...new Set(candidates.filter(Boolean))];
-  }
+  const saveActiveRoom = (code) => localStorage.setItem(KEY_ACTIVE_ROOM, code);
+  const loadActiveRoom = () => (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim();
 
-  function buildLogoUrl(base) {
-    return `${LOGO_DIR}/${base}`;
-  }
+  const normalize = (s) => (s || "").toString().trim();
+  const upper = (s) => normalize(s).toUpperCase();
 
-  function makeLogoImg(teamName) {
-    const img = document.createElement("img");
-    img.className = "logo";
-    img.alt = teamName;
+  const genCode6 = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let out = "";
+    for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  };
 
-    const tries = [];
-    for (const base of logoCandidates(teamName)) {
-      // prefer png, but allow jpg
-      tries.push(buildLogoUrl(`${base}.png`));
-      tries.push(buildLogoUrl(`${base}.jpg`));
-      tries.push(buildLogoUrl(`${base}.jpeg`));
+  const findRoom = (code) => rooms.find(r => r.code === code);
+
+  // -------------------- matches (test queue) --------------------
+  // Uwaga: to dalej TEST. Później podmienimy na prawdziwy import kolejki.
+  const testQueue = () => ([
+    { home: "Jagiellonia", away: "Piast" },
+    { home: "Lechia", away: "Legia" },
+    { home: "Wisła Płock", away: "Radomiak" },
+    { home: "GKS Katowice", away: "Górnik" },
+    { home: "Arka", away: "Cracovia" },
+    { home: "Lech", away: "Pogoń" },
+    { home: "Motor", away: "Raków" },
+    { home: "Korona", away: "Widzew" },
+    { home: "Śląsk", away: "Zagłębie" },
+    { home: "Jagiellonia", away: "Lech" },
+  ]);
+
+  // -------------------- logo resolver --------------------
+  // Zakładamy: loga w /logos/*.png lub *.jpg
+  // Najpierw próbujemy zmapować nazwę drużyny do pliku.
+  const slug = (name) => normalize(name)
+    .toLowerCase()
+    .replaceAll("ł", "l")
+    .replaceAll("ś", "s")
+    .replaceAll("ć", "c")
+    .replaceAll("ń", "n")
+    .replaceAll("ó", "o")
+    .replaceAll("ż", "z")
+    .replaceAll("ź", "z")
+    .replaceAll("ą", "a")
+    .replaceAll("ę", "e")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  // Jeśli Twoje pliki są nazwane inaczej – dopisz tu aliasy.
+  const LOGO_ALIASES = {
+    "jagiellonia": ["jagiellonia", "bialystok"],
+    "piast": ["piast", "gliwice"],
+    "lechia": ["lechia", "gdansk"],
+    "legia": ["legia", "warszawa"],
+    "wisla_plock": ["wisla_plock", "plock"],
+    "radomiak": ["radomiak", "radom"],
+    "gks_katowice": ["gks_katowice", "katowice"],
+    "gornik": ["gornik", "zabrze"],
+    "arka": ["arka", "gdynia"],
+    "cracovia": ["cracovia", "krakow"],
+    "lech": ["lech", "poznan"],
+    "pogon": ["pogon", "szczecin"],
+    "motor": ["motor", "lublin"],
+    "rakow": ["rakow", "czestochowa"],
+    "korona": ["korona", "kielce"],
+    "widzew": ["widzew", "lodz"],
+    "slask": ["slask", "wroclaw"],
+    "zaglebie": ["zaglebie", "lubin"],
+  };
+
+  const guessLogoCandidates = (teamName) => {
+    const s = slug(teamName);
+    const aliases = LOGO_ALIASES[s] || [s];
+    // próbujemy png, potem jpg
+    const out = [];
+    for (const a of aliases) {
+      out.push(`logos/${a}.png`);
+      out.push(`logos/${a}.jpg`);
+      out.push(`logos/${a}.jpeg`);
+      out.push(`${a}.png`);   // jeśli ktoś wrzucił do root (awaryjnie)
+      out.push(`${a}.jpg`);
     }
+    return out;
+  };
 
-    let idx = 0;
-    const setNext = () => {
-      if (idx >= tries.length) {
-        img.style.visibility = "hidden";
-        return;
-      }
-      img.src = tries[idx++];
-    };
-    img.onerror = () => setNext();
-    setNext();
-    return img;
-  }
+  // -------------------- UI render --------------------
+  const syncNickLabels = () => {
+    nickText.textContent = nick || "—";
+    nickTextRooms.textContent = nick || "—";
+    nickTextRoom.textContent = nick || "—";
+  };
 
-  // Ekstraklasa-ish list (test) – we only use teams you likely have logos for.
-  const EKSTRA_TEAMS = [
-    "Legia",
-    "Lech",
-    "Raków",
-    "Jagiellonia",
-    "Cracovia",
-    "Widzew",
-    "Korona",
-    "Radomiak",
-    "Piast",
-    "Pogoń",
-    "Górnik",
-    "Lechia",
-    "Motor",
-    "Zagłębie Lubin",
-    "GKS Katowice",
-    "Wisła Płock",
-    "Arka",
-    "Bruk-Bet",
-  ];
+  const setMenuBg = () => {
+    setBackground(isPhone() ? MENU_PHONE : MENU_PC);
+  };
 
-  function shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+  const setRoomBg = () => {
+    // W POKOJU ma być samo tło stadionu (takie jak menu), bez żadnego dodatkowego screenu
+    setBackground(isPhone() ? MENU_PHONE : MENU_PC);
+  };
 
-  function genRound10() {
-    // pick 20 unique teams if possible
-    const pool = shuffle(EKSTRA_TEAMS);
-    const pairs = [];
-    for (let i = 0; i + 1 < pool.length && pairs.length < 10; i += 2) {
-      pairs.push([pool[i], pool[i + 1]]);
-    }
-
-    // time: next day 18:00 + index*15min
-    const base = new Date();
-    base.setMinutes(0, 0, 0);
-    base.setHours(18);
-    base.setDate(base.getDate() + 1);
-
-    return pairs.map((p, idx) => {
-      const d = new Date(base.getTime() + idx * 15 * 60 * 1000);
-      const dd = String(d.getDate()).padStart(2, "0");
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mi = String(d.getMinutes()).padStart(2, "0");
-      return {
-        id: `m_${Date.now()}_${idx}`,
-        league: "Ekstraklasa",
-        home: p[0],
-        away: p[1],
-        time: `${dd}.${mm} ${hh}:${mi}`,
-        tips: {},
-      };
-    });
-  }
-
-  // ---------- rendering ----------
-
-  function renderNick() {
-    const n = getNick();
-    const t = n ? `Nick: ${n}` : "Nick: —";
-    nickChip.textContent = t;
-    nickChipRooms.textContent = t;
-    nickChipRoom.textContent = t;
-  }
-
-  function refreshMenuImage() {
-    const src = pickMenuSrc();
-    // menu panel
-    menuImg.src = src;
-    // background blur (soft)
-    bgImage.style.backgroundImage = `url('${src}')`;
-  }
-
-  function renderRoomsDebugInfo(rooms) {
-    buildLabel.textContent = String(BUILD);
-    statusRooms(`Pokoje: ${rooms.length}`);
-  }
-
-  function findRoomByCode(rooms, code) {
-    return rooms.find(r => (r.code || "").toUpperCase() === code.toUpperCase()) || null;
-  }
-
-  function ensurePlayer(room, nick) {
-    room.players = Array.isArray(room.players) ? room.players : [];
-    if (!room.players.includes(nick)) room.players.push(nick);
-  }
-
-  function renderPlayers(room) {
+  const renderPlayers = (room) => {
     playersList.innerHTML = "";
-    const list = Array.isArray(room.players) ? room.players : [];
+    const list = (room.players || []).slice();
+    if (!list.includes(nick)) list.push(nick);
 
     list.forEach(p => {
       const row = document.createElement("div");
-      row.className = "pill";
-      const left = document.createElement("div");
-      left.textContent = "Gracz:";
-      left.style.opacity = ".85";
-      const right = document.createElement("div");
-      right.textContent = p;
-      row.append(left, right);
+      row.className = "playerRow";
+      row.innerHTML = `<span>Gracz:</span><b>${p}</b>`;
       playersList.appendChild(row);
     });
+  };
 
-    if (list.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "muted";
-      empty.textContent = "Brak graczy";
-      playersList.appendChild(empty);
+  const getNickTipsForRoom = (room) => {
+    if (!room.tips) room.tips = {};
+    if (!room.tips[nick]) room.tips[nick] = {};
+    return room.tips[nick];
+  };
+
+  const allPicksFilled = () => {
+    const inputs = [...matchesList.querySelectorAll("input[data-mid]")];
+    if (inputs.length === 0) return false;
+
+    // grupujemy po mid
+    const by = {};
+    inputs.forEach(i => {
+      const mid = i.getAttribute("data-mid");
+      if (!by[mid]) by[mid] = [];
+      by[mid].push(i);
+    });
+
+    // każdy mecz musi mieć 2 liczby
+    for (const mid of Object.keys(by)) {
+      const arr = by[mid];
+      if (arr.length < 2) return false;
+      const a = arr.find(x => x.getAttribute("data-side") === "home");
+      const b = arr.find(x => x.getAttribute("data-side") === "away");
+      if (!a || !b) return false;
+      if (a.value.trim() === "" || b.value.trim() === "") return false;
+      if (!/^\d+$/.test(a.value.trim()) || !/^\d+$/.test(b.value.trim())) return false;
     }
-  }
+    return true;
+  };
 
-  function renderMatches(room) {
+  const updateSaveAllState = () => {
+    saveAllBtn.disabled = !allPicksFilled();
+  };
+
+  const renderMatches = (room) => {
     matchesList.innerHTML = "";
-    const matches = Array.isArray(room.matches) ? room.matches : [];
-    const nick = getNick();
+    const tips = getNickTipsForRoom(room);
 
-    if (matches.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "muted";
-      empty.textContent = "Brak spotkań. Admin może dodać kolejkę testową.";
-      matchesList.appendChild(empty);
-      return;
-    }
+    (room.matches || []).forEach(m => {
+      const row = document.createElement("div");
+      row.className = "matchRow";
 
-    // show up to 10 (as requested)
-    matches.slice(0, 10).forEach((m) => {
-      const wrap = document.createElement("div");
-      wrap.className = "matchRow";
+      const left = document.createElement("div");
+      left.className = "team";
+      const leftLogo = document.createElement("img");
+      leftLogo.className = "logo";
+      leftLogo.alt = m.home;
+      leftLogo.src = guessLogoCandidates(m.home)[0];
+      // fallback chain
+      leftLogo.onerror = () => {
+        const c = guessLogoCandidates(m.home);
+        const idx = Number(leftLogo.dataset.idx || "0") + 1;
+        if (idx < c.length) {
+          leftLogo.dataset.idx = String(idx);
+          leftLogo.src = c[idx];
+        } else {
+          leftLogo.onerror = null;
+          leftLogo.style.opacity = "0.0";
+        }
+      };
+      const leftName = document.createElement("div");
+      leftName.className = "teamName";
+      leftName.textContent = m.home;
+      left.appendChild(leftLogo);
+      left.appendChild(leftName);
 
-      const home = document.createElement("div");
-      home.className = "team";
-      home.appendChild(makeLogoImg(m.home));
-      const homeName = document.createElement("div");
-      homeName.className = "teamName";
-      homeName.textContent = m.home;
-      home.appendChild(homeName);
-
-      const tip = document.createElement("div");
-      tip.className = "tipBox";
-      const inH = document.createElement("input");
-      inH.className = "scoreInput";
-      inH.type = "number";
-      inH.min = "0";
-      inH.max = "20";
-      inH.inputMode = "numeric";
-
-      const colon = document.createElement("div");
-      colon.className = "colon";
-      colon.textContent = ":";
+      const mid = document.createElement("div");
+      mid.className = "scoreBox";
 
       const inA = document.createElement("input");
       inA.className = "scoreInput";
-      inA.type = "number";
-      inA.min = "0";
-      inA.max = "20";
       inA.inputMode = "numeric";
+      inA.placeholder = "-";
+      inA.value = (tips[m.id]?.h ?? "").toString();
+      inA.setAttribute("data-mid", m.id);
+      inA.setAttribute("data-side", "home");
 
-      const saveBtn = document.createElement("button");
-      saveBtn.className = "miniBtn";
-      saveBtn.textContent = "Zapisz";
+      const sep = document.createElement("div");
+      sep.className = "scoreSep";
+      sep.textContent = ":";
 
-      // preload existing tip
-      const t = (m.tips && nick && m.tips[nick]) ? m.tips[nick] : null;
-      if (t) {
-        inH.value = String(t.h);
-        inA.value = String(t.a);
-      }
+      const inB = document.createElement("input");
+      inB.className = "scoreInput";
+      inB.inputMode = "numeric";
+      inB.placeholder = "-";
+      inB.value = (tips[m.id]?.a ?? "").toString();
+      inB.setAttribute("data-mid", m.id);
+      inB.setAttribute("data-side", "away");
 
-      saveBtn.addEventListener("click", () => {
-        const h = Number(inH.value);
-        const a = Number(inA.value);
-        if (!Number.isFinite(h) || !Number.isFinite(a) || h < 0 || a < 0) {
-          statusRoom("Podaj poprawny typ");
-          return;
+      const right = document.createElement("div");
+      right.className = "team";
+      right.style.justifyContent = "flex-end";
+
+      const rightName = document.createElement("div");
+      rightName.className = "teamName";
+      rightName.style.textAlign = "right";
+      rightName.textContent = m.away;
+
+      const rightLogo = document.createElement("img");
+      rightLogo.className = "logo";
+      rightLogo.alt = m.away;
+      rightLogo.src = guessLogoCandidates(m.away)[0];
+      rightLogo.onerror = () => {
+        const c = guessLogoCandidates(m.away);
+        const idx = Number(rightLogo.dataset.idx || "0") + 1;
+        if (idx < c.length) {
+          rightLogo.dataset.idx = String(idx);
+          rightLogo.src = c[idx];
+        } else {
+          rightLogo.onerror = null;
+          rightLogo.style.opacity = "0.0";
         }
-        saveTip(room.code, m.id, nick, h, a);
-      });
+      };
 
-      tip.append(inH, colon, inA, saveBtn);
+      right.appendChild(rightName);
+      right.appendChild(rightLogo);
 
-      const away = document.createElement("div");
-      away.className = "team";
-      // away: name then logo right (looks nicer in tight grid)
-      const awayName = document.createElement("div");
-      awayName.className = "teamName";
-      awayName.textContent = m.away;
-      away.appendChild(awayName);
-      away.appendChild(makeLogoImg(m.away));
-      away.style.justifyContent = "flex-end";
+      // listeners
+      const onAnyInput = () => {
+        // cyfry only
+        inA.value = inA.value.replace(/[^\d]/g, "");
+        inB.value = inB.value.replace(/[^\d]/g, "");
+        updateSaveAllState();
+      };
+      inA.addEventListener("input", onAnyInput);
+      inB.addEventListener("input", onAnyInput);
 
-      const tipInfo = document.createElement("div");
-      tipInfo.className = "muted";
-      tipInfo.style.fontSize = "12px";
-      tipInfo.style.gridColumn = "1 / -1";
-      const myTip = (m.tips && nick && m.tips[nick]) ? `${m.tips[nick].h}:${m.tips[nick].a}` : "—";
-      tipInfo.textContent = `${m.league || ""}${m.time ? ` • ${m.time}` : ""} • Twój typ: ${myTip}`;
+      mid.appendChild(inA);
+      mid.appendChild(sep);
+      mid.appendChild(inB);
 
-      wrap.append(home, tip, away);
-      wrap.appendChild(tipInfo);
+      row.appendChild(left);
+      row.appendChild(mid);
+      row.appendChild(right);
 
-      matchesList.appendChild(wrap);
+      matchesList.appendChild(row);
     });
 
-    if (matches.length > 10) {
-      const more = document.createElement("div");
-      more.className = "muted";
-      more.style.fontSize = "12px";
-      more.textContent = `Pokazuję 10 z ${matches.length} spotkań (na razie).`;
-      matchesList.appendChild(more);
-    }
-  }
+    // po renderze ustaw stan
+    updateSaveAllState();
+  };
 
-  // ---------- actions ----------
+  // -------------------- flow --------------------
+  const askNickIfNeeded = () => {
+    if (nick) return true;
+    const n = prompt("Podaj nick:");
+    const nn = normalize(n);
+    if (!nn) return false;
+    nick = nn;
+    saveNick(nick);
+    syncNickLabels();
+    return true;
+  };
 
-  function openMenu() {
-    renderNick();
-    refreshMenuImage();
+  const openMenu = () => {
+    setMenuBg();
+    syncNickLabels();
+    menuInfo.textContent = `BUILD ${BUILD}`;
     showScreen(menuScreen);
-    statusRooms("");
-  }
+  };
 
-  function openRooms() {
-    const nick = ensureNickOrAsk();
-    if (!nick) {
-      alert("Bez nicku nie wejdziesz do ligi.");
-      return;
-    }
-    renderNick();
-    refreshMenuImage();
-
-    const rooms = readRooms();
-    renderRoomsDebugInfo(rooms);
-
+  const openLiga = () => {
+    setMenuBg();
+    syncNickLabels();
+    roomsInfo.textContent = `BUILD ${BUILD}`;
     showScreen(roomsScreen);
-  }
+    logDebug(`openLiga (BUILD ${BUILD}) rooms=${rooms.length}`);
+  };
 
-  function openRoom(code) {
-    const nick = ensureNickOrAsk();
-    if (!nick) return;
-
-    const rooms = readRooms();
-    const room = findRoomByCode(rooms, code);
+  const openRoom = (code) => {
+    const room = findRoom(code);
     if (!room) {
-      statusRooms("Nie znaleziono pokoju");
+      roomInfo.textContent = "Nie znaleziono pokoju.";
       return;
     }
+    activeRoomCode = code;
+    saveActiveRoom(code);
 
-    ensurePlayer(room, nick);
-    room.matches = Array.isArray(room.matches) ? room.matches : [];
-    saveRooms(rooms);
+    // tło ma być same (stadion), bez dodatkowego screenu
+    setRoomBg();
 
-    setActiveRoomCode(room.code);
+    // info
+    roomNameText.textContent = room.name || "—";
+    roomAdminText.textContent = `Admin: ${room.admin || "—"}`;
+    roomCodeText.value = room.code;
 
-    // render
-    roomTitle.textContent = room.name || "(bez nazwy)";
-    roomAdmin.textContent = `Admin: ${room.admin || "—"}`;
-    roomCodeInput.value = room.code;
-
-    // admin-only addRound
-    addRoundBtn.style.display = (room.admin === nick) ? "inline-flex" : "none";
-
+    // gracze
     renderPlayers(room);
+
+    // mecze
     renderMatches(room);
 
-    renderNick();
-    refreshMenuImage();
+    roomInfo.textContent = `W pokoju: ${room.code}`;
     showScreen(roomScreen);
-    statusRoom(`W pokoju: ${room.code}`);
-  }
+  };
 
-  function createRoom() {
-    const nick = ensureNickOrAsk();
-    if (!nick) return;
-
-    const name = (roomNameInput.value || "").trim();
-    if (!name) {
-      statusRooms("Podaj nazwę pokoju");
-      return;
-    }
-
-    const rooms = readRooms();
-
-    // generate unique code
-    let code = genCode6();
-    let guard = 0;
-    while (findRoomByCode(rooms, code) && guard++ < 50) code = genCode6();
-
-    const room = {
-      code,
-      name: name.toUpperCase(),
-      admin: nick,
-      players: [nick],
-      matches: [],
-    };
-
-    rooms.unshift(room);
-    saveRooms(rooms);
-
-    log(`createRoom ok: ${code} (${name}) admin=${nick}`);
-    statusRooms(`Utworzono pokój ${code}`);
-
-    openRoom(code);
-  }
-
-  function joinRoom() {
-    const nick = ensureNickOrAsk();
-    if (!nick) return;
-
-    const code = (joinCodeInput.value || "").trim().toUpperCase();
-    if (code.length !== 6) {
-      statusRooms("Kod musi mieć 6 znaków");
-      return;
-    }
-
-    const rooms = readRooms();
-    const room = findRoomByCode(rooms, code);
-    if (!room) {
-      statusRooms("Nie ma takiego pokoju (lokalnie)");
-      return;
-    }
-
-    ensurePlayer(room, nick);
-    saveRooms(rooms);
-
-    log(`joinRoom ok: ${code} gracz=${nick}`);
-    statusRooms(`Dołączono do ${code}`);
-
-    openRoom(code);
-  }
-
-  function leaveRoom() {
-    const nick = getNick();
-    const code = getActiveRoomCode();
-    if (!code) {
-      openRooms();
-      return;
-    }
-
-    const rooms = readRooms();
-    const room = findRoomByCode(rooms, code);
-    if (room && Array.isArray(room.players)) {
-      room.players = room.players.filter(p => p !== nick);
-      saveRooms(rooms);
-    }
-
-    setActiveRoomCode("");
-    statusRoom("Opuszczono pokój");
-    openRooms();
-  }
-
-  function refreshRoom() {
-    const code = getActiveRoomCode();
-    if (!code) {
-      openRooms();
-      return;
-    }
-    openRoom(code);
-  }
-
-  function copyCode() {
-    const code = (roomCodeInput.value || "").trim();
-    if (!code) return;
-    navigator.clipboard?.writeText(code).then(() => {
-      statusRoom("Skopiowano kod");
-    }).catch(() => {
-      // fallback
-      try {
-        roomCodeInput.focus();
-        roomCodeInput.select();
-        document.execCommand("copy");
-        statusRoom("Skopiowano kod");
-      } catch {
-        statusRoom("Nie udało się skopiować");
-      }
-    });
-  }
-
-  function saveTip(roomCode, matchId, nick, h, a) {
-    const rooms = readRooms();
-    const room = findRoomByCode(rooms, roomCode);
-    if (!room) {
-      statusRoom("Brak pokoju");
-      return;
-    }
-    const m = (room.matches || []).find(x => x.id === matchId);
-    if (!m) {
-      statusRoom("Brak meczu");
-      return;
-    }
-    m.tips = m.tips || {};
-    m.tips[nick] = { h, a, ts: Date.now() };
-    saveRooms(rooms);
-
-    statusRoom(`Zapisano typ ${h}:${a}`);
-    renderMatches(room);
-  }
-
-
-  function saveAllTips() {
-    const nick = getNick();
-    const code = getActiveRoomCode();
-    if (!code) return;
-
-    const rooms = readRooms();
-    const room = findRoomByCode(rooms, code);
-    if (!room) return;
-
-    room.matches = Array.isArray(room.matches) ? room.matches : [];
-
-    // Walidacja: nie zapisujemy "połówek" (np. tylko gospodarze)
-    for (const m of room.matches) {
-      const t = state.tips && state.tips[m.id];
-      if (!t) continue;
-      const hasH = t.h !== null && t.h !== "" && !Number.isNaN(Number(t.h));
-      const hasA = t.a !== null && t.a !== "" && !Number.isNaN(Number(t.a));
-      if (hasH !== hasA) {
-        statusRoom(`Uzupełnij wynik: ${m.home} vs ${m.away}`);
+  // -------------------- rooms actions --------------------
+  const createRoom = () => {
+    try {
+      const name = normalize(newRoomName.value);
+      if (!name) {
+        roomsInfo.textContent = "Podaj nazwę pokoju.";
         return;
       }
+
+      // kod unikalny
+      let code = genCode6();
+      while (rooms.some(r => r.code === code)) code = genCode6();
+
+      const room = {
+        code,
+        name,
+        admin: nick,
+        players: [nick],
+        createdAt: Date.now(),
+        matches: [],
+        tips: {},
+      };
+
+      rooms.push(room);
+      saveRooms();
+      roomsInfo.textContent = `Utworzono pokój: ${code}`;
+      logDebug(`createRoom ok: ${code} (${name}) admin=${nick}`);
+
+      openRoom(code);
+    } catch (e) {
+      roomsInfo.textContent = "Błąd tworzenia pokoju";
+      logDebug(`createRoom exception: ${e?.message || e}`);
     }
+  };
 
-    const ts = Date.now();
-    let savedCount = 0;
-
-    for (const m of room.matches) {
-      const t = state.tips && state.tips[m.id];
-      if (!t) continue;
-      const h = Number(t.h);
-      const a = Number(t.a);
-      if (Number.isNaN(h) || Number.isNaN(a)) continue;
-
-      m.tips = m.tips || {};
-      m.tips[nick] = { h, a, ts };
-      savedCount++;
+  const joinRoom = () => {
+    try {
+      const code = upper(joinRoomCode.value);
+      if (!/^[A-Z0-9]{6}$/.test(code)) {
+        roomsInfo.textContent = "Kod musi mieć 6 znaków.";
+        return;
+      }
+      const room = findRoom(code);
+      if (!room) {
+        roomsInfo.textContent = "Nie ma takiego pokoju (test – lokalnie).";
+        return;
+      }
+      if (!room.players) room.players = [];
+      if (!room.players.includes(nick)) room.players.push(nick);
+      saveRooms();
+      roomsInfo.textContent = `Dołączono do ${code}`;
+      logDebug(`joinRoom ok: ${code} gracz=${nick}`);
+      openRoom(code);
+    } catch (e) {
+      roomsInfo.textContent = "Błąd dołączania";
+      logDebug(`joinRoom exception: ${e?.message || e}`);
     }
+  };
 
-    saveRooms(rooms);
-    statusRoom(savedCount ? "Zapisano typy" : "Brak typów do zapisu");
-    renderMatches(room);
-  }
-
-  function addRoundTest() {
-    const nick = getNick();
-    const code = getActiveRoomCode();
-    if (!code) return;
-
-    const rooms = readRooms();
-    const room = findRoomByCode(rooms, code);
+  // -------------------- room actions --------------------
+  const addQueue = () => {
+    const room = findRoom(activeRoomCode);
     if (!room) return;
 
-    if (room.admin !== nick) {
-      statusRoom("Tylko admin może dodać kolejkę");
+    const base = testQueue();
+    // nadawanie id
+    const now = Date.now();
+    const matches = base.slice(0, 10).map((m, idx) => ({
+      id: `m_${now}_${idx}`,
+      league: "Ekstraklasa",
+      home: m.home,
+      away: m.away
+    }));
+
+    room.matches = matches;
+    saveRooms();
+    renderMatches(room);
+    roomInfo.textContent = "Dodano kolejkę (test)";
+    logDebug(`queue added: ${matches.length} matches`);
+  };
+
+  const saveAllTips = () => {
+    const room = findRoom(activeRoomCode);
+    if (!room) return;
+
+    if (!allPicksFilled()) {
+      roomInfo.textContent = "Uzupełnij typy we wszystkich meczach.";
       return;
     }
 
-    room.matches = Array.isArray(room.matches) ? room.matches : [];
+    const tips = getNickTipsForRoom(room);
 
-    // add 10 matches (append)
-    const round = genRound10();
-    room.matches = round.concat(room.matches);
+    // zbieramy
+    const inputs = [...matchesList.querySelectorAll("input[data-mid]")];
+    const by = {};
+    inputs.forEach(i => {
+      const mid = i.getAttribute("data-mid");
+      const side = i.getAttribute("data-side");
+      if (!by[mid]) by[mid] = {};
+      by[mid][side] = i.value.trim();
+    });
 
-    saveRooms(rooms);
-    statusRoom("Dodano kolejkę (test)");
-    renderMatches(room);
-  }
+    Object.keys(by).forEach(mid => {
+      const h = by[mid].home;
+      const a = by[mid].away;
+      tips[mid] = { h: Number(h), a: Number(a), at: Date.now() };
+    });
 
-  // ---------- navigation ----------
+    saveRooms();
+    roomInfo.textContent = "Zapisano wszystkie typy ✔";
+    logDebug(`saveAllTips ok for ${nick} matches=${Object.keys(by).length}`);
+  };
 
-  function showSplashThenMenu() {
-    showScreen(splash);
-    renderNick();
-    refreshMenuImage();
-    splashHint.textContent = `Ekran startowy (${Math.round(SPLASH_MS / 1000)}s)…`;
+  const copyCode = async () => {
+    try {
+      const code = roomCodeText.value;
+      await navigator.clipboard.writeText(code);
+      roomInfo.textContent = "Skopiowano kod.";
+    } catch {
+      roomInfo.textContent = "Nie udało się skopiować.";
+    }
+  };
 
-    // after SPLASH_MS go to correct screen
+  const leaveRoom = () => {
+    const room = findRoom(activeRoomCode);
+    if (room && Array.isArray(room.players)) {
+      room.players = room.players.filter(p => p !== nick);
+      saveRooms();
+    }
+    activeRoomCode = "";
+    saveActiveRoom("");
+    openLiga();
+  };
+
+  const refreshRoom = () => {
+    loadRooms();
+    if (activeRoomCode) openRoom(activeRoomCode);
+    else openLiga();
+  };
+
+  // -------------------- nick change --------------------
+  const changeNick = () => {
+    const n = prompt("Nowy nick:", nick || "");
+    const nn = normalize(n);
+    if (!nn) return;
+    nick = nn;
+    saveNick(nick);
+    syncNickLabels();
+
+    // w testach: dopisz do aktywnego pokoju jako gracza
+    const room = findRoom(activeRoomCode);
+    if (room) {
+      if (!room.players) room.players = [];
+      if (!room.players.includes(nick)) room.players.push(nick);
+      saveRooms();
+      renderPlayers(room);
+      renderMatches(room);
+    }
+  };
+
+  // -------------------- init --------------------
+  const boot = () => {
+    splashVer.textContent = `BUILD ${BUILD}`;
+    splashHint.textContent = `Ekran startowy (7s)…`;
+    splashImg.style.backgroundImage = `url('${STARTER}')`;
+
+    loadRooms();
+    nick = loadNick();
+    activeRoomCode = loadActiveRoom();
+
+    // splash -> menu
     setTimeout(() => {
-      const code = getActiveRoomCode();
-      if (code) {
-        openRoom(code);
-      } else {
-        openMenu();
+      setMenuBg();
+      if (!nick) {
+        // pierwszy raz: pytamy
+        const ok = askNickIfNeeded();
+        if (!ok) {
+          nick = "";
+          saveNick("");
+        }
       }
+      syncNickLabels();
+      openMenu();
     }, SPLASH_MS);
-  }
+  };
 
-  // ---------- events ----------
-
-  window.addEventListener("resize", refreshMenuImage);
-
-  changeNickBtn.addEventListener("click", () => {
-    const n = prompt("Nowy nick:", getNick() || "");
-    if (!n) return;
-    if (setNick(n)) {
-      renderNick();
-      statusRoom("Zmieniono nick");
-      statusRooms("Zmieniono nick");
-    }
+  // -------------------- events --------------------
+  window.addEventListener("resize", () => {
+    // zmiana tła zależna od szerokości
+    if (menuScreen.classList.contains("active") || roomsScreen.classList.contains("active")) setMenuBg();
+    if (roomScreen.classList.contains("active")) setRoomBg();
   });
 
-  changeNickBtn2.addEventListener("click", () => changeNickBtn.click());
-
+  // menu
+  changeNickBtn.addEventListener("click", changeNick);
   btnLiga.addEventListener("click", () => {
-    openRooms();
+    if (!askNickIfNeeded()) return;
+    openLiga();
   });
+  btnStats.addEventListener("click", () => alert("Statystyki: wkrótce"));
+  btnExit.addEventListener("click", () => alert("Wyjście: w PWA zamknij kartę / aplikację."));
 
-  btnStats.addEventListener("click", () => {
-    alert("Statystyki – zrobimy w następnym kroku.");
-  });
-
-  btnExit.addEventListener("click", () => {
-    alert("Wyjście: w aplikacji Android dodamy finish().");
-  });
-
-  backToMenu1.addEventListener("click", () => openMenu());
-  backToRooms.addEventListener("click", () => openRooms());
-
+  // rooms
+  changeNickBtnRooms.addEventListener("click", changeNick);
+  backToMenuBtn.addEventListener("click", openMenu);
   createRoomBtn.addEventListener("click", () => {
-    try {
-      createRoom();
-    } catch (e) {
-      log(`createRoom exception: ${e?.message || e}`);
-      statusRooms("Błąd tworzenia pokoju");
-    }
+    if (!askNickIfNeeded()) return;
+    createRoom();
   });
-
   joinRoomBtn.addEventListener("click", () => {
-    try {
-      joinRoom();
-    } catch (e) {
-      log(`joinRoom exception: ${e?.message || e}`);
-      statusRooms("Błąd dołączania");
-    }
+    if (!askNickIfNeeded()) return;
+    joinRoom();
   });
 
-  joinCodeInput.addEventListener("input", () => {
-    joinCodeInput.value = joinCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-  });
+  // room
+  roomBackBtn.addEventListener("click", openLiga);
+  addQueueBtn.addEventListener("click", addQueue);
+  saveAllBtn.addEventListener("click", saveAllTips);
 
   copyCodeBtn.addEventListener("click", copyCode);
   leaveRoomBtn.addEventListener("click", leaveRoom);
   refreshRoomBtn.addEventListener("click", refreshRoom);
 
-  addRoundBtn.addEventListener("click", addRoundTest);
-  saveAllTipsBtn.addEventListener("click", saveAllTips);
-
-  // Web app install prompt (optional)
-  let deferredPrompt = null;
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-  });
-
-  // Service worker
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
-    });
-  }
-
-  // ---------- boot ----------
-
-  buildLabel.textContent = String(BUILD);
-  refreshMenuImage();
-  renderNick();
-  showSplashThenMenu();
-
+  // start
+  boot();
 })();
