@@ -1,11 +1,10 @@
-const BUILD = 1215;
+const BUILD = 1220;
 
-// TŁA
-const BG_HOME = "img_wybor.png"; // ekran z 3 przyciskami PNG
-const BG_TLO  = "img_tlo.png";   // reszta aplikacji (pokoje, room itd.)
+const BG_MENU = "img_menu_pc.png"; // ✅ jedyne tło startowe
+const BG_TLO  = "img_tlo.png";     // tło dla rooms/room
 
-const KEY_NICK = "typer_nick_v3";
-const KEY_ACTIVE_ROOM = "typer_active_room_v3";
+const KEY_NICK = "typer_nick_v4";
+const KEY_ACTIVE_ROOM = "typer_active_room_v4";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
@@ -40,13 +39,13 @@ function showToast(msg){
 }
 
 function showScreen(id){
-  ["splash","home","continue","rooms","room","stats"].forEach(s=>{
+  ["splash","menu","rooms","room"].forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
 
-  // tło w zależności od ekranu
-  if(id === "home") setBg(BG_HOME);
+  // ✅ tła: menu ma img_menu_pc.png, reszta img_tlo.png
+  if(id === "menu") setBg(BG_MENU);
   else setBg(BG_TLO);
 }
 
@@ -54,15 +53,6 @@ function setSplash(msg){
   const h = el("splashHint");
   if (h) h.textContent = msg;
   console.log(msg);
-}
-
-function normalizeSlug(s){
-  return (s||"")
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/ł/g,"l")
-    .replace(/[^a-z0-9]+/g,"_")
-    .replace(/^_+|_+$/g,"");
 }
 
 function genCode6(){
@@ -83,23 +73,14 @@ function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
 
-async function ensureNick(){
-  let nick = getNick();
-  while(!nick){
-    nick = prompt("Podaj nick (3–16 znaków):", "") || "";
-    nick = nick.trim();
-    if (nick.length < 3 || nick.length > 16) nick = "";
-    if (!nick) alert("Nick musi mieć 3–16 znaków.");
-  }
-  localStorage.setItem(KEY_NICK, nick);
-  return nick;
+function setNick(nick){
+  localStorage.setItem(KEY_NICK, (nick||"").trim());
 }
 
 function refreshNickLabels(){
   const nick = getNick() || "—";
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom"))  el("nickLabelRoom").textContent  = nick;
-  if (el("nickLabelContinue")) el("nickLabelContinue").textContent = nick;
 }
 
 function clearSavedRoom(){
@@ -108,6 +89,26 @@ function clearSavedRoom(){
 
 function getSavedRoom(){
   return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
+}
+
+function setSavedRoom(code){
+  localStorage.setItem(KEY_ACTIVE_ROOM, (code||"").trim().toUpperCase());
+}
+
+// ---------- Modal ----------
+function modalShow({ icon="✦", title="—", sub="—", bodyHtml="", canClose=true }){
+  el("modalIcon").textContent = icon;
+  el("modalTitle").textContent = title;
+  el("modalSub").textContent = sub;
+  el("modalBody").innerHTML = bodyHtml;
+
+  el("modalClose").style.display = canClose ? "inline-flex" : "none";
+  el("modal").style.display = "flex";
+}
+
+function modalHide(){
+  el("modal").style.display = "none";
+  el("modalBody").innerHTML = "";
 }
 
 // ---------- Firebase ----------
@@ -122,10 +123,10 @@ let unsubPicks = null;
 let currentRoomCode = null;
 let currentRoom = null;
 
-let matchesCache = [];   // [{id, home, away, idx}]
-let picksCache = {};     // matchId -> {h,a} (TY)
-let picksDocByUid = {};  // uid -> picks object
-let submittedByUid = {}; // uid -> boolean
+let matchesCache = [];
+let picksCache = {};
+let picksDocByUid = {};
+let submittedByUid = {};
 let lastPlayers = [];
 
 // ---------- status helpers ----------
@@ -148,6 +149,12 @@ function recomputeSubmittedMap(){
   }
 }
 
+// ---------- Firestore paths ----------
+function roomRef(code){ return boot.doc(db, "rooms", code); }
+function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
+
 // ---------- boot ----------
 async function boot(){
   showScreen("splash");
@@ -156,7 +163,7 @@ async function boot(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
   const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
   const {
-    getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
+    getFirestore, doc, getDoc, setDoc, serverTimestamp,
     collection, query, orderBy, onSnapshot,
     writeBatch, deleteDoc
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
@@ -165,7 +172,8 @@ async function boot(){
   auth = getAuth(app);
   db = getFirestore(app);
 
-  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
+  // expose (bez globali)
+  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
   boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc;
@@ -186,35 +194,33 @@ async function boot(){
   });
 
   setFooter(`BUILD ${BUILD}`);
-  await ensureNick();
+  bindUI();
   refreshNickLabels();
 
-  bindUI();
-
-  // ✅ ZAWSZE start od ekranu z 3 przyciskami (img_wybor.png)
-  showScreen("home");
+  // ✅ Start zawsze na MENU z img_menu_pc.png
+  showScreen("menu");
 }
 
 // ---------- UI binding ----------
 function bindUI(){
-  // HOME buttons (PNG)
-  el("btnHomeRooms").onclick = async ()=> { await goRoomsFlow(); };
-  el("btnHomeStats").onclick = ()=> { showScreen("stats"); };
-  el("btnHomeExit").onclick  = ()=> {
-    showToast("Wyjście: zamknij kartę / aplikację.");
-    // window.close() zwykle zablokowane w przeglądarce
-  };
+  // modal close
+  el("modalClose").onclick = ()=> modalHide();
+  el("modal").addEventListener("click", (e)=>{
+    if(e.target === el("modal")) modalHide();
+  });
 
-  // STATS
-  el("btnBackHomeFromStats").onclick = ()=> showScreen("home");
+  // MENU buttons (PNG)
+  el("btnMenuRooms").onclick = async ()=> { await onClickRooms(); };
+  el("btnMenuStats").onclick = ()=> { showToast("Statystyki – wkrótce"); };
+  el("btnMenuExit").onclick  = ()=> { showToast("Wyjście: zamknij kartę / aplikację"); };
 
   // ROOMS
-  el("btnBackHomeFromRooms").onclick = ()=> showScreen("home");
+  el("btnBackToMenu").onclick = ()=> showScreen("menu");
+
   el("btnChangeNickRooms").onclick = async ()=>{
-    localStorage.removeItem(KEY_NICK);
-    await ensureNick();
+    setNick("");
     refreshNickLabels();
-    showToast("Zmieniono nick");
+    await askNickThenContinue(() => showScreen("rooms"));
   };
 
   el("btnCreateRoom").onclick = async ()=>{
@@ -235,30 +241,12 @@ function bindUI(){
     await joinRoom(code);
   };
 
-  // Enter w join
-  el("inpJoinCode").addEventListener("keydown", async (e)=>{
-    if(e.key === "Enter"){
-      el("btnJoinRoom").click();
-    }
+  el("inpJoinCode").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter") el("btnJoinRoom").click();
   });
 
-  // CONTINUE
-  el("btnContinueYes").onclick = async ()=>{
-    const code = getSavedRoom();
-    if(!code) { showScreen("rooms"); return; }
-    await openRoom(code, { silent:true, force:true });
-  };
-  el("btnContinueNo").onclick = ()=>{
-    showScreen("rooms");
-  };
-  el("btnContinueForget").onclick = ()=>{
-    clearSavedRoom();
-    showToast("Zapomniano pokój");
-    showScreen("rooms");
-  };
-
   // ROOM
-  el("btnBackFromRoom").onclick = ()=>{ showScreen("home"); };
+  el("btnBackFromRoom").onclick = ()=>{ showScreen("menu"); };
   el("btnCopyCode").onclick = async ()=>{
     if(!currentRoomCode) return;
     try{
@@ -274,35 +262,149 @@ function bindUI(){
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
 }
 
-// ✅ flow po kliknięciu "Pokoje typerów"
-async function goRoomsFlow(){
-  // jeśli masz zapisany pokój -> pokaż ekran kontynuacji (ZANIM pokażesz rooms)
+// ---------- Flow: klik Pokoje typerów ----------
+async function onClickRooms(){
+  // 1) jeśli nie ma nicka -> pytanie o nick
+  if(!getNick()){
+    await askNickThenContinue(async ()=>{
+      await afterNickRoomsFlow();
+    });
+    return;
+  }
+
+  // 2) jeśli nick jest -> kontynuacja lub rooms
+  await afterNickRoomsFlow();
+}
+
+async function askNickThenContinue(onOk){
+  modalShow({
+    icon:"👤",
+    title:"Podaj swój nick",
+    sub:"Pierwsze wejście — ustaw nick (3–16 znaków).",
+    canClose:false,
+    bodyHtml: `
+      <div class="miniBox">
+        <div class="sub" style="margin-bottom:8px">Nick:</div>
+        <div class="row">
+          <input id="inpNickModal" placeholder="np. Mariusz" style="flex:1" maxlength="16" />
+          <button class="btn btnGreen" id="btnNickOk">Dalej</button>
+        </div>
+        <div class="help" style="margin-top:8px">Nick będzie zapamiętany na tym urządzeniu.</div>
+      </div>
+    `
+  });
+
+  const inp = el("inpNickModal");
+  const ok = el("btnNickOk");
+
+  const submit = async ()=>{
+    let nick = (inp.value || "").trim();
+    if(nick.length < 3 || nick.length > 16){
+      showToast("Nick 3–16 znaków");
+      return;
+    }
+    setNick(nick);
+    refreshNickLabels();
+    modalHide();
+    if(typeof onOk === "function") await onOk();
+  };
+
+  ok.onclick = submit;
+  inp.addEventListener("keydown",(e)=>{ if(e.key==="Enter") submit(); });
+
+  inp.focus();
+}
+
+async function afterNickRoomsFlow(){
   const saved = getSavedRoom();
+
+  // jeśli jest zapisany pokój -> sprawdź czy istnieje i pokaż modal kontynuacji
   if(saved && saved.length === 6){
     try{
       const snap = await boot.getDoc(roomRef(saved));
       if(snap.exists()){
         const room = snap.data();
-        el("continueRoomName").textContent = room?.name || "—";
-        el("continueRoomCode").textContent = saved;
-        refreshNickLabels();
-        showScreen("continue");
+        const roomName = room?.name || "—";
+        showContinueModal({ roomName, code: saved });
         return;
       }else{
         clearSavedRoom();
       }
     }catch{
-      // jeśli nie da się sprawdzić - przejdź do rooms
+      // jak nie wyszło sprawdzenie, idziemy do rooms
     }
   }
+
+  // brak pokoju -> od razu ekran dołącz/utwórz
   showScreen("rooms");
 }
 
-// ---------- Firestore paths ----------
-function roomRef(code){ return boot.doc(db, "rooms", code); }
-function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
+function showContinueModal({ roomName, code }){
+  const nick = getNick() || "—";
+
+  modalShow({
+    icon:"↩",
+    title:"Witaj ponownie",
+    sub:"Wykryto wcześniejszy pokój — możesz wejść jednym kliknięciem.",
+    canClose:true,
+    bodyHtml: `
+      <div class="grid2">
+        <div class="miniBox">
+          <div class="title" style="margin:0 0 6px 0">Witaj ponownie</div>
+          <div class="sub">Nick:</div>
+          <div class="chip" style="margin-top:8px;width:100%;justify-content:space-between">
+            <span>${escapeHtml(nick)}</span>
+          </div>
+        </div>
+
+        <div class="miniBox">
+          <div class="title" style="margin:0 0 6px 0">Grasz w pokoju</div>
+          <div class="sub">Nazwa pokoju:</div>
+          <div class="chip" style="margin-top:8px;width:100%;justify-content:space-between">
+            <span>${escapeHtml(roomName)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bigAsk">Czy kontynuujesz grę w tym pokoju?</div>
+
+      <div class="modalActions">
+        <button class="btn btnGreen" id="btnContinueYes">✅ Tak</button>
+        <button class="btn" id="btnContinueNo">↪ Nie</button>
+        <div class="spacer"></div>
+        <button class="btn" id="btnForgetRoom">🗑 Zapomnij pokój</button>
+      </div>
+    `
+  });
+
+  el("btnContinueYes").onclick = async ()=>{
+    modalHide();
+    // upewnij się, że zapisany kod jest ustawiony
+    setSavedRoom(code);
+    await openRoom(code, { silent:true, force:true });
+  };
+
+  el("btnContinueNo").onclick = ()=>{
+    modalHide();
+    showScreen("rooms");
+  };
+
+  el("btnForgetRoom").onclick = ()=>{
+    clearSavedRoom();
+    modalHide();
+    showToast("Zapomniano pokój");
+    showScreen("rooms");
+  };
+}
+
+function escapeHtml(s){
+  return String(s || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
 // ---------- Rooms logic ----------
 async function createRoom(roomName){
@@ -326,7 +428,7 @@ async function createRoom(roomName){
       nick, uid: userUid, joinedAt: boot.serverTimestamp()
     });
 
-    localStorage.setItem(KEY_ACTIVE_ROOM, code);
+    setSavedRoom(code);
     el("debugRooms").textContent = `Utworzono pokój ${code}`;
     await openRoom(code);
     return;
@@ -350,7 +452,7 @@ async function joinRoom(code){
     nick, uid: userUid, joinedAt: boot.serverTimestamp()
   }, { merge:true });
 
-  localStorage.setItem(KEY_ACTIVE_ROOM, code);
+  setSavedRoom(code);
   el("debugRooms").textContent = `Dołączono do ${code}`;
   await openRoom(code);
 }
@@ -361,7 +463,7 @@ async function leaveRoom(){
     await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
   }catch{}
 
-  localStorage.removeItem(KEY_ACTIVE_ROOM);
+  clearSavedRoom();
   cleanupRoomListeners();
 
   currentRoomCode = null;
@@ -376,7 +478,7 @@ async function leaveRoom(){
   renderMatches();
   renderPlayers([]);
 
-  showScreen("home");
+  showScreen("menu");
   showToast("Opuszczono pokój");
 }
 
@@ -433,7 +535,7 @@ async function openRoom(code, opts={}){
     el("btnAddQueue").style.display = isAdm ? "block" : "none";
   });
 
-  // live players
+  // players
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
@@ -442,7 +544,7 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // live picks (status)
+  // picks
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -453,7 +555,7 @@ async function openRoom(code, opts={}){
     renderPlayers(lastPlayers);
   });
 
-  // live matches
+  // matches
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
   unsubMatches = boot.onSnapshot(mq, async (qs)=>{
     const arr = [];
@@ -469,10 +571,10 @@ async function openRoom(code, opts={}){
     renderMatches();
   });
 
-  if(!silent) showToast(`W pokoju: ${code}`);
+  if(!silent) showToast(`W pokoju`);
 }
 
-// ---------- Picks (TY) ----------
+// ---------- Picks ----------
 async function loadMyPicks(){
   try{
     const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
@@ -574,7 +676,13 @@ function renderPlayers(players){
 }
 
 function createLogoImg(teamName){
-  const slug = normalizeSlug(teamName);
+  const slug = (teamName||"")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/ł/g,"l")
+    .replace(/[^a-z0-9]+/g,"_")
+    .replace(/^_+|_+$/g,"");
+
   const img = document.createElement("img");
   img.className = "logo";
   img.alt = teamName;
@@ -670,7 +778,7 @@ function updateSaveButtonState(){
   btn.disabled = !allMyPicksFilled();
 }
 
-// ---------- test queue (admin only) ----------
+// ---------- test queue ----------
 async function addTestQueue(){
   if(!currentRoomCode) return;
   if(currentRoom?.adminUid !== userUid){
@@ -710,6 +818,7 @@ async function addTestQueue(){
 (async()=>{
   try{
     showScreen("splash");
+    setBg(BG_MENU); // żeby od razu ładowało się menu-tło
     setSplash(`BUILD ${BUILD}\nŁadowanie…`);
     await boot();
   }catch(e){
