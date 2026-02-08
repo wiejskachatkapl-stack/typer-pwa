@@ -1,4 +1,4 @@
-const BUILD = 1214;
+const BUILD = 1215;
 
 const BG_TLO = "img_tlo.png";
 const BG_WYBOR = "img_wybor.png";
@@ -38,6 +38,7 @@ function showToast(msg){
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=> t.style.display="none", 2600);
 }
+
 function showScreen(id){
   ["splash","wybor","room"].forEach(s=>{
     const node = el(s);
@@ -49,10 +50,20 @@ function showScreen(id){
     setWyborImg(BG_WYBOR);
   }
 }
+
 function setSplash(msg){
   const h = el("splashHint");
   if (h) h.textContent = msg;
   console.log(msg);
+}
+
+function openModal(id){
+  const m = el(id);
+  if(m) m.style.display = "flex";
+}
+function closeModal(id){
+  const m = el(id);
+  if(m) m.style.display = "none";
 }
 
 function normalizeSlug(s){
@@ -63,12 +74,14 @@ function normalizeSlug(s){
     .replace(/[^a-z0-9]+/g,"_")
     .replace(/^_+|_+$/g,"");
 }
+
 function genCode6(){
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
   for(let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
   return out;
 }
+
 function clampInt(v, min, max){
   if (v === "" || v === null || v === undefined) return null;
   const n = parseInt(String(v),10);
@@ -79,6 +92,7 @@ function clampInt(v, min, max){
 function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
+
 async function ensureNick(){
   let nick = getNick();
   while(!nick){
@@ -90,20 +104,13 @@ async function ensureNick(){
   localStorage.setItem(KEY_NICK, nick);
   return nick;
 }
+
 function refreshNickLabels(){
   const nick = getNick() || "—";
   const a = el("nickLabelWybor"); if(a) a.textContent = nick;
   const b = el("nickLabelRoom"); if(b) b.textContent = nick;
 }
 
-function openModal(id){
-  const m = el(id);
-  if(m) m.style.display = "flex";
-}
-function closeModal(id){
-  const m = el(id);
-  if(m) m.style.display = "none";
-}
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
 }
@@ -136,6 +143,7 @@ function isCompletePicksObject(picksObj){
   }
   return true;
 }
+
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
@@ -189,9 +197,10 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
+  // 1) ZAWSZE najpierw pokazujemy planszę z 3 przyciskami
   showScreen("wybor");
 
-  // Kontynuacja: pojawia się dopiero po pokazaniu wyboru
+  // 2) Dopiero potem (jeśli jest zapisany pokój) pokazujemy kontynuację
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved && saved.length === 6){
     setTimeout(async ()=>{
@@ -208,11 +217,15 @@ async function boot(){
         clearSavedRoom();
         showToast("Nie udało się sprawdzić pokoju");
       }
-    }, 80);
+    }, 120);
   }
 }
 
+/* ======= KONTYNUACJA (WYMAGANY UKŁAD) ======= */
 function prepareContinueModal(code, roomName){
+  const nick = getNick() || "—";
+  const nickEl = el("continueNick"); if(nickEl) nickEl.textContent = nick;
+
   const rn = el("continueRoomName"); if(rn) rn.textContent = roomName || "—";
   const rc = el("continueRoomCode"); if(rc) rc.textContent = code || "—";
 
@@ -227,23 +240,27 @@ function prepareContinueModal(code, roomName){
       await openRoom(code, { silent:true, force:true });
     };
   }
+
   if(no){
     no.onclick = ()=>{
       closeModal("continueModal");
-      openRoomsModal();
+      openRoomsModal(); // dopiero TERAZ okno dołącz/utwórz
     };
   }
+
   if(forget){
     forget.onclick = ()=>{
       clearSavedRoom();
       closeModal("continueModal");
       showToast("Zapomniano pokój");
+      // zostajemy na planszy wyboru
     };
   }
 
   openModal("continueModal");
 }
 
+/* ======= POKOJE MODAL ======= */
 function openRoomsModal(){
   openModal("roomsModal");
   el("debugRooms").textContent = "—";
@@ -251,9 +268,10 @@ function openRoomsModal(){
   setTimeout(()=>{
     el("inpJoinCode")?.focus();
     el("inpJoinCode")?.select?.();
-  }, 60);
+  }, 80);
 }
 
+/* ======= UI ======= */
 function bindUI(){
   const hsRooms = el("hsRooms");
   const hsStats = el("hsStats");
@@ -276,10 +294,10 @@ function bindUI(){
     await ensureNick();
     refreshNickLabels();
     showToast("Zmieniono nick");
-    setTimeout(()=> el("inpJoinCode")?.focus(), 60);
+    setTimeout(()=> el("inpJoinCode")?.focus(), 80);
   };
 
-  // ENTER w polu kodu = DOŁĄCZ
+  // ENTER w kodzie = dołącz
   const joinInput = el("inpJoinCode");
   if(joinInput){
     joinInput.addEventListener("keydown", (ev)=>{
@@ -305,7 +323,9 @@ function bindUI(){
   };
 
   const btnBack = el("btnBackFromRoom");
-  if(btnBack) btnBack.onclick = ()=>{ showScreen("wybor"); };
+  if(btnBack) btnBack.onclick = ()=>{
+    showScreen("wybor");
+  };
 
   const btnCopy = el("btnCopyCode");
   if(btnCopy) btnCopy.onclick = async ()=>{
@@ -327,7 +347,7 @@ function bindUI(){
   if(btnAddQ) btnAddQ.onclick = async ()=>{ await addTestQueue(); };
 }
 
-// Rooms logic
+/* ======= Rooms logic ======= */
 async function createRoom(roomName){
   const nick = getNick();
   el("debugRooms").textContent = "Tworzę pokój…";
@@ -409,7 +429,7 @@ function cleanupRoomListeners(){
   if(unsubPicks){ unsubPicks(); unsubPicks=null; }
 }
 
-// Open room + live
+/* ======= Open room ======= */
 async function openRoom(code, opts={}){
   const { silent=false, force=false } = opts;
   code = (code||"").trim().toUpperCase();
@@ -489,7 +509,7 @@ async function openRoom(code, opts={}){
   if(!silent) showToast(`W pokoju: ${code}`);
 }
 
-// Picks
+/* ======= Picks ======= */
 async function loadMyPicks(){
   try{
     const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
@@ -517,7 +537,7 @@ async function saveAllPicks(){
   showToast("Zapisano typy ✅");
 }
 
-// Render
+/* ======= Render ======= */
 function renderPlayers(players){
   const box = el("playersList");
   if(!box) return;
@@ -663,13 +683,14 @@ function renderMatches(){
 
   updateSaveButtonState();
 }
+
 function updateSaveButtonState(){
   const btn = el("btnSaveAll");
   if(!btn) return;
   btn.disabled = !allMyPicksFilled();
 }
 
-// test queue
+/* ======= test queue ======= */
 async function addTestQueue(){
   if(!currentRoomCode) return;
   if(currentRoom?.adminUid !== userUid){ showToast("Tylko admin"); return; }
@@ -691,18 +712,13 @@ async function addTestQueue(){
   sample.forEach((pair, idx)=>{
     const id = `m_${Date.now()}_${idx}`;
     const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
-    b.set(ref, {
-      idx,
-      home: pair[0],
-      away: pair[1],
-      createdAt: boot.serverTimestamp()
-    });
+    b.set(ref, { idx, home: pair[0], away: pair[1], createdAt: boot.serverTimestamp() });
   });
   await b.commit();
   showToast("Dodano kolejkę (test)");
 }
 
-// start
+/* ======= start ======= */
 (async()=>{
   try{
     setBg(BG_TLO);

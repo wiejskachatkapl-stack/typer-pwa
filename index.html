@@ -207,7 +207,7 @@
     .btnDanger:hover{background:linear-gradient(180deg, rgba(255,80,80,.24), rgba(255,255,255,.08))}
     .help{color:rgba(255,255,255,.72);font-weight:800;font-size:13px}
 
-    /* >>> NOWE: DUŻE UI DLA POKOI <<< */
+    /* DUŻE UI POKOI */
     .roomsBigTitle{font-size:26px;font-weight:1000;letter-spacing:.2px}
     .roomsBigSub{font-size:15px;font-weight:900;color:rgba(255,255,255,.72)}
     .roomsSectionTitle{font-size:20px;font-weight:1000;margin:0 0 6px 0}
@@ -231,6 +231,31 @@
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.14);
       box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+
+    /* NOWY UKŁAD: KONTYNUACJA (lewo: witaj + nick, prawo: pokój + nazwa) */
+    .contGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    .contBox{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.14);
+      border-radius:22px;
+      padding:14px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.22);
+      min-height:92px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:6px;
+    }
+    .contLabel{font-size:13px;font-weight:900;color:rgba(255,255,255,.70)}
+    .contValue{font-size:22px;font-weight:1000;letter-spacing:.2px}
+    .mono{font-family:ui-monospace,monospace;letter-spacing:1px}
+    @media (max-width: 760px){
+      .contGrid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -267,7 +292,7 @@
         </div>
       </section>
 
-      <!-- MODAL: KONTYNUACJA -->
+      <!-- MODAL: KONTYNUACJA (NOWY WYMAGANY UKŁAD) -->
       <div id="continueModal" class="modal">
         <div class="modalCard">
           <div class="modalTop">
@@ -281,22 +306,32 @@
           </div>
 
           <div class="modalBody">
-            <div class="row" style="flex-wrap:wrap">
-              <div class="chip">Pokój: <b id="continueRoomName">—</b></div>
-              <div class="chip">Kod: <b id="continueRoomCode" style="font-family:ui-monospace,monospace;letter-spacing:1px">—</b></div>
+            <div class="contGrid">
+              <div class="contBox">
+                <div class="contLabel">Witaj ponownie</div>
+                <div class="contValue" id="continueNick">—</div>
+              </div>
+              <div class="contBox">
+                <div class="contLabel">Grasz w pokoju</div>
+                <div class="contValue" id="continueRoomName">—</div>
+                <div class="contLabel">Kod: <b class="mono" id="continueRoomCode">—</b></div>
+              </div>
             </div>
-            <div class="help">Czy chcesz kontynuować w tym pokoju, czy wrócić do wyboru pokoju?</div>
+
+            <div class="help" style="font-size:14px">
+              Czy chcesz dalej kontynuować tam grę?
+            </div>
           </div>
 
           <div class="modalActions">
-            <button class="btn btnOk" id="btnContinueYes">✅ Tak, kontynuuj</button>
-            <button class="btn" id="btnContinueNo">↩️ Nie, wybierz pokój</button>
-            <button class="btn btnDanger" id="btnContinueForget">🗑️ Zapomnij pokój</button>
+            <button class="btn btnOk roomsBigBtn" id="btnContinueYes">✅ Tak</button>
+            <button class="btn roomsBigBtn" id="btnContinueNo">↩️ Nie</button>
+            <button class="btn btnDanger btnSmall" id="btnContinueForget">🗑️ Zapomnij</button>
           </div>
         </div>
       </div>
 
-      <!-- MODAL: POKOJE (DUŻE UI) -->
+      <!-- MODAL: POKOJE (Dołącz/Utwórz) -->
       <div id="roomsModal" class="modal">
         <div class="modalCard">
 
@@ -304,7 +339,7 @@
             <div class="modalIcon"><span>👥</span></div>
             <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
               <div class="roomsBigTitle">Pokoje typerów</div>
-              <div class="roomsBigSub">Wpisz kod i wchodzisz — bez klikania po ekranach.</div>
+              <div class="roomsBigSub">Wpisz kod i wchodzisz — bez dodatkowych ekranów.</div>
             </div>
             <div class="spacer"></div>
             <div class="chip">Nick: <b id="nickLabelWybor">—</b></div>
@@ -422,6 +457,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1214"></script>
+  <script type="module" src="./app.js?v=1215"></script>
 </body>
 </html>
