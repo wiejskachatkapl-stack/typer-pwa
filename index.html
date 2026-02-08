@@ -82,7 +82,7 @@
     .col{display:flex;flex-direction:column;gap:10px}
     .spacer{flex:1}
 
-    input, select{
+    input{
       border:1px solid rgba(255,255,255,.15);
       background:rgba(0,0,0,.22);
       color:var(--text);
@@ -92,7 +92,6 @@
       font-weight:900;
     }
     input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
-
     .toast{
       position:absolute;left:18px;bottom:14px;
       background:rgba(0,0,0,.35);
@@ -134,18 +133,29 @@
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
 
+    /* ===== wynik + kropka ===== */
     .miniResult{
-      display:flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.14);
-      font-weight:1000;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:14px;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      font-weight:900;
+      white-space:nowrap;
     }
     .dot{
       width:10px;height:10px;border-radius:50%;
-      border:1px solid rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.20);
       background:rgba(255,255,255,.25);
+      flex:0 0 10px;
+      box-shadow:0 0 0 3px rgba(0,0,0,.15) inset;
     }
+    .dotGreen{ background:#33ff88; }
+    .dotYellow{ background:#ffd84d; }
+    .dotRed{ background:#ff4d4d; }
+    .dotNeutral{ background:rgba(255,255,255,.25); }
 
     .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .playerRow{
@@ -179,178 +189,23 @@
       -webkit-backdrop-filter: blur(6px);
     }
     #continueCard{
-      width:min(780px,92%);
+      width:min(760px,92%);
       border:1px solid rgba(255,255,255,.14);
       border-radius:22px;
-      background:rgba(8,22,52,.72);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      overflow:hidden;
-    }
-    .cHead{
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;align-items:center;gap:12px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,0));
-    }
-    .cIcon{
-      width:36px;height:36px;border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.08);
-      display:flex;align-items:center;justify-content:center;
-      font-weight:1000;
-    }
-    .cTitle{font-size:20px;font-weight:1000;margin:0}
-    .cSub{color:rgba(255,255,255,.72);font-weight:800;font-size:13px;margin:2px 0 0 0}
-    .cBody{padding:14px 16px}
-    .pillRow{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 12px}
-    .pill{
-      padding:10px 12px;border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.18);
-      font-weight:1000;
-    }
-    .cActions{
-      padding:12px 16px;
-      border-top:1px solid rgba(255,255,255,.10);
-      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-      background:rgba(0,0,0,.10);
-    }
-
-    /* ADMIN BUILDER MODAL */
-    #builderModal{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:60;
-      background:rgba(0,0,0,.50);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    #builderCard{
-      width:min(1180px,96%);
-      height:min(780px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:24px;
-      background:rgba(8,22,52,.74);
-      box-shadow: 0 24px 90px rgba(0,0,0,.65);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-    .bHead{
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;align-items:center;gap:12px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,0));
-    }
-    .bTitle{font-size:20px;font-weight:1000;margin:0}
-    .bSub{color:rgba(255,255,255,.72);font-weight:800;font-size:13px;margin:2px 0 0 0}
-    .bBody{
-      flex:1; min-height:0;
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:12px;
-      padding:14px;
-    }
-    .bCol{
-      min-height:0;
-      display:flex;flex-direction:column;gap:12px;
-    }
-    .bPanel{padding:14px}
-    .bList{
-      flex:1;min-height:0;overflow:auto;
-      display:flex;flex-direction:column;gap:10px;
-    }
-    .bItem{
-      padding:12px;border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.16);
-      display:flex;align-items:center;gap:10px;
-      font-weight:1000;
-    }
-    .bItem .spacer{flex:1}
-    .bMini{
-      padding:8px 10px;border-radius:14px;font-weight:1000;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.10);
-      cursor:pointer;
-    }
-    .bMini:hover{background:rgba(255,255,255,.14)}
-    .bFoot{
-      padding:12px 16px;
-      border-top:1px solid rgba(255,255,255,.10);
-      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-      background:rgba(0,0,0,.10);
-    }
-
-    /* BUILDER CONFIRM */
-    #builderConfirm{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:80;
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    #builderConfirmCard{
-      width:min(720px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(8,22,52,.82);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      padding:16px;
-    }
-    #builderConfirmCard h3{margin:0 0 8px 0;font-size:18px;font-weight:1000}
-    #builderConfirmCard p{margin:0 0 12px 0;color:rgba(255,255,255,.80);font-weight:800}
-
-    /* RESULTS MODAL */
-    #resultsModal{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:90;
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    #resultsCard{
-      width:min(1080px,96%);
-      height:min(780px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:24px;
       background:rgba(8,22,52,.78);
-      box-shadow: 0 24px 90px rgba(0,0,0,.65);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      padding:18px;
     }
-    .rHead{
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;align-items:center;gap:12px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,0));
-    }
-    .rTitle{font-size:20px;font-weight:1000;margin:0}
-    .rSub{color:rgba(255,255,255,.72);font-weight:800;font-size:13px;margin:2px 0 0 0}
-    .rBody{flex:1;min-height:0;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-    .rFoot{
-      padding:12px 16px;
-      border-top:1px solid rgba(255,255,255,.10);
-      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-      background:rgba(0,0,0,.10);
-    }
-    .rRow{
+    #continueTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0}
+    #continueGrid{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 12px 0}
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.20);
       border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.16);
-      border-radius:18px;
-      padding:12px;
-      display:flex;align-items:center;gap:12px;
+      font-weight:1000;
     }
-    .rTeams{flex:1;min-width:0;display:flex;gap:10px;align-items:center;font-weight:1000}
-    .rTeams span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .rScore{display:flex;align-items:center;gap:8px}
-    .rScore input{width:54px;text-align:center}
+    .pill b{font-weight:1000}
   </style>
 </head>
 
@@ -363,122 +218,26 @@
       <!-- CONTINUE MODAL -->
       <div id="continueModal">
         <div id="continueCard">
-          <div class="cHead">
-            <div class="cIcon">↩</div>
-            <div style="min-width:0">
-              <div class="cTitle" id="continueTitle">Kontynuować?</div>
-              <div class="cSub">Wykryto wcześniejszą rozgrywkę</div>
-            </div>
+          <div class="row">
+            <div class="title" id="continueTitle">Kontynuować?</div>
             <div class="spacer"></div>
             <div class="chip">Typer</div>
           </div>
-          <div class="cBody">
-            <div class="pillRow">
-              <div class="pill">Witaj ponownie: <span id="continueNick">—</span></div>
-              <div class="pill">Grasz w pokoju: <span id="continueRoomName">—</span></div>
-            </div>
-            <div class="sub" id="continueText">Czy chcesz kontynuować grę w tym pokoju?</div>
+
+          <div class="sub">Wykryto wcześniejszą rozgrywkę</div>
+
+          <div id="continueGrid">
+            <div class="pill">Witaj ponownie: <b id="continueNick">—</b></div>
+            <div class="pill">Grasz w pokoju: <b id="continueRoomName">—</b></div>
           </div>
-          <div class="cActions">
-            <button class="btn" id="btnContinueYes">Tak, kontynuuj</button>
-            <button class="btn" id="btnContinueNo">Nie, wybierz inny pokój</button>
+
+          <div class="sub" style="margin-bottom:14px">Czy chcesz kontynuować grę w tym pokoju?</div>
+
+          <div class="row">
+            <button class="btn" id="btnContinueYes">Tak</button>
+            <button class="btn" id="btnContinueNo">Nie</button>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnContinueForget">Zapomnij pokój</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ADMIN BUILDER MODAL -->
-      <div id="builderModal">
-        <div id="builderCard">
-          <div class="bHead">
-            <div class="cIcon">⚙</div>
-            <div style="min-width:0">
-              <div class="bTitle">Własna kolejka (Admin)</div>
-              <div class="bSub">Dodaj dokładnie 10 meczów. Potem wyskoczy pytanie o zapis.</div>
-            </div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnBuilderClose">Zamknij</button>
-          </div>
-
-          <div class="bBody">
-            <div class="bCol">
-              <div class="panel bPanel">
-                <div class="row" style="gap:12px;flex-wrap:wrap">
-                  <div class="chip">Liga</div>
-                  <select id="selLeague" style="flex:1;min-width:280px"></select>
-                  <div class="chip">Dostępne mecze: <span id="poolCount">0</span></div>
-                </div>
-              </div>
-
-              <div class="panel bPanel" style="flex:1;min-height:0">
-                <div class="row">
-                  <div>
-                    <div class="title" style="margin:0">Wybierz mecze</div>
-                    <div class="sub">Klikaj „Dodaj”, aby budować kolejkę.</div>
-                  </div>
-                </div>
-                <div class="bList" id="poolList" style="margin-top:10px"></div>
-              </div>
-            </div>
-
-            <div class="bCol">
-              <div class="panel bPanel">
-                <div class="row" style="flex-wrap:wrap">
-                  <div class="chip">Wybrane: <span id="selectedCount">0</span>/10</div>
-                  <div class="spacer"></div>
-                  <button class="btn btnSmall" id="btnClearSelected">Wyczyść</button>
-                </div>
-              </div>
-
-              <div class="panel bPanel" style="flex:1;min-height:0">
-                <div class="title" style="margin:0">Twoja kolejka</div>
-                <div class="sub">Możesz usuwać pojedyncze pozycje.</div>
-                <div class="bList" id="selectedList" style="margin-top:10px"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bFoot">
-            <div class="sub" id="builderHint">Dodaj 10 meczów, aby móc zapisać.</div>
-            <div class="spacer"></div>
-            <button class="btn" id="btnBuilderSave" disabled>Zapisz 10 meczów</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- BUILDER CONFIRM -->
-      <div id="builderConfirm">
-        <div id="builderConfirmCard">
-          <h3>Masz 10 pojedynków</h3>
-          <p>Czy zapisać tę kolejkę i przejść do typowania?</p>
-          <div class="row">
-            <button class="btn" id="btnConfirmYes">Tak</button>
-            <button class="btn" id="btnConfirmNo">Nie</button>
-            <div class="spacer"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RESULTS MODAL -->
-      <div id="resultsModal">
-        <div id="resultsCard">
-          <div class="rHead">
-            <div class="cIcon">🏁</div>
-            <div style="min-width:0">
-              <div class="rTitle">Wyniki kolejki</div>
-              <div class="rSub">Wpisz finalne wyniki i zapisz. Wyniki pokażą się obok typów.</div>
-            </div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnResultsClose">Zamknij</button>
-          </div>
-
-          <div class="rBody" id="resultsList"></div>
-
-          <div class="rFoot">
-            <div class="sub" id="resultsHint">Uzupełnij wyniki (0–20).</div>
-            <div class="spacer"></div>
-            <button class="btn" id="btnResultsSave">Zapisz wyniki</button>
           </div>
         </div>
       </div>
@@ -587,14 +346,11 @@
               <div class="col" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
 
+                <!-- admin -->
                 <button class="btn" id="btnCustomQueue" style="display:none">Własna kolejka</button>
                 <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
-
-                <!-- NOWE: wyniki -->
-                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki kolejki</button>
-
-                <!-- zakończenie kolejki -->
-                <button class="btn" id="btnFinishQueue" style="display:none">Zatwierdź wyniki (zakończ kolejkę)</button>
+                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
+                <button class="btn" id="btnFinishQueue" style="display:none">Zakończ kolejkę</button>
               </div>
             </div>
 
@@ -611,6 +367,8 @@
                   <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
                 </div>
                 <div class="spacer"></div>
+
+                <div class="chip">KOLEJKA: <span id="queueLabel">—</span></div>
                 <div class="chip">Mecze: <span id="matchesCount">0</span></div>
               </div>
             </div>
@@ -651,6 +409,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1218"></script>
+  <script type="module" src="./app.js?v=1219"></script>
 </body>
 </html>
