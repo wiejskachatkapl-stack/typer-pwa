@@ -275,22 +275,21 @@
       position:absolute; inset:0;
       display:none;
       align-items:center; justify-content:center;
-      z-index:70;
+      z-index:80; /* WYŻEJ niż builderModal */
       background:rgba(0,0,0,.55);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
     #builderConfirmCard{
       width:min(720px,92%);
       border:1px solid rgba(255,255,255,.14);
       border-radius:22px;
-      background:rgba(8,22,52,.78);
+      background:rgba(8,22,52,.82);
       box-shadow: 0 20px 70px rgba(0,0,0,.55);
       padding:16px;
     }
     #builderConfirmCard h3{margin:0 0 8px 0;font-size:18px;font-weight:1000}
     #builderConfirmCard p{margin:0 0 12px 0;color:rgba(255,255,255,.80);font-weight:800}
-
   </style>
 </head>
 
@@ -335,14 +334,13 @@
             <div class="cIcon">⚙</div>
             <div style="min-width:0">
               <div class="bTitle">Własna kolejka (Admin)</div>
-              <div class="bSub">Dodaj dokładnie 10 meczów. Po 10 pojawi się pytanie o zapis.</div>
+              <div class="bSub">Dodaj dokładnie 10 meczów. Potem wyskoczy pytanie o zapis.</div>
             </div>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnBuilderClose">Zamknij</button>
           </div>
 
           <div class="bBody">
-            <!-- LEFT: wybór + mecze -->
             <div class="bCol">
               <div class="panel bPanel">
                 <div class="row" style="gap:12px;flex-wrap:wrap">
@@ -363,7 +361,6 @@
               </div>
             </div>
 
-            <!-- RIGHT: wybrane -->
             <div class="bCol">
               <div class="panel bPanel">
                 <div class="row" style="flex-wrap:wrap">
@@ -505,8 +502,12 @@
               <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+
                 <button class="btn" id="btnCustomQueue" style="display:none">Własna kolejka</button>
                 <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
+
+                <!-- NOWE: zakończenie kolejki / odblokowanie -->
+                <button class="btn" id="btnFinishQueue" style="display:none">Zatwierdź wyniki (zakończ kolejkę)</button>
               </div>
             </div>
 
@@ -563,6 +564,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1216"></script>
+  <script type="module" src="./app.js?v=1217"></script>
 </body>
 </html>

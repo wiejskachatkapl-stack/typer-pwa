@@ -1,4 +1,4 @@
-const BUILD = 1216;
+const BUILD = 1217;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -104,6 +104,8 @@ function clearSavedRoom(){
 }
 
 // ---------- BUILDER MODAL (ADMIN) ----------
+let builderLockedUI = false;
+
 function showBuilder(){
   const m = el("builderModal");
   if (m) m.style.display = "flex";
@@ -111,14 +113,17 @@ function showBuilder(){
 function hideBuilder(){
   const m = el("builderModal");
   if (m) m.style.display = "none";
+  builderLockedUI = false;
 }
 function showBuilderConfirm(){
   const m = el("builderConfirm");
   if (m) m.style.display = "flex";
+  builderLockedUI = true; // blokujemy klikanie pod spodem
 }
 function hideBuilderConfirm(){
   const m = el("builderConfirm");
   if (m) m.style.display = "none";
+  builderLockedUI = false;
 }
 
 // ---------- Firebase ----------
@@ -133,13 +138,13 @@ let unsubPicks = null;
 let currentRoomCode = null;
 let currentRoom = null;
 
-let matchesCache = [];   // [{id, home, away, idx}]
-let picksCache = {};     // matchId -> {h,a} (TY)
-let picksDocByUid = {};  // uid -> picks object
-let submittedByUid = {}; // uid -> boolean
+let matchesCache = [];
+let picksCache = {};
+let picksDocByUid = {};
+let submittedByUid = {};
 let lastPlayers = [];
 
-let fs = {}; // firestore fns holder
+let fs = {};
 
 // ---------- status helpers ----------
 function isCompletePicksObject(picksObj){
@@ -186,7 +191,6 @@ const LEAGUES = [
   { id:"cup_it", name:"Puchar Włoch" },
 ];
 
-// Tymczasowa lista meczów do wyboru (bez API) — łatwo ją potem podmienić na pobieranie z serwera.
 const FIXTURES = {
   laliga: [
     ["Real Madrid","Barcelona"],["Atletico Madrid","Sevilla"],["Valencia","Villarreal"],["Real Sociedad","Betis"],
@@ -265,10 +269,39 @@ const FIXTURES = {
   ],
 };
 
-let builderSelected = []; // [{home, away, leagueId, leagueName}]
+let builderSelected = [];
+let builderDirty = false;
 
 function isAdmin(){
   return currentRoom && currentRoom.adminUid === userUid;
+}
+
+function isQueueLocked(){
+  return !!currentRoom?.queueLocked;
+}
+
+function applyAdminButtonsState(){
+  const admin = isAdmin();
+  const locked = isQueueLocked();
+
+  const btnAdd = el("btnAddQueue");
+  const btnCustom = el("btnCustomQueue");
+  const btnFinish = el("btnFinishQueue");
+
+  if(btnAdd) btnAdd.style.display = admin ? "block" : "none";
+  if(btnCustom) btnCustom.style.display = admin ? "block" : "none";
+  if(btnFinish) btnFinish.style.display = admin ? "block" : "none";
+
+  if(admin){
+    if(btnAdd) btnAdd.disabled = locked;
+    if(btnCustom) btnCustom.disabled = locked;
+    if(btnFinish) btnFinish.disabled = !locked; // działa tylko gdy jest zablokowana kolejka
+  }
+
+  if(admin && locked){
+    if(btnAdd) btnAdd.title = "Kolejka zablokowana do zakończenia.";
+    if(btnCustom) btnCustom.title = "Kolejka zablokowana do zakończenia.";
+  }
 }
 
 function initBuilderUI(){
@@ -285,29 +318,36 @@ function initBuilderUI(){
 
   sel.onchange = ()=> renderBuilderPool();
 
-  el("btnBuilderClose").onclick = ()=> hideBuilder();
+  el("btnBuilderClose").onclick = ()=> {
+    if(builderLockedUI) return;
+    hideBuilder();
+  };
+
   el("btnClearSelected").onclick = ()=>{
+    if(builderLockedUI) return;
     builderSelected = [];
+    builderDirty = true;
     renderBuilderSelected();
     renderBuilderPool();
     updateBuilderSaveState();
   };
 
   el("btnBuilderSave").onclick = ()=>{
+    if(builderLockedUI) return;
     if(builderSelected.length !== 10){
       showToast("Musisz mieć dokładnie 10 meczów");
       return;
     }
-    // pokazujemy potwierdzenie
     showBuilderConfirm();
   };
 
+  // CONFIRM: TAK = zapis
   el("btnConfirmYes").onclick = async ()=>{
-    hideBuilderConfirm();
     await saveCustomQueueToFirestore();
   };
+  // CONFIRM: NIE = wracamy do ustawiania
   el("btnConfirmNo").onclick = ()=>{
-    hideBuilderConfirm(); // wraca do ustawiania meczów
+    hideBuilderConfirm();
   };
 }
 
@@ -316,8 +356,14 @@ function openBuilder(){
     showToast("Tylko admin może ustawiać kolejkę");
     return;
   }
-  // reset (opcjonalnie możesz chcieć pamiętać wybór)
+  if(isQueueLocked()){
+    showToast("Kolejka jest zablokowana. Najpierw zakończ kolejkę.");
+    return;
+  }
+
   builderSelected = [];
+  builderDirty = false;
+
   renderBuilderPool();
   renderBuilderSelected();
   updateBuilderSaveState();
@@ -349,30 +395,40 @@ function renderBuilderPool(){
     btn.textContent = "Dodaj";
 
     const already = builderSelected.some(x=>x.home===home && x.away===away && x.leagueId===leagueId);
-    if(already){
-      btn.textContent = "Dodane";
+
+    if(builderLockedUI){
       btn.disabled = true;
-      btn.style.opacity = ".6";
+      btn.style.opacity = ".55";
       btn.style.cursor = "not-allowed";
-    }
-    if(builderSelected.length >= 10 && !already){
-      btn.disabled = true;
-      btn.style.opacity = ".6";
-      btn.style.cursor = "not-allowed";
+    } else {
+      if(already){
+        btn.textContent = "Dodane";
+        btn.disabled = true;
+        btn.style.opacity = ".6";
+        btn.style.cursor = "not-allowed";
+      }
+      if(builderSelected.length >= 10 && !already){
+        btn.disabled = true;
+        btn.style.opacity = ".6";
+        btn.style.cursor = "not-allowed";
+      }
     }
 
     btn.onclick = ()=>{
+      if(builderLockedUI) return;
       if(builderSelected.length >= 10){
         showToast("Limit 10 meczów");
         return;
       }
       builderSelected.push({ home, away, leagueId, leagueName: lg.name });
+      builderDirty = true;
+
       renderBuilderSelected();
       renderBuilderPool();
       updateBuilderSaveState();
 
       if(builderSelected.length === 10){
-        // automatycznie pokazujemy pytanie
+        // TERAZ: pokazujemy pytanie i NIC nie zapisujemy automatycznie
         showBuilderConfirm();
       }
     };
@@ -418,8 +474,17 @@ function renderBuilderSelected(){
     const del = document.createElement("button");
     del.className = "bMini";
     del.textContent = "Usuń";
+
+    if(builderLockedUI){
+      del.disabled = true;
+      del.style.opacity = ".55";
+      del.style.cursor = "not-allowed";
+    }
+
     del.onclick = ()=>{
+      if(builderLockedUI) return;
       builderSelected.splice(idx,1);
+      builderDirty = true;
       renderBuilderSelected();
       renderBuilderPool();
       updateBuilderSaveState();
@@ -435,11 +500,18 @@ function renderBuilderSelected(){
 function updateBuilderSaveState(){
   const btn = el("btnBuilderSave");
   const hint = el("builderHint");
-  if(btn) btn.disabled = (builderSelected.length !== 10);
+  if(btn) btn.disabled = (builderSelected.length !== 10) || builderLockedUI;
+
   if(hint){
-    if(builderSelected.length < 10) hint.textContent = `Dodaj jeszcze ${10 - builderSelected.length} meczów.`;
-    else if(builderSelected.length === 10) hint.textContent = `Gotowe: 10 meczów. Możesz zapisać.`;
-    else hint.textContent = `Za dużo meczów.`;
+    if(builderLockedUI){
+      hint.textContent = `Potwierdź zapis (TAK/NIE).`;
+    } else if(builderSelected.length < 10){
+      hint.textContent = `Dodaj jeszcze ${10 - builderSelected.length} meczów.`;
+    } else if(builderSelected.length === 10){
+      hint.textContent = `Gotowe: 10 meczów.`;
+    } else {
+      hint.textContent = `Za dużo meczów.`;
+    }
   }
 }
 
@@ -449,19 +521,22 @@ async function saveCustomQueueToFirestore(){
     showToast("Tylko admin");
     return;
   }
+  if(isQueueLocked()){
+    showToast("Kolejka jest zablokowana.");
+    hideBuilderConfirm();
+    hideBuilder();
+    return;
+  }
   if(builderSelected.length !== 10){
     showToast("Musisz mieć dokładnie 10 meczów");
     return;
   }
 
   try{
-    // 1) pobierz istniejące mecze i usuń
+    // 1) usuń istniejące mecze
     const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
     const b = fs.writeBatch(db);
-
-    existingSnap.forEach((docu)=>{
-      b.delete(docu.ref);
-    });
+    existingSnap.forEach((docu)=> b.delete(docu.ref));
 
     // 2) dodaj nowe 10
     builderSelected.forEach((m, idx)=>{
@@ -477,13 +552,53 @@ async function saveCustomQueueToFirestore(){
       });
     });
 
+    // 3) ZABLOKUJ KOLEJKĘ w pokoju (żeby nie dało się modyfikować)
+    b.set(roomRef(currentRoomCode), {
+      queueLocked: true,
+      queueLockedAt: fs.serverTimestamp(),
+      queueLockedBy: userUid
+    }, { merge:true });
+
     await b.commit();
-    showToast("Zapisano kolejkę ✅");
+
+    hideBuilderConfirm();
     hideBuilder();
-    // po zapisie po prostu zostajesz w oknie typowania (room już jest)
+
+    showToast("Zapisano kolejkę i zablokowano ✅");
+    // room snapshot złapie queueLocked i zablokuje przyciski
+
   }catch(e){
     console.error(e);
     showToast("Błąd zapisu kolejki");
+    hideBuilderConfirm();
+  }
+}
+
+async function finishQueueUnlock(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){
+    showToast("Tylko admin");
+    return;
+  }
+  if(!isQueueLocked()){
+    showToast("Kolejka nie jest zablokowana");
+    return;
+  }
+
+  const ok = confirm("Zakończyć kolejkę? Odblokuje to możliwość ustawienia nowej.");
+  if(!ok) return;
+
+  try{
+    await fs.setDoc(roomRef(currentRoomCode), {
+      queueLocked: false,
+      queueFinishedAt: fs.serverTimestamp(),
+      queueFinishedBy: userUid
+    }, { merge:true });
+
+    showToast("Kolejka zakończona. Można ustawić nową ✅");
+  }catch(e){
+    console.error(e);
+    showToast("Błąd zakończenia kolejki");
   }
 }
 
@@ -527,7 +642,6 @@ async function boot(){
   bindUI();
   initBuilderUI();
 
-  // jeśli jest zapisany pokój -> pokaż pytanie o kontynuację (bez kodu)
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved && saved.length === 6){
     setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam…`);
@@ -541,7 +655,7 @@ async function boot(){
       }
       const room = snap.data();
       showScreen("menu");
-      // guziki kontynuacji
+
       el("btnContinueYes").onclick = async ()=>{
         hideContinueModal();
         localStorage.setItem(KEY_ACTIVE_ROOM, saved);
@@ -623,10 +737,11 @@ function bindUI(){
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
 
-  // ADMIN custom queue
+  // ADMIN
+  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
   el("btnCustomQueue").onclick = ()=> openBuilder();
+  el("btnFinishQueue").onclick = async ()=> { await finishQueueUnlock(); };
 }
 
 // ---------- Rooms logic ----------
@@ -644,6 +759,7 @@ async function createRoom(roomName){
       name: roomName,
       adminUid: userUid,
       adminNick: nick,
+      queueLocked: false,
       createdAt: fs.serverTimestamp()
     });
 
@@ -746,18 +862,21 @@ async function openRoom(code, opts={}){
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
   el("roomCode").textContent = code;
 
-  const admin = isAdmin();
-  el("btnAddQueue").style.display = admin ? "block" : "none";
-  el("btnCustomQueue").style.display = admin ? "block" : "none";
+  applyAdminButtonsState();
 
   unsubRoomDoc = fs.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
     currentRoom = d.data();
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
-    const admin2 = isAdmin();
-    el("btnAddQueue").style.display = admin2 ? "block" : "none";
-    el("btnCustomQueue").style.display = admin2 ? "block" : "none";
+
+    // jeśli w międzyczasie zablokowano kolejkę – zamknij builder/confirm
+    if(isQueueLocked()){
+      hideBuilderConfirm();
+      hideBuilder();
+    }
+
+    applyAdminButtonsState();
   });
 
   // live players
@@ -1004,6 +1123,10 @@ async function addTestQueue(){
     showToast("Tylko admin");
     return;
   }
+  if(isQueueLocked()){
+    showToast("Kolejka zablokowana – zakończ ją, aby ustawić nową.");
+    return;
+  }
 
   const sample = [
     ["Jagiellonia","Piast"],
@@ -1018,7 +1141,15 @@ async function addTestQueue(){
     ["Stal Mielec","Puszcza"]
   ];
 
+  const ok = confirm("Dodać testową kolejkę 10 meczów i zablokować kolejkę?");
+  if(!ok) return;
+
   const b = fs.writeBatch(db);
+
+  // wyczyść stare
+  const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
+  existingSnap.forEach((docu)=> b.delete(docu.ref));
+
   sample.forEach((pair, idx)=>{
     const id = `m_${Date.now()}_${idx}`;
     const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
@@ -1029,8 +1160,15 @@ async function addTestQueue(){
       createdAt: fs.serverTimestamp()
     });
   });
+
+  b.set(roomRef(currentRoomCode), {
+    queueLocked: true,
+    queueLockedAt: fs.serverTimestamp(),
+    queueLockedBy: userUid
+  }, { merge:true });
+
   await b.commit();
-  showToast("Dodano kolejkę (test)");
+  showToast("Dodano testową kolejkę i zablokowano ✅");
 }
 
 // ---------- start ----------
