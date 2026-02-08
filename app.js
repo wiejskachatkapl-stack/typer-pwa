@@ -1,4 +1,4 @@
-const BUILD = 1217;
+const BUILD = 1218;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -118,12 +118,24 @@ function hideBuilder(){
 function showBuilderConfirm(){
   const m = el("builderConfirm");
   if (m) m.style.display = "flex";
-  builderLockedUI = true; // blokujemy klikanie pod spodem
+  builderLockedUI = true;
 }
 function hideBuilderConfirm(){
   const m = el("builderConfirm");
   if (m) m.style.display = "none";
   builderLockedUI = false;
+}
+
+// ---------- RESULTS MODAL ----------
+let resultsDraft = {}; // { matchId: {h,a} }
+
+function showResultsModal(){
+  const m = el("resultsModal");
+  if (m) m.style.display = "flex";
+}
+function hideResultsModal(){
+  const m = el("resultsModal");
+  if (m) m.style.display = "none";
 }
 
 // ---------- Firebase ----------
@@ -172,6 +184,38 @@ function playersCol(code){ return fs.collection(db, "rooms", code, "players"); }
 function matchesCol(code){ return fs.collection(db, "rooms", code, "matches"); }
 function picksCol(code){ return fs.collection(db, "rooms", code, "picks"); }
 
+// ---------- Admin state ----------
+function isAdmin(){
+  return currentRoom && currentRoom.adminUid === userUid;
+}
+function isQueueLocked(){
+  return !!currentRoom?.queueLocked;
+}
+
+function applyAdminButtonsState(){
+  const admin = isAdmin();
+  const locked = isQueueLocked();
+
+  const btnAdd = el("btnAddQueue");
+  const btnCustom = el("btnCustomQueue");
+  const btnFinish = el("btnFinishQueue");
+  const btnResults = el("btnEnterResults");
+
+  if(btnAdd) btnAdd.style.display = admin ? "block" : "none";
+  if(btnCustom) btnCustom.style.display = admin ? "block" : "none";
+  if(btnFinish) btnFinish.style.display = admin ? "block" : "none";
+  if(btnResults) btnResults.style.display = admin ? "block" : "none";
+
+  if(admin){
+    if(btnAdd) btnAdd.disabled = locked;
+    if(btnCustom) btnCustom.disabled = locked;
+
+    if(btnFinish) btnFinish.disabled = !locked;
+    // Wyniki sensownie wpisywać gdy kolejka jest locked (mecze zamknięte)
+    if(btnResults) btnResults.disabled = !locked;
+  }
+}
+
 // ---------- Admin: własna kolejka ----------
 const LEAGUES = [
   { id:"laliga", name:"Hiszpańska LaLiga" },
@@ -192,117 +236,25 @@ const LEAGUES = [
 ];
 
 const FIXTURES = {
-  laliga: [
-    ["Real Madrid","Barcelona"],["Atletico Madrid","Sevilla"],["Valencia","Villarreal"],["Real Sociedad","Betis"],
-    ["Athletic Bilbao","Getafe"],["Celta Vigo","Osasuna"],["Las Palmas","Mallorca"],["Girona","Alaves"],
-    ["Rayo Vallecano","Granada"],["Cadiz","Espanyol"],["Almeria","Valladolid"],["Leganes","Eibar"]
-  ],
-  eredivisie: [
-    ["Ajax","PSV"],["Feyenoord","AZ Alkmaar"],["Utrecht","Twente"],["Heerenveen","Sparta Rotterdam"],
-    ["Groningen","Vitesse"],["NEC","Go Ahead Eagles"],["Fortuna Sittard","Heracles"],["PEC Zwolle","Excelsior"],
-    ["RKC Waalwijk","NAC Breda"],["Volendam","Cambuur"],["Willem II","Emmen"],["ADO Den Haag","Roda JC"]
-  ],
-  bundesliga: [
-    ["Bayern","Dortmund"],["Leipzig","Leverkusen"],["Frankfurt","Stuttgart"],["Union Berlin","Werder Bremen"],
-    ["Freiburg","Hoffenheim"],["Wolfsburg","Mainz"],["Augsburg","Koln"],["Monchengladbach","Bochum"],
-    ["Heidenheim","Darmstadt"],["Hamburg","Schalke"],["Hertha","Nurnberg"],["Kaiserslautern","Hannover"]
-  ],
-  premier: [
-    ["Liverpool","Manchester City"],["Arsenal","Chelsea"],["Manchester United","Tottenham"],["Newcastle","Aston Villa"],
-    ["Everton","West Ham"],["Brighton","Brentford"],["Fulham","Crystal Palace"],["Wolves","Bournemouth"],
-    ["Nottingham Forest","Burnley"],["Sheffield United","Leeds"],["Southampton","Leicester"],["Ipswich","Sunderland"]
-  ],
-  seriea: [
-    ["Inter","Milan"],["Juventus","Napoli"],["Roma","Lazio"],["Atalanta","Fiorentina"],
-    ["Torino","Bologna"],["Udinese","Genoa"],["Cagliari","Sassuolo"],["Verona","Parma"],
-    ["Lecce","Empoli"],["Sampdoria","Monza"],["Palermo","Cremonese"],["Bari","Pisa"]
-  ],
-  ligue1: [
-    ["PSG","Marseille"],["Lyon","Monaco"],["Lille","Rennes"],["Nice","Lens"],
-    ["Nantes","Strasbourg"],["Montpellier","Toulouse"],["Reims","Brest"],["Metz","Clermont"],
-    ["Angers","Auxerre"],["Saint-Etienne","Bordeaux"],["Caen","Le Havre"],["Dijon","Amiens"]
-  ],
-  ekstraklasa: [
-    ["Jagiellonia","Piast"],["Lechia","Legia"],["Wisla Plock","Radomiak"],["GKS Katowice","Gornik"],
-    ["Arka","Cracovia"],["Lech","Pogon"],["Motor","Rakow"],["Korona","Widzew"],
-    ["Slask","Zaglebie"],["Stal Mielec","Puszcza"],["Wisla Krakow","LKS"],["Ruch","Gornik Zabrze"]
-  ],
-  ucl: [
-    ["Real Madrid","Bayern"],["Barcelona","PSG"],["Manchester City","Inter"],["Liverpool","Dortmund"],
-    ["Arsenal","Juventus"],["Napoli","Milan"],["Benfica","Porto"],["Atletico Madrid","Chelsea"],
-    ["Leverkusen","Monaco"],["Leipzig","Lille"],["Roma","Ajax"],["PSV","Sevilla"]
-  ],
-  uel: [
-    ["Roma","Sevilla"],["Leverkusen","Liverpool"],["Ajax","Marseille"],["Sporting","Benfica"],
-    ["West Ham","Villarreal"],["Lazio","Betis"],["Fenerbahce","Rangers"],["Shakhtar","Braga"],
-    ["Freiburg","Monaco"],["Nice","Feyenoord"],["AZ Alkmaar","Anderlecht"],["Slavia","Dinamo Zagreb"]
-  ],
-  uecl: [
-    ["Aston Villa","Fiorentina"],["PAOK","Besiktas"],["Legia","Basel"],["Lugano","Gent"],
-    ["Rapid Wien","Twente"],["Celtic","AZ Alkmaar"],["Hapoel","Lech"],["Partizan","Dinamo"],
-    ["Hearts","Rosenborg"],["Sparta","Fenerbahce"],["Viktoria Plzen","Brugge"],["LASK","Rayo Vallecano"]
-  ],
-  cup_nl: [
-    ["Ajax","Feyenoord"],["PSV","AZ Alkmaar"],["Twente","Utrecht"],["Vitesse","Heerenveen"],
-    ["Sparta Rotterdam","NEC"],["Go Ahead Eagles","Groningen"],["RKC Waalwijk","Heracles"],["PEC Zwolle","Fortuna Sittard"],
-    ["Willem II","ADO Den Haag"],["Cambuur","Volendam"]
-  ],
-  cup_pl: [
-    ["Lech","Legia"],["Wisla Krakow","Cracovia"],["Jagiellonia","Pogon"],["Rakow","Slask"],
-    ["Gornik","Widzew"],["Zaglebie","Korona"],["Arka","Motor"],["Piast","Lechia"],
-    ["Stal Mielec","Puszcza"],["Radomiak","Wisla Plock"]
-  ],
-  cup_es: [
-    ["Real Madrid","Atletico Madrid"],["Barcelona","Sevilla"],["Valencia","Betis"],["Villarreal","Real Sociedad"],
-    ["Athletic Bilbao","Osasuna"],["Celta Vigo","Getafe"],["Girona","Alaves"],["Mallorca","Las Palmas"],
-    ["Rayo Vallecano","Granada"],["Cadiz","Espanyol"]
-  ],
-  cup_en: [
-    ["Manchester City","Liverpool"],["Arsenal","Manchester United"],["Chelsea","Tottenham"],["Newcastle","Aston Villa"],
-    ["Everton","West Ham"],["Brighton","Brentford"],["Fulham","Crystal Palace"],["Wolves","Bournemouth"],
-    ["Nottingham Forest","Leeds"],["Southampton","Leicester"]
-  ],
-  cup_it: [
-    ["Inter","Juventus"],["Milan","Napoli"],["Roma","Lazio"],["Atalanta","Fiorentina"],
-    ["Torino","Bologna"],["Udinese","Genoa"],["Cagliari","Sassuolo"],["Verona","Parma"],
-    ["Lecce","Empoli"],["Monza","Sampdoria"]
-  ],
+  laliga: [["Real Madrid","Barcelona"],["Atletico Madrid","Sevilla"],["Valencia","Villarreal"],["Real Sociedad","Betis"]],
+  eredivisie: [["Ajax","PSV"],["Feyenoord","AZ Alkmaar"],["Utrecht","Twente"],["Heerenveen","Sparta Rotterdam"]],
+  bundesliga: [["Bayern","Dortmund"],["Leipzig","Leverkusen"],["Frankfurt","Stuttgart"],["Union Berlin","Werder Bremen"]],
+  premier: [["Liverpool","Manchester City"],["Arsenal","Chelsea"],["Manchester United","Tottenham"],["Newcastle","Aston Villa"]],
+  seriea: [["Inter","Milan"],["Juventus","Napoli"],["Roma","Lazio"],["Atalanta","Fiorentina"]],
+  ligue1: [["PSG","Marseille"],["Lyon","Monaco"],["Lille","Rennes"],["Nice","Lens"]],
+  ekstraklasa: [["Jagiellonia","Piast"],["Lechia","Legia"],["Wisla Plock","Radomiak"],["Lech","Pogon"],["Korona","Widzew"],["Slask","Zaglebie"],["Stal Mielec","Puszcza"],["Motor","Rakow"],["GKS Katowice","Gornik"],["Arka","Cracovia"]],
+  ucl: [["Real Madrid","Bayern"],["Barcelona","PSG"],["Manchester City","Inter"],["Liverpool","Dortmund"]],
+  uel: [["Roma","Sevilla"],["Leverkusen","Liverpool"],["Ajax","Marseille"],["Sporting","Benfica"]],
+  uecl: [["Aston Villa","Fiorentina"],["PAOK","Besiktas"],["Legia","Basel"],["Lugano","Gent"]],
+  cup_nl: [["Ajax","Feyenoord"],["PSV","AZ Alkmaar"],["Twente","Utrecht"],["Vitesse","Heerenveen"]],
+  cup_pl: [["Lech","Legia"],["Wisla Krakow","Cracovia"],["Jagiellonia","Pogon"],["Rakow","Slask"]],
+  cup_es: [["Real Madrid","Atletico Madrid"],["Barcelona","Sevilla"],["Valencia","Betis"],["Villarreal","Real Sociedad"]],
+  cup_en: [["Manchester City","Liverpool"],["Arsenal","Manchester United"],["Chelsea","Tottenham"],["Newcastle","Aston Villa"]],
+  cup_it: [["Inter","Juventus"],["Milan","Napoli"],["Roma","Lazio"],["Atalanta","Fiorentina"]],
 };
 
 let builderSelected = [];
 let builderDirty = false;
-
-function isAdmin(){
-  return currentRoom && currentRoom.adminUid === userUid;
-}
-
-function isQueueLocked(){
-  return !!currentRoom?.queueLocked;
-}
-
-function applyAdminButtonsState(){
-  const admin = isAdmin();
-  const locked = isQueueLocked();
-
-  const btnAdd = el("btnAddQueue");
-  const btnCustom = el("btnCustomQueue");
-  const btnFinish = el("btnFinishQueue");
-
-  if(btnAdd) btnAdd.style.display = admin ? "block" : "none";
-  if(btnCustom) btnCustom.style.display = admin ? "block" : "none";
-  if(btnFinish) btnFinish.style.display = admin ? "block" : "none";
-
-  if(admin){
-    if(btnAdd) btnAdd.disabled = locked;
-    if(btnCustom) btnCustom.disabled = locked;
-    if(btnFinish) btnFinish.disabled = !locked; // działa tylko gdy jest zablokowana kolejka
-  }
-
-  if(admin && locked){
-    if(btnAdd) btnAdd.title = "Kolejka zablokowana do zakończenia.";
-    if(btnCustom) btnCustom.title = "Kolejka zablokowana do zakończenia.";
-  }
-}
 
 function initBuilderUI(){
   const sel = el("selLeague");
@@ -341,11 +293,9 @@ function initBuilderUI(){
     showBuilderConfirm();
   };
 
-  // CONFIRM: TAK = zapis
   el("btnConfirmYes").onclick = async ()=>{
     await saveCustomQueueToFirestore();
   };
-  // CONFIRM: NIE = wracamy do ustawiania
   el("btnConfirmNo").onclick = ()=>{
     hideBuilderConfirm();
   };
@@ -428,7 +378,6 @@ function renderBuilderPool(){
       updateBuilderSaveState();
 
       if(builderSelected.length === 10){
-        // TERAZ: pokazujemy pytanie i NIC nie zapisujemy automatycznie
         showBuilderConfirm();
       }
     };
@@ -533,12 +482,10 @@ async function saveCustomQueueToFirestore(){
   }
 
   try{
-    // 1) usuń istniejące mecze
     const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
     const b = fs.writeBatch(db);
     existingSnap.forEach((docu)=> b.delete(docu.ref));
 
-    // 2) dodaj nowe 10
     builderSelected.forEach((m, idx)=>{
       const id = `m_${Date.now()}_${idx}`;
       const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
@@ -548,11 +495,13 @@ async function saveCustomQueueToFirestore(){
         away: m.away,
         leagueId: m.leagueId,
         leagueName: m.leagueName,
-        createdAt: fs.serverTimestamp()
+        createdAt: fs.serverTimestamp(),
+        // wyniki puste
+        resultH: null,
+        resultA: null
       });
     });
 
-    // 3) ZABLOKUJ KOLEJKĘ w pokoju (żeby nie dało się modyfikować)
     b.set(roomRef(currentRoomCode), {
       queueLocked: true,
       queueLockedAt: fs.serverTimestamp(),
@@ -565,8 +514,6 @@ async function saveCustomQueueToFirestore(){
     hideBuilder();
 
     showToast("Zapisano kolejkę i zablokowano ✅");
-    // room snapshot złapie queueLocked i zablokuje przyciski
-
   }catch(e){
     console.error(e);
     showToast("Błąd zapisu kolejki");
@@ -600,6 +547,146 @@ async function finishQueueUnlock(){
     console.error(e);
     showToast("Błąd zakończenia kolejki");
   }
+}
+
+// ---------- Results (Admin) ----------
+function buildResultsDraftFromMatches(){
+  resultsDraft = {};
+  for(const m of matchesCache){
+    const h = Number.isInteger(m.resultH) ? m.resultH : null;
+    const a = Number.isInteger(m.resultA) ? m.resultA : null;
+    resultsDraft[m.id] = { h, a };
+  }
+}
+
+function renderResultsModal(){
+  const list = el("resultsList");
+  if(!list) return;
+  list.innerHTML = "";
+
+  if(!matchesCache.length){
+    const p = document.createElement("div");
+    p.className = "panel";
+    p.style.padding = "14px";
+    p.textContent = "Brak meczów w tej kolejce.";
+    list.appendChild(p);
+    return;
+  }
+
+  matchesCache.forEach((m, idx)=>{
+    const row = document.createElement("div");
+    row.className = "rRow";
+
+    const teams = document.createElement("div");
+    teams.className = "rTeams";
+    const l = document.createElement("span");
+    l.textContent = m.home || "—";
+    const mid = document.createElement("span");
+    mid.style.opacity = ".75";
+    mid.textContent = " vs ";
+    const r = document.createElement("span");
+    r.textContent = m.away || "—";
+    teams.appendChild(l);
+    teams.appendChild(mid);
+    teams.appendChild(r);
+
+    const score = document.createElement("div");
+    score.className = "rScore";
+
+    const inpH = document.createElement("input");
+    inpH.placeholder = "0";
+    inpH.inputMode = "numeric";
+    inpH.value = (resultsDraft[m.id]?.h ?? "") === "" ? "" : String(resultsDraft[m.id]?.h ?? "");
+    inpH.oninput = ()=>{
+      const v = clampInt(inpH.value, 0, 20);
+      resultsDraft[m.id] = resultsDraft[m.id] || {h:null,a:null};
+      resultsDraft[m.id].h = v;
+    };
+
+    const sep = document.createElement("div");
+    sep.className = "sep";
+    sep.textContent = ":";
+
+    const inpA = document.createElement("input");
+    inpA.placeholder = "0";
+    inpA.inputMode = "numeric";
+    inpA.value = (resultsDraft[m.id]?.a ?? "") === "" ? "" : String(resultsDraft[m.id]?.a ?? "");
+    inpA.oninput = ()=>{
+      const v = clampInt(inpA.value, 0, 20);
+      resultsDraft[m.id] = resultsDraft[m.id] || {h:null,a:null};
+      resultsDraft[m.id].a = v;
+    };
+
+    score.appendChild(inpH);
+    score.appendChild(sep);
+    score.appendChild(inpA);
+
+    row.appendChild(teams);
+    row.appendChild(score);
+
+    list.appendChild(row);
+  });
+}
+
+function allResultsFilled(){
+  if(!matchesCache.length) return false;
+  for(const m of matchesCache){
+    const r = resultsDraft[m.id];
+    if(!r) return false;
+    if(!Number.isInteger(r.h) || !Number.isInteger(r.a)) return false;
+  }
+  return true;
+}
+
+async function saveResultsToFirestore(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){
+    showToast("Tylko admin może wpisać wyniki");
+    return;
+  }
+  if(!isQueueLocked()){
+    showToast("Najpierw zablokuj kolejkę (ustaw mecze).");
+    return;
+  }
+  if(!allResultsFilled()){
+    showToast("Uzupełnij wyniki dla wszystkich meczów (0–20).");
+    return;
+  }
+
+  try{
+    const b = fs.writeBatch(db);
+    for(const m of matchesCache){
+      const r = resultsDraft[m.id];
+      const ref = fs.doc(db, "rooms", currentRoomCode, "matches", m.id);
+      b.set(ref, {
+        resultH: r.h,
+        resultA: r.a,
+        resultSetAt: fs.serverTimestamp(),
+        resultSetBy: userUid
+      }, { merge:true });
+    }
+    await b.commit();
+
+    hideResultsModal();
+    showToast("Zapisano wyniki ✅");
+  }catch(e){
+    console.error(e);
+    showToast("Błąd zapisu wyników");
+  }
+}
+
+function openResults(){
+  if(!isAdmin()){
+    showToast("Tylko admin");
+    return;
+  }
+  if(!isQueueLocked()){
+    showToast("Najpierw ustaw kolejkę (mecze) i ją zablokuj.");
+    return;
+  }
+  buildResultsDraftFromMatches();
+  renderResultsModal();
+  showResultsModal();
 }
 
 // ---------- boot ----------
@@ -641,6 +728,10 @@ async function boot(){
   refreshNickLabels();
   bindUI();
   initBuilderUI();
+
+  // results modal UI
+  el("btnResultsClose").onclick = ()=> hideResultsModal();
+  el("btnResultsSave").onclick = async ()=> await saveResultsToFirestore();
 
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved && saved.length === 6){
@@ -742,6 +833,9 @@ function bindUI(){
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
   el("btnCustomQueue").onclick = ()=> openBuilder();
   el("btnFinishQueue").onclick = async ()=> { await finishQueueUnlock(); };
+
+  // NOWE: wyniki
+  el("btnEnterResults").onclick = ()=> openResults();
 }
 
 // ---------- Rooms logic ----------
@@ -843,7 +937,6 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
-  // reset
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -857,7 +950,6 @@ async function openRoom(code, opts={}){
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
 
-  // UI left
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
   el("roomCode").textContent = code;
@@ -870,7 +962,6 @@ async function openRoom(code, opts={}){
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
 
-    // jeśli w międzyczasie zablokowano kolejkę – zamknij builder/confirm
     if(isQueueLocked()){
       hideBuilderConfirm();
       hideBuilder();
@@ -879,7 +970,6 @@ async function openRoom(code, opts={}){
     applyAdminButtonsState();
   });
 
-  // live players
   const pq = fs.query(playersCol(code), fs.orderBy("joinedAt","asc"));
   unsubPlayers = fs.onSnapshot(pq, (qs)=>{
     const arr = [];
@@ -888,7 +978,6 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // live picks (status)
   unsubPicks = fs.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -899,7 +988,6 @@ async function openRoom(code, opts={}){
     renderPlayers(lastPlayers);
   });
 
-  // live matches
   const mq = fs.query(matchesCol(code), fs.orderBy("idx","asc"));
   unsubMatches = fs.onSnapshot(mq, async (qs)=>{
     const arr = [];
@@ -1034,6 +1122,16 @@ function createLogoImg(teamName){
   return img;
 }
 
+function comparePickToResult(match){
+  const p = picksCache?.[match.id];
+  if(!p || !Number.isInteger(p.h) || !Number.isInteger(p.a)) return null;
+
+  const hasRes = Number.isInteger(match.resultH) && Number.isInteger(match.resultA);
+  if(!hasRes) return null;
+
+  return (p.h === match.resultH && p.a === match.resultA) ? "green" : "red";
+}
+
 function renderMatches(){
   const list = el("matchesList");
   if(!list) return;
@@ -1078,6 +1176,8 @@ function renderMatches(){
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
       updateSaveButtonState();
+      // odśwież kropkę
+      renderMatches();
     };
 
     const sep = document.createElement("div");
@@ -1094,14 +1194,44 @@ function renderMatches(){
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
       updateSaveButtonState();
+      renderMatches();
     };
 
     score.appendChild(inpH);
     score.appendChild(sep);
     score.appendChild(inpA);
 
+    // obok typów pokazujemy wynik + kropkę
+    const resBox = document.createElement("div");
+    resBox.className = "miniResult";
+
+    const dot = document.createElement("div");
+    dot.className = "dot";
+
+    const hasRes = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
+    const label = document.createElement("div");
+    label.style.fontWeight = "1000";
+    label.style.opacity = ".92";
+    label.textContent = hasRes ? `Wynik: ${m.resultH}:${m.resultA}` : "Wynik: —";
+
+    const cmp = comparePickToResult(m);
+    if(cmp === "green"){
+      dot.style.background = "#33ff88";
+      dot.title = "Trafione";
+    } else if(cmp === "red"){
+      dot.style.background = "#ff4d4d";
+      dot.title = "Nietrafione";
+    } else {
+      dot.style.background = "rgba(255,255,255,.25)";
+      dot.title = hasRes ? "Brak typu / niepełny typ" : "Brak wyniku";
+    }
+
+    resBox.appendChild(dot);
+    resBox.appendChild(label);
+
     card.appendChild(leftTeam);
     card.appendChild(score);
+    card.appendChild(resBox);
     card.appendChild(rightTeam);
 
     list.appendChild(card);
@@ -1146,7 +1276,6 @@ async function addTestQueue(){
 
   const b = fs.writeBatch(db);
 
-  // wyczyść stare
   const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
   existingSnap.forEach((docu)=> b.delete(docu.ref));
 
@@ -1157,7 +1286,9 @@ async function addTestQueue(){
       idx,
       home: pair[0],
       away: pair[1],
-      createdAt: fs.serverTimestamp()
+      createdAt: fs.serverTimestamp(),
+      resultH: null,
+      resultA: null
     });
   });
 
