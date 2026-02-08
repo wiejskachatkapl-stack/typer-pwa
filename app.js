@@ -1,4 +1,4 @@
-const BUILD = 1218;
+const BUILD = 1219;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v2";
@@ -184,12 +184,21 @@ function playersCol(code){ return fs.collection(db, "rooms", code, "players"); }
 function matchesCol(code){ return fs.collection(db, "rooms", code, "matches"); }
 function picksCol(code){ return fs.collection(db, "rooms", code, "picks"); }
 
+// archiwum kolejek: rooms/{code}/queues/{queueNo}/matches/*
+function archiveMatchesCol(code, queueNo){
+  return fs.collection(db, "rooms", code, "queues", String(queueNo), "matches");
+}
+
 // ---------- Admin state ----------
 function isAdmin(){
   return currentRoom && currentRoom.adminUid === userUid;
 }
 function isQueueLocked(){
   return !!currentRoom?.queueLocked;
+}
+function getQueueNo(){
+  const n = currentRoom?.queueNo;
+  return Number.isInteger(n) ? n : 0;
 }
 
 function applyAdminButtonsState(){
@@ -207,11 +216,14 @@ function applyAdminButtonsState(){
   if(btnResults) btnResults.style.display = admin ? "block" : "none";
 
   if(admin){
+    // ustawianie kolejki tylko gdy nie locked
     if(btnAdd) btnAdd.disabled = locked;
     if(btnCustom) btnCustom.disabled = locked;
 
+    // kończenie dopiero gdy locked
     if(btnFinish) btnFinish.disabled = !locked;
-    // Wyniki sensownie wpisywać gdy kolejka jest locked (mecze zamknięte)
+
+    // wyniki dopiero gdy locked
     if(btnResults) btnResults.disabled = !locked;
   }
 }
@@ -464,6 +476,78 @@ function updateBuilderSaveState(){
   }
 }
 
+// ---------- Queue persistence (kolejki 1,2,3...) ----------
+async function archiveCurrentMatchesIfAny(){
+  if(!currentRoomCode) return;
+  const oldQueueNo = getQueueNo();
+
+  const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
+  if(existingSnap.empty) return;
+
+  // jeśli nie było jeszcze numeru kolejki, to i tak archiwizujemy jako 0
+  const qNo = Number.isInteger(oldQueueNo) ? oldQueueNo : 0;
+
+  const b = fs.writeBatch(db);
+  existingSnap.forEach((docu)=>{
+    const data = docu.data();
+    const archRef = fs.doc(db, "rooms", currentRoomCode, "queues", String(qNo), "matches", docu.id);
+    b.set(archRef, {
+      ...data,
+      archivedAt: fs.serverTimestamp(),
+      archivedFromActive: true
+    }, { merge:true });
+
+    // po archiwizacji usuwamy z aktywnej listy
+    b.delete(docu.ref);
+  });
+  await b.commit();
+}
+
+async function createAndLockNewQueue(matches10, metaFn){
+  if(!currentRoomCode) return;
+  if(!isAdmin()) throw new Error("Not admin");
+  if(isQueueLocked()) throw new Error("Queue locked");
+
+  // 1) archiwizuj poprzednią aktywną (jeśli istnieje)
+  await archiveCurrentMatchesIfAny();
+
+  // 2) zwiększ numer kolejki
+  const nextNo = (getQueueNo() || 0) + 1;
+
+  // 3) wpisz nowe mecze do aktywnej kolekcji + queueNo
+  const b = fs.writeBatch(db);
+
+  matches10.forEach((m, idx)=>{
+    const id = `m_${Date.now()}_${idx}`;
+    const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
+
+    const base = {
+      idx,
+      home: m.home,
+      away: m.away,
+      createdAt: fs.serverTimestamp(),
+      // wyniki puste
+      resultH: null,
+      resultA: null,
+      // numer kolejki
+      queueNo: nextNo
+    };
+    const extra = metaFn ? metaFn(m) : {};
+    b.set(ref, { ...base, ...extra });
+  });
+
+  // 4) zablokuj kolejkę + zapisz queueNo w pokoju
+  b.set(roomRef(currentRoomCode), {
+    queueLocked: true,
+    queueLockedAt: fs.serverTimestamp(),
+    queueLockedBy: userUid,
+    queueNo: nextNo
+  }, { merge:true });
+
+  await b.commit();
+  return nextNo;
+}
+
 async function saveCustomQueueToFirestore(){
   if(!currentRoomCode) return;
   if(!isAdmin()){
@@ -482,38 +566,14 @@ async function saveCustomQueueToFirestore(){
   }
 
   try{
-    const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
-    const b = fs.writeBatch(db);
-    existingSnap.forEach((docu)=> b.delete(docu.ref));
-
-    builderSelected.forEach((m, idx)=>{
-      const id = `m_${Date.now()}_${idx}`;
-      const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
-      b.set(ref, {
-        idx,
-        home: m.home,
-        away: m.away,
-        leagueId: m.leagueId,
-        leagueName: m.leagueName,
-        createdAt: fs.serverTimestamp(),
-        // wyniki puste
-        resultH: null,
-        resultA: null
-      });
-    });
-
-    b.set(roomRef(currentRoomCode), {
-      queueLocked: true,
-      queueLockedAt: fs.serverTimestamp(),
-      queueLockedBy: userUid
-    }, { merge:true });
-
-    await b.commit();
+    const nextNo = await createAndLockNewQueue(
+      builderSelected.map(x=>({home:x.home, away:x.away, leagueId:x.leagueId, leagueName:x.leagueName})),
+      (m)=>({ leagueId: m.leagueId, leagueName: m.leagueName })
+    );
 
     hideBuilderConfirm();
     hideBuilder();
-
-    showToast("Zapisano kolejkę i zablokowano ✅");
+    showToast(`Zapisano kolejkę #${nextNo} i zablokowano ✅`);
   }catch(e){
     console.error(e);
     showToast("Błąd zapisu kolejki");
@@ -573,7 +633,7 @@ function renderResultsModal(){
     return;
   }
 
-  matchesCache.forEach((m, idx)=>{
+  matchesCache.forEach((m)=>{
     const row = document.createElement("div");
     row.className = "rRow";
 
@@ -645,7 +705,7 @@ async function saveResultsToFirestore(){
     return;
   }
   if(!isQueueLocked()){
-    showToast("Najpierw zablokuj kolejkę (ustaw mecze).");
+    showToast("Najpierw ustaw kolejkę (mecze) i ją zablokuj.");
     return;
   }
   if(!allResultsFilled()){
@@ -834,7 +894,7 @@ function bindUI(){
   el("btnCustomQueue").onclick = ()=> openBuilder();
   el("btnFinishQueue").onclick = async ()=> { await finishQueueUnlock(); };
 
-  // NOWE: wyniki
+  // WYNIKI
   el("btnEnterResults").onclick = ()=> openResults();
 }
 
@@ -854,6 +914,7 @@ async function createRoom(roomName){
       adminUid: userUid,
       adminNick: nick,
       queueLocked: false,
+      queueNo: 0,
       createdAt: fs.serverTimestamp()
     });
 
@@ -1122,6 +1183,14 @@ function createLogoImg(teamName){
   return img;
 }
 
+// ====== DOT LOGIC (green/yellow/red) ======
+function outcomeSign(h, a){
+  if(!Number.isInteger(h) || !Number.isInteger(a)) return null;
+  if(h > a) return 1;     // 1
+  if(h < a) return -1;    // 2
+  return 0;               // X
+}
+
 function comparePickToResult(match){
   const p = picksCache?.[match.id];
   if(!p || !Number.isInteger(p.h) || !Number.isInteger(p.a)) return null;
@@ -1129,7 +1198,16 @@ function comparePickToResult(match){
   const hasRes = Number.isInteger(match.resultH) && Number.isInteger(match.resultA);
   if(!hasRes) return null;
 
-  return (p.h === match.resultH && p.a === match.resultA) ? "green" : "red";
+  // dokładny wynik
+  if(p.h === match.resultH && p.a === match.resultA) return "green";
+
+  // rozstrzygnięcie
+  const ps = outcomeSign(p.h, p.a);
+  const rs = outcomeSign(match.resultH, match.resultA);
+  if(ps !== null && rs !== null && ps === rs) return "yellow";
+
+  // nietrafione
+  return "red";
 }
 
 function renderMatches(){
@@ -1176,7 +1254,6 @@ function renderMatches(){
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
       updateSaveButtonState();
-      // odśwież kropkę
       renderMatches();
     };
 
@@ -1217,7 +1294,10 @@ function renderMatches(){
     const cmp = comparePickToResult(m);
     if(cmp === "green"){
       dot.style.background = "#33ff88";
-      dot.title = "Trafione";
+      dot.title = "Trafione dokładnie";
+    } else if(cmp === "yellow"){
+      dot.style.background = "#ffd84d";
+      dot.title = "Trafione rozstrzygnięcie (1X2)";
     } else if(cmp === "red"){
       dot.style.background = "#ff4d4d";
       dot.title = "Nietrafione";
@@ -1274,32 +1354,16 @@ async function addTestQueue(){
   const ok = confirm("Dodać testową kolejkę 10 meczów i zablokować kolejkę?");
   if(!ok) return;
 
-  const b = fs.writeBatch(db);
-
-  const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
-  existingSnap.forEach((docu)=> b.delete(docu.ref));
-
-  sample.forEach((pair, idx)=>{
-    const id = `m_${Date.now()}_${idx}`;
-    const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
-    b.set(ref, {
-      idx,
-      home: pair[0],
-      away: pair[1],
-      createdAt: fs.serverTimestamp(),
-      resultH: null,
-      resultA: null
-    });
-  });
-
-  b.set(roomRef(currentRoomCode), {
-    queueLocked: true,
-    queueLockedAt: fs.serverTimestamp(),
-    queueLockedBy: userUid
-  }, { merge:true });
-
-  await b.commit();
-  showToast("Dodano testową kolejkę i zablokowano ✅");
+  try{
+    const nextNo = await createAndLockNewQueue(
+      sample.map(x=>({home:x[0], away:x[1]})),
+      ()=>({})
+    );
+    showToast(`Dodano testową kolejkę #${nextNo} i zablokowano ✅`);
+  }catch(e){
+    console.error(e);
+    showToast("Błąd dodawania kolejki testowej");
+  }
 }
 
 // ---------- start ----------
