@@ -1,4 +1,4 @@
-const BUILD = 1212;
+const BUILD = 1213;
 
 const BG_TLO = "img_tlo.png";
 const BG_WYBOR = "img_wybor.png";
@@ -16,12 +16,15 @@ const firebaseConfig = {
   measurementId: "G-5FBDH5G15N"
 };
 
-// helpers
 const el = (id) => document.getElementById(id);
 
 function setBg(src){
   const bg = el("bg");
   if (bg) bg.style.backgroundImage = `url("${src}")`;
+}
+function setWyborImg(src){
+  const w = el("wyborImg");
+  if (w) w.style.backgroundImage = `url("${src}")`;
 }
 function setFooter(txt){
   const f = el("footerRight");
@@ -40,8 +43,14 @@ function showScreen(id){
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
-  if(id === "wybor") setBg(BG_WYBOR);
-  else setBg(BG_TLO);
+
+  // tło ZA ramką zawsze "img_tlo"
+  setBg(BG_TLO);
+
+  // obraz WYBORU jest w środku ramki (ostry)
+  if(id === "wybor"){
+    setWyborImg(BG_WYBOR);
+  }
 }
 function setSplash(msg){
   const h = el("splashHint");
@@ -90,7 +99,6 @@ function refreshNickLabels(){
   const b = el("nickLabelRoom"); if(b) b.textContent = nick;
 }
 
-// MODALE
 function openModal(id){
   const m = el(id);
   if(m) m.style.display = "flex";
@@ -121,7 +129,6 @@ let picksDocByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
 
-// status
 function isCompletePicksObject(picksObj){
   if(!matchesCache.length) return false;
   if(!picksObj || typeof picksObj !== "object") return false;
@@ -145,14 +152,13 @@ function playersCol(code){ return boot.collection(db, "rooms", code, "players");
 function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
 function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
-// boot
 async function boot(){
   setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
   const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
   const {
-    getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
+    getFirestore, doc, getDoc, setDoc, serverTimestamp,
     collection, query, orderBy, onSnapshot,
     writeBatch, deleteDoc
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
@@ -161,7 +167,7 @@ async function boot(){
   auth = getAuth(app);
   db = getFirestore(app);
 
-  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
+  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
   boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc;
@@ -186,27 +192,27 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
-  // start zawsze na wyborze
+  // ZAWSZE najpierw pokazujemy WYBÓR (ostry obraz)
   showScreen("wybor");
 
-  // jeśli zapisany pokój → modal kontynuacji nad wyborem
+  // Dopiero potem (po ticku) ewentualnie pokazujemy "Kontynuować?"
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved && saved.length === 6){
-    try{
-      const snap = await boot.getDoc(roomRef(saved));
-      if(!snap.exists()){
+    setTimeout(async ()=>{
+      try{
+        const snap = await boot.getDoc(roomRef(saved));
+        if(!snap.exists()){
+          clearSavedRoom();
+          showToast("Zapisany pokój nie istnieje");
+          return;
+        }
+        const room = snap.data();
+        prepareContinueModal(saved, room?.name || "—");
+      }catch{
         clearSavedRoom();
-        showToast("Zapisany pokój nie istnieje");
-        return;
+        showToast("Nie udało się sprawdzić pokoju");
       }
-      const room = snap.data();
-      prepareContinueModal(saved, room?.name || "—");
-      return;
-    }catch{
-      clearSavedRoom();
-      showToast("Nie udało się sprawdzić pokoju");
-      return;
-    }
+    }, 80);
   }
 }
 
@@ -225,7 +231,6 @@ function prepareContinueModal(code, roomName){
       await openRoom(code, { silent:true, force:true });
     };
   }
-  // uproszczenie: "Nie" → od razu okno pokoi
   if(no){
     no.onclick = ()=>{
       closeModal("continueModal");
@@ -244,7 +249,6 @@ function prepareContinueModal(code, roomName){
   openModal("continueModal");
 }
 
-// UI binding (z zabezpieczeniem przed null → brak crasha!)
 function bindUI(){
   const hsRooms = el("hsRooms");
   const hsStats = el("hsStats");
@@ -283,7 +287,6 @@ function bindUI(){
     await joinRoom(code);
   };
 
-  // ROOM
   const btnBack = el("btnBackFromRoom");
   if(btnBack) btnBack.onclick = ()=>{ showScreen("wybor"); };
 
@@ -528,7 +531,6 @@ function renderPlayers(players){
     status.style.fontSize = "18px";
     status.style.lineHeight = "1";
     status.style.color = ok ? "#33ff88" : "#ff4d4d";
-    status.title = ok ? "Typy zapisane" : "Brak zapisanych typów";
 
     left.appendChild(name);
     left.appendChild(status);
