@@ -1,5 +1,7 @@
-const BUILD = 1210;
+const BUILD = 1212;
+
 const BG_TLO = "img_tlo.png";
+const BG_WYBOR = "img_wybor.png";
 
 const KEY_NICK = "typer_nick_v2";
 const KEY_ACTIVE_ROOM = "typer_active_room_v2";
@@ -14,11 +16,17 @@ const firebaseConfig = {
   measurementId: "G-5FBDH5G15N"
 };
 
-// ---------- helpers ----------
+// helpers
 const el = (id) => document.getElementById(id);
-const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
-const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
+function setBg(src){
+  const bg = el("bg");
+  if (bg) bg.style.backgroundImage = `url("${src}")`;
+}
+function setFooter(txt){
+  const f = el("footerRight");
+  if (f) f.textContent = txt;
+}
 function showToast(msg){
   const t = el("toast");
   if (!t) return;
@@ -27,14 +35,14 @@ function showToast(msg){
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=> t.style.display="none", 2600);
 }
-
 function showScreen(id){
-  ["splash","menu","rooms","room"].forEach(s=>{
+  ["splash","wybor","room"].forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
+  if(id === "wybor") setBg(BG_WYBOR);
+  else setBg(BG_TLO);
 }
-
 function setSplash(msg){
   const h = el("splashHint");
   if (h) h.textContent = msg;
@@ -49,14 +57,12 @@ function normalizeSlug(s){
     .replace(/[^a-z0-9]+/g,"_")
     .replace(/^_+|_+$/g,"");
 }
-
 function genCode6(){
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
   for(let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
   return out;
 }
-
 function clampInt(v, min, max){
   if (v === "" || v === null || v === undefined) return null;
   const n = parseInt(String(v),10);
@@ -67,7 +73,6 @@ function clampInt(v, min, max){
 function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
-
 async function ensureNick(){
   let nick = getNick();
   while(!nick){
@@ -79,39 +84,26 @@ async function ensureNick(){
   localStorage.setItem(KEY_NICK, nick);
   return nick;
 }
-
 function refreshNickLabels(){
   const nick = getNick() || "—";
-  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
-  if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
-  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
+  const a = el("nickLabelWybor"); if(a) a.textContent = nick;
+  const b = el("nickLabelRoom"); if(b) b.textContent = nick;
 }
 
-// ---------- CONTINUE MODAL ----------
-function showContinueModal({ code, roomName }){
-  const modal = el("continueModal");
-  const text = el("continueText");
-  if (!modal || !text) return;
-
-  const rn = el("continueRoomName");
-  const rc = el("continueRoomCode");
-  if(rn) rn.textContent = roomName || "—";
-  if(rc) rc.textContent = code || "—";
-
-  text.textContent = "Czy chcesz kontynuować w tym pokoju, czy wrócić do wyboru pokoju?";
-  modal.style.display = "flex";
+// MODALE
+function openModal(id){
+  const m = el(id);
+  if(m) m.style.display = "flex";
 }
-
-function hideContinueModal(){
-  const modal = el("continueModal");
-  if (modal) modal.style.display = "none";
+function closeModal(id){
+  const m = el(id);
+  if(m) m.style.display = "none";
 }
-
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
 }
 
-// ---------- Firebase ----------
+// Firebase
 let app, auth, db;
 let userUid = null;
 
@@ -123,17 +115,16 @@ let unsubPicks = null;
 let currentRoomCode = null;
 let currentRoom = null;
 
-let matchesCache = [];   // [{id, home, away, idx}]
-let picksCache = {};     // matchId -> {h,a} (TY)
-let picksDocByUid = {};  // uid -> picks object
-let submittedByUid = {}; // uid -> boolean
+let matchesCache = [];
+let picksCache = {};
+let picksDocByUid = {};
+let submittedByUid = {};
 let lastPlayers = [];
 
-// ---------- status helpers ----------
+// status
 function isCompletePicksObject(picksObj){
   if(!matchesCache.length) return false;
   if(!picksObj || typeof picksObj !== "object") return false;
-
   for(const m of matchesCache){
     const p = picksObj[m.id];
     if(!p) return false;
@@ -141,7 +132,6 @@ function isCompletePicksObject(picksObj){
   }
   return true;
 }
-
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
@@ -149,9 +139,14 @@ function recomputeSubmittedMap(){
   }
 }
 
-// ---------- boot ----------
+// Firestore paths
+function roomRef(code){ return boot.doc(db, "rooms", code); }
+function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
+
+// boot
 async function boot(){
-  setBg(BG_TLO);
   setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
@@ -191,127 +186,128 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
-  // jeśli jest zapisany pokój -> pytanie kontynuacji
+  // start zawsze na wyborze
+  showScreen("wybor");
+
+  // jeśli zapisany pokój → modal kontynuacji nad wyborem
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved && saved.length === 6){
-    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam nazwę…`);
     try{
       const snap = await boot.getDoc(roomRef(saved));
       if(!snap.exists()){
         clearSavedRoom();
-        showScreen("menu");
         showToast("Zapisany pokój nie istnieje");
         return;
       }
       const room = snap.data();
-      showScreen("menu");
       prepareContinueModal(saved, room?.name || "—");
       return;
-    }catch(e){
+    }catch{
       clearSavedRoom();
-      showScreen("menu");
       showToast("Nie udało się sprawdzić pokoju");
       return;
     }
   }
-
-  showScreen("menu");
 }
 
 function prepareContinueModal(code, roomName){
+  const rn = el("continueRoomName"); if(rn) rn.textContent = roomName || "—";
+  const rc = el("continueRoomCode"); if(rc) rc.textContent = code || "—";
+
   const yes = el("btnContinueYes");
   const no = el("btnContinueNo");
   const forget = el("btnContinueForget");
 
   if(yes){
     yes.onclick = async ()=>{
-      hideContinueModal();
+      closeModal("continueModal");
       localStorage.setItem(KEY_ACTIVE_ROOM, code);
       await openRoom(code, { silent:true, force:true });
     };
   }
-
+  // uproszczenie: "Nie" → od razu okno pokoi
   if(no){
     no.onclick = ()=>{
-      hideContinueModal();
-      showScreen("rooms"); // bardziej naturalne niż menu
+      closeModal("continueModal");
+      openModal("roomsModal");
+      setTimeout(()=> el("inpJoinCode")?.focus(), 50);
     };
   }
-
   if(forget){
     forget.onclick = ()=>{
       clearSavedRoom();
-      hideContinueModal();
+      closeModal("continueModal");
       showToast("Zapomniano pokój");
-      showScreen("menu");
     };
   }
 
-  showContinueModal({ code, roomName });
+  openModal("continueModal");
 }
 
-// ---------- UI binding ----------
+// UI binding (z zabezpieczeniem przed null → brak crasha!)
 function bindUI(){
-  // MENU
-  el("btnOpenRooms").onclick = async ()=>{ showScreen("rooms"); el("debugRooms").textContent = "—"; };
-  el("btnChangeNickMenu").onclick = async ()=>{
+  const hsRooms = el("hsRooms");
+  const hsStats = el("hsStats");
+  const hsExit  = el("hsExit");
+
+  if(hsRooms) hsRooms.onclick = ()=>{ openModal("roomsModal"); el("debugRooms").textContent="—"; };
+  if(hsStats) hsStats.onclick = ()=> showToast("Statystyki — wkrótce ✅");
+  if(hsExit)  hsExit.onclick  = ()=>{
+    showToast("Zamykanie…");
+    try{ window.close(); }catch{}
+    setTimeout(()=> showToast("Jeśli nie zamknęło — zamknij kartę ręcznie."), 900);
+  };
+
+  const closeRooms = el("btnCloseRooms");
+  if(closeRooms) closeRooms.onclick = ()=> closeModal("roomsModal");
+
+  const chNick = el("btnChangeNick");
+  if(chNick) chNick.onclick = async ()=>{
     localStorage.removeItem(KEY_NICK);
     await ensureNick();
     refreshNickLabels();
     showToast("Zmieniono nick");
   };
 
-  // ROOMS
-  el("btnBackMenu").onclick = ()=> showScreen("menu");
-  el("btnChangeNickRooms").onclick = async ()=>{
-    localStorage.removeItem(KEY_NICK);
-    await ensureNick();
-    refreshNickLabels();
-    showToast("Zmieniono nick");
-  };
-
-  el("btnCreateRoom").onclick = async ()=>{
+  const btnCreate = el("btnCreateRoom");
+  if(btnCreate) btnCreate.onclick = async ()=>{
     const name = (el("inpRoomName").value || "").trim();
-    if(name.length < 2){
-      showToast("Podaj nazwę pokoju");
-      return;
-    }
+    if(name.length < 2){ showToast("Podaj nazwę pokoju"); return; }
     await createRoom(name);
   };
 
-  el("btnJoinRoom").onclick = async ()=>{
+  const btnJoin = el("btnJoinRoom");
+  if(btnJoin) btnJoin.onclick = async ()=>{
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
-    if(code.length !== 6){
-      showToast("Kod musi mieć 6 znaków");
-      return;
-    }
+    if(code.length !== 6){ showToast("Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
   };
 
   // ROOM
-  el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
-  el("btnCopyCode").onclick = async ()=>{
+  const btnBack = el("btnBackFromRoom");
+  if(btnBack) btnBack.onclick = ()=>{ showScreen("wybor"); };
+
+  const btnCopy = el("btnCopyCode");
+  if(btnCopy) btnCopy.onclick = async ()=>{
     if(!currentRoomCode) return;
-    try{
-      await navigator.clipboard.writeText(currentRoomCode);
-      showToast("Skopiowano kod");
-    }catch{
-      showToast("Nie udało się skopiować");
-    }
+    try{ await navigator.clipboard.writeText(currentRoomCode); showToast("Skopiowano kod"); }
+    catch{ showToast("Nie udało się skopiować"); }
   };
-  el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
-  el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
-  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+
+  const btnLeave = el("btnLeave");
+  if(btnLeave) btnLeave.onclick = async ()=>{ await leaveRoom(); };
+
+  const btnRefresh = el("btnRefresh");
+  if(btnRefresh) btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
+
+  const btnSave = el("btnSaveAll");
+  if(btnSave) btnSave.onclick = async ()=>{ await saveAllPicks(); };
+
+  const btnAddQ = el("btnAddQueue");
+  if(btnAddQ) btnAddQ.onclick = async ()=>{ await addTestQueue(); };
 }
 
-// ---------- Firestore paths ----------
-function roomRef(code){ return boot.doc(db, "rooms", code); }
-function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
-
-// ---------- Rooms logic ----------
+// Rooms logic
 async function createRoom(roomName){
   const nick = getNick();
   el("debugRooms").textContent = "Tworzę pokój…";
@@ -335,6 +331,7 @@ async function createRoom(roomName){
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
     el("debugRooms").textContent = `Utworzono pokój ${code}`;
+    closeModal("roomsModal");
     await openRoom(code);
     return;
   }
@@ -359,21 +356,19 @@ async function joinRoom(code){
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
   el("debugRooms").textContent = `Dołączono do ${code}`;
+  closeModal("roomsModal");
   await openRoom(code);
 }
 
 async function leaveRoom(){
   if(!currentRoomCode) return;
-  try{
-    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
-  }catch{}
+  try{ await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid)); }catch{}
 
   localStorage.removeItem(KEY_ACTIVE_ROOM);
   cleanupRoomListeners();
 
   currentRoomCode = null;
   currentRoom = null;
-
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -383,7 +378,7 @@ async function leaveRoom(){
   renderMatches();
   renderPlayers([]);
 
-  showScreen("rooms");
+  showScreen("wybor");
   showToast("Opuszczono pokój");
 }
 
@@ -394,7 +389,7 @@ function cleanupRoomListeners(){
   if(unsubPicks){ unsubPicks(); unsubPicks=null; }
 }
 
-// ---------- Open room + live ----------
+// Open room + live
 async function openRoom(code, opts={}){
   const { silent=false, force=false } = opts;
   code = (code||"").trim().toUpperCase();
@@ -409,7 +404,6 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
-  // reset
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -423,7 +417,6 @@ async function openRoom(code, opts={}){
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
 
-  // UI left
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
   el("roomCode").textContent = code;
@@ -440,7 +433,6 @@ async function openRoom(code, opts={}){
     el("btnAddQueue").style.display = isAdm ? "block" : "none";
   });
 
-  // live players
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
@@ -449,7 +441,6 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // live picks (status)
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -460,7 +451,6 @@ async function openRoom(code, opts={}){
     renderPlayers(lastPlayers);
   });
 
-  // live matches
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
   unsubMatches = boot.onSnapshot(mq, async (qs)=>{
     const arr = [];
@@ -479,36 +469,22 @@ async function openRoom(code, opts={}){
   if(!silent) showToast(`W pokoju: ${code}`);
 }
 
-// ---------- Picks (TY) ----------
+// Picks
 async function loadMyPicks(){
   try{
     const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
     const snap = await boot.getDoc(ref);
-    if(!snap.exists()){
-      picksCache = {};
-      return;
-    }
+    if(!snap.exists()){ picksCache = {}; return; }
     const data = snap.data();
     picksCache = data?.picks || {};
-  }catch{
-    picksCache = {};
-  }
+  }catch{ picksCache = {}; }
 }
-
-function allMyPicksFilled(){
-  return isCompletePicksObject(picksCache);
-}
+function allMyPicksFilled(){ return isCompletePicksObject(picksCache); }
 
 async function saveAllPicks(){
   if(!currentRoomCode) return;
-  if(!matchesCache.length){
-    showToast("Brak meczów");
-    return;
-  }
-  if(!allMyPicksFilled()){
-    showToast("Uzupełnij wszystkie typy");
-    return;
-  }
+  if(!matchesCache.length){ showToast("Brak meczów"); return; }
+  if(!allMyPicksFilled()){ showToast("Uzupełnij wszystkie typy"); return; }
 
   const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
   await boot.setDoc(ref, {
@@ -521,7 +497,7 @@ async function saveAllPicks(){
   showToast("Zapisano typy ✅");
 }
 
-// ---------- Render ----------
+// Render
 function renderPlayers(players){
   const box = el("playersList");
   if(!box) return;
@@ -558,8 +534,8 @@ function renderPlayers(players){
     left.appendChild(status);
 
     const right = document.createElement("div");
-    right.className = "row";
-    right.style.gap = "8px";
+    right.style.display="flex";
+    right.style.gap="8px";
 
     if(p.uid === adminUid){
       const b = document.createElement("div");
@@ -608,11 +584,10 @@ function renderMatches(){
 
     const leftTeam = document.createElement("div");
     leftTeam.className = "team";
-    const lLogo = createLogoImg(m.home);
+    leftTeam.appendChild(createLogoImg(m.home));
     const lName = document.createElement("div");
     lName.className = "teamName";
     lName.textContent = m.home || "—";
-    leftTeam.appendChild(lLogo);
     leftTeam.appendChild(lName);
 
     const rightTeam = document.createElement("div");
@@ -622,9 +597,8 @@ function renderMatches(){
     rName.className = "teamName";
     rName.style.textAlign = "right";
     rName.textContent = m.away || "—";
-    const rLogo = createLogoImg(m.away);
     rightTeam.appendChild(rName);
-    rightTeam.appendChild(rLogo);
+    rightTeam.appendChild(createLogoImg(m.away));
 
     const score = document.createElement("div");
     score.className = "scoreBox";
@@ -670,20 +644,16 @@ function renderMatches(){
 
   updateSaveButtonState();
 }
-
 function updateSaveButtonState(){
   const btn = el("btnSaveAll");
   if(!btn) return;
   btn.disabled = !allMyPicksFilled();
 }
 
-// ---------- test queue ----------
+// test queue
 async function addTestQueue(){
   if(!currentRoomCode) return;
-  if(currentRoom?.adminUid !== userUid){
-    showToast("Tylko admin");
-    return;
-  }
+  if(currentRoom?.adminUid !== userUid){ showToast("Tylko admin"); return; }
 
   const sample = [
     ["Jagiellonia","Piast"],
@@ -713,7 +683,7 @@ async function addTestQueue(){
   showToast("Dodano kolejkę (test)");
 }
 
-// ---------- start ----------
+// start
 (async()=>{
   try{
     setBg(BG_TLO);

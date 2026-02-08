@@ -52,7 +52,7 @@
     .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
       background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
 
-    /* COMMON UI */
+    /* COMMON */
     .panel{
       border:1px solid var(--stroke);
       border-radius:var(--r);
@@ -76,8 +76,6 @@
     .btn:disabled{opacity:.45;cursor:not-allowed}
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
     .chip{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.12);font-weight:900}
-    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
-    .sub{color:var(--muted);font-weight:700;font-size:13px}
     .row{display:flex;gap:10px;align-items:center}
     .col{display:flex;flex-direction:column;gap:10px}
     .spacer{flex:1}
@@ -92,6 +90,7 @@
       font-weight:900;
     }
     input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+
     .toast{
       position:absolute;left:18px;bottom:14px;
       background:rgba(0,0,0,.35);
@@ -99,12 +98,26 @@
       color:rgba(255,255,255,.85);
       padding:10px 14px;border-radius:16px;font-weight:800;
       display:none;
+      z-index:80;
     }
     .footerRight{
       position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
     }
 
-    /* ROOM LAYOUT */
+    /* WYBÓR */
+    #wybor{position:relative;align-items:center;justify-content:center}
+    .wyborHotspots{position:absolute;inset:0;pointer-events:none}
+    .hotspot{
+      position:absolute;
+      pointer-events:auto;
+      cursor:pointer;
+      border-radius:18px;
+      background:rgba(255,255,255,0.00);
+      border:0;
+      outline:none;
+    }
+
+    /* ROOM */
     #room{padding:16px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
@@ -119,16 +132,9 @@
       padding:12px 12px;
       display:flex;align-items:center;gap:12px;
     }
-    .team{
-      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
-      font-weight:1000;
-    }
+    .team{display:flex;align-items:center;gap:10px;min-width:0;flex:1;font-weight:1000}
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .logo{
-      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
-      background:rgba(255,255,255,.10);
-      object-fit:contain;
-    }
+    .logo{width:24px;height:24px;flex:0 0 24px;border-radius:6px;background:rgba(255,255,255,.10);object-fit:contain}
     .scoreBox{display:flex;align-items:center;gap:8px}
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
@@ -143,23 +149,10 @@
     }
     .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
 
-    /* ROOMS SCREEN */
-    #rooms{padding:16px;gap:14px}
-    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
-
-    /* MENU */
-    #menu{padding:16px}
-    .menuBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-
-    /* CONTINUE MODAL (TYPUJ STYLE) */
-    #continueModal{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:50;
+    /* MODALE */
+    .modal{
+      position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+      z-index:70;
       background:
         radial-gradient(1200px 600px at 50% 35%, rgba(60,140,255,.14), rgba(0,0,0,.55)),
         rgba(0,0,0,.45);
@@ -169,28 +162,25 @@
     }
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-    #continueCard{
-      width:min(820px,94%);
+    .modalCard{
+      width:min(860px,94%);
       border-radius:26px;
       border:1px solid rgba(255,255,255,.16);
-      background:
-        linear-gradient(180deg, rgba(8,22,52,.86), rgba(8,22,52,.66));
-      box-shadow:
-        0 22px 85px rgba(0,0,0,.62),
-        0 0 0 1px rgba(255,255,255,.06) inset;
+      background: linear-gradient(180deg, rgba(8,22,52,.86), rgba(8,22,52,.66));
+      box-shadow: 0 22px 85px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.06) inset;
       overflow:hidden;
       transform: translateY(8px) scale(.98);
       animation:popIn .18s ease-out forwards;
     }
     @keyframes popIn{to{transform: translateY(0) scale(1)}}
 
-    .continueTop{
+    .modalTop{
       display:flex;align-items:center;gap:12px;
       padding:16px 18px;
       border-bottom:1px solid rgba(255,255,255,.10);
       background:rgba(0,0,0,.10);
     }
-    .continueIcon{
+    .modalIcon{
       width:44px;height:44px;border-radius:16px;
       background:linear-gradient(180deg, rgba(70,170,255,.22), rgba(0,0,0,.20));
       border:1px solid rgba(255,255,255,.14);
@@ -198,78 +188,21 @@
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
       font-weight:1000;
     }
-    .continueIcon span{font-size:20px;opacity:.95}
-    .continueTitleWrap{display:flex;flex-direction:column;gap:2px;min-width:0}
-    #continueTitle{
-      font-size:22px;font-weight:1000;margin:0;
-      letter-spacing:.2px;
-    }
-    .continueSub{
-      color:rgba(255,255,255,.70);
-      font-weight:800;font-size:13px;
-    }
-
-    .continueBody{
-      padding:16px 18px 14px 18px;
-      display:flex;flex-direction:column;gap:12px;
-    }
-    .kv{
-      display:flex;gap:12px;flex-wrap:wrap;
-    }
-    .pill{
-      display:inline-flex;align-items:center;gap:10px;
-      padding:10px 12px;
-      border-radius:18px;
-      background:rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:900;
-    }
-    .pill b{opacity:.85}
-    .pillCode{
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.14));
-      border:1px solid rgba(255,255,255,.14);
-    }
-    .pillCode .code{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      letter-spacing: 1px;
-      font-weight:1000;
-      padding:4px 8px;
-      border-radius:12px;
-      background:rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.10);
-    }
-
-    #continueText{
-      margin:0;
-      color:rgba(255,255,255,.82);
-      font-weight:850;
-      white-space:pre-wrap;
-      line-height:1.35;
-    }
-
-    .continueActions{
+    .modalIcon span{font-size:20px;opacity:.95}
+    .modalTitle{font-size:22px;font-weight:1000;letter-spacing:.2px;}
+    .modalSub{color:rgba(255,255,255,.70);font-weight:800;font-size:13px;}
+    .modalBody{padding:16px 18px 14px 18px;display:flex;flex-direction:column;gap:12px;}
+    .modalActions{
       display:flex;gap:10px;align-items:center;flex-wrap:wrap;
       padding:14px 18px 18px 18px;
       border-top:1px solid rgba(255,255,255,.10);
       background:rgba(0,0,0,.08);
     }
-
-    /* ładniejsze przyciski do modala */
-    .btnOk{
-      background:linear-gradient(180deg, rgba(40,255,160,.22), rgba(255,255,255,.08));
-      border:1px solid rgba(60,255,170,.35);
-    }
+    .btnOk{background:linear-gradient(180deg, rgba(40,255,160,.22), rgba(255,255,255,.08));border:1px solid rgba(60,255,170,.35)}
     .btnOk:hover{background:linear-gradient(180deg, rgba(40,255,160,.28), rgba(255,255,255,.10))}
-    .btnNo{
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.14);
-    }
-    .btnDanger{
-      margin-left:auto;
-      background:linear-gradient(180deg, rgba(255,80,80,.18), rgba(255,255,255,.06));
-      border:1px solid rgba(255,90,90,.35);
-    }
+    .btnDanger{margin-left:auto;background:linear-gradient(180deg, rgba(255,80,80,.18), rgba(255,255,255,.06));border:1px solid rgba(255,90,90,.35)}
     .btnDanger:hover{background:linear-gradient(180deg, rgba(255,80,80,.24), rgba(255,255,255,.08))}
+    .help{color:rgba(255,255,255,.72);font-weight:800;font-size:13px}
   </style>
 </head>
 
@@ -278,36 +211,6 @@
 
   <div id="app">
     <div class="frame">
-
-      <!-- CONTINUE MODAL -->
-      <div id="continueModal">
-        <div id="continueCard">
-          <div class="continueTop">
-            <div class="continueIcon"><span>⏱️</span></div>
-            <div class="continueTitleWrap">
-              <div id="continueTitle">Kontynuować?</div>
-              <div class="continueSub">Wykryto wcześniejszą rozgrywkę</div>
-            </div>
-            <div class="spacer"></div>
-            <div class="chip">Typer</div>
-          </div>
-
-          <div class="continueBody">
-            <div class="kv">
-              <div class="pill"><b>Pokój:</b> <span id="continueRoomName">—</span></div>
-              <div class="pill pillCode"><b>Kod:</b> <span class="code" id="continueRoomCode">—</span></div>
-            </div>
-
-            <p id="continueText">Czy chcesz kontynuować?</p>
-          </div>
-
-          <div class="continueActions">
-            <button class="btn btnOk" id="btnContinueYes">✅ Tak, kontynuuj</button>
-            <button class="btn btnNo" id="btnContinueNo">↩️ Nie, wybierz pokój</button>
-            <button class="btn btnDanger" id="btnContinueForget">🗑️ Zapomnij pokój</button>
-          </div>
-        </div>
-      </div>
 
       <!-- SPLASH -->
       <section id="splash" class="screen active">
@@ -319,73 +222,95 @@
         </div>
       </section>
 
-      <!-- MENU -->
-      <section id="menu" class="screen">
-        <div class="menuBox panel">
-          <div class="row">
-            <div class="chip">Menu</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnChangeNickMenu">Zmień nick</button>
-          </div>
+      <!-- WYBÓR -->
+      <section id="wybor" class="screen">
+        <div class="wyborHotspots">
+          <button id="hsRooms" class="hotspot" aria-label="Pokoje typerów"
+            style="left:22%; top:44.5%; width:22%; height:12%;"></button>
 
-          <div class="panel block">
-            <h2>Liga typerów</h2>
-            <div class="help">Wejście do pokoi (FireStore).</div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn" id="btnOpenRooms">Wejdź</button>
-              <div class="spacer"></div>
-              <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
-            </div>
-          </div>
+          <button id="hsStats" class="hotspot" aria-label="Statystyki"
+            style="left:39%; top:44.5%; width:22%; height:12%;"></button>
 
-          <div class="panel block">
-            <h2>Info</h2>
-            <div class="help">To jest wersja z Firestore. Pokoje i gracze są współdzielone.</div>
-          </div>
+          <button id="hsExit" class="hotspot" aria-label="Wyjście"
+            style="left:56%; top:44.5%; width:22%; height:12%;"></button>
         </div>
       </section>
 
-      <!-- ROOMS -->
-      <section id="rooms" class="screen">
-        <div class="roomsBox panel">
-          <div class="row">
-            <div class="chip">Liga</div>
-            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
+      <!-- MODAL: KONTYNUACJA -->
+      <div id="continueModal" class="modal">
+        <div class="modalCard">
+          <div class="modalTop">
+            <div class="modalIcon"><span>⏱️</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <div class="modalTitle">Kontynuować?</div>
+              <div class="modalSub">Wykryto wcześniejszą rozgrywkę</div>
+            </div>
             <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
-            <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
+            <div class="chip">Typer</div>
           </div>
 
-          <div class="panel block">
-            <h2>Nowy pokój</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
-              <button class="btn" id="btnCreateRoom">Utwórz</button>
+          <div class="modalBody">
+            <div class="row" style="flex-wrap:wrap">
+              <div class="chip">Pokój: <b id="continueRoomName">—</b></div>
+              <div class="chip">Kod: <b id="continueRoomCode" style="font-family:ui-monospace,monospace;letter-spacing:1px">—</b></div>
             </div>
-            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            <div class="help">Czy chcesz kontynuować w tym pokoju, czy wrócić do wyboru pokoju?</div>
           </div>
 
-          <div class="panel block">
-            <h2>Dołącz do pokoju</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
-              <button class="btn" id="btnJoinRoom">Dołącz</button>
+          <div class="modalActions">
+            <button class="btn btnOk" id="btnContinueYes">✅ Tak, kontynuuj</button>
+            <button class="btn" id="btnContinueNo">↩️ Nie, wybierz pokój</button>
+            <button class="btn btnDanger" id="btnContinueForget">🗑️ Zapomnij pokój</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: POKOJE (JOIN/CREATE) -->
+      <div id="roomsModal" class="modal">
+        <div class="modalCard">
+          <div class="modalTop">
+            <div class="modalIcon"><span>👥</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <div class="modalTitle">Pokoje typerów</div>
+              <div class="modalSub">Szybkie wejście bez dodatkowych ekranów</div>
             </div>
-            <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
+            <div class="spacer"></div>
+            <div class="chip">Nick: <b id="nickLabelWybor">—</b></div>
           </div>
 
-          <div class="panel block">
-            <h2>Debug</h2>
+          <div class="modalBody">
+            <div class="panel" style="padding:14px">
+              <div style="font-weight:1000;font-size:18px;margin-bottom:6px">Dołącz do pokoju</div>
+              <div class="row" style="margin-top:8px">
+                <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
+                <button class="btn btnOk" id="btnJoinRoom">Dołącz</button>
+              </div>
+              <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div style="font-weight:1000;font-size:18px;margin-bottom:6px">Utwórz nowy pokój</div>
+              <div class="row" style="margin-top:8px">
+                <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
+                <button class="btn" id="btnCreateRoom">Utwórz</button>
+              </div>
+              <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            </div>
+
             <div class="help" id="debugRooms">—</div>
           </div>
+
+          <div class="modalActions">
+            <button class="btn" id="btnChangeNick">Zmień nick</button>
+            <button class="btn" id="btnCloseRooms">Wróć</button>
+          </div>
         </div>
-      </section>
+      </div>
 
       <!-- ROOM -->
       <section id="room" class="screen">
         <div id="roomRoot" style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
 
-          <!-- LEFT -->
           <div class="leftBar panel">
             <div class="col" style="gap:10px">
               <div class="chip">Pokój</div>
@@ -394,7 +319,7 @@
 
             <div class="panel" style="padding:14px">
               <div class="title" id="roomName">—</div>
-              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
+              <div class="help">Admin: <b id="roomAdmin">—</b></div>
               <div class="row" style="margin-top:10px">
                 <div class="chip" style="flex:1;justify-content:space-between;">
                   Kod: <span id="roomCode">—</span>
@@ -408,8 +333,8 @@
             </div>
 
             <div class="panel" style="padding:14px">
-              <div class="title">Akcje</div>
-              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              <div style="font-weight:1000;font-size:18px;margin-bottom:6px">Akcje</div>
+              <div class="help">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
                 <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
@@ -420,13 +345,12 @@
             <button class="btn" id="btnBackFromRoom">Wróć</button>
           </div>
 
-          <!-- MIDDLE -->
           <div class="mid">
             <div class="panel midHead">
               <div class="row">
                 <div>
-                  <div class="title">Spotkania</div>
-                  <div class="sub">Uzupełnij wyniki (0–20). Jedno zapisanie dla całej listy.</div>
+                  <div style="font-size:22px;font-weight:1000;margin-bottom:2px">Spotkania</div>
+                  <div class="help">Uzupełnij wyniki (0–20). Jedno zapisanie dla całej listy.</div>
                 </div>
                 <div class="spacer"></div>
                 <div class="chip">Mecze: <span id="matchesCount">0</span></div>
@@ -436,11 +360,10 @@
             <div class="panel matchesWrap" id="matchesList"></div>
           </div>
 
-          <!-- RIGHT -->
           <div class="rightBar panel">
             <div>
-              <div class="title">Gracze</div>
-              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
+              <div style="font-size:22px;font-weight:1000;margin-bottom:2px">Gracze</div>
+              <div class="help">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
             </div>
             <div class="playersList" id="playersList"></div>
           </div>
@@ -469,6 +392,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1210"></script>
+  <script type="module" src="./app.js?v=1212"></script>
 </body>
 </html>
