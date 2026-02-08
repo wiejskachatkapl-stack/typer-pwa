@@ -1,4 +1,4 @@
-const BUILD = 1211;
+const BUILD = 1214;
 
 const BG_TLO = "img_tlo.png";
 const BG_WYBOR = "img_wybor.png";
@@ -16,19 +16,20 @@ const firebaseConfig = {
   measurementId: "G-5FBDH5G15N"
 };
 
-// ---------- helpers ----------
 const el = (id) => document.getElementById(id);
 
 function setBg(src){
   const bg = el("bg");
   if (bg) bg.style.backgroundImage = `url("${src}")`;
 }
-
+function setWyborImg(src){
+  const w = el("wyborImg");
+  if (w) w.style.backgroundImage = `url("${src}")`;
+}
 function setFooter(txt){
   const f = el("footerRight");
   if (f) f.textContent = txt;
 }
-
 function showToast(msg){
   const t = el("toast");
   if (!t) return;
@@ -37,18 +38,17 @@ function showToast(msg){
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=> t.style.display="none", 2600);
 }
-
 function showScreen(id){
-  ["splash","wybor","rooms","room"].forEach(s=>{
+  ["splash","wybor","room"].forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
 
-  // tła per ekran
-  if(id === "wybor") setBg(BG_WYBOR);
-  else setBg(BG_TLO);
+  setBg(BG_TLO);
+  if(id === "wybor"){
+    setWyborImg(BG_WYBOR);
+  }
 }
-
 function setSplash(msg){
   const h = el("splashHint");
   if (h) h.textContent = msg;
@@ -63,14 +63,12 @@ function normalizeSlug(s){
     .replace(/[^a-z0-9]+/g,"_")
     .replace(/^_+|_+$/g,"");
 }
-
 function genCode6(){
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
   for(let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
   return out;
 }
-
 function clampInt(v, min, max){
   if (v === "" || v === null || v === undefined) return null;
   const n = parseInt(String(v),10);
@@ -81,7 +79,6 @@ function clampInt(v, min, max){
 function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
-
 async function ensureNick(){
   let nick = getNick();
   while(!nick){
@@ -93,41 +90,25 @@ async function ensureNick(){
   localStorage.setItem(KEY_NICK, nick);
   return nick;
 }
-
 function refreshNickLabels(){
   const nick = getNick() || "—";
-  if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
-  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
+  const a = el("nickLabelWybor"); if(a) a.textContent = nick;
+  const b = el("nickLabelRoom"); if(b) b.textContent = nick;
 }
 
-// ---------- CONTINUE MODAL ----------
-function showContinueModal({ code, roomName }){
-  const modal = el("continueModal");
-  if (!modal) return;
-
-  const rn = el("continueRoomName");
-  const rc = el("continueRoomCode");
-  if(rn) rn.textContent = roomName || "—";
-  if(rc) rc.textContent = code || "—";
-
-  const text = el("continueText");
-  if(text){
-    text.textContent = "Czy chcesz kontynuować w tym pokoju, czy wrócić do wyboru pokoju?";
-  }
-
-  modal.style.display = "flex";
+function openModal(id){
+  const m = el(id);
+  if(m) m.style.display = "flex";
 }
-
-function hideContinueModal(){
-  const modal = el("continueModal");
-  if (modal) modal.style.display = "none";
+function closeModal(id){
+  const m = el(id);
+  if(m) m.style.display = "none";
 }
-
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
 }
 
-// ---------- Firebase ----------
+// Firebase
 let app, auth, db;
 let userUid = null;
 
@@ -145,11 +126,9 @@ let picksDocByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
 
-// ---------- status helpers ----------
 function isCompletePicksObject(picksObj){
   if(!matchesCache.length) return false;
   if(!picksObj || typeof picksObj !== "object") return false;
-
   for(const m of matchesCache){
     const p = picksObj[m.id];
     if(!p) return false;
@@ -157,7 +136,6 @@ function isCompletePicksObject(picksObj){
   }
   return true;
 }
-
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
@@ -165,21 +143,19 @@ function recomputeSubmittedMap(){
   }
 }
 
-// ---------- Firestore paths ----------
+// Firestore paths
 function roomRef(code){ return boot.doc(db, "rooms", code); }
 function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
 function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
 function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
-// ---------- boot ----------
 async function boot(){
-  setBg(BG_TLO);
   setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
   const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
   const {
-    getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
+    getFirestore, doc, getDoc, setDoc, serverTimestamp,
     collection, query, orderBy, onSnapshot,
     writeBatch, deleteDoc
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
@@ -188,7 +164,7 @@ async function boot(){
   auth = getAuth(app);
   db = getFirestore(app);
 
-  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
+  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
   boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc;
@@ -213,128 +189,145 @@ async function boot(){
   refreshNickLabels();
   bindUI();
 
-  // Start zawsze na EKRANIE WYBORU
   showScreen("wybor");
 
-  // Jeśli jest zapisany pokój -> pokaż modal nad wyborem
+  // Kontynuacja: pojawia się dopiero po pokazaniu wyboru
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved && saved.length === 6){
-    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam nazwę…`);
-    try{
-      const snap = await boot.getDoc(roomRef(saved));
-      if(!snap.exists()){
+    setTimeout(async ()=>{
+      try{
+        const snap = await boot.getDoc(roomRef(saved));
+        if(!snap.exists()){
+          clearSavedRoom();
+          showToast("Zapisany pokój nie istnieje");
+          return;
+        }
+        const room = snap.data();
+        prepareContinueModal(saved, room?.name || "—");
+      }catch{
         clearSavedRoom();
-        showToast("Zapisany pokój nie istnieje");
-        showScreen("wybor");
-        return;
+        showToast("Nie udało się sprawdzić pokoju");
       }
-      const room = snap.data();
-      prepareContinueModal(saved, room?.name || "—");
-      return;
-    }catch(e){
-      clearSavedRoom();
-      showToast("Nie udało się sprawdzić pokoju");
-      showScreen("wybor");
-      return;
-    }
+    }, 80);
   }
 }
 
 function prepareContinueModal(code, roomName){
+  const rn = el("continueRoomName"); if(rn) rn.textContent = roomName || "—";
+  const rc = el("continueRoomCode"); if(rc) rc.textContent = code || "—";
+
   const yes = el("btnContinueYes");
   const no = el("btnContinueNo");
   const forget = el("btnContinueForget");
 
   if(yes){
     yes.onclick = async ()=>{
-      hideContinueModal();
+      closeModal("continueModal");
       localStorage.setItem(KEY_ACTIVE_ROOM, code);
       await openRoom(code, { silent:true, force:true });
     };
   }
-
-  // UPROSZCZENIE: "Nie" od razu do pokoi (żeby mniej klikać)
   if(no){
     no.onclick = ()=>{
-      hideContinueModal();
-      showScreen("rooms");
-      setTimeout(()=> el("inpJoinCode")?.focus(), 50);
+      closeModal("continueModal");
+      openRoomsModal();
     };
   }
-
   if(forget){
     forget.onclick = ()=>{
       clearSavedRoom();
-      hideContinueModal();
+      closeModal("continueModal");
       showToast("Zapomniano pokój");
-      showScreen("wybor");
     };
   }
 
-  showContinueModal({ code, roomName });
+  openModal("continueModal");
 }
 
-// ---------- UI binding ----------
+function openRoomsModal(){
+  openModal("roomsModal");
+  el("debugRooms").textContent = "—";
+  refreshNickLabels();
+  setTimeout(()=>{
+    el("inpJoinCode")?.focus();
+    el("inpJoinCode")?.select?.();
+  }, 60);
+}
+
 function bindUI(){
-  // HOTSPOTY z img_wybor.png
-  el("hsRooms").onclick = ()=>{ showScreen("rooms"); el("debugRooms").textContent="—"; };
-  el("hsStats").onclick = ()=>{ showToast("Statystyki — wkrótce ✅"); };
-  el("hsExit").onclick = ()=>{
+  const hsRooms = el("hsRooms");
+  const hsStats = el("hsStats");
+  const hsExit  = el("hsExit");
+
+  if(hsRooms) hsRooms.onclick = ()=> openRoomsModal();
+  if(hsStats) hsStats.onclick = ()=> showToast("Statystyki — wkrótce ✅");
+  if(hsExit)  hsExit.onclick  = ()=>{
     showToast("Zamykanie…");
-    try{
-      window.close();
-      setTimeout(()=> showToast("Przeglądarka zwykle nie pozwala zamknąć zakładki. Zamknij ręcznie."), 900);
-    }catch{
-      showToast("Zamknij kartę ręcznie.");
-    }
+    try{ window.close(); }catch{}
+    setTimeout(()=> showToast("Jeśli nie zamknęło — zamknij kartę ręcznie."), 900);
   };
 
-  // ROOMS
-  el("btnBackToWybor").onclick = ()=> showScreen("wybor");
+  const closeRooms = el("btnCloseRooms");
+  if(closeRooms) closeRooms.onclick = ()=> closeModal("roomsModal");
 
-  el("btnChangeNickRooms").onclick = async ()=>{
+  const chNick = el("btnChangeNick");
+  if(chNick) chNick.onclick = async ()=>{
     localStorage.removeItem(KEY_NICK);
     await ensureNick();
     refreshNickLabels();
     showToast("Zmieniono nick");
+    setTimeout(()=> el("inpJoinCode")?.focus(), 60);
   };
 
-  el("btnCreateRoom").onclick = async ()=>{
+  // ENTER w polu kodu = DOŁĄCZ
+  const joinInput = el("inpJoinCode");
+  if(joinInput){
+    joinInput.addEventListener("keydown", (ev)=>{
+      if(ev.key === "Enter"){
+        ev.preventDefault();
+        el("btnJoinRoom")?.click();
+      }
+    });
+  }
+
+  const btnCreate = el("btnCreateRoom");
+  if(btnCreate) btnCreate.onclick = async ()=>{
     const name = (el("inpRoomName").value || "").trim();
-    if(name.length < 2){
-      showToast("Podaj nazwę pokoju");
-      return;
-    }
+    if(name.length < 2){ showToast("Podaj nazwę pokoju"); return; }
     await createRoom(name);
   };
 
-  el("btnJoinRoom").onclick = async ()=>{
+  const btnJoin = el("btnJoinRoom");
+  if(btnJoin) btnJoin.onclick = async ()=>{
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
-    if(code.length !== 6){
-      showToast("Kod musi mieć 6 znaków");
-      return;
-    }
+    if(code.length !== 6){ showToast("Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
   };
 
-  // ROOM
-  el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
-  el("btnCopyCode").onclick = async ()=>{
+  const btnBack = el("btnBackFromRoom");
+  if(btnBack) btnBack.onclick = ()=>{ showScreen("wybor"); };
+
+  const btnCopy = el("btnCopyCode");
+  if(btnCopy) btnCopy.onclick = async ()=>{
     if(!currentRoomCode) return;
-    try{
-      await navigator.clipboard.writeText(currentRoomCode);
-      showToast("Skopiowano kod");
-    }catch{
-      showToast("Nie udało się skopiować");
-    }
+    try{ await navigator.clipboard.writeText(currentRoomCode); showToast("Skopiowano kod"); }
+    catch{ showToast("Nie udało się skopiować"); }
   };
-  el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
-  el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
-  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+
+  const btnLeave = el("btnLeave");
+  if(btnLeave) btnLeave.onclick = async ()=>{ await leaveRoom(); };
+
+  const btnRefresh = el("btnRefresh");
+  if(btnRefresh) btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
+
+  const btnSave = el("btnSaveAll");
+  if(btnSave) btnSave.onclick = async ()=>{ await saveAllPicks(); };
+
+  const btnAddQ = el("btnAddQueue");
+  if(btnAddQ) btnAddQ.onclick = async ()=>{ await addTestQueue(); };
 }
 
-// ---------- Rooms logic ----------
+// Rooms logic
 async function createRoom(roomName){
   const nick = getNick();
   el("debugRooms").textContent = "Tworzę pokój…";
@@ -358,6 +351,7 @@ async function createRoom(roomName){
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
     el("debugRooms").textContent = `Utworzono pokój ${code}`;
+    closeModal("roomsModal");
     await openRoom(code);
     return;
   }
@@ -382,21 +376,19 @@ async function joinRoom(code){
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
   el("debugRooms").textContent = `Dołączono do ${code}`;
+  closeModal("roomsModal");
   await openRoom(code);
 }
 
 async function leaveRoom(){
   if(!currentRoomCode) return;
-  try{
-    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
-  }catch{}
+  try{ await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid)); }catch{}
 
   localStorage.removeItem(KEY_ACTIVE_ROOM);
   cleanupRoomListeners();
 
   currentRoomCode = null;
   currentRoom = null;
-
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -406,7 +398,7 @@ async function leaveRoom(){
   renderMatches();
   renderPlayers([]);
 
-  showScreen("rooms");
+  showScreen("wybor");
   showToast("Opuszczono pokój");
 }
 
@@ -417,7 +409,7 @@ function cleanupRoomListeners(){
   if(unsubPicks){ unsubPicks(); unsubPicks=null; }
 }
 
-// ---------- Open room + live ----------
+// Open room + live
 async function openRoom(code, opts={}){
   const { silent=false, force=false } = opts;
   code = (code||"").trim().toUpperCase();
@@ -432,7 +424,6 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
-  // reset
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -446,7 +437,6 @@ async function openRoom(code, opts={}){
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
 
-  // UI left
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
   el("roomCode").textContent = code;
@@ -463,7 +453,6 @@ async function openRoom(code, opts={}){
     el("btnAddQueue").style.display = isAdm ? "block" : "none";
   });
 
-  // live players
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
@@ -472,7 +461,6 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // live picks (status)
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -483,7 +471,6 @@ async function openRoom(code, opts={}){
     renderPlayers(lastPlayers);
   });
 
-  // live matches
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
   unsubMatches = boot.onSnapshot(mq, async (qs)=>{
     const arr = [];
@@ -502,36 +489,22 @@ async function openRoom(code, opts={}){
   if(!silent) showToast(`W pokoju: ${code}`);
 }
 
-// ---------- Picks (TY) ----------
+// Picks
 async function loadMyPicks(){
   try{
     const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
     const snap = await boot.getDoc(ref);
-    if(!snap.exists()){
-      picksCache = {};
-      return;
-    }
+    if(!snap.exists()){ picksCache = {}; return; }
     const data = snap.data();
     picksCache = data?.picks || {};
-  }catch{
-    picksCache = {};
-  }
+  }catch{ picksCache = {}; }
 }
-
-function allMyPicksFilled(){
-  return isCompletePicksObject(picksCache);
-}
+function allMyPicksFilled(){ return isCompletePicksObject(picksCache); }
 
 async function saveAllPicks(){
   if(!currentRoomCode) return;
-  if(!matchesCache.length){
-    showToast("Brak meczów");
-    return;
-  }
-  if(!allMyPicksFilled()){
-    showToast("Uzupełnij wszystkie typy");
-    return;
-  }
+  if(!matchesCache.length){ showToast("Brak meczów"); return; }
+  if(!allMyPicksFilled()){ showToast("Uzupełnij wszystkie typy"); return; }
 
   const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
   await boot.setDoc(ref, {
@@ -544,7 +517,7 @@ async function saveAllPicks(){
   showToast("Zapisano typy ✅");
 }
 
-// ---------- Render ----------
+// Render
 function renderPlayers(players){
   const box = el("playersList");
   if(!box) return;
@@ -575,14 +548,13 @@ function renderPlayers(players){
     status.style.fontSize = "18px";
     status.style.lineHeight = "1";
     status.style.color = ok ? "#33ff88" : "#ff4d4d";
-    status.title = ok ? "Typy zapisane" : "Brak zapisanych typów";
 
     left.appendChild(name);
     left.appendChild(status);
 
     const right = document.createElement("div");
-    right.className = "row";
-    right.style.gap = "8px";
+    right.style.display="flex";
+    right.style.gap="8px";
 
     if(p.uid === adminUid){
       const b = document.createElement("div");
@@ -631,11 +603,10 @@ function renderMatches(){
 
     const leftTeam = document.createElement("div");
     leftTeam.className = "team";
-    const lLogo = createLogoImg(m.home);
+    leftTeam.appendChild(createLogoImg(m.home));
     const lName = document.createElement("div");
     lName.className = "teamName";
     lName.textContent = m.home || "—";
-    leftTeam.appendChild(lLogo);
     leftTeam.appendChild(lName);
 
     const rightTeam = document.createElement("div");
@@ -645,9 +616,8 @@ function renderMatches(){
     rName.className = "teamName";
     rName.style.textAlign = "right";
     rName.textContent = m.away || "—";
-    const rLogo = createLogoImg(m.away);
     rightTeam.appendChild(rName);
-    rightTeam.appendChild(rLogo);
+    rightTeam.appendChild(createLogoImg(m.away));
 
     const score = document.createElement("div");
     score.className = "scoreBox";
@@ -693,20 +663,16 @@ function renderMatches(){
 
   updateSaveButtonState();
 }
-
 function updateSaveButtonState(){
   const btn = el("btnSaveAll");
   if(!btn) return;
   btn.disabled = !allMyPicksFilled();
 }
 
-// ---------- test queue ----------
+// test queue
 async function addTestQueue(){
   if(!currentRoomCode) return;
-  if(currentRoom?.adminUid !== userUid){
-    showToast("Tylko admin");
-    return;
-  }
+  if(currentRoom?.adminUid !== userUid){ showToast("Tylko admin"); return; }
 
   const sample = [
     ["Jagiellonia","Piast"],
@@ -736,7 +702,7 @@ async function addTestQueue(){
   showToast("Dodano kolejkę (test)");
 }
 
-// ---------- start ----------
+// start
 (async()=>{
   try{
     setBg(BG_TLO);
