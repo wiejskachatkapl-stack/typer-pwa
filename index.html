@@ -19,9 +19,27 @@
       --r: 22px;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
-    #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
-    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:1}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      overflow:hidden
+    }
+
+    #bg{
+      position:fixed;inset:0;
+      background:#071229 center/cover no-repeat;
+      z-index:0;
+      transition: background-image .25s ease;
+    }
+
+    #app{
+      position:fixed;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      padding:14px;z-index:1
+    }
+
     .frame{
       width:min(1580px,96vw);
       height:min(920px,94vh);
@@ -32,6 +50,7 @@
       backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
       overflow:hidden;position:relative;
     }
+
     .screen{display:none;height:100%;width:100%}
     .screen.active{display:flex}
 
@@ -49,8 +68,12 @@
     }
     @keyframes spin{to{transform:rotate(360deg)}}
     .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
-    .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
-      background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
+    .err{
+      margin-top:10px;padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);
+      display:none;white-space:pre-wrap
+    }
 
     /* COMMON UI */
     .panel{
@@ -75,7 +98,14 @@
     .btn:hover{background:rgba(255,255,255,.14)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
-    .chip{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.12);font-weight:900}
+
+    .chip{
+      display:inline-flex;gap:10px;align-items:center;
+      padding:10px 14px;border-radius:18px;
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:900
+    }
     .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
     .sub{color:var(--muted);font-weight:700;font-size:13px}
     .row{display:flex;gap:10px;align-items:center}
@@ -92,6 +122,7 @@
       font-weight:900;
     }
     input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+
     .toast{
       position:absolute;left:18px;bottom:14px;
       background:rgba(0,0,0,.35);
@@ -99,65 +130,138 @@
       color:rgba(255,255,255,.85);
       padding:10px 14px;border-radius:16px;font-weight:800;
       display:none;
+      z-index:99;
     }
     .footerRight{
-      position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
+      position:absolute;right:18px;bottom:14px;
+      color:rgba(255,255,255,.55);font-size:12px;font-weight:800
     }
 
-    /* MENU (img_wybor.png + hotspoty) */
-    #menu{align-items:center;justify-content:center;padding:0}
-    .menuStage{
+    /* HOME (img_wybor.png + PNG buttons) */
+    #home{
+      align-items:center;
+      justify-content:center;
+      padding:20px;
       position:relative;
-      width:100%;
-      height:100%;
     }
-    .menuBg{
-      position:absolute; inset:0;
-      background:center/cover no-repeat;
-      filter: blur(14px);
-      transform: scale(1.06);
-      opacity:.95;
+    .homeWrap{
+      width:min(1200px,96%);
+      height:min(700px,90%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:22px;
     }
-    .menuCard{
-      position:absolute; inset:18px;
-      border-radius:26px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(0,0,0,.08);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      overflow:hidden;
+    .homeBtns{
+      display:flex;
+      gap:26px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      padding-top:10px;
     }
-    .menuImage{
-      position:absolute; inset:0;
-      background:center/contain no-repeat;
-    }
-
-    /* Hotspoty klikane na przyciskach (dopasowane do grafiki 1536x864) */
-    .hotspot{
-      position:absolute;
+    .imgBtn{
       border:0;
-      background:rgba(255,255,255,0.0); /* niewidoczne */
+      background:transparent;
+      padding:0;
       cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition: transform .12s ease, filter .12s ease;
+      user-select:none;
+    }
+    .imgBtn:hover{ transform: translateY(-2px) scale(1.02); filter: brightness(1.06); }
+    .imgBtn:active{ transform: translateY(0px) scale(0.99); filter: brightness(0.98); }
+    .imgBtn img{
+      height:100px;
+      width:auto;
+      display:block;
+    }
+    @media (max-width: 980px){
+      .imgBtn img{ height:86px; }
+      .homeBtns{ gap:18px; }
+    }
+    @media (max-width: 640px){
+      .imgBtn img{ height:78px; }
+    }
+
+    /* CONTINUE SCREEN */
+    #continue{
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .continueCard{
+      width:min(980px,94%);
+      padding:18px;
+      border-radius:24px;
+    }
+    .continueTop{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 12px 16px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      margin-bottom:14px;
+    }
+    .continueIcon{
+      width:44px;height:44px;border-radius:14px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:1000;
+    }
+    .continueTitle{
+      font-size:22px;
+      font-weight:1000;
+      margin:0;
+      line-height:1.1;
+    }
+    .continueSub{
+      color:rgba(255,255,255,.78);
+      font-weight:800;
+      margin-top:4px;
+      font-size:13px;
+    }
+    .continueGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      margin-top:10px;
+    }
+    @media (max-width: 860px){
+      .continueGrid{ grid-template-columns:1fr; }
+    }
+    .miniBox{
+      padding:14px;
       border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
     }
-    .hotspot:hover{
-      background:rgba(255,255,255,0.08); /* delikatny podświetlacz */
-      outline:1px solid rgba(255,255,255,0.10);
-      backdrop-filter: blur(2px);
+    .bigAsk{
+      margin-top:14px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.14);
+      font-weight:900;
     }
-
-    /* Pozycje procentowe – działają responsywnie */
-    /* Ustawione na środek trzech dużych przycisków z Twojego img_wybor.png */
-    #btnWyborRooms{ left:18%; top:46%; width:22%; height:13%; }
-    #btnWyborStats{ left:39%; top:46%; width:22%; height:13%; }
-    #btnWyborExit { left:60%; top:46%; width:22%; height:13%; }
-
-    /* ROOMS SCREEN */
-    #rooms{padding:16px;gap:14px}
-    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
+    .continueActions{
+      display:flex;
+      gap:12px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+    .btnGreen{
+      background:rgba(40, 170, 110, .22);
+      border:1px solid rgba(90,255,170,.30);
+    }
+    .btnRed{
+      background:rgba(210, 60, 80, .18);
+      border:1px solid rgba(255,120,140,.28);
+    }
 
     /* ROOM LAYOUT */
     #room{padding:16px;gap:14px;align-items:stretch}
@@ -198,45 +302,17 @@
     }
     .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
 
-    /* CONTINUE MODAL (ładniejszy) */
-    #continueModal{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:50;
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    #continueCard{
-      width:min(820px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(8,22,52,.78);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      overflow:hidden;
-    }
-    .cHead{
-      display:flex; align-items:center; gap:12px;
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      background:linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,0));
-    }
-    .cIcon{
-      width:36px;height:36px;border-radius:12px;
-      background:rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.10);
-      display:flex;align-items:center;justify-content:center;
-      font-weight:1000;
-    }
-    .cTitle{font-size:20px;font-weight:1000;margin:0}
-    .cSub{margin:0;color:rgba(255,255,255,.70);font-weight:800;font-size:12px}
-    .cBody{padding:14px 16px}
-    #continueText{color:rgba(255,255,255,.88);font-weight:850;white-space:pre-wrap;margin:0 0 14px 0}
-    .cBtns{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .btnOk{background:rgba(20,170,110,.20);border-color:rgba(60,255,190,.25)}
-    .btnNo{background:rgba(90,120,255,.16);border-color:rgba(120,160,255,.22)}
-    .btnDanger{background:rgba(255,70,70,.14);border-color:rgba(255,120,120,.22)}
+    /* ROOMS SCREEN */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* STATS placeholder */
+    #stats{align-items:center;justify-content:center;padding:16px}
+    .statsBox{width:min(980px,100%);padding:18px}
+
   </style>
 </head>
 
@@ -245,31 +321,6 @@
 
   <div id="app">
     <div class="frame">
-
-      <!-- CONTINUE MODAL -->
-      <div id="continueModal">
-        <div id="continueCard">
-          <div class="cHead">
-            <div class="cIcon">⏵</div>
-            <div style="display:flex;flex-direction:column;gap:2px">
-              <div class="cTitle">Kontynuować?</div>
-              <p class="cSub">Wykryto wcześniejszą rozgrywkę</p>
-            </div>
-            <div class="spacer"></div>
-            <div class="chip">Typer</div>
-          </div>
-          <div class="cBody">
-            <p id="continueText">—</p>
-            <div class="cBtns">
-              <div class="row" style="gap:10px">
-                <button class="btn btnOk" id="btnContinueYes">✓ Tak, kontynuuj</button>
-                <button class="btn btnNo" id="btnContinueNo">↩ Nie, wybierz pokój</button>
-              </div>
-              <button class="btn btnDanger" id="btnContinueForget">🗑 Zapomnij pokój</button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- SPLASH -->
       <section id="splash" class="screen active">
@@ -281,17 +332,63 @@
         </div>
       </section>
 
-      <!-- MENU (WYBÓR: img_wybor.png + hotspoty) -->
-      <section id="menu" class="screen">
-        <div class="menuStage">
-          <div class="menuBg" id="menuBg"></div>
-          <div class="menuCard">
-            <div class="menuImage" id="menuImage"></div>
+      <!-- HOME (img_wybor.png + PNG buttons) -->
+      <section id="home" class="screen">
+        <div class="homeWrap">
+          <div class="homeBtns">
+            <button class="imgBtn" id="btnHomeRooms" aria-label="Pokoje typerów">
+              <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
+            </button>
+            <button class="imgBtn" id="btnHomeStats" aria-label="Statystyki">
+              <img src="btn_statystyki.png" alt="Statystyki">
+            </button>
+            <button class="imgBtn" id="btnHomeExit" aria-label="Wyjście">
+              <img src="btn_wyjscie.png" alt="Wyjście">
+            </button>
+          </div>
+        </div>
+      </section>
 
-            <!-- Hotspoty -->
-            <button class="hotspot" id="btnWyborRooms" aria-label="Pokoje typerów"></button>
-            <button class="hotspot" id="btnWyborStats" aria-label="Statystyki"></button>
-            <button class="hotspot" id="btnWyborExit" aria-label="Wyjście"></button>
+      <!-- CONTINUE -->
+      <section id="continue" class="screen">
+        <div class="panel continueCard">
+          <div class="continueTop">
+            <div class="continueIcon">↩</div>
+            <div style="min-width:0">
+              <div class="continueTitle">Witaj ponownie</div>
+              <div class="continueSub">Wykryto wcześniejszy pokój — możesz wejść jednym kliknięciem.</div>
+            </div>
+            <div class="spacer"></div>
+            <div class="chip">Nick: <span id="nickLabelContinue">—</span></div>
+          </div>
+
+          <div class="continueGrid">
+            <div class="miniBox">
+              <div class="title" style="margin:0 0 6px 0">Grasz w pokoju</div>
+              <div class="sub">Nazwa:</div>
+              <div class="chip" style="margin-top:8px;justify-content:space-between;width:100%">
+                <span id="continueRoomName">—</span>
+              </div>
+            </div>
+
+            <div class="miniBox">
+              <div class="title" style="margin:0 0 6px 0">Kod pokoju</div>
+              <div class="sub">Szybkie wejście:</div>
+              <div class="chip" style="margin-top:8px;justify-content:space-between;width:100%">
+                <span id="continueRoomCode">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bigAsk">
+            Czy chcesz kontynuować grę w tym pokoju?
+          </div>
+
+          <div class="continueActions">
+            <button class="btn btnGreen" id="btnContinueYes">✅ Tak, kontynuuj</button>
+            <button class="btn" id="btnContinueNo">↪ Nie, wybierz pokój</button>
+            <div class="spacer"></div>
+            <button class="btn btnRed" id="btnContinueForget">🗑 Zapomnij pokój</button>
           </div>
         </div>
       </section>
@@ -300,11 +397,11 @@
       <section id="rooms" class="screen">
         <div class="roomsBox panel">
           <div class="row">
-            <div class="chip">Liga</div>
+            <div class="chip">Pokoje typerów</div>
             <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
-            <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
+            <button class="btn btnSmall" id="btnBackHomeFromRooms">Wróć</button>
           </div>
 
           <div class="panel block">
@@ -313,7 +410,7 @@
               <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
               <button class="btn" id="btnJoinRoom">Dołącz</button>
             </div>
-            <div class="help" style="margin-top:8px">Tip: ENTER lub wpisanie 6 znaków = automatyczne dołączenie.</div>
+            <div class="help" style="margin-top:8px">Wpisz kod od admina. Enter także działa.</div>
           </div>
 
           <div class="panel block">
@@ -322,7 +419,7 @@
               <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
               <button class="btn" id="btnCreateRoom">Utwórz</button>
             </div>
-            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem jest osoba, która tworzy pokój.</div>
+            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
           </div>
 
           <div class="panel block">
@@ -399,6 +496,21 @@
         </div>
       </section>
 
+      <!-- STATS (placeholder) -->
+      <section id="stats" class="screen">
+        <div class="panel statsBox">
+          <div class="row">
+            <div class="chip">Statystyki</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnBackHomeFromStats">Wróć</button>
+          </div>
+          <div class="panel block" style="margin-top:14px">
+            <h2>Wkrótce</h2>
+            <div class="help">Tu zrobimy ranking i punkty. Na razie wróć do menu.</div>
+          </div>
+        </div>
+      </section>
+
       <div class="toast" id="toast"></div>
       <div class="footerRight" id="footerRight">—</div>
     </div>
@@ -420,6 +532,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1214"></script>
+  <script type="module" src="./app.js?v=1215"></script>
 </body>
 </html>
