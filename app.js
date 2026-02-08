@@ -1,10 +1,8 @@
-const BUILD = 1220;
+const BUILD = 1216;
+const BG_TLO = "img_tlo.png";
 
-const BG_MENU = "img_menu_pc.png"; // ✅ jedyne tło startowe
-const BG_TLO  = "img_tlo.png";     // tło dla rooms/room
-
-const KEY_NICK = "typer_nick_v4";
-const KEY_ACTIVE_ROOM = "typer_active_room_v4";
+const KEY_NICK = "typer_nick_v2";
+const KEY_ACTIVE_ROOM = "typer_active_room_v2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
@@ -18,16 +16,8 @@ const firebaseConfig = {
 
 // ---------- helpers ----------
 const el = (id) => document.getElementById(id);
-
-const setBg = (src) => {
-  const bg = el("bg");
-  if (bg) bg.style.backgroundImage = `url("${src}")`;
-};
-
-const setFooter = (txt) => {
-  const f = el("footerRight");
-  if (f) f.textContent = txt;
-};
+const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
+const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
 function showToast(msg){
   const t = el("toast");
@@ -43,16 +33,21 @@ function showScreen(id){
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
-
-  // ✅ tła: menu ma img_menu_pc.png, reszta img_tlo.png
-  if(id === "menu") setBg(BG_MENU);
-  else setBg(BG_TLO);
 }
 
 function setSplash(msg){
   const h = el("splashHint");
   if (h) h.textContent = msg;
   console.log(msg);
+}
+
+function normalizeSlug(s){
+  return (s||"")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/ł/g,"l")
+    .replace(/[^a-z0-9]+/g,"_")
+    .replace(/^_+|_+$/g,"");
 }
 
 function genCode6(){
@@ -73,42 +68,61 @@ function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
 
-function setNick(nick){
-  localStorage.setItem(KEY_NICK, (nick||"").trim());
+async function ensureNick(){
+  let nick = getNick();
+  while(!nick){
+    nick = prompt("Podaj nick (3–16 znaków):", "") || "";
+    nick = nick.trim();
+    if (nick.length < 3 || nick.length > 16) nick = "";
+    if (!nick) alert("Nick musi mieć 3–16 znaków.");
+  }
+  localStorage.setItem(KEY_NICK, nick);
+  return nick;
 }
 
 function refreshNickLabels(){
   const nick = getNick() || "—";
+  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
-  if (el("nickLabelRoom"))  el("nickLabelRoom").textContent  = nick;
+  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
+}
+
+// ---------- CONTINUE MODAL ----------
+function showContinueModal({ code, roomName }){
+  const modal = el("continueModal");
+  const text = el("continueText");
+  if (!modal || !text) return;
+
+  text.textContent =
+    `Grasz w pokoju:\n` +
+    `• ${roomName || "—"}\n` +
+    `• kod: ${code}\n\n` +
+    `Czy chcesz kontynuować?`;
+
+  modal.style.display = "flex";
+}
+
+function hideContinueModal(){
+  const modal = el("continueModal");
+  if (modal) modal.style.display = "none";
 }
 
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
 }
 
-function getSavedRoom(){
-  return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
+// ---------- ADMIN QUEUE MODAL ----------
+function showQueueModal(){
+  const m = el("queueModal");
+  if (m) m.style.display = "flex";
 }
-
-function setSavedRoom(code){
-  localStorage.setItem(KEY_ACTIVE_ROOM, (code||"").trim().toUpperCase());
+function hideQueueModal(){
+  const m = el("queueModal");
+  if (m) m.style.display = "none";
 }
-
-// ---------- Modal ----------
-function modalShow({ icon="✦", title="—", sub="—", bodyHtml="", canClose=true }){
-  el("modalIcon").textContent = icon;
-  el("modalTitle").textContent = title;
-  el("modalSub").textContent = sub;
-  el("modalBody").innerHTML = bodyHtml;
-
-  el("modalClose").style.display = canClose ? "inline-flex" : "none";
-  el("modal").style.display = "flex";
-}
-
-function modalHide(){
-  el("modal").style.display = "none";
-  el("modalBody").innerHTML = "";
+function setQueueStatus(txt){
+  const s = el("queueStatus");
+  if (s) s.textContent = txt;
 }
 
 // ---------- Firebase ----------
@@ -123,11 +137,114 @@ let unsubPicks = null;
 let currentRoomCode = null;
 let currentRoom = null;
 
-let matchesCache = [];
-let picksCache = {};
-let picksDocByUid = {};
-let submittedByUid = {};
+let matchesCache = [];   // [{id, home, away, idx}]
+let picksCache = {};     // matchId -> {h,a} (TY)
+let picksDocByUid = {};  // uid -> picks object
+let submittedByUid = {}; // uid -> boolean
 let lastPlayers = [];
+
+// ---------- Catalog (A) ----------
+const LEAGUES = [
+  { id:"laliga", name:"hiszpańska LaLiga" },
+  { id:"eredivisie", name:"holenderska Eredivisie" },
+  { id:"bundesliga", name:"niemiecka Bundesliga" },
+  { id:"premier_league", name:"angielska Premier League" },
+  { id:"serie_a", name:"włoska Serie A" },
+  { id:"ligue_1", name:"francuska Ligue 1" },
+  { id:"ekstraklasa", name:"Polska Ekstraklasa" },
+  { id:"ucl", name:"Liga Mistrzów" },
+  { id:"uel", name:"Liga Europy" },
+  { id:"uecl", name:"Liga Konferencji" },
+  { id:"knvb_beker", name:"Puchar Holandii" },
+  { id:"puchar_polski", name:"Puchar Polski" },
+  { id:"copa_del_rey", name:"Puchar Hiszpanii" },
+  { id:"fa_cup", name:"Puchar Anglii" },
+  { id:"coppa_italia", name:"Puchar Włoch" },
+];
+
+// Przykładowy katalog meczów (możemy go potem rozbudować / podmienić na Firestore/API)
+const CATALOG = {
+  ekstraklasa: [
+    ["Jagiellonia","Piast"],
+    ["Lechia","Legia"],
+    ["Wisla Plock","Radomiak"],
+    ["GKS Katowice","Gornik"],
+    ["Arka","Cracovia"],
+    ["Lech","Pogon"],
+    ["Motor","Rakow"],
+    ["Korona","Widzew"],
+    ["Slask","Zaglebie"],
+    ["Stal Mielec","Puszcza"],
+  ],
+  premier_league: [
+    ["Arsenal","Chelsea"],
+    ["Liverpool","Manchester City"],
+    ["Tottenham","Manchester United"],
+    ["Newcastle","Aston Villa"],
+    ["West Ham","Everton"],
+  ],
+  bundesliga: [
+    ["Bayern","Dortmund"],
+    ["Leipzig","Leverkusen"],
+    ["Frankfurt","Stuttgart"],
+    ["Wolfsburg","Werder Bremen"],
+  ],
+  laliga: [
+    ["Real Madrid","Barcelona"],
+    ["Atletico","Sevilla"],
+    ["Valencia","Villarreal"],
+    ["Real Sociedad","Athletic Bilbao"],
+  ],
+  serie_a: [
+    ["Inter","Milan"],
+    ["Juventus","Napoli"],
+    ["Roma","Lazio"],
+    ["Atalanta","Fiorentina"],
+  ],
+  ligue_1: [
+    ["PSG","Marseille"],
+    ["Lyon","Monaco"],
+    ["Lille","Rennes"],
+  ],
+  eredivisie: [
+    ["Ajax","PSV"],
+    ["Feyenoord","AZ Alkmaar"],
+    ["Twente","Utrecht"],
+  ],
+  ucl: [
+    ["Real Madrid","Manchester City"],
+    ["Bayern","PSG"],
+    ["Barcelona","Inter"],
+  ],
+  uel: [
+    ["Roma","Leverkusen"],
+    ["Liverpool","Villarreal"],
+  ],
+  uecl: [
+    ["Aston Villa","Fiorentina"],
+    ["West Ham","AZ Alkmaar"],
+  ],
+  knvb_beker: [
+    ["Ajax","Feyenoord"],
+    ["PSV","AZ Alkmaar"],
+  ],
+  puchar_polski: [
+    ["Lech","Legia"],
+    ["Wisla Krakow","Cracovia"],
+  ],
+  copa_del_rey: [
+    ["Barcelona","Sevilla"],
+    ["Real Madrid","Valencia"],
+  ],
+  fa_cup: [
+    ["Arsenal","Liverpool"],
+    ["Chelsea","Manchester United"],
+  ],
+  coppa_italia: [
+    ["Inter","Juventus"],
+    ["Roma","Lazio"],
+  ],
+};
 
 // ---------- status helpers ----------
 function isCompletePicksObject(picksObj){
@@ -149,34 +266,27 @@ function recomputeSubmittedMap(){
   }
 }
 
-// ---------- Firestore paths ----------
-function roomRef(code){ return boot.doc(db, "rooms", code); }
-function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
-
 // ---------- boot ----------
 async function boot(){
-  showScreen("splash");
+  setBg(BG_TLO);
   setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
   const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
   const {
-    getFirestore, doc, getDoc, setDoc, serverTimestamp,
+    getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
     collection, query, orderBy, onSnapshot,
-    writeBatch, deleteDoc
+    writeBatch, deleteDoc, getDocs
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
 
-  // expose (bez globali)
-  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc;
+  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
-  boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc;
+  boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc; boot.getDocs = getDocs;
 
   await new Promise((resolve, reject)=>{
     const unsub = onAuthStateChanged(auth, async(u)=>{
@@ -194,33 +304,86 @@ async function boot(){
   });
 
   setFooter(`BUILD ${BUILD}`);
-  bindUI();
+  await ensureNick();
   refreshNickLabels();
+  bindUI();
+  initLeagueSelect();
 
-  // ✅ Start zawsze na MENU z img_menu_pc.png
+  // jeśli jest zapisany pokój -> pytanie kontynuacji
+  const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
+  if(saved && saved.length === 6){
+    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam nazwę…`);
+    try{
+      const snap = await boot.getDoc(roomRef(saved));
+      if(!snap.exists()){
+        clearSavedRoom();
+        showScreen("menu");
+        showToast("Zapisany pokój nie istnieje");
+        return;
+      }
+      const room = snap.data();
+      showScreen("menu");
+      prepareContinueModal(saved, room?.name || "—");
+      return;
+    }catch{
+      clearSavedRoom();
+      showScreen("menu");
+      showToast("Nie udało się sprawdzić pokoju");
+      return;
+    }
+  }
+
   showScreen("menu");
+}
+
+function prepareContinueModal(code, roomName){
+  const yes = el("btnContinueYes");
+  const no = el("btnContinueNo");
+  const forget = el("btnContinueForget");
+
+  if(yes){
+    yes.onclick = async ()=>{
+      hideContinueModal();
+      localStorage.setItem(KEY_ACTIVE_ROOM, code);
+      await openRoom(code, { silent:true, force:true });
+    };
+  }
+  if(no){
+    no.onclick = ()=>{
+      hideContinueModal();
+      showScreen("menu");
+    };
+  }
+  if(forget){
+    forget.onclick = ()=>{
+      clearSavedRoom();
+      showToast("Zapomniano pokój");
+      hideContinueModal();
+      showScreen("menu");
+    };
+  }
+
+  showContinueModal({ code, roomName });
 }
 
 // ---------- UI binding ----------
 function bindUI(){
-  // modal close
-  el("modalClose").onclick = ()=> modalHide();
-  el("modal").addEventListener("click", (e)=>{
-    if(e.target === el("modal")) modalHide();
-  });
-
-  // MENU buttons (PNG)
-  el("btnMenuRooms").onclick = async ()=> { await onClickRooms(); };
-  el("btnMenuStats").onclick = ()=> { showToast("Statystyki – wkrótce"); };
-  el("btnMenuExit").onclick  = ()=> { showToast("Wyjście: zamknij kartę / aplikację"); };
+  // MENU
+  el("btnOpenRooms").onclick = async ()=>{ showScreen("rooms"); el("debugRooms").textContent = "—"; };
+  el("btnChangeNickMenu").onclick = async ()=>{
+    localStorage.removeItem(KEY_NICK);
+    await ensureNick();
+    refreshNickLabels();
+    showToast("Zmieniono nick");
+  };
 
   // ROOMS
-  el("btnBackToMenu").onclick = ()=> showScreen("menu");
-
+  el("btnBackMenu").onclick = ()=> showScreen("menu");
   el("btnChangeNickRooms").onclick = async ()=>{
-    setNick("");
+    localStorage.removeItem(KEY_NICK);
+    await ensureNick();
     refreshNickLabels();
-    await askNickThenContinue(() => showScreen("rooms"));
+    showToast("Zmieniono nick");
   };
 
   el("btnCreateRoom").onclick = async ()=>{
@@ -241,12 +404,8 @@ function bindUI(){
     await joinRoom(code);
   };
 
-  el("inpJoinCode").addEventListener("keydown", (e)=>{
-    if(e.key === "Enter") el("btnJoinRoom").click();
-  });
-
   // ROOM
-  el("btnBackFromRoom").onclick = ()=>{ showScreen("menu"); };
+  el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
   el("btnCopyCode").onclick = async ()=>{
     if(!currentRoomCode) return;
     try{
@@ -259,152 +418,38 @@ function bindUI(){
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
+
+  // admin actions
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+  el("btnAdminQueue").onclick = ()=>{ openAdminQueue(); };
+
+  // queue modal
+  el("btnQueueClose").onclick = ()=> hideQueueModal();
+  el("btnQueueClose2").onclick = ()=> hideQueueModal();
+  el("btnClearQueue").onclick = async ()=>{ await clearAllMatches(); };
+  el("selLeague").onchange = ()=> renderCatalog();
 }
 
-// ---------- Flow: klik Pokoje typerów ----------
-async function onClickRooms(){
-  // 1) jeśli nie ma nicka -> pytanie o nick
-  if(!getNick()){
-    await askNickThenContinue(async ()=>{
-      await afterNickRoomsFlow();
-    });
-    return;
+// ---------- leagues select ----------
+function initLeagueSelect(){
+  const sel = el("selLeague");
+  if(!sel) return;
+  sel.innerHTML = "";
+  for(const l of LEAGUES){
+    const opt = document.createElement("option");
+    opt.value = l.id;
+    opt.textContent = l.name;
+    sel.appendChild(opt);
   }
-
-  // 2) jeśli nick jest -> kontynuacja lub rooms
-  await afterNickRoomsFlow();
+  // domyślnie Polska
+  sel.value = "ekstraklasa";
 }
 
-async function askNickThenContinue(onOk){
-  modalShow({
-    icon:"👤",
-    title:"Podaj swój nick",
-    sub:"Pierwsze wejście — ustaw nick (3–16 znaków).",
-    canClose:false,
-    bodyHtml: `
-      <div class="miniBox">
-        <div class="sub" style="margin-bottom:8px">Nick:</div>
-        <div class="row">
-          <input id="inpNickModal" placeholder="np. Mariusz" style="flex:1" maxlength="16" />
-          <button class="btn btnGreen" id="btnNickOk">Dalej</button>
-        </div>
-        <div class="help" style="margin-top:8px">Nick będzie zapamiętany na tym urządzeniu.</div>
-      </div>
-    `
-  });
-
-  const inp = el("inpNickModal");
-  const ok = el("btnNickOk");
-
-  const submit = async ()=>{
-    let nick = (inp.value || "").trim();
-    if(nick.length < 3 || nick.length > 16){
-      showToast("Nick 3–16 znaków");
-      return;
-    }
-    setNick(nick);
-    refreshNickLabels();
-    modalHide();
-    if(typeof onOk === "function") await onOk();
-  };
-
-  ok.onclick = submit;
-  inp.addEventListener("keydown",(e)=>{ if(e.key==="Enter") submit(); });
-
-  inp.focus();
-}
-
-async function afterNickRoomsFlow(){
-  const saved = getSavedRoom();
-
-  // jeśli jest zapisany pokój -> sprawdź czy istnieje i pokaż modal kontynuacji
-  if(saved && saved.length === 6){
-    try{
-      const snap = await boot.getDoc(roomRef(saved));
-      if(snap.exists()){
-        const room = snap.data();
-        const roomName = room?.name || "—";
-        showContinueModal({ roomName, code: saved });
-        return;
-      }else{
-        clearSavedRoom();
-      }
-    }catch{
-      // jak nie wyszło sprawdzenie, idziemy do rooms
-    }
-  }
-
-  // brak pokoju -> od razu ekran dołącz/utwórz
-  showScreen("rooms");
-}
-
-function showContinueModal({ roomName, code }){
-  const nick = getNick() || "—";
-
-  modalShow({
-    icon:"↩",
-    title:"Witaj ponownie",
-    sub:"Wykryto wcześniejszy pokój — możesz wejść jednym kliknięciem.",
-    canClose:true,
-    bodyHtml: `
-      <div class="grid2">
-        <div class="miniBox">
-          <div class="title" style="margin:0 0 6px 0">Witaj ponownie</div>
-          <div class="sub">Nick:</div>
-          <div class="chip" style="margin-top:8px;width:100%;justify-content:space-between">
-            <span>${escapeHtml(nick)}</span>
-          </div>
-        </div>
-
-        <div class="miniBox">
-          <div class="title" style="margin:0 0 6px 0">Grasz w pokoju</div>
-          <div class="sub">Nazwa pokoju:</div>
-          <div class="chip" style="margin-top:8px;width:100%;justify-content:space-between">
-            <span>${escapeHtml(roomName)}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="bigAsk">Czy kontynuujesz grę w tym pokoju?</div>
-
-      <div class="modalActions">
-        <button class="btn btnGreen" id="btnContinueYes">✅ Tak</button>
-        <button class="btn" id="btnContinueNo">↪ Nie</button>
-        <div class="spacer"></div>
-        <button class="btn" id="btnForgetRoom">🗑 Zapomnij pokój</button>
-      </div>
-    `
-  });
-
-  el("btnContinueYes").onclick = async ()=>{
-    modalHide();
-    // upewnij się, że zapisany kod jest ustawiony
-    setSavedRoom(code);
-    await openRoom(code, { silent:true, force:true });
-  };
-
-  el("btnContinueNo").onclick = ()=>{
-    modalHide();
-    showScreen("rooms");
-  };
-
-  el("btnForgetRoom").onclick = ()=>{
-    clearSavedRoom();
-    modalHide();
-    showToast("Zapomniano pokój");
-    showScreen("rooms");
-  };
-}
-
-function escapeHtml(s){
-  return String(s || "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
+// ---------- Firestore paths ----------
+function roomRef(code){ return boot.doc(db, "rooms", code); }
+function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
 // ---------- Rooms logic ----------
 async function createRoom(roomName){
@@ -428,7 +473,7 @@ async function createRoom(roomName){
       nick, uid: userUid, joinedAt: boot.serverTimestamp()
     });
 
-    setSavedRoom(code);
+    localStorage.setItem(KEY_ACTIVE_ROOM, code);
     el("debugRooms").textContent = `Utworzono pokój ${code}`;
     await openRoom(code);
     return;
@@ -452,7 +497,7 @@ async function joinRoom(code){
     nick, uid: userUid, joinedAt: boot.serverTimestamp()
   }, { merge:true });
 
-  setSavedRoom(code);
+  localStorage.setItem(KEY_ACTIVE_ROOM, code);
   el("debugRooms").textContent = `Dołączono do ${code}`;
   await openRoom(code);
 }
@@ -463,7 +508,7 @@ async function leaveRoom(){
     await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
   }catch{}
 
-  clearSavedRoom();
+  localStorage.removeItem(KEY_ACTIVE_ROOM);
   cleanupRoomListeners();
 
   currentRoomCode = null;
@@ -478,7 +523,7 @@ async function leaveRoom(){
   renderMatches();
   renderPlayers([]);
 
-  showScreen("menu");
+  showScreen("rooms");
   showToast("Opuszczono pokój");
 }
 
@@ -525,6 +570,7 @@ async function openRoom(code, opts={}){
 
   const isAdmin = (currentRoom.adminUid === userUid);
   el("btnAddQueue").style.display = isAdmin ? "block" : "none";
+  el("btnAdminQueue").style.display = isAdmin ? "block" : "none";
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
@@ -533,9 +579,10 @@ async function openRoom(code, opts={}){
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
     const isAdm = (currentRoom.adminUid === userUid);
     el("btnAddQueue").style.display = isAdm ? "block" : "none";
+    el("btnAdminQueue").style.display = isAdm ? "block" : "none";
   });
 
-  // players
+  // live players
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
@@ -544,7 +591,7 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // picks
+  // live picks (status)
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -555,7 +602,7 @@ async function openRoom(code, opts={}){
     renderPlayers(lastPlayers);
   });
 
-  // matches
+  // live matches
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
   unsubMatches = boot.onSnapshot(mq, async (qs)=>{
     const arr = [];
@@ -571,10 +618,10 @@ async function openRoom(code, opts={}){
     renderMatches();
   });
 
-  if(!silent) showToast(`W pokoju`);
+  if(!silent) showToast(`W pokoju: ${code}`);
 }
 
-// ---------- Picks ----------
+// ---------- Picks (TY) ----------
 async function loadMyPicks(){
   try{
     const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
@@ -676,13 +723,7 @@ function renderPlayers(players){
 }
 
 function createLogoImg(teamName){
-  const slug = (teamName||"")
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/ł/g,"l")
-    .replace(/[^a-z0-9]+/g,"_")
-    .replace(/^_+|_+$/g,"");
-
+  const slug = normalizeSlug(teamName);
   const img = document.createElement("img");
   img.className = "logo";
   img.alt = teamName;
@@ -778,6 +819,124 @@ function updateSaveButtonState(){
   btn.disabled = !allMyPicksFilled();
 }
 
+// ---------- Admin Queue Builder ----------
+function openAdminQueue(){
+  if(!currentRoomCode) return;
+  if(currentRoom?.adminUid !== userUid){
+    showToast("Tylko admin");
+    return;
+  }
+  renderCatalog();
+  setQueueStatus(`Pokój: ${currentRoomCode} • mecze w pokoju: ${matchesCache.length}`);
+  showQueueModal();
+}
+
+function renderCatalog(){
+  const sel = el("selLeague");
+  const box = el("catalogList");
+  if(!sel || !box) return;
+
+  const leagueId = sel.value;
+  const list = CATALOG[leagueId] || [];
+  box.innerHTML = "";
+
+  if(!list.length){
+    const empty = document.createElement("div");
+    empty.className = "qHint";
+    empty.textContent = "Brak meczów w katalogu dla tej ligi (na razie).";
+    box.appendChild(empty);
+    return;
+  }
+
+  list.forEach(pair=>{
+    const [home, away] = pair;
+
+    const row = document.createElement("div");
+    row.className = "qMatch";
+    row.title = "Kliknij, aby dodać do kolejki";
+
+    const left = document.createElement("div");
+    left.className = "qTeams";
+    const b1 = document.createElement("b");
+    b1.textContent = home;
+    const b2 = document.createElement("b");
+    b2.style.opacity = ".92";
+    b2.textContent = away;
+    left.appendChild(b1);
+    left.appendChild(b2);
+
+    const right = document.createElement("div");
+    right.className = "badge";
+    right.textContent = "Dodaj";
+
+    row.appendChild(left);
+    row.appendChild(right);
+
+    row.onclick = async ()=>{
+      await addMatchFromCatalog(leagueId, home, away);
+    };
+
+    box.appendChild(row);
+  });
+}
+
+function nextIdx(){
+  if(!matchesCache.length) return 0;
+  let maxIdx = -1;
+  for(const m of matchesCache){
+    const v = Number.isFinite(m.idx) ? m.idx : -1;
+    if(v > maxIdx) maxIdx = v;
+  }
+  return maxIdx + 1;
+}
+
+async function addMatchFromCatalog(leagueId, home, away){
+  if(!currentRoomCode) return;
+  if(currentRoom?.adminUid !== userUid){
+    showToast("Tylko admin");
+    return;
+  }
+
+  // zabezpieczenie przed duplikatem (home+away)
+  const dup = matchesCache.some(m => (m.home === home && m.away === away));
+  if(dup){
+    showToast("Ten mecz już jest w kolejce");
+    return;
+  }
+
+  const idx = nextIdx();
+  const id = `m_${Date.now()}_${normalizeSlug(home)}_${normalizeSlug(away)}`;
+
+  const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+  await boot.setDoc(ref, {
+    idx,
+    home,
+    away,
+    league: leagueId,
+    createdAt: boot.serverTimestamp()
+  });
+
+  showToast(`Dodano: ${home} – ${away}`);
+  setQueueStatus(`Dodano mecz • mecze w pokoju: ${matchesCache.length + 1}`);
+}
+
+async function clearAllMatches(){
+  if(!currentRoomCode) return;
+  if(currentRoom?.adminUid !== userUid){
+    showToast("Tylko admin");
+    return;
+  }
+  if(!confirm("Usunąć WSZYSTKIE mecze z tego pokoju?")) return;
+
+  const qs = await boot.getDocs(matchesCol(currentRoomCode));
+  const b = boot.writeBatch(db);
+  qs.forEach(d => b.delete(d.ref));
+  await b.commit();
+
+  showToast("Wyczyszczono kolejkę");
+  setQueueStatus("Kolejka wyczyszczona");
+}
+
 // ---------- test queue ----------
 async function addTestQueue(){
   if(!currentRoomCode) return;
@@ -799,17 +958,22 @@ async function addTestQueue(){
     ["Stal Mielec","Puszcza"]
   ];
 
+  const startIdx = nextIdx();
   const b = boot.writeBatch(db);
-  sample.forEach((pair, idx)=>{
-    const id = `m_${Date.now()}_${idx}`;
+
+  sample.forEach((pair, i)=>{
+    const [home, away] = pair;
+    const id = `m_${Date.now()}_${i}`;
     const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
     b.set(ref, {
-      idx,
-      home: pair[0],
-      away: pair[1],
+      idx: startIdx + i,
+      home,
+      away,
+      league: "ekstraklasa",
       createdAt: boot.serverTimestamp()
     });
   });
+
   await b.commit();
   showToast("Dodano kolejkę (test)");
 }
@@ -817,8 +981,7 @@ async function addTestQueue(){
 // ---------- start ----------
 (async()=>{
   try{
-    showScreen("splash");
-    setBg(BG_MENU); // żeby od razu ładowało się menu-tło
+    setBg(BG_TLO);
     setSplash(`BUILD ${BUILD}\nŁadowanie…`);
     await boot();
   }catch(e){

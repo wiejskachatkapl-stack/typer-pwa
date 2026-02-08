@@ -9,63 +9,37 @@
 
   <style>
     :root{
-      --stroke: rgba(255,255,255,.14);
+      --bg:#071229;
+      --glass: rgba(8, 22, 52, .55);
+      --glass2: rgba(8, 22, 52, .40);
+      --stroke: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.72);
       --shadow: 0 14px 50px rgba(0,0,0,.45);
       --r: 22px;
-      --glass: rgba(8, 22, 52, .72);
-      --glass2: rgba(8, 22, 52, .55);
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      background:#071229;
-      overflow:hidden
-    }
-
-    /* JEDNO TŁO dla całej app (zmieniane w JS) */
-    #bg{
-      position:fixed; inset:0;
-      background:#071229 center/cover no-repeat;
-      z-index:0;
-      transition: background-image .20s ease;
-    }
-
-    #app{
-      position:fixed; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      padding:14px;
-      z-index:1;
-    }
-
-    /* „Ramka” – może zostać, ale jest przezroczysta, nie robi bałaganu */
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
+    #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
+    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:1}
     .frame{
       width:min(1580px,96vw);
       height:min(920px,94vh);
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid var(--stroke);
       border-radius:26px;
-      background:rgba(0,0,0,.06);
+      background:rgba(0,0,0,.10);
       box-shadow:var(--shadow);
-      overflow:hidden;
-      position:relative;
+      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      overflow:hidden;position:relative;
     }
-
     .screen{display:none;height:100%;width:100%}
     .screen.active{display:flex}
 
     /* SPLASH */
     #splash{align-items:center;justify-content:center;padding:24px}
     .splashCard{
-      width:min(820px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(0,0,0,.22);
-      padding:22px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      width:min(820px,92%);border:1px solid var(--stroke);
+      border-radius:22px;background:var(--glass2);padding:22px;
     }
     .spinner{
       width:26px;height:26px;border-radius:50%;
@@ -74,80 +48,18 @@
       animation:spin 1s linear infinite;margin-top:12px;
     }
     @keyframes spin{to{transform:rotate(360deg)}}
-    .hint{margin-top:8px;color:var(--muted);font-weight:800;white-space:pre-wrap}
-    .err{
-      margin-top:10px;padding:10px 12px;border-radius:14px;
-      border:1px solid rgba(255,120,120,.35);
-      background:rgba(255,60,60,.12);
-      display:none;white-space:pre-wrap
-    }
+    .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
+    .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
 
-    /* MENU (3 PNG przyciski na tle img_menu_pc.png) */
-    #menu{align-items:center;justify-content:center}
-    .menuWrap{
-      width:100%; height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .menuBtns{
-      display:flex;
-      gap:26px;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap;
-      /* ⬇️ tym ustawiasz pozycję przycisków na tle */
-      transform: translateY(0px);
-    }
-    .imgBtn{
-      border:0;
-      background:transparent;
-      padding:0;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .imgBtn:hover{ transform: translateY(-2px) scale(1.02); filter: brightness(1.06); }
-    .imgBtn:active{ transform: translateY(0px) scale(0.99); filter: brightness(0.98); }
-    .imgBtn img{ height:98px; width:auto; display:block; }
-
-    @media (max-width: 980px){
-      .imgBtn img{ height:86px; }
-      .menuBtns{ gap:18px; }
-    }
-    @media (max-width: 640px){
-      .imgBtn img{ height:78px; }
-    }
-
-    /* ROOMS (dołącz/utwórz) */
-    #rooms{padding:16px;gap:14px;align-items:stretch;justify-content:center}
+    /* COMMON UI */
     .panel{
-      border:1px solid rgba(255,255,255,.12);
+      border:1px solid var(--stroke);
       border-radius:var(--r);
-      background:rgba(0,0,0,.18);
+      background:var(--glass);
       box-shadow:0 10px 30px rgba(0,0,0,.30);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-    }
-    .roomsBox{
-      width:min(980px,100%);
-      margin:auto;
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:14px
-    }
-    .row{display:flex;gap:10px;align-items:center}
-    .spacer{flex:1}
-    .chip{
-      display:inline-flex;gap:10px;align-items:center;
-      padding:10px 14px;border-radius:18px;
-      background:rgba(0,0,0,.20);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:900
     }
     .btn{
       border:1px solid rgba(255,255,255,.14);
@@ -161,8 +73,27 @@
       white-space:nowrap;
     }
     .btn:hover{background:rgba(255,255,255,.14)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
-    input{
+    .btnDanger{
+      border:1px solid rgba(255,90,90,.35);
+      background:rgba(255,60,60,.14);
+    }
+    .btnDanger:hover{background:rgba(255,60,60,.20)}
+    .btnOk{
+      border:1px solid rgba(80,255,160,.28);
+      background:rgba(30,180,110,.18);
+    }
+    .btnOk:hover{background:rgba(30,180,110,.24)}
+
+    .chip{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.12);font-weight:900}
+    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
+    .sub{color:var(--muted);font-weight:700;font-size:13px}
+    .row{display:flex;gap:10px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:10px}
+    .spacer{flex:1}
+
+    input, select{
       border:1px solid rgba(255,255,255,.15);
       background:rgba(0,0,0,.22);
       color:var(--text);
@@ -172,17 +103,24 @@
       font-weight:900;
     }
     input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
+    .toast{
+      position:absolute;left:18px;bottom:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.85);
+      padding:10px 14px;border-radius:16px;font-weight:800;
+      display:none;
+    }
+    .footerRight{
+      position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
+    }
 
-    /* ROOM UI (bez zmian – zostawiam Twoją strukturę) */
+    /* ROOM LAYOUT */
     #room{padding:16px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
-    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
-    .sub{color:var(--muted);font-weight:700;font-size:13px}
+
     .midHead{padding:14px}
     .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
     .matchCard{
@@ -192,12 +130,20 @@
       padding:12px 12px;
       display:flex;align-items:center;gap:12px;
     }
-    .team{display:flex;align-items:center;gap:10px;min-width:0;flex:1;font-weight:1000}
+    .team{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      font-weight:1000;
+    }
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .logo{width:24px;height:24px;flex:0 0 24px;border-radius:6px;background:rgba(255,255,255,.10);object-fit:contain}
+    .logo{
+      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      background:rgba(255,255,255,.10);
+      object-fit:contain;
+    }
     .scoreBox{display:flex;align-items:center;gap:8px}
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
+
     .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .playerRow{
       padding:10px 12px;border-radius:16px;
@@ -208,82 +154,121 @@
     }
     .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
 
-    /* MODAL (Nick + Kontynuacja) */
-    #modal{
+    /* ROOMS SCREEN */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* MENU */
+    #menu{padding:16px}
+    .menuBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+
+    /* CONTINUE MODAL */
+    #continueModal{
       position:absolute; inset:0;
       display:none;
-      align-items:center;
-      justify-content:center;
+      align-items:center; justify-content:center;
       z-index:50;
-      background:rgba(0,0,0,.42);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background:rgba(0,0,0,.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
-    .modalCard{
-      width:min(980px,92%);
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(8,22,52,.78);
+    #continueCard{
+      width:min(720px,92%);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      background:rgba(8,22,52,.72);
       box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      overflow:hidden;
+      padding:18px;
     }
-    .modalTop{
+    #continueTitle{font-size:20px;font-weight:1000;margin:0 0 6px 0}
+    #continueText{color:rgba(255,255,255,.80);font-weight:800;white-space:pre-wrap;margin:0 0 14px 0}
+
+    /* ADMIN QUEUE BUILDER MODAL */
+    #queueModal{
+      position:absolute; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:60;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+    }
+    #queueCard{
+      width:min(980px,94%);
+      max-height:88%;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:24px;
+      background:rgba(8,22,52,.78);
+      box-shadow: 0 22px 80px rgba(0,0,0,.60);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    #queueHead{
+      padding:14px 16px;
+      border-bottom:1px solid rgba(255,255,255,.10);
       display:flex;
       align-items:center;
-      gap:12px;
+      gap:10px;
+    }
+    #queueBody{
       padding:14px 16px;
-      background:rgba(0,0,0,.18);
-      border-bottom:1px solid rgba(255,255,255,.10);
+      display:flex;
+      gap:14px;
+      min-height:0;
+      flex:1;
     }
-    .modalIcon{
-      width:44px;height:44px;border-radius:14px;
-      background:rgba(0,0,0,.25);
-      border:1px solid rgba(255,255,255,.12);
-      display:flex;align-items:center;justify-content:center;
-      font-weight:1000;
+    .qCol{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
-    .modalTitle{font-size:22px;font-weight:1000;margin:0;line-height:1.1}
-    .modalSub{color:rgba(255,255,255,.78);font-weight:800;margin-top:4px;font-size:13px}
-    .modalBody{padding:16px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    @media (max-width: 860px){ .grid2{grid-template-columns:1fr} }
-    .miniBox{
-      padding:14px;
-      border-radius:18px;
+    .qList{
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding-right:6px;
+    }
+    .qMatch{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
-    }
-    .bigAsk{
-      margin-top:14px;
-      padding:14px;
       border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.14);
-      font-weight:900;
-    }
-    .modalActions{
+      padding:12px 12px;
       display:flex;
-      gap:12px;
-      margin-top:14px;
-      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      cursor:pointer;
+      user-select:none;
     }
-    .btnGreen{
-      background:rgba(40,170,110,.22);
-      border:1px solid rgba(90,255,170,.30);
+    .qMatch:hover{background:rgba(255,255,255,.06)}
+    .qTeams{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
     }
-
-    /* toast + footer */
-    .toast{
-      position:absolute;left:18px;bottom:14px;
-      background:rgba(0,0,0,.35);
-      border:1px solid rgba(255,255,255,.12);
-      color:rgba(255,255,255,.85);
-      padding:10px 14px;border-radius:16px;font-weight:800;
-      display:none;
-      z-index:99;
+    .qTeams b{
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
-    .footerRight{
-      position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
+    .qHint{color:rgba(255,255,255,.70);font-weight:800;font-size:12px}
+    #queueFoot{
+      padding:12px 16px;
+      border-top:1px solid rgba(255,255,255,.10);
+      display:flex;
+      gap:10px;
+      align-items:center;
     }
   </style>
 </head>
@@ -294,20 +279,57 @@
   <div id="app">
     <div class="frame">
 
-      <!-- MODAL (używany do nick i do kontynuacji) -->
-      <div id="modal">
-        <div class="modalCard">
-          <div class="modalTop">
-            <div class="modalIcon" id="modalIcon">✦</div>
-            <div style="min-width:0">
-              <div class="modalTitle" id="modalTitle">—</div>
-              <div class="modalSub" id="modalSub">—</div>
-            </div>
+      <!-- CONTINUE MODAL -->
+      <div id="continueModal">
+        <div id="continueCard">
+          <div id="continueTitle">Kontynuować?</div>
+          <p id="continueText">—</p>
+          <div class="row">
+            <button class="btn btnOk" id="btnContinueYes">Tak, kontynuuj</button>
+            <button class="btn" id="btnContinueNo">Nie, wróć do menu</button>
             <div class="spacer"></div>
-            <button class="btn btnSmall" id="modalClose">Zamknij</button>
+            <button class="btn btnDanger btnSmall" id="btnContinueForget">Zapomnij pokój</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN QUEUE MODAL -->
+      <div id="queueModal">
+        <div id="queueCard">
+          <div id="queueHead">
+            <div class="chip">Własna kolejka (admin)</div>
+            <div class="spacer"></div>
+            <div class="chip">Liga:
+              <select id="selLeague" style="margin-left:8px">
+                <option value="ekstraklasa">Polska Ekstraklasa</option>
+              </select>
+            </div>
+            <button class="btn btnSmall" id="btnQueueClose">Zamknij</button>
           </div>
 
-          <div class="modalBody" id="modalBody"><!-- dynamic --></div>
+          <div id="queueBody">
+            <div class="qCol panel" style="padding:14px">
+              <div class="title" style="margin:0">Mecze</div>
+              <div class="sub">Kliknij mecz, aby dodać do kolejki w tym pokoju.</div>
+              <div class="qList" id="catalogList"></div>
+              <div class="qHint">Tip: możesz dodać kilka meczów — pojawią się w panelu „Spotkania”.</div>
+            </div>
+
+            <div class="qCol panel" style="padding:14px;max-width:360px">
+              <div class="title" style="margin:0">Narzędzia</div>
+              <div class="sub">Szybkie akcje admina.</div>
+              <div class="col" style="margin-top:10px">
+                <button class="btn btnDanger" id="btnClearQueue">Wyczyść kolejkę (usuń mecze)</button>
+              </div>
+              <div class="qHint" style="margin-top:10px">Uwaga: „Wyczyść kolejkę” usuwa wszystkie mecze z pokoju.</div>
+            </div>
+          </div>
+
+          <div id="queueFoot">
+            <div class="sub" id="queueStatus">—</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnQueueClose2">Zamknij</button>
+          </div>
         </div>
       </div>
 
@@ -321,19 +343,28 @@
         </div>
       </section>
 
-      <!-- MENU (img_menu_pc.png + 3 PNG buttons) -->
+      <!-- MENU -->
       <section id="menu" class="screen">
-        <div class="menuWrap">
-          <div class="menuBtns">
-            <button class="imgBtn" id="btnMenuRooms" aria-label="Pokoje typerów">
-              <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
-            </button>
-            <button class="imgBtn" id="btnMenuStats" aria-label="Statystyki">
-              <img src="btn_statystyki.png" alt="Statystyki">
-            </button>
-            <button class="imgBtn" id="btnMenuExit" aria-label="Wyjście">
-              <img src="btn_wyjscie.png" alt="Wyjście">
-            </button>
+        <div class="menuBox panel">
+          <div class="row">
+            <div class="chip">Menu</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnChangeNickMenu">Zmień nick</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Liga typerów</h2>
+            <div class="help">Wejście do pokoi (FireStore).</div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn" id="btnOpenRooms">Wejdź</button>
+              <div class="spacer"></div>
+              <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
+            </div>
+          </div>
+
+          <div class="panel block">
+            <h2>Info</h2>
+            <div class="help">To jest wersja z Firestore. Pokoje i gracze są współdzielone.</div>
           </div>
         </div>
       </section>
@@ -342,11 +373,20 @@
       <section id="rooms" class="screen">
         <div class="roomsBox panel">
           <div class="row">
-            <div class="chip">Pokoje typerów</div>
+            <div class="chip">Liga</div>
             <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
-            <button class="btn btnSmall" id="btnBackToMenu">Wróć</button>
+            <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Nowy pokój</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
+              <button class="btn" id="btnCreateRoom">Utwórz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
           </div>
 
           <div class="panel block">
@@ -355,16 +395,7 @@
               <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
               <button class="btn" id="btnJoinRoom">Dołącz</button>
             </div>
-            <div class="help" style="margin-top:8px">Wpisz kod od admina. Enter także działa.</div>
-          </div>
-
-          <div class="panel block">
-            <h2>Utwórz nowy pokój</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
-              <button class="btn" id="btnCreateRoom">Utwórz</button>
-            </div>
-            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
           </div>
 
           <div class="panel block">
@@ -380,7 +411,7 @@
 
           <!-- LEFT -->
           <div class="leftBar panel">
-            <div class="row" style="gap:10px;flex-wrap:wrap">
+            <div class="col" style="gap:10px">
               <div class="chip">Pokój</div>
               <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
             </div>
@@ -403,14 +434,17 @@
             <div class="panel" style="padding:14px">
               <div class="title">Akcje</div>
               <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
-              <div class="col" style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
-                <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+              <div class="col" style="margin-top:10px">
+                <button class="btn btnOk" id="btnSaveAll" disabled>Zapisz typy</button>
+
+                <!-- tylko admin -->
+                <button class="btn" id="btnAdminQueue" style="display:none">Własna kolejka</button>
                 <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
               </div>
             </div>
 
             <div class="spacer"></div>
-            <button class="btn" id="btnBackFromRoom">Wróć do menu</button>
+            <button class="btn" id="btnBackFromRoom">Wróć</button>
           </div>
 
           <!-- MIDDLE -->
@@ -462,6 +496,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1220"></script>
+  <script type="module" src="./app.js?v=1216"></script>
 </body>
 </html>
