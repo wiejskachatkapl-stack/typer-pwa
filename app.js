@@ -88,41 +88,37 @@ function refreshNickLabels(){
 }
 
 // ---------- CONTINUE MODAL ----------
-function showContinueModal({ code, roomName }){
+function showContinueModal({ roomName }){
   const modal = el("continueModal");
-  const text = el("continueText");
-  if (!modal || !text) return;
-
-  text.textContent =
-    `Grasz w pokoju:\n` +
-    `• ${roomName || "—"}\n` +
-    `• kod: ${code}\n\n` +
-    `Czy chcesz kontynuować?`;
-
+  if (!modal) return;
+  el("continueNick").textContent = getNick() || "—";
+  el("continueRoomName").textContent = roomName || "—";
   modal.style.display = "flex";
 }
-
 function hideContinueModal(){
   const modal = el("continueModal");
   if (modal) modal.style.display = "none";
 }
-
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
 }
 
-// ---------- ADMIN QUEUE MODAL ----------
-function showQueueModal(){
-  const m = el("queueModal");
+// ---------- BUILDER MODAL (ADMIN) ----------
+function showBuilder(){
+  const m = el("builderModal");
   if (m) m.style.display = "flex";
 }
-function hideQueueModal(){
-  const m = el("queueModal");
+function hideBuilder(){
+  const m = el("builderModal");
   if (m) m.style.display = "none";
 }
-function setQueueStatus(txt){
-  const s = el("queueStatus");
-  if (s) s.textContent = txt;
+function showBuilderConfirm(){
+  const m = el("builderConfirm");
+  if (m) m.style.display = "flex";
+}
+function hideBuilderConfirm(){
+  const m = el("builderConfirm");
+  if (m) m.style.display = "none";
 }
 
 // ---------- Firebase ----------
@@ -143,108 +139,7 @@ let picksDocByUid = {};  // uid -> picks object
 let submittedByUid = {}; // uid -> boolean
 let lastPlayers = [];
 
-// ---------- Catalog (A) ----------
-const LEAGUES = [
-  { id:"laliga", name:"hiszpańska LaLiga" },
-  { id:"eredivisie", name:"holenderska Eredivisie" },
-  { id:"bundesliga", name:"niemiecka Bundesliga" },
-  { id:"premier_league", name:"angielska Premier League" },
-  { id:"serie_a", name:"włoska Serie A" },
-  { id:"ligue_1", name:"francuska Ligue 1" },
-  { id:"ekstraklasa", name:"Polska Ekstraklasa" },
-  { id:"ucl", name:"Liga Mistrzów" },
-  { id:"uel", name:"Liga Europy" },
-  { id:"uecl", name:"Liga Konferencji" },
-  { id:"knvb_beker", name:"Puchar Holandii" },
-  { id:"puchar_polski", name:"Puchar Polski" },
-  { id:"copa_del_rey", name:"Puchar Hiszpanii" },
-  { id:"fa_cup", name:"Puchar Anglii" },
-  { id:"coppa_italia", name:"Puchar Włoch" },
-];
-
-// Przykładowy katalog meczów (możemy go potem rozbudować / podmienić na Firestore/API)
-const CATALOG = {
-  ekstraklasa: [
-    ["Jagiellonia","Piast"],
-    ["Lechia","Legia"],
-    ["Wisla Plock","Radomiak"],
-    ["GKS Katowice","Gornik"],
-    ["Arka","Cracovia"],
-    ["Lech","Pogon"],
-    ["Motor","Rakow"],
-    ["Korona","Widzew"],
-    ["Slask","Zaglebie"],
-    ["Stal Mielec","Puszcza"],
-  ],
-  premier_league: [
-    ["Arsenal","Chelsea"],
-    ["Liverpool","Manchester City"],
-    ["Tottenham","Manchester United"],
-    ["Newcastle","Aston Villa"],
-    ["West Ham","Everton"],
-  ],
-  bundesliga: [
-    ["Bayern","Dortmund"],
-    ["Leipzig","Leverkusen"],
-    ["Frankfurt","Stuttgart"],
-    ["Wolfsburg","Werder Bremen"],
-  ],
-  laliga: [
-    ["Real Madrid","Barcelona"],
-    ["Atletico","Sevilla"],
-    ["Valencia","Villarreal"],
-    ["Real Sociedad","Athletic Bilbao"],
-  ],
-  serie_a: [
-    ["Inter","Milan"],
-    ["Juventus","Napoli"],
-    ["Roma","Lazio"],
-    ["Atalanta","Fiorentina"],
-  ],
-  ligue_1: [
-    ["PSG","Marseille"],
-    ["Lyon","Monaco"],
-    ["Lille","Rennes"],
-  ],
-  eredivisie: [
-    ["Ajax","PSV"],
-    ["Feyenoord","AZ Alkmaar"],
-    ["Twente","Utrecht"],
-  ],
-  ucl: [
-    ["Real Madrid","Manchester City"],
-    ["Bayern","PSG"],
-    ["Barcelona","Inter"],
-  ],
-  uel: [
-    ["Roma","Leverkusen"],
-    ["Liverpool","Villarreal"],
-  ],
-  uecl: [
-    ["Aston Villa","Fiorentina"],
-    ["West Ham","AZ Alkmaar"],
-  ],
-  knvb_beker: [
-    ["Ajax","Feyenoord"],
-    ["PSV","AZ Alkmaar"],
-  ],
-  puchar_polski: [
-    ["Lech","Legia"],
-    ["Wisla Krakow","Cracovia"],
-  ],
-  copa_del_rey: [
-    ["Barcelona","Sevilla"],
-    ["Real Madrid","Valencia"],
-  ],
-  fa_cup: [
-    ["Arsenal","Liverpool"],
-    ["Chelsea","Manchester United"],
-  ],
-  coppa_italia: [
-    ["Inter","Juventus"],
-    ["Roma","Lazio"],
-  ],
-};
+let fs = {}; // firestore fns holder
 
 // ---------- status helpers ----------
 function isCompletePicksObject(picksObj){
@@ -266,6 +161,332 @@ function recomputeSubmittedMap(){
   }
 }
 
+// ---------- Firestore paths ----------
+function roomRef(code){ return fs.doc(db, "rooms", code); }
+function playersCol(code){ return fs.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return fs.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return fs.collection(db, "rooms", code, "picks"); }
+
+// ---------- Admin: własna kolejka ----------
+const LEAGUES = [
+  { id:"laliga", name:"Hiszpańska LaLiga" },
+  { id:"eredivisie", name:"Holenderska Eredivisie" },
+  { id:"bundesliga", name:"Niemiecka Bundesliga" },
+  { id:"premier", name:"Angielska Premiership" },
+  { id:"seriea", name:"Włoska Serie A" },
+  { id:"ligue1", name:"Francuska Ligue 1" },
+  { id:"ekstraklasa", name:"Polska Ekstraklasa" },
+  { id:"ucl", name:"Liga Mistrzów" },
+  { id:"uel", name:"Liga Europy" },
+  { id:"uecl", name:"Liga Konferencji" },
+  { id:"cup_nl", name:"Puchar Holandii" },
+  { id:"cup_pl", name:"Puchar Polski" },
+  { id:"cup_es", name:"Puchar Hiszpanii" },
+  { id:"cup_en", name:"Puchar Anglii" },
+  { id:"cup_it", name:"Puchar Włoch" },
+];
+
+// Tymczasowa lista meczów do wyboru (bez API) — łatwo ją potem podmienić na pobieranie z serwera.
+const FIXTURES = {
+  laliga: [
+    ["Real Madrid","Barcelona"],["Atletico Madrid","Sevilla"],["Valencia","Villarreal"],["Real Sociedad","Betis"],
+    ["Athletic Bilbao","Getafe"],["Celta Vigo","Osasuna"],["Las Palmas","Mallorca"],["Girona","Alaves"],
+    ["Rayo Vallecano","Granada"],["Cadiz","Espanyol"],["Almeria","Valladolid"],["Leganes","Eibar"]
+  ],
+  eredivisie: [
+    ["Ajax","PSV"],["Feyenoord","AZ Alkmaar"],["Utrecht","Twente"],["Heerenveen","Sparta Rotterdam"],
+    ["Groningen","Vitesse"],["NEC","Go Ahead Eagles"],["Fortuna Sittard","Heracles"],["PEC Zwolle","Excelsior"],
+    ["RKC Waalwijk","NAC Breda"],["Volendam","Cambuur"],["Willem II","Emmen"],["ADO Den Haag","Roda JC"]
+  ],
+  bundesliga: [
+    ["Bayern","Dortmund"],["Leipzig","Leverkusen"],["Frankfurt","Stuttgart"],["Union Berlin","Werder Bremen"],
+    ["Freiburg","Hoffenheim"],["Wolfsburg","Mainz"],["Augsburg","Koln"],["Monchengladbach","Bochum"],
+    ["Heidenheim","Darmstadt"],["Hamburg","Schalke"],["Hertha","Nurnberg"],["Kaiserslautern","Hannover"]
+  ],
+  premier: [
+    ["Liverpool","Manchester City"],["Arsenal","Chelsea"],["Manchester United","Tottenham"],["Newcastle","Aston Villa"],
+    ["Everton","West Ham"],["Brighton","Brentford"],["Fulham","Crystal Palace"],["Wolves","Bournemouth"],
+    ["Nottingham Forest","Burnley"],["Sheffield United","Leeds"],["Southampton","Leicester"],["Ipswich","Sunderland"]
+  ],
+  seriea: [
+    ["Inter","Milan"],["Juventus","Napoli"],["Roma","Lazio"],["Atalanta","Fiorentina"],
+    ["Torino","Bologna"],["Udinese","Genoa"],["Cagliari","Sassuolo"],["Verona","Parma"],
+    ["Lecce","Empoli"],["Sampdoria","Monza"],["Palermo","Cremonese"],["Bari","Pisa"]
+  ],
+  ligue1: [
+    ["PSG","Marseille"],["Lyon","Monaco"],["Lille","Rennes"],["Nice","Lens"],
+    ["Nantes","Strasbourg"],["Montpellier","Toulouse"],["Reims","Brest"],["Metz","Clermont"],
+    ["Angers","Auxerre"],["Saint-Etienne","Bordeaux"],["Caen","Le Havre"],["Dijon","Amiens"]
+  ],
+  ekstraklasa: [
+    ["Jagiellonia","Piast"],["Lechia","Legia"],["Wisla Plock","Radomiak"],["GKS Katowice","Gornik"],
+    ["Arka","Cracovia"],["Lech","Pogon"],["Motor","Rakow"],["Korona","Widzew"],
+    ["Slask","Zaglebie"],["Stal Mielec","Puszcza"],["Wisla Krakow","LKS"],["Ruch","Gornik Zabrze"]
+  ],
+  ucl: [
+    ["Real Madrid","Bayern"],["Barcelona","PSG"],["Manchester City","Inter"],["Liverpool","Dortmund"],
+    ["Arsenal","Juventus"],["Napoli","Milan"],["Benfica","Porto"],["Atletico Madrid","Chelsea"],
+    ["Leverkusen","Monaco"],["Leipzig","Lille"],["Roma","Ajax"],["PSV","Sevilla"]
+  ],
+  uel: [
+    ["Roma","Sevilla"],["Leverkusen","Liverpool"],["Ajax","Marseille"],["Sporting","Benfica"],
+    ["West Ham","Villarreal"],["Lazio","Betis"],["Fenerbahce","Rangers"],["Shakhtar","Braga"],
+    ["Freiburg","Monaco"],["Nice","Feyenoord"],["AZ Alkmaar","Anderlecht"],["Slavia","Dinamo Zagreb"]
+  ],
+  uecl: [
+    ["Aston Villa","Fiorentina"],["PAOK","Besiktas"],["Legia","Basel"],["Lugano","Gent"],
+    ["Rapid Wien","Twente"],["Celtic","AZ Alkmaar"],["Hapoel","Lech"],["Partizan","Dinamo"],
+    ["Hearts","Rosenborg"],["Sparta","Fenerbahce"],["Viktoria Plzen","Brugge"],["LASK","Rayo Vallecano"]
+  ],
+  cup_nl: [
+    ["Ajax","Feyenoord"],["PSV","AZ Alkmaar"],["Twente","Utrecht"],["Vitesse","Heerenveen"],
+    ["Sparta Rotterdam","NEC"],["Go Ahead Eagles","Groningen"],["RKC Waalwijk","Heracles"],["PEC Zwolle","Fortuna Sittard"],
+    ["Willem II","ADO Den Haag"],["Cambuur","Volendam"]
+  ],
+  cup_pl: [
+    ["Lech","Legia"],["Wisla Krakow","Cracovia"],["Jagiellonia","Pogon"],["Rakow","Slask"],
+    ["Gornik","Widzew"],["Zaglebie","Korona"],["Arka","Motor"],["Piast","Lechia"],
+    ["Stal Mielec","Puszcza"],["Radomiak","Wisla Plock"]
+  ],
+  cup_es: [
+    ["Real Madrid","Atletico Madrid"],["Barcelona","Sevilla"],["Valencia","Betis"],["Villarreal","Real Sociedad"],
+    ["Athletic Bilbao","Osasuna"],["Celta Vigo","Getafe"],["Girona","Alaves"],["Mallorca","Las Palmas"],
+    ["Rayo Vallecano","Granada"],["Cadiz","Espanyol"]
+  ],
+  cup_en: [
+    ["Manchester City","Liverpool"],["Arsenal","Manchester United"],["Chelsea","Tottenham"],["Newcastle","Aston Villa"],
+    ["Everton","West Ham"],["Brighton","Brentford"],["Fulham","Crystal Palace"],["Wolves","Bournemouth"],
+    ["Nottingham Forest","Leeds"],["Southampton","Leicester"]
+  ],
+  cup_it: [
+    ["Inter","Juventus"],["Milan","Napoli"],["Roma","Lazio"],["Atalanta","Fiorentina"],
+    ["Torino","Bologna"],["Udinese","Genoa"],["Cagliari","Sassuolo"],["Verona","Parma"],
+    ["Lecce","Empoli"],["Monza","Sampdoria"]
+  ],
+};
+
+let builderSelected = []; // [{home, away, leagueId, leagueName}]
+
+function isAdmin(){
+  return currentRoom && currentRoom.adminUid === userUid;
+}
+
+function initBuilderUI(){
+  const sel = el("selLeague");
+  if(!sel) return;
+
+  sel.innerHTML = "";
+  for(const lg of LEAGUES){
+    const opt = document.createElement("option");
+    opt.value = lg.id;
+    opt.textContent = lg.name;
+    sel.appendChild(opt);
+  }
+
+  sel.onchange = ()=> renderBuilderPool();
+
+  el("btnBuilderClose").onclick = ()=> hideBuilder();
+  el("btnClearSelected").onclick = ()=>{
+    builderSelected = [];
+    renderBuilderSelected();
+    renderBuilderPool();
+    updateBuilderSaveState();
+  };
+
+  el("btnBuilderSave").onclick = ()=>{
+    if(builderSelected.length !== 10){
+      showToast("Musisz mieć dokładnie 10 meczów");
+      return;
+    }
+    // pokazujemy potwierdzenie
+    showBuilderConfirm();
+  };
+
+  el("btnConfirmYes").onclick = async ()=>{
+    hideBuilderConfirm();
+    await saveCustomQueueToFirestore();
+  };
+  el("btnConfirmNo").onclick = ()=>{
+    hideBuilderConfirm(); // wraca do ustawiania meczów
+  };
+}
+
+function openBuilder(){
+  if(!isAdmin()){
+    showToast("Tylko admin może ustawiać kolejkę");
+    return;
+  }
+  // reset (opcjonalnie możesz chcieć pamiętać wybór)
+  builderSelected = [];
+  renderBuilderPool();
+  renderBuilderSelected();
+  updateBuilderSaveState();
+  showBuilder();
+}
+
+function renderBuilderPool(){
+  const sel = el("selLeague");
+  const leagueId = sel ? sel.value : "ekstraklasa";
+  const lg = LEAGUES.find(x=>x.id===leagueId) || LEAGUES[0];
+  const list = el("poolList");
+  const arr = FIXTURES[leagueId] || [];
+
+  if(el("poolCount")) el("poolCount").textContent = String(arr.length);
+
+  if(!list) return;
+  list.innerHTML = "";
+
+  arr.forEach((pair)=>{
+    const home = pair[0], away = pair[1];
+
+    const item = document.createElement("div");
+    item.className = "bItem";
+    item.innerHTML = `<div style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${home} <span style="opacity:.7">vs</span> ${away}</div>`;
+    const sp = document.createElement("div"); sp.className="spacer";
+
+    const btn = document.createElement("button");
+    btn.className = "bMini";
+    btn.textContent = "Dodaj";
+
+    const already = builderSelected.some(x=>x.home===home && x.away===away && x.leagueId===leagueId);
+    if(already){
+      btn.textContent = "Dodane";
+      btn.disabled = true;
+      btn.style.opacity = ".6";
+      btn.style.cursor = "not-allowed";
+    }
+    if(builderSelected.length >= 10 && !already){
+      btn.disabled = true;
+      btn.style.opacity = ".6";
+      btn.style.cursor = "not-allowed";
+    }
+
+    btn.onclick = ()=>{
+      if(builderSelected.length >= 10){
+        showToast("Limit 10 meczów");
+        return;
+      }
+      builderSelected.push({ home, away, leagueId, leagueName: lg.name });
+      renderBuilderSelected();
+      renderBuilderPool();
+      updateBuilderSaveState();
+
+      if(builderSelected.length === 10){
+        // automatycznie pokazujemy pytanie
+        showBuilderConfirm();
+      }
+    };
+
+    item.appendChild(sp);
+    item.appendChild(btn);
+    list.appendChild(item);
+  });
+}
+
+function renderBuilderSelected(){
+  const list = el("selectedList");
+  if(el("selectedCount")) el("selectedCount").textContent = String(builderSelected.length);
+  if(!list) return;
+
+  list.innerHTML = "";
+  builderSelected.forEach((m, idx)=>{
+    const item = document.createElement("div");
+    item.className = "bItem";
+
+    const t = document.createElement("div");
+    t.style.minWidth="0";
+    t.style.overflow="hidden";
+    t.style.textOverflow="ellipsis";
+    t.style.whiteSpace="nowrap";
+    t.textContent = `${idx+1}. ${m.home} vs ${m.away}`;
+
+    const sub = document.createElement("div");
+    sub.style.opacity=".75";
+    sub.style.fontWeight="900";
+    sub.style.fontSize="12px";
+    sub.textContent = m.leagueName;
+
+    const col = document.createElement("div");
+    col.style.display="flex";
+    col.style.flexDirection="column";
+    col.style.gap="2px";
+    col.appendChild(t);
+    col.appendChild(sub);
+
+    const sp = document.createElement("div"); sp.className="spacer";
+
+    const del = document.createElement("button");
+    del.className = "bMini";
+    del.textContent = "Usuń";
+    del.onclick = ()=>{
+      builderSelected.splice(idx,1);
+      renderBuilderSelected();
+      renderBuilderPool();
+      updateBuilderSaveState();
+    };
+
+    item.appendChild(col);
+    item.appendChild(sp);
+    item.appendChild(del);
+    list.appendChild(item);
+  });
+}
+
+function updateBuilderSaveState(){
+  const btn = el("btnBuilderSave");
+  const hint = el("builderHint");
+  if(btn) btn.disabled = (builderSelected.length !== 10);
+  if(hint){
+    if(builderSelected.length < 10) hint.textContent = `Dodaj jeszcze ${10 - builderSelected.length} meczów.`;
+    else if(builderSelected.length === 10) hint.textContent = `Gotowe: 10 meczów. Możesz zapisać.`;
+    else hint.textContent = `Za dużo meczów.`;
+  }
+}
+
+async function saveCustomQueueToFirestore(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){
+    showToast("Tylko admin");
+    return;
+  }
+  if(builderSelected.length !== 10){
+    showToast("Musisz mieć dokładnie 10 meczów");
+    return;
+  }
+
+  try{
+    // 1) pobierz istniejące mecze i usuń
+    const existingSnap = await fs.getDocs(matchesCol(currentRoomCode));
+    const b = fs.writeBatch(db);
+
+    existingSnap.forEach((docu)=>{
+      b.delete(docu.ref);
+    });
+
+    // 2) dodaj nowe 10
+    builderSelected.forEach((m, idx)=>{
+      const id = `m_${Date.now()}_${idx}`;
+      const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
+      b.set(ref, {
+        idx,
+        home: m.home,
+        away: m.away,
+        leagueId: m.leagueId,
+        leagueName: m.leagueName,
+        createdAt: fs.serverTimestamp()
+      });
+    });
+
+    await b.commit();
+    showToast("Zapisano kolejkę ✅");
+    hideBuilder();
+    // po zapisie po prostu zostajesz w oknie typowania (room już jest)
+  }catch(e){
+    console.error(e);
+    showToast("Błąd zapisu kolejki");
+  }
+}
+
 // ---------- boot ----------
 async function boot(){
   setBg(BG_TLO);
@@ -283,10 +504,7 @@ async function boot(){
   auth = getAuth(app);
   db = getFirestore(app);
 
-  boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
-  boot.serverTimestamp = serverTimestamp;
-  boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
-  boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc; boot.getDocs = getDocs;
+  fs = { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, orderBy, onSnapshot, writeBatch, deleteDoc, getDocs };
 
   await new Promise((resolve, reject)=>{
     const unsub = onAuthStateChanged(auth, async(u)=>{
@@ -307,14 +525,14 @@ async function boot(){
   await ensureNick();
   refreshNickLabels();
   bindUI();
-  initLeagueSelect();
+  initBuilderUI();
 
-  // jeśli jest zapisany pokój -> pytanie kontynuacji
+  // jeśli jest zapisany pokój -> pokaż pytanie o kontynuację (bez kodu)
   const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
   if(saved && saved.length === 6){
-    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam nazwę…`);
+    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam…`);
     try{
-      const snap = await boot.getDoc(roomRef(saved));
+      const snap = await fs.getDoc(roomRef(saved));
       if(!snap.exists()){
         clearSavedRoom();
         showScreen("menu");
@@ -323,47 +541,34 @@ async function boot(){
       }
       const room = snap.data();
       showScreen("menu");
-      prepareContinueModal(saved, room?.name || "—");
+      // guziki kontynuacji
+      el("btnContinueYes").onclick = async ()=>{
+        hideContinueModal();
+        localStorage.setItem(KEY_ACTIVE_ROOM, saved);
+        await openRoom(saved, { silent:true, force:true });
+      };
+      el("btnContinueNo").onclick = ()=>{
+        hideContinueModal();
+        showScreen("rooms");
+      };
+      el("btnContinueForget").onclick = ()=>{
+        clearSavedRoom();
+        hideContinueModal();
+        showToast("Zapomniano pokój");
+        showScreen("menu");
+      };
+
+      showContinueModal({ roomName: room?.name || "—" });
       return;
-    }catch{
+    }catch(e){
+      console.error(e);
       clearSavedRoom();
       showScreen("menu");
-      showToast("Nie udało się sprawdzić pokoju");
       return;
     }
   }
 
   showScreen("menu");
-}
-
-function prepareContinueModal(code, roomName){
-  const yes = el("btnContinueYes");
-  const no = el("btnContinueNo");
-  const forget = el("btnContinueForget");
-
-  if(yes){
-    yes.onclick = async ()=>{
-      hideContinueModal();
-      localStorage.setItem(KEY_ACTIVE_ROOM, code);
-      await openRoom(code, { silent:true, force:true });
-    };
-  }
-  if(no){
-    no.onclick = ()=>{
-      hideContinueModal();
-      showScreen("menu");
-    };
-  }
-  if(forget){
-    forget.onclick = ()=>{
-      clearSavedRoom();
-      showToast("Zapomniano pokój");
-      hideContinueModal();
-      showScreen("menu");
-    };
-  }
-
-  showContinueModal({ code, roomName });
 }
 
 // ---------- UI binding ----------
@@ -418,38 +623,11 @@ function bindUI(){
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
-
-  // admin actions
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnAdminQueue").onclick = ()=>{ openAdminQueue(); };
 
-  // queue modal
-  el("btnQueueClose").onclick = ()=> hideQueueModal();
-  el("btnQueueClose2").onclick = ()=> hideQueueModal();
-  el("btnClearQueue").onclick = async ()=>{ await clearAllMatches(); };
-  el("selLeague").onchange = ()=> renderCatalog();
+  // ADMIN custom queue
+  el("btnCustomQueue").onclick = ()=> openBuilder();
 }
-
-// ---------- leagues select ----------
-function initLeagueSelect(){
-  const sel = el("selLeague");
-  if(!sel) return;
-  sel.innerHTML = "";
-  for(const l of LEAGUES){
-    const opt = document.createElement("option");
-    opt.value = l.id;
-    opt.textContent = l.name;
-    sel.appendChild(opt);
-  }
-  // domyślnie Polska
-  sel.value = "ekstraklasa";
-}
-
-// ---------- Firestore paths ----------
-function roomRef(code){ return boot.doc(db, "rooms", code); }
-function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
 // ---------- Rooms logic ----------
 async function createRoom(roomName){
@@ -459,18 +637,18 @@ async function createRoom(roomName){
   for(let tries=0; tries<12; tries++){
     const code = genCode6();
     const ref = roomRef(code);
-    const snap = await boot.getDoc(ref);
+    const snap = await fs.getDoc(ref);
     if(snap.exists()) continue;
 
-    await boot.setDoc(ref, {
+    await fs.setDoc(ref, {
       name: roomName,
       adminUid: userUid,
       adminNick: nick,
-      createdAt: boot.serverTimestamp()
+      createdAt: fs.serverTimestamp()
     });
 
-    await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-      nick, uid: userUid, joinedAt: boot.serverTimestamp()
+    await fs.setDoc(fs.doc(db, "rooms", code, "players", userUid), {
+      nick, uid: userUid, joinedAt: fs.serverTimestamp()
     });
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -486,15 +664,15 @@ async function joinRoom(code){
   el("debugRooms").textContent = "Dołączam…";
 
   const ref = roomRef(code);
-  const snap = await boot.getDoc(ref);
+  const snap = await fs.getDoc(ref);
   if(!snap.exists()){
     el("debugRooms").textContent = "Nie ma takiego pokoju.";
     showToast("Nie ma takiego pokoju");
     return;
   }
 
-  await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-    nick, uid: userUid, joinedAt: boot.serverTimestamp()
+  await fs.setDoc(fs.doc(db, "rooms", code, "players", userUid), {
+    nick, uid: userUid, joinedAt: fs.serverTimestamp()
   }, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -505,7 +683,7 @@ async function joinRoom(code){
 async function leaveRoom(){
   if(!currentRoomCode) return;
   try{
-    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
+    await fs.deleteDoc(fs.doc(db, "rooms", currentRoomCode, "players", userUid));
   }catch{}
 
   localStorage.removeItem(KEY_ACTIVE_ROOM);
@@ -559,7 +737,7 @@ async function openRoom(code, opts={}){
   renderPlayers([]);
 
   const ref = roomRef(code);
-  const snap = await boot.getDoc(ref);
+  const snap = await fs.getDoc(ref);
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
 
@@ -568,23 +746,23 @@ async function openRoom(code, opts={}){
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
   el("roomCode").textContent = code;
 
-  const isAdmin = (currentRoom.adminUid === userUid);
-  el("btnAddQueue").style.display = isAdmin ? "block" : "none";
-  el("btnAdminQueue").style.display = isAdmin ? "block" : "none";
+  const admin = isAdmin();
+  el("btnAddQueue").style.display = admin ? "block" : "none";
+  el("btnCustomQueue").style.display = admin ? "block" : "none";
 
-  unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
+  unsubRoomDoc = fs.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
     currentRoom = d.data();
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
-    const isAdm = (currentRoom.adminUid === userUid);
-    el("btnAddQueue").style.display = isAdm ? "block" : "none";
-    el("btnAdminQueue").style.display = isAdm ? "block" : "none";
+    const admin2 = isAdmin();
+    el("btnAddQueue").style.display = admin2 ? "block" : "none";
+    el("btnCustomQueue").style.display = admin2 ? "block" : "none";
   });
 
   // live players
-  const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
-  unsubPlayers = boot.onSnapshot(pq, (qs)=>{
+  const pq = fs.query(playersCol(code), fs.orderBy("joinedAt","asc"));
+  unsubPlayers = fs.onSnapshot(pq, (qs)=>{
     const arr = [];
     qs.forEach(docu=> arr.push(docu.data()));
     lastPlayers = arr;
@@ -592,7 +770,7 @@ async function openRoom(code, opts={}){
   });
 
   // live picks (status)
-  unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
+  unsubPicks = fs.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
       const data = d.data();
@@ -603,8 +781,8 @@ async function openRoom(code, opts={}){
   });
 
   // live matches
-  const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
-  unsubMatches = boot.onSnapshot(mq, async (qs)=>{
+  const mq = fs.query(matchesCol(code), fs.orderBy("idx","asc"));
+  unsubMatches = fs.onSnapshot(mq, async (qs)=>{
     const arr = [];
     qs.forEach(docu=>{
       arr.push({ id: docu.id, ...docu.data() });
@@ -624,8 +802,8 @@ async function openRoom(code, opts={}){
 // ---------- Picks (TY) ----------
 async function loadMyPicks(){
   try{
-    const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
-    const snap = await boot.getDoc(ref);
+    const ref = fs.doc(db, "rooms", currentRoomCode, "picks", userUid);
+    const snap = await fs.getDoc(ref);
     if(!snap.exists()){
       picksCache = {};
       return;
@@ -652,11 +830,11 @@ async function saveAllPicks(){
     return;
   }
 
-  const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
-  await boot.setDoc(ref, {
+  const ref = fs.doc(db, "rooms", currentRoomCode, "picks", userUid);
+  await fs.setDoc(ref, {
     uid: userUid,
     nick: getNick(),
-    updatedAt: boot.serverTimestamp(),
+    updatedAt: fs.serverTimestamp(),
     picks: picksCache
   }, { merge:true });
 
@@ -819,128 +997,10 @@ function updateSaveButtonState(){
   btn.disabled = !allMyPicksFilled();
 }
 
-// ---------- Admin Queue Builder ----------
-function openAdminQueue(){
-  if(!currentRoomCode) return;
-  if(currentRoom?.adminUid !== userUid){
-    showToast("Tylko admin");
-    return;
-  }
-  renderCatalog();
-  setQueueStatus(`Pokój: ${currentRoomCode} • mecze w pokoju: ${matchesCache.length}`);
-  showQueueModal();
-}
-
-function renderCatalog(){
-  const sel = el("selLeague");
-  const box = el("catalogList");
-  if(!sel || !box) return;
-
-  const leagueId = sel.value;
-  const list = CATALOG[leagueId] || [];
-  box.innerHTML = "";
-
-  if(!list.length){
-    const empty = document.createElement("div");
-    empty.className = "qHint";
-    empty.textContent = "Brak meczów w katalogu dla tej ligi (na razie).";
-    box.appendChild(empty);
-    return;
-  }
-
-  list.forEach(pair=>{
-    const [home, away] = pair;
-
-    const row = document.createElement("div");
-    row.className = "qMatch";
-    row.title = "Kliknij, aby dodać do kolejki";
-
-    const left = document.createElement("div");
-    left.className = "qTeams";
-    const b1 = document.createElement("b");
-    b1.textContent = home;
-    const b2 = document.createElement("b");
-    b2.style.opacity = ".92";
-    b2.textContent = away;
-    left.appendChild(b1);
-    left.appendChild(b2);
-
-    const right = document.createElement("div");
-    right.className = "badge";
-    right.textContent = "Dodaj";
-
-    row.appendChild(left);
-    row.appendChild(right);
-
-    row.onclick = async ()=>{
-      await addMatchFromCatalog(leagueId, home, away);
-    };
-
-    box.appendChild(row);
-  });
-}
-
-function nextIdx(){
-  if(!matchesCache.length) return 0;
-  let maxIdx = -1;
-  for(const m of matchesCache){
-    const v = Number.isFinite(m.idx) ? m.idx : -1;
-    if(v > maxIdx) maxIdx = v;
-  }
-  return maxIdx + 1;
-}
-
-async function addMatchFromCatalog(leagueId, home, away){
-  if(!currentRoomCode) return;
-  if(currentRoom?.adminUid !== userUid){
-    showToast("Tylko admin");
-    return;
-  }
-
-  // zabezpieczenie przed duplikatem (home+away)
-  const dup = matchesCache.some(m => (m.home === home && m.away === away));
-  if(dup){
-    showToast("Ten mecz już jest w kolejce");
-    return;
-  }
-
-  const idx = nextIdx();
-  const id = `m_${Date.now()}_${normalizeSlug(home)}_${normalizeSlug(away)}`;
-
-  const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
-  await boot.setDoc(ref, {
-    idx,
-    home,
-    away,
-    league: leagueId,
-    createdAt: boot.serverTimestamp()
-  });
-
-  showToast(`Dodano: ${home} – ${away}`);
-  setQueueStatus(`Dodano mecz • mecze w pokoju: ${matchesCache.length + 1}`);
-}
-
-async function clearAllMatches(){
-  if(!currentRoomCode) return;
-  if(currentRoom?.adminUid !== userUid){
-    showToast("Tylko admin");
-    return;
-  }
-  if(!confirm("Usunąć WSZYSTKIE mecze z tego pokoju?")) return;
-
-  const qs = await boot.getDocs(matchesCol(currentRoomCode));
-  const b = boot.writeBatch(db);
-  qs.forEach(d => b.delete(d.ref));
-  await b.commit();
-
-  showToast("Wyczyszczono kolejkę");
-  setQueueStatus("Kolejka wyczyszczona");
-}
-
 // ---------- test queue ----------
 async function addTestQueue(){
   if(!currentRoomCode) return;
-  if(currentRoom?.adminUid !== userUid){
+  if(!isAdmin()){
     showToast("Tylko admin");
     return;
   }
@@ -958,22 +1018,17 @@ async function addTestQueue(){
     ["Stal Mielec","Puszcza"]
   ];
 
-  const startIdx = nextIdx();
-  const b = boot.writeBatch(db);
-
-  sample.forEach((pair, i)=>{
-    const [home, away] = pair;
-    const id = `m_${Date.now()}_${i}`;
-    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+  const b = fs.writeBatch(db);
+  sample.forEach((pair, idx)=>{
+    const id = `m_${Date.now()}_${idx}`;
+    const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
     b.set(ref, {
-      idx: startIdx + i,
-      home,
-      away,
-      league: "ekstraklasa",
-      createdAt: boot.serverTimestamp()
+      idx,
+      home: pair[0],
+      away: pair[1],
+      createdAt: fs.serverTimestamp()
     });
   });
-
   await b.commit();
   showToast("Dodano kolejkę (test)");
 }
