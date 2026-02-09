@@ -31,12 +31,10 @@
     }
     #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
 
-    /* UWAGA: #app jest centrowaniem, a frame jest skalowany */
     #app{
       position:fixed;inset:0;
       display:flex;align-items:center;justify-content:center;
-      padding:0;z-index:1;
-      overflow:hidden;
+      overflow:hidden;z-index:1;
     }
 
     .frame{
@@ -48,7 +46,6 @@
       box-shadow:var(--shadow);
       backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
       overflow:hidden;position:relative;
-
       transform: scale(var(--uiScale));
       transform-origin: center center;
     }
@@ -130,10 +127,12 @@
     #mainMenu{align-items:center;justify-content:center}
     .menuImgWrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
     #menuBgImg{width:100%;height:100%;object-fit:cover;display:block;}
+
     .menuBtns{
       position:absolute;left:50%;top:52%;
       transform:translate(-50%,-50%);
       display:flex;gap:34px;align-items:center;justify-content:center;
+      z-index:2;
     }
     .imgBtn{
       width:280px;height:auto;cursor:pointer;user-select:none;-webkit-user-drag:none;
@@ -141,6 +140,26 @@
       transition: transform .08s ease;
     }
     .imgBtn:active{ transform: scale(0.98); }
+
+    /* NOWY PRZYCISK POD GŁÓWNYMI (LEAGUE) */
+    .menuBottomBtns{
+      position:absolute;left:50%;top:66%;
+      transform:translate(-50%,-50%);
+      display:flex;gap:14px;align-items:center;justify-content:center;
+      z-index:3;
+    }
+    .menuLeagueBtn{
+      min-width:320px;
+      padding:14px 18px;
+      border-radius:18px;
+      font-size:16px;
+      letter-spacing:.2px;
+      background:rgba(8,22,52,.55);
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 14px 26px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
 
     /* ROOM LAYOUT */
     #room{padding:16px;gap:14px;align-items:stretch}
@@ -186,7 +205,6 @@
     }
     .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
 
-    /* eye button */
     .eyeBtn{
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.10);
@@ -208,6 +226,18 @@
     .block{padding:14px}
     .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
     .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* LEAGUE SCREEN */
+    #league{padding:16px}
+    .leagueBox{width:min(1100px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .tableWrap{overflow:auto;max-height:620px;border-radius:18px}
+    table{width:100%;border-collapse:collapse}
+    th, td{padding:12px 12px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;font-weight:900}
+    th{position:sticky;top:0;background:rgba(8,22,52,.85);backdrop-filter:blur(8px)}
+    tr:hover td{background:rgba(255,255,255,.04)}
+    .pos{width:60px}
+    .pts{width:120px;text-align:right}
+    .rnd{width:140px;text-align:right}
 
     /* MODALS */
     .modal{
@@ -282,6 +312,11 @@
             <img id="btnMenuStats" class="imgBtn" src="btn_statystyki.png" alt="Statystyki" />
             <img id="btnMenuExit" class="imgBtn" src="btn_wyjscie.png" alt="Wyjście" />
           </div>
+
+          <!-- NOWY PRZYCISK -->
+          <div class="menuBottomBtns">
+            <button id="btnMenuLeague" class="btn menuLeagueBtn">Tabela ligi typerów</button>
+          </div>
         </div>
       </section>
 
@@ -317,6 +352,41 @@
           <div class="panel block">
             <h2>Debug</h2>
             <div class="help" id="debugRooms">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LEAGUE TABLE -->
+      <section id="league" class="screen">
+        <div class="leagueBox panel">
+          <div class="row">
+            <div class="chip">Tabela ligi typerów</div>
+            <div class="chip">Po kolejce: <span id="leagueAfterRound">—</span></div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnLeagueRefresh">Odśwież</button>
+            <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
+          </div>
+
+          <div class="panel" style="padding:14px">
+            <div class="row">
+              <div class="title" style="margin:0">Ranking</div>
+              <div class="spacer"></div>
+              <div class="sub" id="leagueInfo">—</div>
+            </div>
+          </div>
+
+          <div class="panel tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="pos">#</th>
+                  <th>Gracz</th>
+                  <th class="rnd">Kolejki</th>
+                  <th class="pts">Punkty</th>
+                </tr>
+              </thead>
+              <tbody id="leagueBody"></tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -440,7 +510,7 @@
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnCloseResults">Zamknij</button>
           </div>
-          <div class="sub">Wpisz wyniki i zapisz. Gracze zobaczą kropki: 🟢/🟡/🔴.</div>
+          <div class="sub">Wpisz wyniki i zapisz. Punkty trafią do ligi po tej kolejce.</div>
 
           <div class="listGrid" id="resultsList" style="grid-template-columns:1fr;"></div>
 
@@ -457,7 +527,6 @@
   </div>
 
   <script>
-    // debug błędów
     const hint = document.getElementById("splashHint");
     const errBox = document.getElementById("splashErr");
     function showErr(title, msg){
@@ -472,12 +541,10 @@
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
 
-    // WYMUSZENIE WYGLĄDU JAK NA GRAFICE:
-    // UI jest projektowane w bazie 1600x900 i skalowane do aktualnego okna.
     function applyScale(){
       const root = document.documentElement;
       const baseW = 1600, baseH = 900;
-      const pad = 24; // zapas na marginesy
+      const pad = 24;
       const sx = (window.innerWidth - pad) / baseW;
       const sy = (window.innerHeight - pad) / baseH;
       const scale = Math.max(0.5, Math.min(1, Math.min(sx, sy)));
@@ -487,6 +554,6 @@
     applyScale();
   </script>
 
-  <script type="module" src="./app.js?v=1241"></script>
+  <script type="module" src="./app.js?v=1242"></script>
 </body>
 </html>
