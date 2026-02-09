@@ -183,14 +183,14 @@
     }
     .imgBtn img{
       display:block;
-      height:90px; /* wymuszenie “ładnych” rozmiarów */
+      height:90px;
       width:auto;
       border-radius:16px;
     }
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
-    /* ===== ROOMS (create/join) ===== */
+    /* ===== ROOMS ===== */
     #rooms{padding:16px;gap:14px}
     .roomsBox{
       width:min(980px,100%);
@@ -204,7 +204,7 @@
     .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
     .help{color:var(--muted);font-weight:800;font-size:13px}
 
-    /* ===== CONTINUE SCREEN (po klik Pokoje typerów, jeśli jest zapisany pokój) ===== */
+    /* ===== CONTINUE ===== */
     #continue{
       padding:16px;
       align-items:center;
@@ -261,7 +261,7 @@
       align-items:center;
     }
 
-    /* ===== ROOM LAYOUT ===== */
+    /* ===== ROOM ===== */
     #room{padding:16px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
@@ -289,6 +289,15 @@
     .scoreBox{display:flex;align-items:center;gap:8px}
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
+    .resultPill{
+      margin-left:8px;
+      padding:8px 10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      font-weight:1000;
+      white-space:nowrap;
+    }
 
     .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .playerRow{
@@ -303,7 +312,6 @@
       border:1px solid rgba(255,255,255,.12);
       font-weight:1000;font-size:12px
     }
-
     .eyeBtn{
       width:36px;height:28px;
       border-radius:12px;
@@ -324,7 +332,34 @@
     }
     .rightFooterBtn .btn{width:100%}
 
-    /* ===== LEAGUE TABLE ===== */
+    /* ===== RESULTS SCREEN ===== */
+    #results{
+      padding:16px;
+      align-items:center;
+      justify-content:center;
+    }
+    .resultsWrap{
+      width:min(1100px,100%);
+      margin:auto;
+      padding:14px;
+    }
+    .resultsTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .resultsList{
+      max-height:min(680px,70vh);
+      overflow:auto;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    /* ===== LEAGUE ===== */
     #league{
       padding:16px;
       align-items:center;
@@ -369,7 +404,6 @@
     .pstatsBody{padding:14px}
     .kv{display:flex;gap:10px;flex-wrap:wrap}
     .kv .pill{font-weight:1000}
-
   </style>
 </head>
 
@@ -389,7 +423,7 @@
         </div>
       </section>
 
-      <!-- HOME (MENU PNG) -->
+      <!-- HOME -->
       <section id="home" class="screen">
         <div class="homeBtns" aria-label="Menu">
           <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
@@ -404,7 +438,7 @@
         </div>
       </section>
 
-      <!-- CONTINUE SCREEN -->
+      <!-- CONTINUE -->
       <section id="continue" class="screen">
         <div class="continueBox panel">
           <div class="continueCard">
@@ -439,7 +473,7 @@
         </div>
       </section>
 
-      <!-- ROOMS (CREATE/JOIN) -->
+      <!-- ROOMS -->
       <section id="rooms" class="screen">
         <div class="roomsBox panel">
           <div class="row">
@@ -477,7 +511,7 @@
 
       <!-- ROOM -->
       <section id="room" class="screen">
-        <div id="roomRoot" style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
+        <div style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
 
           <!-- LEFT -->
           <div class="leftBar panel">
@@ -506,6 +540,9 @@
               <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+
+                <!-- ADMIN -->
+                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
                 <button class="btn" id="btnMyQueue" style="display:none">Własna kolejka</button>
                 <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
               </div>
@@ -548,7 +585,29 @@
         </div>
       </section>
 
-      <!-- LEAGUE TABLE -->
+      <!-- RESULTS (ADMIN) -->
+      <section id="results" class="screen">
+        <div class="resultsWrap panel">
+          <div class="resultsTop">
+            <div class="row" style="gap:10px;flex-wrap:wrap">
+              <div class="chip">Wyniki</div>
+              <div class="chip">Pokój: <span id="resRoomName">—</span></div>
+              <div class="chip">KOLEJKA: <span id="resRound">—</span></div>
+            </div>
+            <div class="row">
+              <button class="btn btnSmall" id="btnResBack">Wróć</button>
+              <button class="btn btnSmall" id="btnResSave">Zapisz wyniki</button>
+            </div>
+          </div>
+
+          <div class="panel resultsList" id="resultsList"></div>
+          <div class="sub" style="padding:10px 14px">
+            Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
+          </div>
+        </div>
+      </section>
+
+      <!-- LEAGUE -->
       <section id="league" class="screen">
         <div class="leagueWrap panel">
           <div class="leagueTop">
@@ -571,15 +630,15 @@
             <div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
               <table id="leagueTable">
                 <thead>
-                  <tr>
-                    <th style="width:60px">#</th>
-                    <th>Gracz</th>
-                    <th style="width:120px">Kolejki</th>
-                    <th style="width:120px">Punkty</th>
-                  </tr>
+                <tr>
+                  <th style="width:60px">#</th>
+                  <th>Gracz</th>
+                  <th style="width:120px">Kolejki</th>
+                  <th style="width:120px">Punkty</th>
+                </tr>
                 </thead>
                 <tbody id="leagueBody">
-                  <tr><td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
+                <tr><td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -634,6 +693,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2000"></script>
+  <script type="module" src="./app.js?v=2001"></script>
 </body>
 </html>

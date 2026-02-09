@@ -1,12 +1,11 @@
-const BUILD = 2000;
+const BUILD = 2001;
 
-// Jedno tło menu (bez dodatkowych mgieł / dodatkowych obrazów)
 const BG_HOME = "img_menu_pc.png";
-const BG_ROOM = "img_tlo.png"; // jeśli chcesz w pokoju inne tło, zostaw. Jak ma być zawsze img_menu_pc.png -> ustaw na to samo.
+const BG_ROOM = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v3";
 const KEY_ACTIVE_ROOM = "typer_active_room_v3";
-const KEY_ROOMS_HISTORY = "typer_rooms_history_v3"; // lista kodów, żeby wybierać pokoje do tabeli
+const KEY_ROOMS_HISTORY = "typer_rooms_history_v3";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
@@ -18,7 +17,6 @@ const firebaseConfig = {
   measurementId: "G-5FBDH5G15N"
 };
 
-// helpers
 const el = (id) => document.getElementById(id);
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
@@ -33,14 +31,15 @@ function showToast(msg){
 }
 
 function showScreen(id){
-  const ids = ["splash","home","continue","rooms","room","league","pstats"];
+  const ids = ["splash","home","continue","rooms","room","results","league","pstats"];
   ids.forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
 
-  // tło zależnie od ekranu
+  // tło
   if(id === "room") setBg(BG_ROOM);
+  else if(id === "results") setBg(BG_ROOM);
   else setBg(BG_HOME);
 }
 
@@ -69,15 +68,13 @@ function normalizeSlug(s){
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/ł/g,"l")
-    .replace(/[^a-z0-9]+/g,"_")
-    .replace(/^_+|_+$/g,"");
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
-// Nick
 function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
-
 async function ensureNick(){
   let nick = getNick();
   while(!nick){
@@ -90,7 +87,6 @@ async function ensureNick(){
   refreshNickLabels();
   return nick;
 }
-
 function refreshNickLabels(){
   const nick = getNick() || "—";
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
@@ -98,7 +94,6 @@ function refreshNickLabels(){
   if (el("leagueNick")) el("leagueNick").textContent = nick;
 }
 
-// room saved
 function getSavedRoom(){
   return (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
 }
@@ -117,9 +112,10 @@ function pushRoomHistory(code){
   localStorage.setItem(KEY_ROOMS_HISTORY, JSON.stringify(arr));
 }
 
-// Firebase
+// Firebase boot
 let app, auth, db;
 let userUid = null;
+const boot = {};
 
 let unsubRoomDoc = null;
 let unsubPlayers = null;
@@ -128,21 +124,22 @@ let unsubPicks = null;
 
 let currentRoomCode = null;
 let currentRoom = null;
-
-// “Kolejka” – na razie etykieta/placeholder, dopniemy pełne roundy w kolejnym kroku
 let currentRoundNo = 1;
 
-// Cache
-let matchesCache = [];      // [{id, home, away, idx}]
-let picksCache = {};        // matchId -> {h,a}
-let picksDocByUid = {};     // uid -> picks object
-let submittedByUid = {};    // uid -> boolean
+let matchesCache = [];   // [{id, home, away, idx, resultH, resultA}]
+let picksCache = {};     // my picks: matchId -> {h,a}
+let picksDocByUid = {};  // uid -> picks object
+let submittedByUid = {}; // uid -> bool
 let lastPlayers = [];
+
+function roomRef(code){ return boot.doc(db, "rooms", code); }
+function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
+function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
+function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 
 function isCompletePicksObject(picksObj){
   if(!matchesCache.length) return false;
   if(!picksObj || typeof picksObj !== "object") return false;
-
   for(const m of matchesCache){
     const p = picksObj[m.id];
     if(!p) return false;
@@ -159,15 +156,6 @@ function recomputeSubmittedMap(){
 function iAmSubmitted(){
   return !!submittedByUid[userUid];
 }
-
-// Firestore paths
-function roomRef(code){ return boot.doc(db, "rooms", code); }
-function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
-
-// boot loader holder
-const boot = {};
 
 async function initFirebase(){
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
@@ -203,16 +191,11 @@ async function initFirebase(){
   });
 }
 
-// ===== UI BINDING =====
+// ===== UI =====
 function bindUI(){
-  // HOME buttons
+  // HOME
   el("btnHomeRooms").onclick = async ()=>{
-    // po kliknięciu “Pokoje typerów”:
-    // 1) jeśli nie ma nicku -> pytaj
-    // 2) jeśli jest zapisany pokój -> pokaż CONTINUE
-    // 3) w przeciwnym razie -> ROOMS (create/join)
     if(!getNick()) await ensureNick();
-
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
       await showContinueIfRoomExists(saved);
@@ -222,42 +205,29 @@ function bindUI(){
   };
 
   el("btnHomeStats").onclick = async ()=>{
-    // Statystyki = tabela ligi (globalny przycisk) -> jeśli jesteś w pokoju to otwórz ten pokój, a jeśli nie, to poproś o wybór.
     if(!getNick()) await ensureNick();
-
     if(currentRoomCode){
       await openLeagueTable(currentRoomCode);
       return;
     }
-
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
       await openLeagueTable(saved);
       return;
     }
-
-    // jeśli brak zapisów - przerzucamy do “Pokoje” żeby wybrał
     showToast("Najpierw wybierz / dołącz do pokoju");
     showScreen("rooms");
   };
 
-  el("btnHomeExit").onclick = ()=>{
-    // w PWA nie zamkniemy karty – robimy “powrót na HOME” + komunikat
-    showToast("Możesz zamknąć kartę przeglądarki.");
-  };
+  el("btnHomeExit").onclick = ()=> showToast("Możesz zamknąć kartę przeglądarki.");
 
-  // CONTINUE screen buttons
+  // CONTINUE
   el("btnContYes").onclick = async ()=>{
     const code = getSavedRoom();
     if(!code) { showScreen("rooms"); return; }
     await openRoom(code, { force:true });
   };
-
-  el("btnContNo").onclick = ()=>{
-    // Nie kontynuuj -> dopiero teraz okno tworzenia / dołączania
-    showScreen("rooms");
-  };
-
+  el("btnContNo").onclick = ()=> showScreen("rooms");
   el("btnContForget").onclick = ()=>{
     clearSavedRoom();
     showToast("Zapomniano pokój");
@@ -266,30 +236,21 @@ function bindUI(){
 
   // ROOMS
   el("btnBackHomeFromRooms").onclick = ()=> showScreen("home");
-
   el("btnChangeNickRooms").onclick = async ()=>{
     localStorage.removeItem(KEY_NICK);
     await ensureNick();
     showToast("Zmieniono nick");
   };
-
   el("btnCreateRoom").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const name = (el("inpRoomName").value || "").trim();
-    if(name.length < 2){
-      showToast("Podaj nazwę pokoju");
-      return;
-    }
+    if(name.length < 2){ showToast("Podaj nazwę pokoju"); return; }
     await createRoom(name);
   };
-
   el("btnJoinRoom").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
-    if(code.length !== 6){
-      showToast("Kod musi mieć 6 znaków");
-      return;
-    }
+    if(code.length !== 6){ showToast("Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
   };
 
@@ -301,44 +262,49 @@ function bindUI(){
     try{
       await navigator.clipboard.writeText(currentRoomCode);
       showToast("Skopiowano kod");
-    }catch{
-      showToast("Nie udało się skopiować");
-    }
+    }catch{ showToast("Nie udało się skopiować"); }
   };
 
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
+
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
 
-  // admin buttons (na razie zostawiamy – mechanikę “własnej kolejki” dopinamy w kolejnym kroku)
+  // ADMIN
+  el("btnEnterResults").onclick = async ()=>{
+    if(!isAdmin()) { showToast("Tylko admin"); return; }
+    if(!matchesCache.length){ showToast("Brak meczów"); return; }
+    openResultsScreen();
+  };
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast("Własna kolejka – dopinamy w następnym kroku"); };
+  el("btnMyQueue").onclick = async ()=>{ showToast("Własna kolejka – dopinamy dalej"); };
 
-  // League from room right-bottom
+  // RESULTS
+  el("btnResBack").onclick = ()=> showScreen("room");
+  el("btnResSave").onclick = async ()=>{ await saveResults(); };
+
+  // League from room
   el("btnLeagueFromRoom").onclick = async ()=>{
     if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
   };
 
-  // League screen
-  el("btnLeagueBack").onclick = ()=>{
-    // jeśli byliśmy w pokoju, wróć do pokoju, inaczej home
-    if(currentRoomCode) showScreen("room");
-    else showScreen("home");
-  };
-
+  // League
+  el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
   el("btnLeagueRefresh").onclick = async ()=>{
     if(!leagueState.roomCode) return;
     await openLeagueTable(leagueState.roomCode, {silent:true});
   };
 
-  // Player stats back
-  el("btnPstatsBack").onclick = ()=>{
-    showScreen("league");
-  };
+  // Player stats
+  el("btnPstatsBack").onclick = ()=> showScreen("league");
 }
 
-// ===== FLOWS =====
+function isAdmin(){
+  return currentRoom?.adminUid === userUid;
+}
+
+// ===== CONTINUE FLOW =====
 async function showContinueIfRoomExists(code){
   code = (code||"").trim().toUpperCase();
   if(code.length !== 6){ showScreen("rooms"); return; }
@@ -361,7 +327,7 @@ async function showContinueIfRoomExists(code){
   }
 }
 
-// ===== Rooms logic =====
+// ===== ROOMS LOGIC =====
 async function createRoom(roomName){
   const nick = getNick();
   el("debugRooms").textContent = "Tworzę pokój…";
@@ -423,7 +389,6 @@ async function leaveRoom(){
     await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", userUid));
   }catch{}
 
-  // nie kasujemy historii, ale kasujemy “aktywny”
   clearSavedRoom();
   cleanupRoomListeners();
 
@@ -450,7 +415,7 @@ function cleanupRoomListeners(){
   if(unsubPicks){ unsubPicks(); unsubPicks=null; }
 }
 
-// ===== Open room + live =====
+// ===== OPEN ROOM =====
 async function openRoom(code, opts={}){
   const { silent=false, force=false } = opts;
   code = (code||"").trim().toUpperCase();
@@ -465,7 +430,6 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
-  // reset
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -482,14 +446,17 @@ async function openRoom(code, opts={}){
   currentRoundNo = currentRoom?.currentRoundNo || 1;
   el("roundLabel").textContent = `KOLEJKA ${currentRoundNo}`;
 
-  // UI left
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
   el("roomCode").textContent = code;
 
-  const isAdmin = (currentRoom.adminUid === userUid);
-  el("btnAddQueue").style.display = isAdmin ? "block" : "none";
-  el("btnMyQueue").style.display = isAdmin ? "block" : "none";
+  refreshNickLabels();
+
+  // admin UI
+  const adm = isAdmin();
+  el("btnAddQueue").style.display = adm ? "block" : "none";
+  el("btnMyQueue").style.display = adm ? "block" : "none";
+  el("btnEnterResults").style.display = adm ? "block" : "none";
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
@@ -498,12 +465,13 @@ async function openRoom(code, opts={}){
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
     currentRoundNo = currentRoom?.currentRoundNo || 1;
     el("roundLabel").textContent = `KOLEJKA ${currentRoundNo}`;
-    const isAdm = (currentRoom.adminUid === userUid);
-    el("btnAddQueue").style.display = isAdm ? "block" : "none";
-    el("btnMyQueue").style.display = isAdm ? "block" : "none";
+
+    const adm2 = isAdmin();
+    el("btnAddQueue").style.display = adm2 ? "block" : "none";
+    el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    el("btnEnterResults").style.display = adm2 ? "block" : "none";
   });
 
-  // live players
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
@@ -512,7 +480,6 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // live picks (status)
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -523,7 +490,6 @@ async function openRoom(code, opts={}){
     renderPlayers(lastPlayers);
   });
 
-  // live matches
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
   unsubMatches = boot.onSnapshot(mq, async (qs)=>{
     const arr = [];
@@ -537,12 +503,15 @@ async function openRoom(code, opts={}){
 
     await loadMyPicks();
     renderMatches();
+
+    // enable results button only if matches exist
+    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length;
   });
 
   if(!silent) showToast(`W pokoju: ${code}`);
 }
 
-// ===== Picks =====
+// ===== PICKS =====
 async function loadMyPicks(){
   try{
     const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
@@ -584,7 +553,7 @@ async function saveAllPicks(){
   showToast("Zapisano typy ✅");
 }
 
-// ===== Render =====
+// ===== RENDER =====
 function renderPlayers(players){
   const box = el("playersList");
   if(!box) return;
@@ -621,14 +590,12 @@ function renderPlayers(players){
     left.appendChild(name);
     left.appendChild(status);
 
-    // EYE (podgląd) — aktywne dopiero po zapisaniu Twoich typów
     const eye = document.createElement("button");
     eye.className = "eyeBtn";
     eye.textContent = "👁";
-    eye.title = myOk ? "Podgląd typów gracza" : "Zapisz swoje typy, aby podglądać innych";
+    eye.title = myOk ? "Podgląd / statystyki" : "Zapisz swoje typy, aby podglądać innych";
     eye.disabled = !myOk;
     eye.onclick = async ()=>{
-      // na razie podgląd przerzucamy do statystyk gracza (rozbudujemy w kolejnym kroku o widok typów)
       await openPlayerStats(currentRoomCode, p.uid, p.nick || "—");
     };
 
@@ -747,10 +714,17 @@ function renderMatches(){
     score.appendChild(sep);
     score.appendChild(inpA);
 
+    // Wynik (jeśli wpisany przez admina)
+    if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
+      const rp = document.createElement("div");
+      rp.className = "resultPill";
+      rp.textContent = `Wynik: ${m.resultH}:${m.resultA}`;
+      score.appendChild(rp);
+    }
+
     card.appendChild(leftTeam);
     card.appendChild(score);
     card.appendChild(rightTeam);
-
     list.appendChild(card);
   }
 
@@ -763,10 +737,131 @@ function updateSaveButtonState(){
   btn.disabled = !allMyPicksFilled();
 }
 
-// ===== test queue (admin) =====
+// ===== RESULTS SCREEN (ADMIN) =====
+const resultsDraft = {}; // matchId -> {h,a}
+
+function openResultsScreen(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()) return;
+
+  el("resRoomName").textContent = currentRoom?.name || "—";
+  el("resRound").textContent = `KOLEJKA ${currentRoundNo}`;
+
+  // init draft from existing results if any
+  for(const m of matchesCache){
+    resultsDraft[m.id] = {
+      h: Number.isInteger(m.resultH) ? m.resultH : null,
+      a: Number.isInteger(m.resultA) ? m.resultA : null
+    };
+  }
+
+  renderResultsList();
+  showScreen("results");
+}
+
+function renderResultsList(){
+  const list = el("resultsList");
+  if(!list) return;
+  list.innerHTML = "";
+
+  for(const m of matchesCache){
+    const card = document.createElement("div");
+    card.className = "matchCard";
+
+    const leftTeam = document.createElement("div");
+    leftTeam.className = "team";
+    const lLogo = createLogoImg(m.home);
+    const lName = document.createElement("div");
+    lName.className = "teamName";
+    lName.textContent = m.home || "—";
+    leftTeam.appendChild(lLogo);
+    leftTeam.appendChild(lName);
+
+    const rightTeam = document.createElement("div");
+    rightTeam.className = "team";
+    rightTeam.style.justifyContent = "flex-end";
+    const rName = document.createElement("div");
+    rName.className = "teamName";
+    rName.style.textAlign = "right";
+    rName.textContent = m.away || "—";
+    const rLogo = createLogoImg(m.away);
+    rightTeam.appendChild(rName);
+    rightTeam.appendChild(rLogo);
+
+    const score = document.createElement("div");
+    score.className = "scoreBox";
+
+    const inpH = document.createElement("input");
+    inpH.className = "scoreInput";
+    inpH.inputMode = "numeric";
+    inpH.placeholder = "0";
+    inpH.value = resultsDraft[m.id]?.h ?? "";
+    inpH.oninput = () => {
+      const v = clampInt(inpH.value, 0, 20);
+      resultsDraft[m.id].h = v;
+    };
+
+    const sep = document.createElement("div");
+    sep.className = "sep";
+    sep.textContent = ":";
+
+    const inpA = document.createElement("input");
+    inpA.className = "scoreInput";
+    inpA.inputMode = "numeric";
+    inpA.placeholder = "0";
+    inpA.value = resultsDraft[m.id]?.a ?? "";
+    inpA.oninput = () => {
+      const v = clampInt(inpA.value, 0, 20);
+      resultsDraft[m.id].a = v;
+    };
+
+    score.appendChild(inpH);
+    score.appendChild(sep);
+    score.appendChild(inpA);
+
+    card.appendChild(leftTeam);
+    card.appendChild(score);
+    card.appendChild(rightTeam);
+
+    list.appendChild(card);
+  }
+}
+
+async function saveResults(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()) { showToast("Tylko admin"); return; }
+  if(!matchesCache.length) { showToast("Brak meczów"); return; }
+
+  // wymagamy kompletu wyników
+  for(const m of matchesCache){
+    const d = resultsDraft[m.id];
+    if(!d || !Number.isInteger(d.h) || !Number.isInteger(d.a)){
+      showToast("Uzupełnij wszystkie wyniki (0–20)");
+      return;
+    }
+  }
+
+  const b = boot.writeBatch(db);
+  for(const m of matchesCache){
+    const d = resultsDraft[m.id];
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", m.id);
+    b.update(ref, {
+      resultH: d.h,
+      resultA: d.a,
+      resultAt: boot.serverTimestamp(),
+      resultBy: userUid
+    });
+  }
+
+  await b.commit();
+  showToast("Zapisano wyniki ✅");
+  showScreen("room");
+}
+
+// ===== TEST QUEUE =====
 async function addTestQueue(){
   if(!currentRoomCode) return;
-  if(currentRoom?.adminUid !== userUid){
+  if(!isAdmin()){
     showToast("Tylko admin");
     return;
   }
@@ -799,9 +894,7 @@ async function addTestQueue(){
   showToast("Dodano kolejkę (test)");
 }
 
-// ===== LEAGUE TABLE / STATS =====
-// Na razie: ranking liczymy “z grubsza” po zapisanych typach (a punkty = 0, dopóki nie ma wyników/kolejek zamkniętych).
-// UI + nawigacja jest gotowa, a “prawdziwe punkty” dopniemy, gdy zatwierdzisz strukturę zapisów kolejek i wyników.
+// ===== LEAGUE / STATS (placeholder UI) =====
 const leagueState = {
   roomCode: null,
   roomName: null,
@@ -828,11 +921,9 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.roomName = room?.name || "—";
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
 
-    // Header
     el("leagueRoomName").textContent = leagueState.roomName;
     el("leagueAfterRound").textContent = String(leagueState.afterRound);
 
-    // Zbierz graczy (players)
     const playersSnap = await new Promise((resolve, reject)=>{
       const q = boot.query(playersCol(roomCode), boot.orderBy("joinedAt","asc"));
       const unsub = boot.onSnapshot(q, (qs)=>{
@@ -843,7 +934,6 @@ async function openLeagueTable(roomCode, opts={}) {
       }, (e)=>{ reject(e); });
     });
 
-    // Na razie: “Kolejki” = 0, “Punkty” = 0 (dopniemy z wynikami)
     leagueState.rows = playersSnap.map(p=>({
       uid: p.uid,
       nick: p.nick || "—",
@@ -867,8 +957,6 @@ function renderLeagueTable(){
   body.innerHTML = "";
 
   const rows = [...leagueState.rows];
-
-  // sort: points desc, nick asc
   rows.sort((a,b)=>{
     if(b.points !== a.points) return b.points - a.points;
     return String(a.nick).localeCompare(String(b.nick), "pl");
@@ -909,7 +997,6 @@ async function openPlayerStats(roomCode, uid, nick){
   showScreen("pstats");
 }
 
-// ===== small util =====
 function escapeHtml(s){
   return String(s||"")
     .replaceAll("&","&amp;")
@@ -927,17 +1014,11 @@ function escapeHtml(s){
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
-
-    // start UI
     bindUI();
 
-    // nick labels
     if(getNick()) refreshNickLabels();
 
-    // Start always at HOME (menu PNG)
-    // (Twoje wymaganie: najpierw ekran z przyciskami, dopiero potem kontynuacja po kliknięciu)
     showScreen("home");
-
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
