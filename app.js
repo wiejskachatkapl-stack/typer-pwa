@@ -1,4 +1,4 @@
-const BUILD = 2002;
+const BUILD = 2003;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -146,14 +146,22 @@ let picksDocByUid = {};  // uid -> picks object
 let submittedByUid = {}; // uid -> bool
 let lastPlayers = [];
 
-// points cache per uid (current round)
-let pointsByUid = {}; // uid -> number
+let pointsByUid = {}; // uid -> number (current round)
 let myPoints = null;
 
 function roomRef(code){ return boot.doc(db, "rooms", code); }
 function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
 function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
 function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
+function roundsCol(code){ return boot.collection(db, "rooms", code, "rounds"); } // archiwum
+function leagueCol(code){ return boot.collection(db, "rooms", code, "league"); } // suma
+
+function roundDocRef(code, roundNo){
+  return boot.doc(db, "rooms", code, "rounds", `round_${roundNo}`);
+}
+function leagueDocRef(code, uid){
+  return boot.doc(db, "rooms", code, "league", uid);
+}
 
 function isCompletePicksObject(picksObj){
   if(!matchesCache.length) return false;
@@ -198,6 +206,7 @@ function dotClassFor(pH,pA,rH,rA){
   if(pts === 1) return "yellow";
   return "red";
 }
+
 function recomputePoints(){
   pointsByUid = {};
   myPoints = null;
@@ -228,7 +237,7 @@ async function initFirebase(){
   const {
     getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
     collection, query, orderBy, onSnapshot,
-    writeBatch, deleteDoc
+    writeBatch, deleteDoc, getDocs, increment
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
   app = initializeApp(firebaseConfig);
@@ -238,7 +247,8 @@ async function initFirebase(){
   boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
-  boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc;
+  boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc; boot.getDocs = getDocs;
+  boot.increment = increment;
 
   await new Promise((resolve, reject)=>{
     const unsub = onAuthStateChanged(auth, async(u)=>{
@@ -343,6 +353,11 @@ function bindUI(){
     if(!matchesCache.length){ showToast("Brak meczów"); return; }
     openResultsScreen();
   };
+
+  el("btnEndRound").onclick = async ()=>{
+    await endRoundConfirmAndArchive();
+  };
+
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
   el("btnMyQueue").onclick = async ()=>{ showToast("Własna kolejka – dopinamy dalej"); };
 
@@ -526,6 +541,8 @@ async function openRoom(code, opts={}){
   el("btnAddQueue").style.display = adm ? "block" : "none";
   el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
+  el("btnEndRound").style.display = adm ? "block" : "none";
+  el("btnEndRound").disabled = true;
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
@@ -539,6 +556,8 @@ async function openRoom(code, opts={}){
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
     el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
+    el("btnEndRound").style.display = adm2 ? "block" : "none";
+    el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
   });
 
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
@@ -577,6 +596,7 @@ async function openRoom(code, opts={}){
     renderMatches();
 
     if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length;
+    if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
   });
 
   if(!silent) showToast(`W pokoju: ${code}`);
@@ -623,7 +643,6 @@ async function saveAllPicks(){
 
   showToast("Zapisano typy ✅");
 
-  // od razu odśwież punkty i panel graczy
   recomputeSubmittedMap();
   recomputePoints();
   renderPlayers(lastPlayers);
@@ -671,7 +690,7 @@ function renderPlayers(players){
     right.className = "row";
     right.style.gap = "8px";
 
-    // punkty (tylko jak są wyniki kompletne)
+    // punkty (aktualna kolejka) tylko jak są wyniki kompletne
     if(resultsOk && isCompletePicksObject(picksDocByUid[p.uid])){
       const pts = pointsByUid[p.uid] ?? 0;
       const ptsBadge = document.createElement("div");
@@ -732,7 +751,6 @@ function renderMatches(){
 
   el("matchesCount").textContent = String(matchesCache.length || 0);
 
-  // punkty w headerze
   if(el("myPointsLabel")){
     if(allResultsComplete() && isCompletePicksObject(picksDocByUid[userUid])){
       el("myPointsLabel").textContent = String(pointsByUid[userUid] ?? 0);
@@ -740,6 +758,9 @@ function renderMatches(){
       el("myPointsLabel").textContent = "—";
     }
   }
+
+  // end-round enable
+  if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
 
   if(!matchesCache.length){
     const info = document.createElement("div");
@@ -878,7 +899,6 @@ function openPicksPreview(uid, nick){
     return;
   }
 
-  // lista meczów
   for(const m of matchesCache){
     const row = document.createElement("div");
     row.className = "matchCard";
@@ -900,11 +920,9 @@ function openPicksPreview(uid, nick){
     pickPill.textContent = `Typ: ${p.h}:${p.a}`;
     score.appendChild(pickPill);
 
-    // wynik + kropka + pkt
     const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
     const dot = document.createElement("span");
     dot.className = "dot " + (resOk ? dotClassFor(p.h,p.a,m.resultH,m.resultA) : "gray");
-    dot.title = resOk ? "Ocena typu" : "Brak wyników";
 
     const resPill = document.createElement("div");
     resPill.className = "resultPill";
@@ -1053,13 +1071,122 @@ async function saveResults(){
 
   await b.commit();
 
-  // po zapisie: przelicz punkty + odśwież UI
   recomputePoints();
   renderPlayers(lastPlayers);
   renderMatches();
 
   showToast("Zapisano wyniki ✅");
   showScreen("room");
+}
+
+// ===== ARCHIWUM KOLEJEK (HISTORIA) =====
+async function endRoundConfirmAndArchive(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()) { showToast("Tylko admin"); return; }
+  if(!matchesCache.length){ showToast("Brak meczów"); return; }
+  if(!allResultsComplete()){ showToast("Najpierw wpisz komplet wyników"); return; }
+
+  const ok = confirm(`Zakończyć KOLEJKĘ ${currentRoundNo} i zapisać do historii?\n\nPo zakończeniu: mecze/typy tej kolejki zostaną zarchiwizowane, a aplikacja przejdzie do KOLEJKI ${currentRoundNo+1}.`);
+  if(!ok) return;
+
+  await archiveCurrentRound();
+}
+
+async function archiveCurrentRound(){
+  const code = currentRoomCode;
+  const roundNo = currentRoundNo;
+
+  // 1) pobierz wszystkie typy z /picks
+  const picksSnap = await boot.getDocs(picksCol(code));
+  const picksByUid = {};
+  const nickByUid = {};
+  picksSnap.forEach(d=>{
+    const data = d.data();
+    picksByUid[d.id] = data?.picks || {};
+    if(data?.nick) nickByUid[d.id] = data.nick;
+  });
+
+  // 2) zbuduj listę meczów do archiwum
+  const matches = matchesCache.map(m=>({
+    id: m.id,
+    idx: Number.isInteger(m.idx) ? m.idx : 0,
+    home: m.home || "",
+    away: m.away || "",
+    resultH: m.resultH,
+    resultA: m.resultA
+  }));
+
+  // 3) policz punkty dla każdego uid, który ma komplet typów
+  const pointsMap = {};
+  const playedMap = {};
+  for(const [uid, picksObj] of Object.entries(picksByUid)){
+    // komplet = ma wszystkie typy
+    let complete = true;
+    for(const m of matchesCache){
+      const p = picksObj?.[m.id];
+      if(!p || !Number.isInteger(p.h) || !Number.isInteger(p.a)){ complete = false; break; }
+    }
+    if(!complete) continue;
+
+    let sum = 0;
+    for(const m of matchesCache){
+      const p = picksObj[m.id];
+      sum += scoreOneMatch(p.h, p.a, m.resultH, m.resultA) ?? 0;
+    }
+    pointsMap[uid] = sum;
+    playedMap[uid] = true;
+  }
+
+  // 4) zapis do archiwum + aktualizacja ligi + czyszczenie bieżącej kolejki
+  const b = boot.writeBatch(db);
+
+  // round doc
+  const rd = roundDocRef(code, roundNo);
+  b.set(rd, {
+    roundNo,
+    roomCode: code,
+    roomName: currentRoom?.name || "",
+    createdAt: boot.serverTimestamp(),
+    closedAt: boot.serverTimestamp(),
+    closedBy: userUid,
+    matchesCount: matches.length,
+    matches,
+    picksByUid,     // archiwum typów
+    pointsByUid: pointsMap,
+    nickByUid
+  }, { merge:false });
+
+  // update league totals (increment)
+  for(const [uid, pts] of Object.entries(pointsMap)){
+    const nick = nickByUid[uid] || (lastPlayers.find(p=>p.uid===uid)?.nick) || "—";
+    const ld = leagueDocRef(code, uid);
+    b.set(ld, {
+      uid,
+      nick,
+      totalPoints: boot.increment(pts),
+      roundsPlayed: boot.increment(1),
+      updatedAt: boot.serverTimestamp()
+    }, { merge:true });
+  }
+
+  // update room -> next round
+  b.update(roomRef(code), {
+    currentRoundNo: roundNo + 1,
+    updatedAt: boot.serverTimestamp()
+  });
+
+  // delete current matches & picks (czyścimy na nową kolejkę)
+  for(const m of matchesCache){
+    b.delete(boot.doc(db, "rooms", code, "matches", m.id));
+  }
+  picksSnap.forEach(d=>{
+    b.delete(boot.doc(db, "rooms", code, "picks", d.id));
+  });
+
+  await b.commit();
+
+  // UI reset (zostanie też odświeżone snapshotami)
+  showToast(`Zakończono KOLEJKĘ ${roundNo} ✅`);
 }
 
 // ===== TEST QUEUE =====
@@ -1098,7 +1225,7 @@ async function addTestQueue(){
   showToast("Dodano kolejkę (test)");
 }
 
-// ===== LEAGUE (na razie) =====
+// ===== LEAGUE (prawdziwa) =====
 const leagueState = {
   roomCode: null,
   roomName: null,
@@ -1128,24 +1255,22 @@ async function openLeagueTable(roomCode, opts={}) {
     el("leagueRoomName").textContent = leagueState.roomName;
     el("leagueAfterRound").textContent = String(leagueState.afterRound);
 
-    const playersSnap = await new Promise((resolve, reject)=>{
-      const q = boot.query(playersCol(roomCode), boot.orderBy("joinedAt","asc"));
-      const unsub = boot.onSnapshot(q, (qs)=>{
-        const arr = [];
-        qs.forEach(d=>arr.push(d.data()));
-        unsub();
-        resolve(arr);
-      }, (e)=>{ reject(e); });
+    // Pobierz ranking z /league
+    const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
+    const qs = await boot.getDocs(q);
+
+    const arr = [];
+    qs.forEach(d=>{
+      const x = d.data();
+      arr.push({
+        uid: x.uid || d.id,
+        nick: x.nick || "—",
+        rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
+        points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
+      });
     });
 
-    // UWAGA: ranking pełny dopniemy po “historia kolejek”.
-    leagueState.rows = playersSnap.map(p=>({
-      uid: p.uid,
-      nick: p.nick || "—",
-      rounds: 0,
-      points: 0
-    }));
-
+    leagueState.rows = arr;
     renderLeagueTable();
     showScreen("league");
     if(!silent) showToast("Tabela ligi");
@@ -1182,8 +1307,179 @@ function renderLeagueTable(){
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
+    tr.onclick = ()=> openPlayerStatsFromLeague(r.uid, r.nick);
     body.appendChild(tr);
   });
+}
+
+// ===== STATYSTYKI GRACZA (MODAL) =====
+async function openPlayerStatsFromLeague(uid, nick){
+  if(!leagueState.roomCode) return;
+
+  const code = leagueState.roomCode;
+
+  // pobierz archiwalne kolejki (rounds) i wyświetl punkty gracza
+  const q = boot.query(roundsCol(code), boot.orderBy("roundNo","desc"));
+  const qs = await boot.getDocs(q);
+
+  const wrap = document.createElement("div");
+  wrap.style.display="flex";
+  wrap.style.flexDirection="column";
+  wrap.style.gap="10px";
+
+  const head = document.createElement("div");
+  head.className="row";
+  head.style.flexWrap="wrap";
+  head.appendChild(chip(`Pokój: ${leagueState.roomName}`));
+  head.appendChild(chip(`Gracz: ${nick}`));
+  wrap.appendChild(head);
+
+  if(qs.empty){
+    const info = document.createElement("div");
+    info.className="sub";
+    info.textContent="Brak zakończonych kolejek w historii.";
+    wrap.appendChild(info);
+    modalOpen("Statystyki gracza", wrap);
+    return;
+  }
+
+  qs.forEach(d=>{
+    const rd = d.data();
+    const rn = rd.roundNo ?? 0;
+    const pts = rd?.pointsByUid?.[uid];
+    const played = (pts !== undefined && pts !== null);
+
+    const row = document.createElement("div");
+    row.className="matchCard";
+    row.style.justifyContent="space-between";
+
+    const left = document.createElement("div");
+    left.style.display="flex";
+    left.style.flexDirection="column";
+    left.style.gap="4px";
+    left.innerHTML = `<div style="font-weight:1000">KOLEJKA ${rn}</div>
+                      <div class="sub">${played ? "Zagrana" : "Brak typów / niepełne"}</div>`;
+
+    const right = document.createElement("div");
+    right.className="row";
+
+    const ptsChip = document.createElement("div");
+    ptsChip.className="chip";
+    ptsChip.textContent = `Punkty: ${played ? pts : "—"}`;
+
+    const btn = document.createElement("button");
+    btn.className="btn btnSmall";
+    btn.textContent="Podgląd";
+    btn.disabled = !played;
+    btn.onclick = async ()=>{
+      await openArchivedPicksPreview(code, rn, uid, nick);
+    };
+
+    right.appendChild(ptsChip);
+    right.appendChild(btn);
+
+    row.appendChild(left);
+    row.appendChild(right);
+    wrap.appendChild(row);
+  });
+
+  modalOpen("Statystyki gracza", wrap);
+}
+
+async function openArchivedPicksPreview(code, roundNo, uid, nick){
+  const rd = await boot.getDoc(roundDocRef(code, roundNo));
+  if(!rd.exists()){ showToast("Brak archiwum tej kolejki"); return; }
+  const data = rd.data();
+
+  const matches = data.matches || [];
+  const picksByUid = data.picksByUid || {};
+  const picksObj = picksByUid[uid] || null;
+
+  const wrap = document.createElement("div");
+  wrap.style.display="flex";
+  wrap.style.flexDirection="column";
+  wrap.style.gap="10px";
+
+  const top = document.createElement("div");
+  top.className="row";
+  top.style.flexWrap="wrap";
+  top.appendChild(chip(`Gracz: ${nick}`));
+  top.appendChild(chip(`KOLEJKA ${roundNo}`));
+  const pts = data?.pointsByUid?.[uid];
+  top.appendChild(chip(`PUNKTY: ${pts ?? "—"}`));
+  wrap.appendChild(top);
+
+  if(!picksObj){
+    const info = document.createElement("div");
+    info.className="sub";
+    info.textContent="Brak zapisanych typów w tej kolejce.";
+    wrap.appendChild(info);
+    modalOpen("Podgląd (archiwum)", wrap);
+    return;
+  }
+
+  for(const m of matches){
+    const row = document.createElement("div");
+    row.className="matchCard";
+
+    const leftTeam = document.createElement("div");
+    leftTeam.className="team";
+    leftTeam.appendChild(createLogoImg(m.home));
+    const ln = document.createElement("div");
+    ln.className="teamName";
+    ln.textContent = m.home;
+    leftTeam.appendChild(ln);
+
+    const score = document.createElement("div");
+    score.className="scoreBox";
+
+    const p = picksObj[m.id];
+    const pickPill = document.createElement("div");
+    pickPill.className="resultPill";
+    pickPill.textContent = p ? `Typ: ${p.h}:${p.a}` : "Typ: —";
+    score.appendChild(pickPill);
+
+    const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA) && p;
+    const dot = document.createElement("span");
+    dot.className = "dot " + (resOk ? dotClassFor(p.h,p.a,m.resultH,m.resultA) : "gray");
+
+    const resPill = document.createElement("div");
+    resPill.className="resultPill";
+    resPill.textContent = `Wynik: ${m.resultH}:${m.resultA}`;
+
+    const ptsOne = resOk ? scoreOneMatch(p.h,p.a,m.resultH,m.resultA) : null;
+    const ptsPill = document.createElement("div");
+    ptsPill.className="resultPill";
+    ptsPill.textContent = (ptsOne===null) ? "pkt: —" : `pkt: ${ptsOne}`;
+
+    score.appendChild(dot);
+    score.appendChild(resPill);
+    score.appendChild(ptsPill);
+
+    const rightTeam = document.createElement("div");
+    rightTeam.className="team";
+    rightTeam.style.justifyContent="flex-end";
+    const rn = document.createElement("div");
+    rn.className="teamName";
+    rn.style.textAlign="right";
+    rn.textContent = m.away;
+    rightTeam.appendChild(rn);
+    rightTeam.appendChild(createLogoImg(m.away));
+
+    row.appendChild(leftTeam);
+    row.appendChild(score);
+    row.appendChild(rightTeam);
+    wrap.appendChild(row);
+  }
+
+  modalOpen("Podgląd (archiwum)", wrap);
+}
+
+function chip(text){
+  const d = document.createElement("div");
+  d.className="chip";
+  d.textContent = text;
+  return d;
 }
 
 function escapeHtml(s){

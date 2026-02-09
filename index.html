@@ -393,7 +393,7 @@
     tr:hover td{background:rgba(255,255,255,.04)}
     .linkRow{cursor:pointer}
 
-    /* ===== MODAL (PODGLĄD TYPOW) ===== */
+    /* ===== MODAL ===== */
     .modal{
       position:absolute; inset:0;
       display:none;
@@ -575,6 +575,8 @@
 
                 <!-- ADMIN -->
                 <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
+                <button class="btn" id="btnEndRound" style="display:none" disabled>Zakończ kolejkę</button>
+
                 <button class="btn" id="btnMyQueue" style="display:none">Własna kolejka</button>
                 <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
               </div>
@@ -595,7 +597,7 @@
                 <div class="spacer"></div>
                 <div class="chip">KOLEJKA: <span id="roundLabel">—</span></div>
                 <div class="chip">Mecze: <span id="matchesCount">0</span></div>
-                <div class="chip">PUNKTY: <span id="myPointsLabel">—</span></div>
+                <div class="chip">PUNKTY (kolejka): <span id="myPointsLabel">—</span></div>
               </div>
             </div>
 
@@ -658,7 +660,9 @@
 
           <div class="panel" style="padding:14px">
             <div class="title" style="margin:0 0 10px 0">Ranking</div>
-            <div class="sub" style="margin-bottom:10px" id="leagueHint">Kliknij gracza, aby zobaczyć statystyki.</div>
+            <div class="sub" style="margin-bottom:10px" id="leagueHint">
+              Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).
+            </div>
 
             <div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
               <table id="leagueTable">
@@ -680,7 +684,7 @@
         </div>
       </section>
 
-      <!-- MODAL PODGLĄDU -->
+      <!-- MODAL -->
       <div class="modal" id="modal">
         <div class="modalCard">
           <div class="modalHead">
@@ -713,6 +717,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2002"></script>
+  <script type="module" src="./app.js?v=2003"></script>
 </body>
 </html>
