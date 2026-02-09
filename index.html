@@ -105,35 +105,17 @@
       position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
     }
 
-    /* MAIN MENU (obraz tła + 3 przyciski PNG) */
+    /* MAIN MENU */
     #mainMenu{align-items:center;justify-content:center}
-    .menuImgWrap{
-      width:100%;height:100%;
-      display:flex;align-items:center;justify-content:center;
-      position:relative;
-    }
-    #menuBgImg{
-      width:100%;height:100%;
-      object-fit:cover;
-      display:block;
-    }
+    .menuImgWrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
+    #menuBgImg{width:100%;height:100%;object-fit:cover;display:block;}
     .menuBtns{
-      position:absolute;
-      left:50%;
-      top:52%;
+      position:absolute;left:50%;top:52%;
       transform:translate(-50%,-50%);
-      display:flex;
-      gap:34px;
-      align-items:center;
-      justify-content:center;
-      pointer-events:auto;
+      display:flex;gap:34px;align-items:center;justify-content:center;
     }
     .imgBtn{
-      width:280px;
-      height:auto;
-      cursor:pointer;
-      user-select:none;
-      -webkit-user-drag:none;
+      width:280px;height:auto;cursor:pointer;user-select:none;-webkit-user-drag:none;
       filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
       transition: transform .08s ease;
     }
@@ -154,38 +136,20 @@
       padding:12px 12px;
       display:flex;align-items:center;gap:12px;
     }
-    .team{
-      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
-      font-weight:1000;
-    }
+    .team{display:flex;align-items:center;gap:10px;min-width:0;flex:1;font-weight:1000;}
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .logo{
-      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
-      background:rgba(255,255,255,.10);
-      object-fit:contain;
-    }
+    .logo{width:24px;height:24px;flex:0 0 24px;border-radius:6px;background:rgba(255,255,255,.10);object-fit:contain;}
     .scoreBox{display:flex;align-items:center;gap:8px}
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
 
     .miniResult{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:14px;
-      background:rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.10);
-      font-weight:900;
-      white-space:nowrap;
+      display:flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:14px;
+      background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);
+      font-weight:900;white-space:nowrap;
     }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      border:1px solid rgba(255,255,255,.20);
-      background:rgba(255,255,255,.25);
-      flex:0 0 10px;
-      box-shadow:0 0 0 3px rgba(0,0,0,.15) inset;
-    }
+    .dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,.20);background:rgba(255,255,255,.25);flex:0 0 10px;box-shadow:0 0 0 3px rgba(0,0,0,.15) inset;}
     .dotGreen{ background:#33ff88; }
     .dotYellow{ background:#ffd84d; }
     .dotRed{ background:#ff4d4d; }
@@ -200,6 +164,22 @@
       font-weight:900;
     }
     .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
+
+    /* eye button */
+    .eyeBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.10);
+      color:var(--text);
+      width:34px;height:34px;
+      display:inline-flex;align-items:center;justify-content:center;
+      border-radius:12px;
+      font-weight:1000;
+      cursor:pointer;
+      user-select:none;
+      opacity:.45;
+    }
+    .eyeBtn.enabled{opacity:1}
+    .eyeBtn:disabled{cursor:not-allowed;opacity:.35}
 
     /* ROOMS SCREEN */
     #rooms{padding:16px;gap:14px}
@@ -219,7 +199,7 @@
       -webkit-backdrop-filter: blur(6px);
     }
     .modalCard{
-      width:min(920px,94%);
+      width:min(980px,94%);
       border:1px solid rgba(255,255,255,.14);
       border-radius:22px;
       background:rgba(8,22,52,.78);
@@ -227,12 +207,13 @@
       padding:18px;
     }
     .modalTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0}
+
     .listGrid{
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap:10px;
       margin-top:10px;
-      max-height:360px;
+      max-height:420px;
       overflow:auto;
       padding-right:6px;
     }
@@ -244,6 +225,15 @@
       font-weight:900;
     }
 
+    .pickLine{
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;align-items:center;gap:12px;justify-content:space-between;
+      font-weight:900;
+    }
+    .pickTeams{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pickScore{min-width:70px;text-align:right;font-weight:1000}
   </style>
 </head>
 
@@ -376,7 +366,7 @@
           <div class="rightBar panel">
             <div>
               <div class="title">Gracze</div>
-              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
+              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
             </div>
             <div class="playersList" id="playersList"></div>
           </div>
@@ -384,7 +374,20 @@
         </div>
       </section>
 
-      <!-- MODAL: CUSTOM QUEUE -->
+      <!-- MODAL: PODGLĄD TYPOW -->
+      <div id="modalPeek" class="modal">
+        <div class="modalCard">
+          <div class="row">
+            <div class="modalTitle" id="peekTitle">Podgląd typów</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnClosePeek">Zamknij</button>
+          </div>
+          <div class="sub" id="peekSub">—</div>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;max-height:520px;overflow:auto;" id="peekList"></div>
+        </div>
+      </div>
+
+      <!-- MODAL: CUSTOM QUEUE (zostaje jak było) -->
       <div id="modalCustom" class="modal">
         <div class="modalCard">
           <div class="row">
@@ -399,7 +402,6 @@
           </div>
 
           <div class="sub" style="margin-top:10px">Klikaj “Dodaj” przy meczach. Po dodaniu 10 pojawi się zapis.</div>
-
           <div class="listGrid" id="customMatchesList"></div>
 
           <div class="row" style="margin-top:12px">
@@ -410,7 +412,7 @@
         </div>
       </div>
 
-      <!-- MODAL: RESULTS -->
+      <!-- MODAL: RESULTS (zostaje jak było) -->
       <div id="modalResults" class="modal">
         <div class="modalCard">
           <div class="row">
@@ -450,6 +452,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1230"></script>
+  <script type="module" src="./app.js?v=1240"></script>
 </body>
 </html>
