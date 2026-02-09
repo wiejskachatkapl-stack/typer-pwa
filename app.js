@@ -1,4 +1,4 @@
-const BUILD = 1240;
+const BUILD = 1241;
 const BG_TLO = "img_tlo.png";
 
 const KEY_NICK = "typer_nick_v3";
@@ -168,9 +168,9 @@ let activeRoundId = null;
 let activeRoundNo = 0;
 
 let matchesCache = [];
-let picksCache = {};        // moje typy
-let picksDocByUid = {};     // uid -> picks map
-let submittedByUid = {};    // uid -> boolean
+let picksCache = {};
+let picksDocByUid = {};
+let submittedByUid = {};
 let lastPlayers = [];
 
 // ---------- Firestore paths ----------
@@ -726,11 +726,12 @@ function updateSaveButtonState(){
 
 // ---------- PODGLĄD TYPOW ----------
 function openPeek(uid, nick){
-  // warunki dostępu:
-  // 1) Ty musisz mieć zapisane swoje typy (✓)
-  // 2) Podglądany gracz musi mieć zapisane typy (✓)
   if(!activeRoundId){
     showToast("Brak aktywnej kolejki");
+    return;
+  }
+  if(uid === userUid){
+    showToast("To Twoje typy 🙂");
     return;
   }
   if(!mySubmitted()){
@@ -749,7 +750,6 @@ function openPeek(uid, nick){
   const box = el("peekList");
   box.innerHTML = "";
 
-  // lista meczów w kolejności idx
   const sorted = [...matchesCache].sort((a,b)=>(a.idx??0)-(b.idx??0));
   sorted.forEach(m=>{
     const p = picksObj[m.id];
@@ -786,6 +786,14 @@ function renderPlayers(players){
 
   const iSubmitted = mySubmitted();
 
+  // jeśli jesteś sam -> pokaż info (a oko i tak będzie widoczne przy Tobie jako disabled)
+  if(players.length <= 1){
+    const info = document.createElement("div");
+    info.className = "sub";
+    info.textContent = "Jesteś sam w pokoju. Oko do podglądu będzie użyteczne, gdy dołączą inni gracze.";
+    box.appendChild(info);
+  }
+
   players.forEach(p=>{
     const row = document.createElement("div");
     row.className = "playerRow";
@@ -818,11 +826,15 @@ function renderPlayers(players){
     right.className = "row";
     right.style.gap = "8px";
 
-    // oko (nie pokazuj dla siebie)
-    if(p.uid !== userUid){
-      const eye = document.createElement("button");
-      eye.className = "eyeBtn";
-      eye.textContent = "👁";
+    // OKO: zawsze widoczne (nawet przy Tobie), ale w odpowiednich sytuacjach zablokowane
+    const eye = document.createElement("button");
+    eye.className = "eyeBtn";
+    eye.textContent = "👁";
+
+    if(p.uid === userUid){
+      eye.disabled = true;
+      eye.title = "To Ty";
+    }else{
       const canPeek = !!activeRoundId && iSubmitted && !!submittedByUid[p.uid];
       eye.disabled = !canPeek;
       if(canPeek) eye.classList.add("enabled");
@@ -830,8 +842,8 @@ function renderPlayers(players){
         ? "Podgląd typów"
         : (!iSubmitted ? "Najpierw zapisz swoje typy" : "Gracz nie zapisał typów");
       eye.onclick = ()=> openPeek(p.uid, p.nick);
-      right.appendChild(eye);
     }
+    right.appendChild(eye);
 
     if(p.uid === adminUid){
       const b = document.createElement("div");

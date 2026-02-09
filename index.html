@@ -17,21 +17,42 @@
       --muted: rgba(255,255,255,.72);
       --shadow: 0 14px 50px rgba(0,0,0,.45);
       --r: 22px;
+
+      /* baza UI i skala */
+      --baseW: 1600;
+      --baseH: 900;
+      --uiScale: 1;
     }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
+    body{
+      margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);background:var(--bg);overflow:hidden
+    }
     #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
-    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:1}
+
+    /* UWAGA: #app jest centrowaniem, a frame jest skalowany */
+    #app{
+      position:fixed;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      padding:0;z-index:1;
+      overflow:hidden;
+    }
+
     .frame{
-      width:min(1580px,96vw);
-      height:min(920px,94vh);
+      width: calc(var(--baseW) * 1px);
+      height: calc(var(--baseH) * 1px);
       border:1px solid var(--stroke);
       border-radius:26px;
       background:rgba(0,0,0,.10);
       box-shadow:var(--shadow);
       backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
       overflow:hidden;position:relative;
+
+      transform: scale(var(--uiScale));
+      transform-origin: center center;
     }
+
     .screen{display:none;height:100%;width:100%}
     .screen.active{display:flex}
 
@@ -123,9 +144,9 @@
 
     /* ROOM LAYOUT */
     #room{padding:16px;gap:14px;align-items:stretch}
-    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .leftBar{width:320px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
-    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .rightBar{width:360px;min-width:360px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
 
     .midHead{padding:14px}
     .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
@@ -224,7 +245,6 @@
       display:flex;align-items:center;gap:10px;justify-content:space-between;
       font-weight:900;
     }
-
     .pickLine{
       padding:10px 12px;border-radius:16px;
       background:rgba(0,0,0,.18);
@@ -387,7 +407,7 @@
         </div>
       </div>
 
-      <!-- MODAL: CUSTOM QUEUE (zostaje jak było) -->
+      <!-- MODAL: CUSTOM QUEUE -->
       <div id="modalCustom" class="modal">
         <div class="modalCard">
           <div class="row">
@@ -412,7 +432,7 @@
         </div>
       </div>
 
-      <!-- MODAL: RESULTS (zostaje jak było) -->
+      <!-- MODAL: RESULTS -->
       <div id="modalResults" class="modal">
         <div class="modalCard">
           <div class="row">
@@ -437,6 +457,7 @@
   </div>
 
   <script>
+    // debug błędów
     const hint = document.getElementById("splashHint");
     const errBox = document.getElementById("splashErr");
     function showErr(title, msg){
@@ -450,8 +471,22 @@
     window.addEventListener("unhandledrejection", (e) => {
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
+
+    // WYMUSZENIE WYGLĄDU JAK NA GRAFICE:
+    // UI jest projektowane w bazie 1600x900 i skalowane do aktualnego okna.
+    function applyScale(){
+      const root = document.documentElement;
+      const baseW = 1600, baseH = 900;
+      const pad = 24; // zapas na marginesy
+      const sx = (window.innerWidth - pad) / baseW;
+      const sy = (window.innerHeight - pad) / baseH;
+      const scale = Math.max(0.5, Math.min(1, Math.min(sx, sy)));
+      root.style.setProperty("--uiScale", String(scale));
+    }
+    window.addEventListener("resize", applyScale);
+    applyScale();
   </script>
 
-  <script type="module" src="./app.js?v=1240"></script>
+  <script type="module" src="./app.js?v=1241"></script>
 </body>
 </html>
