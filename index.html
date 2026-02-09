@@ -10,54 +10,63 @@
   <style>
     :root{
       --bg:#071229;
-      --glass: rgba(8, 22, 52, .55);
-      --glass2: rgba(8, 22, 52, .40);
+      --glass: rgba(8, 22, 52, .58);
+      --glass2: rgba(8, 22, 52, .42);
       --stroke: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.16);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.72);
       --shadow: 0 14px 50px rgba(0,0,0,.45);
       --r: 22px;
-
-      /* baza UI i skala */
-      --baseW: 1600;
-      --baseH: 900;
-      --uiScale: 1;
     }
-
     *{box-sizing:border-box}
     body{
-      margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);background:var(--bg);overflow:hidden
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      overflow:hidden;
     }
-    #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
+
+    #bg{
+      position:fixed; inset:0;
+      background:#071229 center/cover no-repeat;
+      z-index:0;
+    }
 
     #app{
-      position:fixed;inset:0;
-      display:flex;align-items:center;justify-content:center;
-      overflow:hidden;z-index:1;
+      position:fixed; inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:14px;
+      z-index:1;
     }
 
     .frame{
-      width: calc(var(--baseW) * 1px);
-      height: calc(var(--baseH) * 1px);
+      width:min(1580px,96vw);
+      height:min(920px,94vh);
       border:1px solid var(--stroke);
       border-radius:26px;
       background:rgba(0,0,0,.10);
       box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      overflow:hidden;position:relative;
-      transform: scale(var(--uiScale));
-      transform-origin: center center;
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      overflow:hidden;
+      position:relative;
     }
 
     .screen{display:none;height:100%;width:100%}
     .screen.active{display:flex}
 
-    /* SPLASH */
+    /* ===== SPLASH ===== */
     #splash{align-items:center;justify-content:center;padding:24px}
     .splashCard{
-      width:min(820px,92%);border:1px solid var(--stroke);
-      border-radius:22px;background:var(--glass2);padding:22px;
+      width:min(820px,92%);
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      background:var(--glass2);
+      padding:22px;
     }
     .spinner{
       width:26px;height:26px;border-radius:50%;
@@ -66,11 +75,15 @@
       animation:spin 1s linear infinite;margin-top:12px;
     }
     @keyframes spin{to{transform:rotate(360deg)}}
-    .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
-    .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
-      background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
+    .hint{margin-top:8px;color:var(--muted);font-weight:800;white-space:pre-wrap}
+    .err{
+      margin-top:10px;padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);
+      display:none;white-space:pre-wrap
+    }
 
-    /* COMMON UI */
+    /* ===== COMMON ===== */
     .panel{
       border:1px solid var(--stroke);
       border-radius:var(--r);
@@ -79,6 +92,7 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
+
     .btn{
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.10);
@@ -92,15 +106,28 @@
     }
     .btn:hover{background:rgba(255,255,255,.14)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
+
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
-    .chip{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.12);font-weight:900}
+
+    .chip{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 14px;
+      border-radius:18px;
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:900;
+    }
+
     .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
     .sub{color:var(--muted);font-weight:700;font-size:13px}
+
     .row{display:flex;gap:10px;align-items:center}
     .col{display:flex;flex-direction:column;gap:10px}
     .spacer{flex:1}
 
-    input, select{
+    input{
       border:1px solid rgba(255,255,255,.15);
       background:rgba(0,0,0,.22);
       color:var(--text);
@@ -118,54 +145,127 @@
       color:rgba(255,255,255,.85);
       padding:10px 14px;border-radius:16px;font-weight:800;
       display:none;
+      z-index:60;
     }
     .footerRight{
-      position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
+      position:absolute;right:18px;bottom:14px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;font-weight:900;
+      z-index:10;
     }
 
-    /* MAIN MENU */
-    #mainMenu{align-items:center;justify-content:center}
-    .menuImgWrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
-    #menuBgImg{width:100%;height:100%;object-fit:cover;display:block;}
-
-    .menuBtns{
-      position:absolute;left:50%;top:52%;
+    /* ===== HOME (MENU PNG) ===== */
+    #home{
+      align-items:center;
+      justify-content:center;
+      position:relative;
+    }
+    .homeBtns{
+      position:absolute;
+      left:50%;
+      top:52%;
       transform:translate(-50%,-50%);
-      display:flex;gap:34px;align-items:center;justify-content:center;
-      z-index:2;
+      display:flex;
+      gap:40px;
+      align-items:center;
+      justify-content:center;
+      padding:10px;
     }
     .imgBtn{
-      width:280px;height:auto;cursor:pointer;user-select:none;-webkit-user-drag:none;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
-      transition: transform .08s ease;
+      appearance:none;
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      padding:0;
+      line-height:0;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
+      transform: translateZ(0);
     }
-    .imgBtn:active{ transform: scale(0.98); }
+    .imgBtn img{
+      display:block;
+      height:90px; /* wymuszenie “ładnych” rozmiarów */
+      width:auto;
+      border-radius:16px;
+    }
+    .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
+    .imgBtn:active{transform: translateY(1px)}
 
-    /* NOWY PRZYCISK POD GŁÓWNYMI (LEAGUE) */
-    .menuBottomBtns{
-      position:absolute;left:50%;top:66%;
-      transform:translate(-50%,-50%);
-      display:flex;gap:14px;align-items:center;justify-content:center;
-      z-index:3;
+    /* ===== ROOMS (create/join) ===== */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{
+      width:min(980px,100%);
+      margin:auto;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px
     }
-    .menuLeagueBtn{
-      min-width:320px;
-      padding:14px 18px;
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* ===== CONTINUE SCREEN (po klik Pokoje typerów, jeśli jest zapisany pokój) ===== */
+    #continue{
+      padding:16px;
+      align-items:center;
+      justify-content:center;
+    }
+    .continueBox{
+      width:min(980px,100%);
+      margin:auto;
+      padding:16px;
+    }
+    .continueCard{
+      padding:16px;
+      border-radius:22px;
+      border:1px solid var(--stroke2);
+      background:rgba(8,22,52,.62);
+      box-shadow:0 20px 70px rgba(0,0,0,.45);
+    }
+    .continueTop{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      padding-bottom:12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      margin-bottom:12px;
+    }
+    .pill{
+      padding:8px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      font-weight:1000;
+    }
+    .continueGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+    .miniCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
       border-radius:18px;
-      font-size:16px;
-      letter-spacing:.2px;
-      background:rgba(8,22,52,.55);
-      border:1px solid rgba(255,255,255,.16);
-      box-shadow:0 14px 26px rgba(0,0,0,.35);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      padding:12px;
+    }
+    .bigQ{
+      margin-top:12px;
+      font-weight:1000;
+    }
+    .continueBtns{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
     }
 
-    /* ROOM LAYOUT */
+    /* ===== ROOM LAYOUT ===== */
     #room{padding:16px;gap:14px;align-items:stretch}
-    .leftBar{width:320px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
-    .rightBar{width:360px;min-width:360px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     .midHead{padding:14px}
     .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
@@ -176,24 +276,19 @@
       padding:12px 12px;
       display:flex;align-items:center;gap:12px;
     }
-    .team{display:flex;align-items:center;gap:10px;min-width:0;flex:1;font-weight:1000;}
+    .team{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      font-weight:1000;
+    }
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .logo{width:24px;height:24px;flex:0 0 24px;border-radius:6px;background:rgba(255,255,255,.10);object-fit:contain;}
+    .logo{
+      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      background:rgba(255,255,255,.10);
+      object-fit:contain;
+    }
     .scoreBox{display:flex;align-items:center;gap:8px}
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
-
-    .miniResult{
-      display:flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:14px;
-      background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);
-      font-weight:900;white-space:nowrap;
-    }
-    .dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,.20);background:rgba(255,255,255,.25);flex:0 0 10px;box-shadow:0 0 0 3px rgba(0,0,0,.15) inset;}
-    .dotGreen{ background:#33ff88; }
-    .dotYellow{ background:#ffd84d; }
-    .dotRed{ background:#ff4d4d; }
-    .dotNeutral{ background:rgba(255,255,255,.25); }
 
     .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .playerRow{
@@ -203,87 +298,78 @@
       display:flex;gap:10px;align-items:center;justify-content:space-between;
       font-weight:900;
     }
-    .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
+    .badge{
+      padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:1000;font-size:12px
+    }
 
     .eyeBtn{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.10);
-      color:var(--text);
-      width:34px;height:34px;
-      display:inline-flex;align-items:center;justify-content:center;
+      width:36px;height:28px;
       border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.85);
       font-weight:1000;
       cursor:pointer;
-      user-select:none;
-      opacity:.45;
+      display:flex;align-items:center;justify-content:center;
     }
-    .eyeBtn.enabled{opacity:1}
-    .eyeBtn:disabled{cursor:not-allowed;opacity:.35}
+    .eyeBtn:disabled{opacity:.35;cursor:not-allowed}
 
-    /* ROOMS SCREEN */
-    #rooms{padding:16px;gap:14px}
-    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
-
-    /* LEAGUE SCREEN */
-    #league{padding:16px}
-    .leagueBox{width:min(1100px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .tableWrap{overflow:auto;max-height:620px;border-radius:18px}
-    table{width:100%;border-collapse:collapse}
-    th, td{padding:12px 12px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;font-weight:900}
-    th{position:sticky;top:0;background:rgba(8,22,52,.85);backdrop-filter:blur(8px)}
-    tr:hover td{background:rgba(255,255,255,.04)}
-    .pos{width:60px}
-    .pts{width:120px;text-align:right}
-    .rnd{width:140px;text-align:right}
-
-    /* MODALS */
-    .modal{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:50;
-      background:rgba(0,0,0,.45);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+    .rightFooterBtn{
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:14px;
     }
-    .modalCard{
-      width:min(980px,94%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(8,22,52,.78);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      padding:18px;
-    }
-    .modalTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0}
+    .rightFooterBtn .btn{width:100%}
 
-    .listGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
+    /* ===== LEAGUE TABLE ===== */
+    #league{
+      padding:16px;
+      align-items:center;
+      justify-content:center;
+    }
+    .leagueWrap{
+      width:min(1100px,100%);
+      margin:auto;
+      padding:14px;
+    }
+    .leagueTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
       gap:10px;
-      margin-top:10px;
-      max-height:420px;
-      overflow:auto;
-      padding-right:6px;
+      margin-bottom:10px;
     }
-    .pickItem{
-      padding:10px 12px;border-radius:16px;
-      background:rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.12);
-      display:flex;align-items:center;gap:10px;justify-content:space-between;
+    .leagueTopLeft{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:18px;
+    }
+    th,td{
+      padding:12px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
       font-weight:900;
     }
-    .pickLine{
-      padding:10px 12px;border-radius:16px;
-      background:rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.12);
-      display:flex;align-items:center;gap:12px;justify-content:space-between;
-      font-weight:900;
+    th{color:rgba(255,255,255,.80);text-align:left;font-size:12px;letter-spacing:.2px}
+    tr:hover td{background:rgba(255,255,255,.04)}
+    .linkRow{cursor:pointer}
+
+    /* ===== PLAYER STATS ===== */
+    #pstats{
+      padding:16px;
+      align-items:center;
+      justify-content:center;
     }
-    .pickTeams{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pickScore{min-width:70px;text-align:right;font-weight:1000}
+    .pstatsWrap{width:min(1100px,100%);margin:auto;padding:14px}
+    .pstatsHead{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .pstatsBody{padding:14px}
+    .kv{display:flex;gap:10px;flex-wrap:wrap}
+    .kv .pill{font-weight:1000}
+
   </style>
 </head>
 
@@ -303,41 +389,65 @@
         </div>
       </section>
 
-      <!-- MAIN MENU IMAGE -->
-      <section id="mainMenu" class="screen">
-        <div class="menuImgWrap">
-          <img id="menuBgImg" src="img_menu_pc.png" alt="Menu" />
-          <div class="menuBtns">
-            <img id="btnMenuRooms" class="imgBtn" src="btn_pokoje_typerow.png" alt="Pokoje typerów" />
-            <img id="btnMenuStats" class="imgBtn" src="btn_statystyki.png" alt="Statystyki" />
-            <img id="btnMenuExit" class="imgBtn" src="btn_wyjscie.png" alt="Wyjście" />
-          </div>
+      <!-- HOME (MENU PNG) -->
+      <section id="home" class="screen">
+        <div class="homeBtns" aria-label="Menu">
+          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
+            <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
+          </button>
+          <button class="imgBtn" id="btnHomeStats" title="Statystyki">
+            <img src="btn_statystyki.png" alt="Statystyki">
+          </button>
+          <button class="imgBtn" id="btnHomeExit" title="Wyjście">
+            <img src="btn_wyjscie.png" alt="Wyjście">
+          </button>
+        </div>
+      </section>
 
-          <!-- NOWY PRZYCISK -->
-          <div class="menuBottomBtns">
-            <button id="btnMenuLeague" class="btn menuLeagueBtn">Tabela ligi typerów</button>
+      <!-- CONTINUE SCREEN -->
+      <section id="continue" class="screen">
+        <div class="continueBox panel">
+          <div class="continueCard">
+            <div class="continueTop">
+              <div>
+                <div class="title" style="margin:0">Kontynuować?</div>
+                <div class="sub">Wykryto wcześniejszą rozgrywkę</div>
+              </div>
+              <div class="pill">Typer</div>
+            </div>
+
+            <div class="continueGrid">
+              <div class="miniCard">
+                <div class="sub">Witaj ponownie</div>
+                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contNick">—</div>
+              </div>
+              <div class="miniCard">
+                <div class="sub">Grasz w pokoju</div>
+                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contRoomName">—</div>
+              </div>
+            </div>
+
+            <div class="bigQ">Czy chcesz kontynuować grę w tym pokoju?</div>
+
+            <div class="continueBtns">
+              <button class="btn" id="btnContYes">Tak</button>
+              <button class="btn" id="btnContNo">Nie</button>
+              <div class="spacer"></div>
+              <button class="btn btnSmall" id="btnContForget">Zapomnij pokój</button>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ROOMS -->
+      <!-- ROOMS (CREATE/JOIN) -->
       <section id="rooms" class="screen">
         <div class="roomsBox panel">
           <div class="row">
             <div class="chip">Pokoje typerów</div>
-            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
             <div class="spacer"></div>
+            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
             <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
-            <button class="btn btnSmall" id="btnBackMain">Wróć</button>
-          </div>
-
-          <div class="panel block">
-            <h2>Nowy pokój</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
-              <button class="btn" id="btnCreateRoom">Utwórz</button>
-            </div>
-            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            <button class="btn btnSmall" id="btnBackHomeFromRooms">Wróć</button>
           </div>
 
           <div class="panel block">
@@ -350,43 +460,17 @@
           </div>
 
           <div class="panel block">
+            <h2>Utwórz nowy pokój</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
+              <button class="btn" id="btnCreateRoom">Utwórz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+          </div>
+
+          <div class="panel block">
             <h2>Debug</h2>
             <div class="help" id="debugRooms">—</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- LEAGUE TABLE -->
-      <section id="league" class="screen">
-        <div class="leagueBox panel">
-          <div class="row">
-            <div class="chip">Tabela ligi typerów</div>
-            <div class="chip">Po kolejce: <span id="leagueAfterRound">—</span></div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnLeagueRefresh">Odśwież</button>
-            <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
-          </div>
-
-          <div class="panel" style="padding:14px">
-            <div class="row">
-              <div class="title" style="margin:0">Ranking</div>
-              <div class="spacer"></div>
-              <div class="sub" id="leagueInfo">—</div>
-            </div>
-          </div>
-
-          <div class="panel tableWrap">
-            <table>
-              <thead>
-                <tr>
-                  <th class="pos">#</th>
-                  <th>Gracz</th>
-                  <th class="rnd">Kolejki</th>
-                  <th class="pts">Punkty</th>
-                </tr>
-              </thead>
-              <tbody id="leagueBody"></tbody>
-            </table>
           </div>
         </div>
       </section>
@@ -422,11 +506,8 @@
               <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
-
-                <!-- admin -->
-                <button class="btn" id="btnCustomQueue" style="display:none">Własna kolejka</button>
-                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
-                <button class="btn" id="btnFinishQueue" style="display:none">Zakończ kolejkę</button>
+                <button class="btn" id="btnMyQueue" style="display:none">Własna kolejka</button>
+                <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
               </div>
             </div>
 
@@ -443,8 +524,7 @@
                   <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
                 </div>
                 <div class="spacer"></div>
-
-                <div class="chip">KOLEJKA: <span id="queueLabel">—</span></div>
+                <div class="chip">KOLEJKA: <span id="roundLabel">—</span></div>
                 <div class="chip">Mecze: <span id="matchesCount">0</span></div>
               </div>
             </div>
@@ -459,67 +539,79 @@
               <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
             </div>
             <div class="playersList" id="playersList"></div>
+
+            <div class="rightFooterBtn">
+              <button class="btn" id="btnLeagueFromRoom">Tabela ligi typerów</button>
+            </div>
           </div>
 
         </div>
       </section>
 
-      <!-- MODAL: PODGLĄD TYPOW -->
-      <div id="modalPeek" class="modal">
-        <div class="modalCard">
-          <div class="row">
-            <div class="modalTitle" id="peekTitle">Podgląd typów</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnClosePeek">Zamknij</button>
-          </div>
-          <div class="sub" id="peekSub">—</div>
-          <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;max-height:520px;overflow:auto;" id="peekList"></div>
-        </div>
-      </div>
-
-      <!-- MODAL: CUSTOM QUEUE -->
-      <div id="modalCustom" class="modal">
-        <div class="modalCard">
-          <div class="row">
-            <div class="modalTitle">Własna kolejka (max 10)</div>
-            <div class="spacer"></div>
-            <div class="chip">Dodane: <span id="customCount">0</span>/10</div>
+      <!-- LEAGUE TABLE -->
+      <section id="league" class="screen">
+        <div class="leagueWrap panel">
+          <div class="leagueTop">
+            <div class="leagueTopLeft">
+              <div class="chip">Tabela ligi typerów</div>
+              <div class="chip">Pokój: <span id="leagueRoomName">—</span></div>
+              <div class="chip">Nick: <span id="leagueNick">—</span></div>
+              <div class="chip">Po kolejce: <span id="leagueAfterRound">—</span></div>
+            </div>
+            <div class="row">
+              <button class="btn btnSmall" id="btnLeagueRefresh">Odśwież</button>
+              <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
+            </div>
           </div>
 
-          <div class="row" style="margin-top:8px">
-            <select id="selLeague" style="flex:1"></select>
-            <button class="btn btnSmall" id="btnCloseCustom">Zamknij</button>
-          </div>
+          <div class="panel" style="padding:14px">
+            <div class="title" style="margin:0 0 10px 0">Ranking</div>
+            <div class="sub" style="margin-bottom:10px" id="leagueHint">Kliknij gracza, aby zobaczyć statystyki.</div>
 
-          <div class="sub" style="margin-top:10px">Klikaj “Dodaj” przy meczach. Po dodaniu 10 pojawi się zapis.</div>
-          <div class="listGrid" id="customMatchesList"></div>
+            <div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
+              <table id="leagueTable">
+                <thead>
+                  <tr>
+                    <th style="width:60px">#</th>
+                    <th>Gracz</th>
+                    <th style="width:120px">Kolejki</th>
+                    <th style="width:120px">Punkty</th>
+                  </tr>
+                </thead>
+                <tbody id="leagueBody">
+                  <tr><td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
+                </tbody>
+              </table>
+            </div>
 
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="btnConfirm10" disabled>Zapisz kolejkę (10)</button>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnClearCustom">Wyczyść wybór</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- MODAL: RESULTS -->
-      <div id="modalResults" class="modal">
-        <div class="modalCard">
-          <div class="row">
-            <div class="modalTitle">Wpisz wyniki (admin)</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnCloseResults">Zamknij</button>
-          </div>
-          <div class="sub">Wpisz wyniki i zapisz. Punkty trafią do ligi po tej kolejce.</div>
-
-          <div class="listGrid" id="resultsList" style="grid-template-columns:1fr;"></div>
-
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="btnSaveResults">Zapisz wyniki</button>
-            <div class="spacer"></div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- PLAYER STATS -->
+      <section id="pstats" class="screen">
+        <div class="pstatsWrap panel">
+          <div class="pstatsHead">
+            <div class="chip">Statystyki gracza</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnPstatsBack">Wróć</button>
+          </div>
+
+          <div class="panel pstatsBody">
+            <div class="title" style="margin:0" id="pstatsPlayer">—</div>
+            <div class="sub" style="margin-top:6px">Pokój: <span id="pstatsRoom">—</span></div>
+
+            <div class="kv" style="margin-top:12px">
+              <div class="pill">Punkty: <span id="pstatsPoints">0</span></div>
+              <div class="pill">Kolejki: <span id="pstatsRounds">0</span></div>
+            </div>
+
+            <div class="sub" style="margin-top:14px" id="pstatsNote">
+              (Podgląd szczegółów dopniemy w kolejnym kroku — na razie widzisz sumy)
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div class="toast" id="toast"></div>
       <div class="footerRight" id="footerRight">—</div>
@@ -540,20 +632,8 @@
     window.addEventListener("unhandledrejection", (e) => {
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
-
-    function applyScale(){
-      const root = document.documentElement;
-      const baseW = 1600, baseH = 900;
-      const pad = 24;
-      const sx = (window.innerWidth - pad) / baseW;
-      const sy = (window.innerHeight - pad) / baseH;
-      const scale = Math.max(0.5, Math.min(1, Math.min(sx, sy)));
-      root.style.setProperty("--uiScale", String(scale));
-    }
-    window.addEventListener("resize", applyScale);
-    applyScale();
   </script>
 
-  <script type="module" src="./app.js?v=1242"></script>
+  <script type="module" src="./app.js?v=2000"></script>
 </body>
 </html>
