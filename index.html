@@ -393,17 +393,49 @@
     tr:hover td{background:rgba(255,255,255,.04)}
     .linkRow{cursor:pointer}
 
-    /* ===== PLAYER STATS ===== */
-    #pstats{
-      padding:16px;
-      align-items:center;
-      justify-content:center;
+    /* ===== MODAL (PODGLĄD TYPOW) ===== */
+    .modal{
+      position:absolute; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:80;
+      background:rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
-    .pstatsWrap{width:min(1100px,100%);margin:auto;padding:14px}
-    .pstatsHead{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
-    .pstatsBody{padding:14px}
-    .kv{display:flex;gap:10px;flex-wrap:wrap}
-    .kv .pill{font-weight:1000}
+    .modal.active{display:flex}
+    .modalCard{
+      width:min(1100px,94%);
+      max-height:min(760px,90%);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(8,22,52,.72);
+      border-radius:22px;
+      box-shadow:0 24px 90px rgba(0,0,0,.55);
+      display:flex;
+      flex-direction:column;
+    }
+    .modalHead{
+      padding:14px;
+      display:flex; align-items:center; gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .modalBody{
+      padding:14px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      display:inline-block;
+      border:1px solid rgba(255,255,255,.25);
+    }
+    .dot.green{background:#2bff88}
+    .dot.yellow{background:#ffd24a}
+    .dot.red{background:#ff4d4d}
+    .dot.gray{background:rgba(255,255,255,.35)}
   </style>
 </head>
 
@@ -563,6 +595,7 @@
                 <div class="spacer"></div>
                 <div class="chip">KOLEJKA: <span id="roundLabel">—</span></div>
                 <div class="chip">Mecze: <span id="matchesCount">0</span></div>
+                <div class="chip">PUNKTY: <span id="myPointsLabel">—</span></div>
               </div>
             </div>
 
@@ -647,30 +680,17 @@
         </div>
       </section>
 
-      <!-- PLAYER STATS -->
-      <section id="pstats" class="screen">
-        <div class="pstatsWrap panel">
-          <div class="pstatsHead">
-            <div class="chip">Statystyki gracza</div>
+      <!-- MODAL PODGLĄDU -->
+      <div class="modal" id="modal">
+        <div class="modalCard">
+          <div class="modalHead">
+            <div class="chip" id="modalTitle">—</div>
             <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnPstatsBack">Wróć</button>
+            <button class="btn btnSmall" id="modalClose">Zamknij</button>
           </div>
-
-          <div class="panel pstatsBody">
-            <div class="title" style="margin:0" id="pstatsPlayer">—</div>
-            <div class="sub" style="margin-top:6px">Pokój: <span id="pstatsRoom">—</span></div>
-
-            <div class="kv" style="margin-top:12px">
-              <div class="pill">Punkty: <span id="pstatsPoints">0</span></div>
-              <div class="pill">Kolejki: <span id="pstatsRounds">0</span></div>
-            </div>
-
-            <div class="sub" style="margin-top:14px" id="pstatsNote">
-              (Podgląd szczegółów dopniemy w kolejnym kroku — na razie widzisz sumy)
-            </div>
-          </div>
+          <div class="modalBody" id="modalBody"></div>
         </div>
-      </section>
+      </div>
 
       <div class="toast" id="toast"></div>
       <div class="footerRight" id="footerRight">—</div>
@@ -693,6 +713,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2001"></script>
+  <script type="module" src="./app.js?v=2002"></script>
 </body>
 </html>
