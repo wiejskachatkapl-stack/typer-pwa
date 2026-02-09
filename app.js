@@ -1,8 +1,11 @@
-const BUILD = 1219;
+const BUILD = 1230;
+
+// tło aplikacji (za ramką)
 const BG_TLO = "img_tlo.png";
 
-const KEY_NICK = "typer_nick_v2";
-const KEY_ACTIVE_ROOM = "typer_active_room_v2";
+// ekran menu to obraz img_menu_pc.png (w index.html jako <img>)
+const KEY_NICK = "typer_nick_v3";
+const KEY_ACTIVE_ROOM = "typer_active_room_v3";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
@@ -12,6 +15,84 @@ const firebaseConfig = {
   messagingSenderId: "1032303131493",
   appId: "1:1032303131493:web:8cc41341f3e42415d6ff8c",
   measurementId: "G-5FBDH5G15N"
+};
+
+// ====== LIGI (jak chciałeś) ======
+const LEAGUES = [
+  "hiszpańska Laliga",
+  "holenderskia eredivisie",
+  "niemiecka bundesliga",
+  "angielska premieship",
+  "włoska Serie A",
+  "francuska Ligue 1",
+  "Polska ekstraklasa",
+  "liga mistrzów",
+  "liga europy",
+  "liga konferencji",
+  "puchar holandii",
+  "puchar polski",
+  "puchar hiszpanii",
+  "puchar anglii",
+  "puchar włoch"
+];
+
+// ====== BAZA MECZÓW (TESTOWA) ======
+// To jest tylko “lokalna baza”, żeby działało wybieranie.
+// Później podepniemy API i będzie brało prawdziwe mecze.
+const FIXTURES = {
+  "hiszpańska Laliga": [
+    ["Real Madrid","Barcelona"],["Atletico","Sevilla"],["Valencia","Villarreal"],["Betis","Sociedad"],
+    ["Athletic","Girona"],["Getafe","Osasuna"],["Celta","Mallorca"],["Alaves","Las Palmas"]
+  ],
+  "holenderskia eredivisie": [
+    ["Ajax","PSV"],["Feyenoord","AZ"],["Twente","Utrecht"],["Heerenveen","Sparta"],
+    ["NEC","Groningen"],["Go Ahead","Heracles"],["Fortuna","Willem II"]
+  ],
+  "niemiecka bundesliga": [
+    ["Bayern","Dortmund"],["Leipzig","Leverkusen"],["Frankfurt","Wolfsburg"],["Stuttgart","Hoffenheim"],
+    ["Union","Freiburg"],["Mainz","Bremen"]
+  ],
+  "angielska premieship": [
+    ["Liverpool","Manchester City"],["Arsenal","Chelsea"],["Manchester Utd","Tottenham"],["Newcastle","Aston Villa"],
+    ["Everton","West Ham"],["Brighton","Brentford"]
+  ],
+  "włoska Serie A": [
+    ["Inter","Milan"],["Juventus","Napoli"],["Roma","Lazio"],["Atalanta","Fiorentina"],
+    ["Bologna","Torino"]
+  ],
+  "francuska Ligue 1": [
+    ["PSG","Marseille"],["Lyon","Monaco"],["Lille","Rennes"],["Nice","Lens"],
+    ["Nantes","Toulouse"]
+  ],
+  "Polska ekstraklasa": [
+    ["Jagiellonia","Piast"],["Lechia","Legia"],["Wisla Plock","Radomiak"],["GKS Katowice","Gornik"],
+    ["Arka","Cracovia"],["Lech","Pogon"],["Motor","Rakow"],["Korona","Widzew"],
+    ["Slask","Zaglebie"],["Stal Mielec","Puszcza"],["Gornik","Legia"],["Rakow","Lech"]
+  ],
+  "liga mistrzów": [
+    ["Real Madrid","Bayern"],["Barcelona","PSG"],["Manchester City","Inter"],["Liverpool","Dortmund"]
+  ],
+  "liga europy": [
+    ["Roma","Ajax"],["Leverkusen","Lyon"],["Sevilla","West Ham"],["Marseille","Fenerbahce"]
+  ],
+  "liga konferencji": [
+    ["Aston Villa","Fiorentina"],["AZ","Betis"],["Legia","Basel"],["Nice","Braga"]
+  ],
+  "puchar holandii": [
+    ["Ajax","PSV"],["Feyenoord","Twente"],["AZ","Utrecht"]
+  ],
+  "puchar polski": [
+    ["Lech","Legia"],["Rakow","Gornik"],["Jagiellonia","Pogon"],["Widzew","Cracovia"]
+  ],
+  "puchar hiszpanii": [
+    ["Real Madrid","Sevilla"],["Barcelona","Atletico"],["Valencia","Betis"]
+  ],
+  "puchar anglii": [
+    ["Arsenal","Liverpool"],["Manchester City","Chelsea"],["Tottenham","Newcastle"]
+  ],
+  "puchar włoch": [
+    ["Inter","Juventus"],["Milan","Napoli"],["Roma","Atalanta"]
+  ]
 };
 
 // ---------- helpers ----------
@@ -27,14 +108,12 @@ function showToast(msg){
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=> t.style.display="none", 2600);
 }
-
 function showScreen(id){
-  ["splash","menu","rooms","room"].forEach(s=>{
+  ["splash","mainMenu","rooms","room"].forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
 }
-
 function setSplash(msg){
   const h = el("splashHint");
   if (h) h.textContent = msg;
@@ -46,17 +125,15 @@ function normalizeSlug(s){
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/ł/g,"l")
-    .replace(/[^a-z0-9]+/g,"_")
-    .replace(/^_+|_+$/g,"");
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
-
 function genCode6(){
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
   for(let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
   return out;
 }
-
 function clampInt(v, min, max){
   if (v === "" || v === null || v === undefined) return null;
   const n = parseInt(String(v),10);
@@ -67,7 +144,6 @@ function clampInt(v, min, max){
 function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
-
 async function ensureNick(){
   let nick = getNick();
   while(!nick){
@@ -79,25 +155,10 @@ async function ensureNick(){
   localStorage.setItem(KEY_NICK, nick);
   return nick;
 }
-
 function refreshNickLabels(){
   const nick = getNick() || "—";
-  if (el("nickLabelMenu")) el("nickLabelMenu").textContent = nick;
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
-}
-
-// ---------- CONTINUE MODAL ----------
-function showContinueModal({ roomName }){
-  const modal = el("continueModal");
-  if (!modal) return;
-  el("continueNick").textContent = getNick() || "—";
-  el("continueRoomName").textContent = roomName || "—";
-  modal.style.display = "flex";
-}
-function hideContinueModal(){
-  const modal = el("continueModal");
-  if (modal) modal.style.display = "none";
 }
 function clearSavedRoom(){
   localStorage.removeItem(KEY_ACTIVE_ROOM);
@@ -106,6 +167,7 @@ function clearSavedRoom(){
 // ---------- Firebase ----------
 let app, auth, db;
 let userUid = null;
+let fs = {};
 
 let unsubRoomDoc = null;
 let unsubPlayers = null;
@@ -115,19 +177,28 @@ let unsubPicks = null;
 let currentRoomCode = null;
 let currentRoom = null;
 
-let matchesCache = [];
-let picksCache = {};
-let picksDocByUid = {};
-let submittedByUid = {};
+let activeRoundId = null;
+let activeRoundNo = 0;
+
+let matchesCache = [];      // matches for active round
+let picksCache = {};        // my picks map matchId-> {h,a}
+let picksDocByUid = {};     // uid -> picks map
+let submittedByUid = {};    // uid -> boolean
 let lastPlayers = [];
 
-let fs = {};
+// ---------- Firestore paths ----------
+function roomRef(code){ return fs.doc(db, "rooms", code); }
+function playersCol(code){ return fs.collection(db, "rooms", code, "players"); }
+function roundsCol(code){ return fs.collection(db, "rooms", code, "rounds"); }
+function roundRef(code, roundId){ return fs.doc(db, "rooms", code, "rounds", roundId); }
+function matchesCol(code, roundId){ return fs.collection(db, "rooms", code, "rounds", roundId, "matches"); }
+function picksCol(code, roundId){ return fs.collection(db, "rooms", code, "rounds", roundId, "picks"); }
+function myPickRef(code, roundId){ return fs.doc(db, "rooms", code, "rounds", roundId, "picks", userUid); }
 
 // ---------- status helpers ----------
 function isCompletePicksObject(picksObj){
   if(!matchesCache.length) return false;
   if(!picksObj || typeof picksObj !== "object") return false;
-
   for(const m of matchesCache){
     const p = picksObj[m.id];
     if(!p) return false;
@@ -135,7 +206,6 @@ function isCompletePicksObject(picksObj){
   }
   return true;
 }
-
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
@@ -143,37 +213,13 @@ function recomputeSubmittedMap(){
   }
 }
 
-// ---------- Firestore paths ----------
-function roomRef(code){ return fs.doc(db, "rooms", code); }
-function playersCol(code){ return fs.collection(db, "rooms", code, "players"); }
-function matchesCol(code){ return fs.collection(db, "rooms", code, "matches"); }
-function picksCol(code){ return fs.collection(db, "rooms", code, "picks"); }
-
-// ---------- queue label ----------
-function getQueueNoFromRoomOrMatches(){
-  const n = currentRoom?.queueNo;
-  if (Number.isInteger(n) && n > 0) return n;
-
-  const first = matchesCache?.[0]?.queueNo;
-  if (Number.isInteger(first) && first > 0) return first;
-
-  return 0;
-}
-function refreshQueueLabel(){
-  const q = getQueueNoFromRoomOrMatches();
-  const out = q > 0 ? `KOLEJKA ${q}` : "—";
-  const node = el("queueLabel");
-  if (node) node.textContent = out;
-}
-
-// ---------- dot logic (green/yellow/red) ----------
+// ---------- dots (green/yellow/red) ----------
 function outcomeSign(h, a){
   if(!Number.isInteger(h) || !Number.isInteger(a)) return null;
-  if(h > a) return 1;     // 1
-  if(h < a) return -1;    // 2
-  return 0;               // X
+  if(h > a) return 1;
+  if(h < a) return -1;
+  return 0;
 }
-
 function comparePickToResult(match){
   const p = picksCache?.[match.id];
   if(!p || !Number.isInteger(p.h) || !Number.isInteger(p.a)) return null;
@@ -181,18 +227,14 @@ function comparePickToResult(match){
   const hasRes = Number.isInteger(match.resultH) && Number.isInteger(match.resultA);
   if(!hasRes) return null;
 
-  // 1) dokładny wynik
   if(p.h === match.resultH && p.a === match.resultA) return "green";
 
-  // 2) tylko rozstrzygnięcie (1X2)
   const ps = outcomeSign(p.h, p.a);
   const rs = outcomeSign(match.resultH, match.resultA);
   if(ps !== null && rs !== null && ps === rs) return "yellow";
 
-  // 3) nietrafione
   return "red";
 }
-
 function applyDotState(dotEl, state, hasResult){
   dotEl.classList.remove("dotGreen","dotYellow","dotRed","dotNeutral");
   if(state === "green"){
@@ -210,34 +252,41 @@ function applyDotState(dotEl, state, hasResult){
   }
 }
 
-// ---------- Admin UI (na razie tylko blokady przycisków) ----------
+// ---------- room state ----------
 function isAdmin(){
   return currentRoom && currentRoom.adminUid === userUid;
 }
 function isQueueLocked(){
   return !!currentRoom?.queueLocked;
 }
+function refreshQueueLabel(){
+  const node = el("queueLabel");
+  if(!node) return;
+  if(activeRoundNo > 0) node.textContent = `KOLEJKA ${activeRoundNo}`;
+  else node.textContent = "—";
+}
 function applyAdminButtonsState(){
   const admin = isAdmin();
   const locked = isQueueLocked();
 
-  const btnAdd = el("btnAddQueue");
   const btnCustom = el("btnCustomQueue");
   const btnResults = el("btnEnterResults");
   const btnFinish = el("btnFinishQueue");
 
-  if(btnAdd) btnAdd.style.display = admin ? "block" : "none";
   if(btnCustom) btnCustom.style.display = admin ? "block" : "none";
   if(btnResults) btnResults.style.display = admin ? "block" : "none";
   if(btnFinish) btnFinish.style.display = admin ? "block" : "none";
 
   if(admin){
-    if(btnAdd) btnAdd.disabled = locked;
-    if(btnCustom) btnCustom.disabled = locked;
-    if(btnResults) btnResults.disabled = !locked;
-    if(btnFinish) btnFinish.disabled = !locked;
+    if(btnCustom) btnCustom.disabled = locked;      // dodawanie tylko gdy nie ma kolejki
+    if(btnResults) btnResults.disabled = !locked;   // wyniki tylko gdy kolejka jest ustawiona
+    if(btnFinish) btnFinish.disabled = !locked;     // zakończyć tylko gdy jest kolejka
   }
 }
+
+// ---------- modals ----------
+function openModal(id){ const m = el(id); if(m) m.style.display = "flex"; }
+function closeModal(id){ const m = el(id); if(m) m.style.display = "none"; }
 
 // ---------- boot ----------
 async function boot(){
@@ -274,74 +323,50 @@ async function boot(){
   });
 
   setFooter(`BUILD ${BUILD}`);
+  bindUI();
   await ensureNick();
   refreshNickLabels();
-  bindUI();
 
-  // jeśli jest zapisany pokój — pokaż modal kontynuacji
-  const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
-  if(saved && saved.length === 6){
-    setSplash(`Znaleziono zapisany pokój: ${saved}\nSprawdzam…`);
-    try{
-      const snap = await fs.getDoc(roomRef(saved));
-      if(!snap.exists()){
-        clearSavedRoom();
-        showScreen("menu");
-        showToast("Zapisany pokój nie istnieje");
-        return;
-      }
-      const room = snap.data();
-      showScreen("menu");
-
-      el("btnContinueYes").onclick = async ()=>{
-        hideContinueModal();
-        localStorage.setItem(KEY_ACTIVE_ROOM, saved);
-        await openRoom(saved, { silent:true, force:true });
-      };
-      el("btnContinueNo").onclick = ()=>{
-        hideContinueModal();
-        showScreen("rooms");
-      };
-      el("btnContinueForget").onclick = ()=>{
-        clearSavedRoom();
-        hideContinueModal();
-        showToast("Zapomniano pokój");
-        showScreen("menu");
-      };
-
-      showContinueModal({ roomName: room?.name || "—" });
-      return;
-    }catch(e){
-      console.error(e);
-      clearSavedRoom();
-      showScreen("menu");
-      return;
-    }
-  }
-
-  showScreen("menu");
+  // start z menu obrazkowego
+  showScreen("mainMenu");
 }
 
 // ---------- UI binding ----------
 function bindUI(){
-  // MENU
-  el("btnOpenRooms").onclick = async ()=>{ showScreen("rooms"); el("debugRooms").textContent = "—"; };
-  el("btnChangeNickMenu").onclick = async ()=>{
-    localStorage.removeItem(KEY_NICK);
+  // MAIN MENU image buttons
+  el("btnMenuRooms").onclick = async ()=>{
     await ensureNick();
     refreshNickLabels();
-    showToast("Zmieniono nick");
+
+    // Jeżeli mamy zapisany aktywny pokój i on istnieje → wchodzimy od razu do pokoju
+    // (to jest “uproszczenie klików” – jak chcesz, dodamy ładne okno “Witaj ponownie”)
+    const saved = (localStorage.getItem(KEY_ACTIVE_ROOM) || "").trim().toUpperCase();
+    if(saved && saved.length === 6){
+      try{
+        const snap = await fs.getDoc(roomRef(saved));
+        if(snap.exists()){
+          await joinRoom(saved, { silentJoin:true }); // w razie gdy nie ma gracza w players
+          return;
+        } else {
+          clearSavedRoom();
+        }
+      }catch{}
+    }
+
+    showScreen("rooms");
+    el("debugRooms").textContent = "—";
   };
+  el("btnMenuStats").onclick = ()=> showToast("Statystyki – dodamy w kolejnym kroku");
+  el("btnMenuExit").onclick = ()=> showToast("Wyjście – w PWA zamknij kartę / aplikację");
 
   // ROOMS
-  el("btnBackMenu").onclick = ()=> showScreen("menu");
+  el("btnBackMain").onclick = ()=> showScreen("mainMenu");
   el("btnChangeNickRooms").onclick = async ()=>{
     localStorage.removeItem(KEY_NICK);
     await ensureNick();
     refreshNickLabels();
     showToast("Zmieniono nick");
   };
-
   el("btnCreateRoom").onclick = async ()=>{
     const name = (el("inpRoomName").value || "").trim();
     if(name.length < 2){
@@ -350,7 +375,6 @@ function bindUI(){
     }
     await createRoom(name);
   };
-
   el("btnJoinRoom").onclick = async ()=>{
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
     if(code.length !== 6){
@@ -361,7 +385,7 @@ function bindUI(){
   };
 
   // ROOM
-  el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
+  el("btnBackFromRoom").onclick = ()=> showScreen("rooms");
   el("btnCopyCode").onclick = async ()=>{
     if(!currentRoomCode) return;
     try{
@@ -375,11 +399,19 @@ function bindUI(){
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
 
-  // ADMIN (na razie tylko test)
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnCustomQueue").onclick = ()=> showToast("Własna kolejka — dodamy w kolejnym kroku");
-  el("btnEnterResults").onclick = ()=> showToast("Wpisywanie wyników — dołożymy w kolejnym kroku");
-  el("btnFinishQueue").onclick = ()=> showToast("Zakończenie kolejki — dołożymy w kolejnym kroku");
+  // ADMIN actions
+  el("btnCustomQueue").onclick = async ()=>{ await openCustomQueue(); };
+  el("btnEnterResults").onclick = async ()=>{ await openResultsModal(); };
+  el("btnFinishQueue").onclick = async ()=>{ await finishQueue(); };
+
+  // CUSTOM MODAL
+  el("btnCloseCustom").onclick = ()=> closeModal("modalCustom");
+  el("btnClearCustom").onclick = ()=> customSelectionClear();
+  el("btnConfirm10").onclick = async ()=>{ await customSelectionSave(); };
+
+  // RESULTS MODAL
+  el("btnCloseResults").onclick = ()=> closeModal("modalResults");
+  el("btnSaveResults").onclick = async ()=>{ await saveResults(); };
 }
 
 // ---------- Rooms logic ----------
@@ -398,7 +430,8 @@ async function createRoom(roomName){
       adminUid: userUid,
       adminNick: nick,
       queueLocked: false,
-      queueNo: 0,
+      activeRoundId: null,
+      activeRoundNo: 0,
       createdAt: fs.serverTimestamp()
     });
 
@@ -411,12 +444,13 @@ async function createRoom(roomName){
     await openRoom(code);
     return;
   }
-  el("debugRooms").textContent = "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
+  el("debugRooms").textContent = "Nie udało się wygenerować wolnego kodu.";
 }
 
-async function joinRoom(code){
+async function joinRoom(code, opts={}){
+  const { silentJoin=false } = opts;
   const nick = getNick();
-  el("debugRooms").textContent = "Dołączam…";
+  el("debugRooms").textContent = silentJoin ? "Wchodzę…" : "Dołączam…";
 
   const ref = roomRef(code);
   const snap = await fs.getDoc(ref);
@@ -431,7 +465,7 @@ async function joinRoom(code){
   }, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
-  el("debugRooms").textContent = `Dołączono do ${code}`;
+  if(!silentJoin) el("debugRooms").textContent = `Dołączono do ${code}`;
   await openRoom(code);
 }
 
@@ -446,6 +480,9 @@ async function leaveRoom(){
 
   currentRoomCode = null;
   currentRoom = null;
+
+  activeRoundId = null;
+  activeRoundNo = 0;
 
   matchesCache = [];
   picksCache = {};
@@ -482,6 +519,9 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
+  // reset view
+  activeRoundId = null;
+  activeRoundNo = 0;
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -491,6 +531,7 @@ async function openRoom(code, opts={}){
   renderPlayers([]);
   refreshQueueLabel();
 
+  // load room
   const ref = roomRef(code);
   const snap = await fs.getDoc(ref);
   if(!snap.exists()) throw new Error("Room not found");
@@ -501,19 +542,30 @@ async function openRoom(code, opts={}){
   el("roomCode").textContent = code;
 
   applyAdminButtonsState();
-  refreshQueueLabel();
 
-  unsubRoomDoc = fs.onSnapshot(ref, (d)=>{
+  // room live
+  unsubRoomDoc = fs.onSnapshot(ref, async(d)=>{
     if(!d.exists()) return;
+    const prevRound = activeRoundId;
     currentRoom = d.data();
+
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
+
     applyAdminButtonsState();
+
+    activeRoundId = currentRoom.activeRoundId || null;
+    activeRoundNo = currentRoom.activeRoundNo || 0;
     refreshQueueLabel();
+
+    // jeżeli zmieniła się aktywna kolejka → przepnij suby
+    if(prevRound !== activeRoundId){
+      await attachRoundListeners();
+    }
   });
 
-  // players
-  const pq = fs.query(fs.collection(db, "rooms", code, "players"), fs.orderBy("joinedAt","asc"));
+  // players live
+  const pq = fs.query(playersCol(code), fs.orderBy("joinedAt","asc"));
   unsubPlayers = fs.onSnapshot(pq, (qs)=>{
     const arr = [];
     qs.forEach(docu=> arr.push(docu.data()));
@@ -521,8 +573,47 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // picks status
-  unsubPicks = fs.onSnapshot(fs.collection(db, "rooms", code, "picks"), (qs)=>{
+  // set active round and attach listeners
+  activeRoundId = currentRoom.activeRoundId || null;
+  activeRoundNo = currentRoom.activeRoundNo || 0;
+  refreshQueueLabel();
+  await attachRoundListeners();
+
+  if(!silent) showToast(`W pokoju: ${code}`);
+}
+
+async function attachRoundListeners(){
+  // clear old
+  if(unsubMatches){ unsubMatches(); unsubMatches=null; }
+  if(unsubPicks){ unsubPicks(); unsubPicks=null; }
+
+  matchesCache = [];
+  picksCache = {};
+  picksDocByUid = {};
+  submittedByUid = {};
+  renderMatches();
+
+  if(!activeRoundId){
+    renderMatches();
+    updateSaveButtonState();
+    renderPlayers(lastPlayers);
+    return;
+  }
+
+  // matches live
+  const mq = fs.query(matchesCol(currentRoomCode, activeRoundId), fs.orderBy("idx","asc"));
+  unsubMatches = fs.onSnapshot(mq, async(qs)=>{
+    const arr = [];
+    qs.forEach(docu=> arr.push({ id: docu.id, ...docu.data() }));
+    matchesCache = arr;
+    await loadMyPicks();
+    recomputeSubmittedMap();
+    renderPlayers(lastPlayers);
+    renderMatches();
+  });
+
+  // picks live (status)
+  unsubPicks = fs.onSnapshot(picksCol(currentRoomCode, activeRoundId), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
       const data = d.data();
@@ -531,50 +622,33 @@ async function openRoom(code, opts={}){
     recomputeSubmittedMap();
     renderPlayers(lastPlayers);
   });
-
-  // matches
-  const mq = fs.query(fs.collection(db, "rooms", code, "matches"), fs.orderBy("idx","asc"));
-  unsubMatches = fs.onSnapshot(mq, async (qs)=>{
-    const arr = [];
-    qs.forEach(docu=>{
-      arr.push({ id: docu.id, ...docu.data() });
-    });
-    matchesCache = arr;
-
-    refreshQueueLabel();
-
-    recomputeSubmittedMap();
-    renderPlayers(lastPlayers);
-
-    await loadMyPicks();
-    renderMatches();
-  });
-
-  if(!silent) showToast(`W pokoju: ${code}`);
 }
 
-// ---------- Picks (TY) ----------
+// ---------- Picks ----------
 async function loadMyPicks(){
+  if(!activeRoundId){
+    picksCache = {};
+    return;
+  }
   try{
-    const ref = fs.doc(db, "rooms", currentRoomCode, "picks", userUid);
-    const snap = await fs.getDoc(ref);
+    const snap = await fs.getDoc(myPickRef(currentRoomCode, activeRoundId));
     if(!snap.exists()){
       picksCache = {};
       return;
     }
-    const data = snap.data();
-    picksCache = data?.picks || {};
+    picksCache = snap.data()?.picks || {};
   }catch{
     picksCache = {};
   }
 }
-
 function allMyPicksFilled(){
   return isCompletePicksObject(picksCache);
 }
-
 async function saveAllPicks(){
-  if(!currentRoomCode) return;
+  if(!activeRoundId){
+    showToast("Brak aktywnej kolejki");
+    return;
+  }
   if(!matchesCache.length){
     showToast("Brak meczów");
     return;
@@ -583,9 +657,7 @@ async function saveAllPicks(){
     showToast("Uzupełnij wszystkie typy");
     return;
   }
-
-  const ref = fs.doc(db, "rooms", currentRoomCode, "picks", userUid);
-  await fs.setDoc(ref, {
+  await fs.setDoc(myPickRef(currentRoomCode, activeRoundId), {
     uid: userUid,
     nick: getNick(),
     updatedAt: fs.serverTimestamp(),
@@ -659,7 +731,6 @@ function createLogoImg(teamName){
   const img = document.createElement("img");
   img.className = "logo";
   img.alt = teamName;
-
   img.src = `./logos/${slug}.png`;
   img.onerror = () => {
     if(img.dataset.try === "jpg"){ img.style.display="none"; return; }
@@ -675,6 +746,18 @@ function renderMatches(){
   list.innerHTML = "";
 
   el("matchesCount").textContent = String(matchesCache.length || 0);
+
+  if(!activeRoundId){
+    const empty = document.createElement("div");
+    empty.className = "sub";
+    empty.style.padding = "10px";
+    empty.textContent = isAdmin()
+      ? "Brak aktywnej kolejki. Admin może dodać własną kolejkę."
+      : "Brak aktywnej kolejki. Poczekaj aż admin doda mecze.";
+    list.appendChild(empty);
+    updateSaveButtonState();
+    return;
+  }
 
   for(const m of matchesCache){
     const card = document.createElement("div");
@@ -745,7 +828,6 @@ function renderMatches(){
     dot.className = "dot dotNeutral";
 
     const hasRes = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
-
     const label = document.createElement("div");
     label.textContent = hasRes ? `Wynik: ${m.resultH}:${m.resultA}` : "Wynik: —";
 
@@ -769,70 +851,253 @@ function renderMatches(){
 function updateSaveButtonState(){
   const btn = el("btnSaveAll");
   if(!btn) return;
-  btn.disabled = !allMyPicksFilled();
+  btn.disabled = !activeRoundId || !allMyPicksFilled();
 }
 
-// ---------- TEST: dodanie kolejki (tylko admin) ----------
-async function addTestQueue(){
-  if(!currentRoomCode) return;
+// ---------- ADMIN: Custom Queue ----------
+let customSelected = []; // [{home,away,league}]
+function customSelectionClear(){
+  customSelected = [];
+  renderCustomList();
+}
+function fillLeagueSelect(){
+  const s = el("selLeague");
+  s.innerHTML = "";
+  LEAGUES.forEach(l=>{
+    const o = document.createElement("option");
+    o.value = l;
+    o.textContent = l;
+    s.appendChild(o);
+  });
+  s.onchange = ()=> renderCustomList();
+}
+function renderCustomList(){
+  el("customCount").textContent = String(customSelected.length);
+  el("btnConfirm10").disabled = customSelected.length !== 10;
+
+  const league = el("selLeague").value;
+  const fixtures = FIXTURES[league] || [];
+
+  const box = el("customMatchesList");
+  box.innerHTML = "";
+
+  fixtures.forEach((pair)=>{
+    const home = pair[0], away = pair[1];
+
+    const already = customSelected.some(x=> x.home===home && x.away===away && x.league===league);
+
+    const item = document.createElement("div");
+    item.className = "pickItem";
+
+    const left = document.createElement("div");
+    left.textContent = `${home} — ${away}`;
+    left.style.fontWeight = "1000";
+
+    const btn = document.createElement("button");
+    btn.className = "btn btnSmall";
+    btn.textContent = already ? "Dodane" : "Dodaj";
+    btn.disabled = already || customSelected.length >= 10;
+    btn.onclick = ()=>{
+      if(customSelected.length >= 10) return;
+      customSelected.push({ home, away, league });
+      renderCustomList();
+    };
+
+    item.appendChild(left);
+    item.appendChild(btn);
+    box.appendChild(item);
+  });
+
+  if(!fixtures.length){
+    const t = document.createElement("div");
+    t.className = "sub";
+    t.textContent = "Brak meczów w bazie testowej dla tej ligi.";
+    box.appendChild(t);
+  }
+}
+
+async function openCustomQueue(){
   if(!isAdmin()){
     showToast("Tylko admin");
     return;
   }
   if(isQueueLocked()){
-    showToast("Kolejka zablokowana – zakończ ją, aby dodać nową.");
+    showToast("Nie można modyfikować – kolejka trwa (najpierw zakończ).");
+    return;
+  }
+  if(!currentRoomCode) return;
+
+  fillLeagueSelect();
+  customSelectionClear();
+  openModal("modalCustom");
+}
+
+async function customSelectionSave(){
+  if(customSelected.length !== 10){
+    showToast("Musisz mieć dokładnie 10 meczów");
+    return;
+  }
+  const ok = confirm("Masz 10 pojedynków. Zapisać kolejkę?");
+  if(!ok){
+    // wraca do ustawiania (modal zostaje)
     return;
   }
 
-  const sample = [
-    ["Jagiellonia","Piast"],
-    ["Lechia","Legia"],
-    ["Wisla Plock","Radomiak"],
-    ["GKS Katowice","Gornik"],
-    ["Arka","Cracovia"],
-    ["Lech","Pogon"],
-    ["Motor","Rakow"],
-    ["Korona","Widzew"],
-    ["Slask","Zaglebie"],
-    ["Stal Mielec","Puszcza"]
-  ];
-
-  const ok = confirm("Dodać testową kolejkę 10 meczów?");
-  if(!ok) return;
-
-  // zwiększamy numer kolejki w pokoju + zapisujemy queueNo do meczów
-  const currentNo = Number.isInteger(currentRoom?.queueNo) ? currentRoom.queueNo : 0;
-  const nextNo = currentNo + 1;
+  // nowa runda
+  const nextNo = (currentRoom?.activeRoundNo || 0) + 1;
+  const roundId = `r_${Date.now()}_${genCode6()}`;
 
   const b = fs.writeBatch(db);
 
-  // wyczyść poprzednie mecze (prosto, bez archiwum – testowo)
-  // jeżeli chcesz archiwum – dopiszemy w następnym kroku
-  // UWAGA: potrzebujemy listy ID – robimy prościej: nie kasujemy, tylko nadpisujemy idx/nowe id
-  // (dla testu wystarczy, a archiwum dodamy później)
+  // round doc
+  b.set(roundRef(currentRoomCode, roundId), {
+    no: nextNo,
+    createdAt: fs.serverTimestamp(),
+    createdByUid: userUid,
+    createdByNick: getNick()
+  });
 
-  sample.forEach((pair, idx)=>{
-    const id = `m_${Date.now()}_${idx}`;
-    const ref = fs.doc(db, "rooms", currentRoomCode, "matches", id);
+  // matches
+  customSelected.forEach((m, idx)=>{
+    const matchId = `m_${Date.now()}_${idx}`;
+    const ref = fs.doc(db, "rooms", currentRoomCode, "rounds", roundId, "matches", matchId);
     b.set(ref, {
       idx,
-      home: pair[0],
-      away: pair[1],
-      createdAt: fs.serverTimestamp(),
+      league: m.league,
+      home: m.home,
+      away: m.away,
       resultH: null,
       resultA: null,
-      queueNo: nextNo
+      createdAt: fs.serverTimestamp()
     });
   });
 
+  // lock + active
   b.set(roomRef(currentRoomCode), {
-    queueNo: nextNo,
     queueLocked: true,
-    queueLockedAt: fs.serverTimestamp()
+    activeRoundId: roundId,
+    activeRoundNo: nextNo
   }, { merge:true });
 
   await b.commit();
-  showToast(`Dodano KOLEJKĘ ${nextNo} ✅`);
+
+  closeModal("modalCustom");
+  showToast(`Zapisano KOLEJKĘ ${nextNo} ✅`);
+}
+
+// ---------- ADMIN: Results ----------
+function renderResultsEditor(){
+  const box = el("resultsList");
+  box.innerHTML = "";
+
+  matchesCache.forEach((m)=>{
+    const row = document.createElement("div");
+    row.className = "pickItem";
+    row.style.justifyContent = "flex-start";
+    row.style.gap = "12px";
+
+    const title = document.createElement("div");
+    title.style.flex = "1";
+    title.textContent = `${m.home} — ${m.away}`;
+    title.style.fontWeight = "1000";
+
+    const inpH = document.createElement("input");
+    inpH.style.width = "70px";
+    inpH.inputMode = "numeric";
+    inpH.placeholder = "0";
+    inpH.value = (m.resultH ?? "") === null ? "" : String(m.resultH ?? "");
+    inpH.dataset.mid = m.id;
+    inpH.dataset.side = "h";
+
+    const sep = document.createElement("div");
+    sep.textContent = ":";
+    sep.style.fontWeight = "1000";
+
+    const inpA = document.createElement("input");
+    inpA.style.width = "70px";
+    inpA.inputMode = "numeric";
+    inpA.placeholder = "0";
+    inpA.value = (m.resultA ?? "") === null ? "" : String(m.resultA ?? "");
+    inpA.dataset.mid = m.id;
+    inpA.dataset.side = "a";
+
+    row.appendChild(title);
+    row.appendChild(inpH);
+    row.appendChild(sep);
+    row.appendChild(inpA);
+
+    box.appendChild(row);
+  });
+}
+
+async function openResultsModal(){
+  if(!isAdmin()){
+    showToast("Tylko admin");
+    return;
+  }
+  if(!isQueueLocked() || !activeRoundId){
+    showToast("Brak aktywnej kolejki");
+    return;
+  }
+  openModal("modalResults");
+  renderResultsEditor();
+}
+
+async function saveResults(){
+  if(!isAdmin() || !activeRoundId) return;
+
+  // zbieramy inputy
+  const inputs = Array.from(el("resultsList").querySelectorAll("input"));
+  const temp = {}; // mid -> {h,a}
+  inputs.forEach(inp=>{
+    const mid = inp.dataset.mid;
+    temp[mid] = temp[mid] || {};
+    const v = clampInt(inp.value, 0, 20);
+    if(inp.dataset.side === "h") temp[mid].h = v;
+    if(inp.dataset.side === "a") temp[mid].a = v;
+  });
+
+  // walidacja: wszystkie mecze muszą mieć wynik
+  for(const m of matchesCache){
+    const t = temp[m.id] || {};
+    if(!Number.isInteger(t.h) || !Number.isInteger(t.a)){
+      showToast("Uzupełnij wszystkie wyniki (0–20)");
+      return;
+    }
+  }
+
+  const b = fs.writeBatch(db);
+  matchesCache.forEach(m=>{
+    const t = temp[m.id];
+    const ref = fs.doc(db, "rooms", currentRoomCode, "rounds", activeRoundId, "matches", m.id);
+    b.set(ref, { resultH: t.h, resultA: t.a, resultsUpdatedAt: fs.serverTimestamp() }, { merge:true });
+  });
+  await b.commit();
+
+  closeModal("modalResults");
+  showToast("Zapisano wyniki ✅");
+}
+
+// ---------- ADMIN: Finish Queue ----------
+async function finishQueue(){
+  if(!isAdmin()){
+    showToast("Tylko admin");
+    return;
+  }
+  if(!activeRoundId || !isQueueLocked()){
+    showToast("Brak aktywnej kolejki");
+    return;
+  }
+  const ok = confirm("Zakończyć kolejkę? Po zakończeniu będzie można dodać następną.");
+  if(!ok) return;
+
+  await fs.setDoc(roomRef(currentRoomCode), {
+    queueLocked: false,
+    activeRoundId: null,
+    activeRoundNo: currentRoom?.activeRoundNo || 0
+  }, { merge:true });
+
+  showToast("Kolejka zakończona ✅");
 }
 
 // ---------- start ----------

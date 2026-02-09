@@ -82,7 +82,7 @@
     .col{display:flex;flex-direction:column;gap:10px}
     .spacer{flex:1}
 
-    input{
+    input, select{
       border:1px solid rgba(255,255,255,.15);
       background:rgba(0,0,0,.22);
       color:var(--text);
@@ -92,6 +92,7 @@
       font-weight:900;
     }
     input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+
     .toast{
       position:absolute;left:18px;bottom:14px;
       background:rgba(0,0,0,.35);
@@ -103,6 +104,40 @@
     .footerRight{
       position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
     }
+
+    /* MAIN MENU (obraz tła + 3 przyciski PNG) */
+    #mainMenu{align-items:center;justify-content:center}
+    .menuImgWrap{
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      position:relative;
+    }
+    #menuBgImg{
+      width:100%;height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .menuBtns{
+      position:absolute;
+      left:50%;
+      top:52%;
+      transform:translate(-50%,-50%);
+      display:flex;
+      gap:34px;
+      align-items:center;
+      justify-content:center;
+      pointer-events:auto;
+    }
+    .imgBtn{
+      width:280px;
+      height:auto;
+      cursor:pointer;
+      user-select:none;
+      -webkit-user-drag:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
+      transition: transform .08s ease;
+    }
+    .imgBtn:active{ transform: scale(0.98); }
 
     /* ROOM LAYOUT */
     #room{padding:16px;gap:14px;align-items:stretch}
@@ -133,7 +168,6 @@
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
 
-    /* ===== wynik + kropka ===== */
     .miniResult{
       display:flex;
       align-items:center;
@@ -174,12 +208,8 @@
     .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
     .help{color:var(--muted);font-weight:800;font-size:13px}
 
-    /* MENU */
-    #menu{padding:16px}
-    .menuBox{width:min(980px,100%);margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-
-    /* CONTINUE MODAL */
-    #continueModal{
+    /* MODALS */
+    .modal{
       position:absolute; inset:0;
       display:none;
       align-items:center; justify-content:center;
@@ -188,24 +218,32 @@
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
-    #continueCard{
-      width:min(760px,92%);
+    .modalCard{
+      width:min(920px,94%);
       border:1px solid rgba(255,255,255,.14);
       border-radius:22px;
       background:rgba(8,22,52,.78);
       box-shadow: 0 20px 70px rgba(0,0,0,.55);
       padding:18px;
     }
-    #continueTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0}
-    #continueGrid{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 12px 0}
-    .pill{
-      display:inline-flex;gap:8px;align-items:center;
-      padding:10px 12px;border-radius:16px;
-      background:rgba(0,0,0,.20);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:1000;
+    .modalTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0}
+    .listGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+      max-height:360px;
+      overflow:auto;
+      padding-right:6px;
     }
-    .pill b{font-weight:1000}
+    .pickItem{
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;align-items:center;gap:10px;justify-content:space-between;
+      font-weight:900;
+    }
+
   </style>
 </head>
 
@@ -214,33 +252,6 @@
 
   <div id="app">
     <div class="frame">
-
-      <!-- CONTINUE MODAL -->
-      <div id="continueModal">
-        <div id="continueCard">
-          <div class="row">
-            <div class="title" id="continueTitle">Kontynuować?</div>
-            <div class="spacer"></div>
-            <div class="chip">Typer</div>
-          </div>
-
-          <div class="sub">Wykryto wcześniejszą rozgrywkę</div>
-
-          <div id="continueGrid">
-            <div class="pill">Witaj ponownie: <b id="continueNick">—</b></div>
-            <div class="pill">Grasz w pokoju: <b id="continueRoomName">—</b></div>
-          </div>
-
-          <div class="sub" style="margin-bottom:14px">Czy chcesz kontynuować grę w tym pokoju?</div>
-
-          <div class="row">
-            <button class="btn" id="btnContinueYes">Tak</button>
-            <button class="btn" id="btnContinueNo">Nie</button>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnContinueForget">Zapomnij pokój</button>
-          </div>
-        </div>
-      </div>
 
       <!-- SPLASH -->
       <section id="splash" class="screen active">
@@ -252,28 +263,14 @@
         </div>
       </section>
 
-      <!-- MENU -->
-      <section id="menu" class="screen">
-        <div class="menuBox panel">
-          <div class="row">
-            <div class="chip">Menu</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnChangeNickMenu">Zmień nick</button>
-          </div>
-
-          <div class="panel block">
-            <h2>Liga typerów</h2>
-            <div class="help">Wejście do pokoi (FireStore).</div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn" id="btnOpenRooms">Wejdź</button>
-              <div class="spacer"></div>
-              <div class="chip">Nick: <span id="nickLabelMenu">—</span></div>
-            </div>
-          </div>
-
-          <div class="panel block">
-            <h2>Info</h2>
-            <div class="help">To jest wersja z Firestore. Pokoje i gracze są współdzielone.</div>
+      <!-- MAIN MENU IMAGE -->
+      <section id="mainMenu" class="screen">
+        <div class="menuImgWrap">
+          <img id="menuBgImg" src="img_menu_pc.png" alt="Menu" />
+          <div class="menuBtns">
+            <img id="btnMenuRooms" class="imgBtn" src="btn_pokoje_typerow.png" alt="Pokoje typerów" />
+            <img id="btnMenuStats" class="imgBtn" src="btn_statystyki.png" alt="Statystyki" />
+            <img id="btnMenuExit" class="imgBtn" src="btn_wyjscie.png" alt="Wyjście" />
           </div>
         </div>
       </section>
@@ -282,11 +279,11 @@
       <section id="rooms" class="screen">
         <div class="roomsBox panel">
           <div class="row">
-            <div class="chip">Liga</div>
+            <div class="chip">Pokoje typerów</div>
             <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
-            <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
+            <button class="btn btnSmall" id="btnBackMain">Wróć</button>
           </div>
 
           <div class="panel block">
@@ -348,7 +345,6 @@
 
                 <!-- admin -->
                 <button class="btn" id="btnCustomQueue" style="display:none">Własna kolejka</button>
-                <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
                 <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
                 <button class="btn" id="btnFinishQueue" style="display:none">Zakończ kolejkę</button>
               </div>
@@ -388,6 +384,51 @@
         </div>
       </section>
 
+      <!-- MODAL: CUSTOM QUEUE -->
+      <div id="modalCustom" class="modal">
+        <div class="modalCard">
+          <div class="row">
+            <div class="modalTitle">Własna kolejka (max 10)</div>
+            <div class="spacer"></div>
+            <div class="chip">Dodane: <span id="customCount">0</span>/10</div>
+          </div>
+
+          <div class="row" style="margin-top:8px">
+            <select id="selLeague" style="flex:1"></select>
+            <button class="btn btnSmall" id="btnCloseCustom">Zamknij</button>
+          </div>
+
+          <div class="sub" style="margin-top:10px">Klikaj “Dodaj” przy meczach. Po dodaniu 10 pojawi się zapis.</div>
+
+          <div class="listGrid" id="customMatchesList"></div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="btnConfirm10" disabled>Zapisz kolejkę (10)</button>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnClearCustom">Wyczyść wybór</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: RESULTS -->
+      <div id="modalResults" class="modal">
+        <div class="modalCard">
+          <div class="row">
+            <div class="modalTitle">Wpisz wyniki (admin)</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnCloseResults">Zamknij</button>
+          </div>
+          <div class="sub">Wpisz wyniki i zapisz. Gracze zobaczą kropki: 🟢/🟡/🔴.</div>
+
+          <div class="listGrid" id="resultsList" style="grid-template-columns:1fr;"></div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="btnSaveResults">Zapisz wyniki</button>
+            <div class="spacer"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="toast" id="toast"></div>
       <div class="footerRight" id="footerRight">—</div>
     </div>
@@ -409,6 +450,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1219"></script>
+  <script type="module" src="./app.js?v=1230"></script>
 </body>
 </html>
