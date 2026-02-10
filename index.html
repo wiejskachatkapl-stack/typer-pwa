@@ -2,181 +2,525 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TypujSport</title>
-  <link rel="stylesheet" href="./style.css?v=2003" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#08122a" />
+  <title>Typer</title>
+  <link rel="manifest" href="manifest.json" />
+
+  <style>
+    :root{
+      --bg:#071229;
+      --glass: rgba(8, 22, 52, .55);
+      --glass2: rgba(8, 22, 52, .40);
+      --stroke: rgba(255,255,255,.12);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --shadow: 0 14px 50px rgba(0,0,0,.45);
+      --r: 22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      overflow:hidden;
+    }
+
+    /* GLOBAL BACKGROUND (zmieniane z JS) */
+    #bg{
+      position:fixed; inset:0;
+      background: #071229 center/cover no-repeat;
+      z-index:0;
+      transform: translateZ(0);
+    }
+
+    #app{
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      padding:14px;
+      z-index:1;
+    }
+
+    /* RAMKA jak w Twoich screenach */
+    .frame{
+      width:min(1580px,96vw);
+      height:min(920px,94vh);
+      border:1px solid var(--stroke);
+      border-radius:26px;
+      background:rgba(0,0,0,.10);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .screen{display:none;height:100%;width:100%}
+    .screen.active{display:flex}
+
+    /* SPLASH */
+    #splash{align-items:center;justify-content:center;padding:24px}
+    .splashCard{
+      width:min(820px,92%);
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      background:var(--glass2);
+      padding:22px;
+    }
+    .spinner{
+      width:26px;height:26px;border-radius:50%;
+      border:3px solid rgba(255,255,255,.25);
+      border-top-color:rgba(255,255,255,.9);
+      animation:spin 1s linear infinite;margin-top:12px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
+    .err{
+      margin-top:10px;padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);
+      display:none;white-space:pre-wrap
+    }
+
+    /* COMMON UI */
+    .panel{
+      border:1px solid var(--stroke);
+      border-radius:var(--r);
+      background:var(--glass);
+      box-shadow:0 10px 30px rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.10);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:16px;
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{background:rgba(255,255,255,.14)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
+    .chip{
+      display:inline-flex;gap:10px;align-items:center;
+      padding:10px 14px;border-radius:18px;
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:900
+    }
+    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
+    .sub{color:var(--muted);font-weight:700;font-size:13px}
+    .row{display:flex;gap:10px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:10px}
+    .spacer{flex:1}
+    input{
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      outline:none;
+      font-weight:900;
+    }
+    input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+
+    .toast{
+      position:absolute;left:18px;bottom:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.85);
+      padding:10px 14px;border-radius:16px;font-weight:800;
+      display:none;
+      z-index:60;
+    }
+    .footerRight{
+      position:absolute;right:18px;bottom:14px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;font-weight:800
+    }
+
+    /* ===== HOME (MENU STARTOWE) ===== */
+    #menu{
+      align-items:stretch;
+      justify-content:center;
+      position:relative;
+    }
+    .homeOverlay{
+      position:absolute; inset:0;
+      /* delikatna szyba, ale NIE druga grafika */
+      background: rgba(0,0,0,.10);
+    }
+
+    /* 3 przyciski PNG w 1 linii */
+    .homeButtons{
+      position:absolute;
+      left:50%; top:52%;
+      transform:translate(-50%,-50%);
+      display:flex; gap:26px;
+      align-items:center;
+      justify-content:center;
+      z-index:2;
+      padding:10px 14px;
+      border-radius:24px;
+      background: rgba(0,0,0,.10);
+      border:1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .imgBtn{
+      all:unset;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .imgBtn img{
+      width:240px;          /* WYMUSZONE 240px */
+      height:auto;
+      display:block;
+      border-radius:16px;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
+      transform: translateZ(0);
+    }
+    .imgBtn:active img{transform: translateY(1px)}
+    .imgBtn:focus-visible{
+      outline:2px solid rgba(120,200,255,.8);
+      outline-offset:6px;
+      border-radius:18px;
+    }
+
+    /* Zębatka – NA DOLE po LEWEJ, duża i okrągła */
+    .gearBtn{
+      position:absolute;
+      left:22px;
+      bottom:22px;     /* przeniesiona na dół */
+      width:72px;height:72px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+      z-index:3;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 14px 34px rgba(0,0,0,.45);
+      user-select:none;
+      font-size:30px;
+      line-height:1;
+    }
+    .gearBtn:hover{background: rgba(0,0,0,.24)}
+    .gearBtn:active{transform: translateY(1px)}
+
+    /* ===== ROOMS SCREEN ===== */
+    #rooms{padding:16px;gap:14px;align-items:stretch;justify-content:center}
+    .roomsBox{
+      width:min(980px,100%);
+      margin:auto;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px
+    }
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* ===== ROOM LAYOUT ===== */
+    #room{padding:16px;gap:14px;align-items:stretch}
+    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
+    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+
+    .midHead{padding:14px}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
+    .matchCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:18px;
+      padding:12px 12px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .team{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      font-weight:1000;
+    }
+    .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .logo{
+      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      background:rgba(255,255,255,.10);
+      object-fit:contain;
+    }
+    .scoreBox{display:flex;align-items:center;gap:8px}
+    .scoreInput{width:48px;text-align:center}
+    .sep{font-weight:1000;opacity:.85}
+
+    .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .playerRow{
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;gap:10px;align-items:center;justify-content:space-between;
+      font-weight:900;
+    }
+    .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
+
+    /* ===== SETTINGS MODAL (placeholder – zostaje, żeby UI nie “znikało”) ===== */
+    #settingsModal{
+      position:absolute; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:55;
+      background:rgba(0,0,0,.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .modalCard{
+      width:min(920px,92%);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      background:rgba(8,22,52,.72);
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      padding:16px;
+    }
+
+    /* Continue modal (zostaje – możesz potem podmienić na swój finalny wygląd) */
+    #continueModal{
+      position:absolute; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      z-index:56;
+      background:rgba(0,0,0,.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #continueCard{
+      width:min(720px,92%);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      background:rgba(8,22,52,.72);
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      padding:18px;
+    }
+    #continueTitle{font-size:20px;font-weight:1000;margin:0 0 6px 0}
+    #continueText{color:rgba(255,255,255,.80);font-weight:800;white-space:pre-wrap;margin:0 0 14px 0}
+
+    /* LEAGUE screen placeholder */
+    #league{padding:16px;gap:14px;align-items:center;justify-content:center}
+  </style>
 </head>
 
 <body>
   <div id="bg"></div>
 
   <div id="app">
+    <div class="frame">
 
-    <!-- SPLASH -->
-    <section id="splash" class="screen active">
-      <div class="splashCard">
-        <div class="splashTitle">Typer</div>
-        <div id="splashHint" class="splashHint">Ładowanie…</div>
-      </div>
-    </section>
-
-    <!-- HOME -->
-    <section id="home" class="screen">
-      <!-- Zębatka (teraz dół-lewo) -->
-      <button id="btnOpenSettings" class="gearBtn" title="Ustawienia" aria-label="Ustawienia">
-        ⚙
-      </button>
-
-      <div class="homeButtons">
-        <button id="btnHomeRooms" class="homeBtnCircle">POKÓJ<br/>TYPERÓW</button>
-        <button id="btnHomeStats" class="homeBtnCircle">STATYSTYKI</button>
-        <button id="btnHomeExit" class="homeBtnCircle">WYJŚCIE</button>
-      </div>
-    </section>
-
-    <!-- ROOMS -->
-    <section id="rooms" class="screen">
-      <div class="topBar">
-        <div class="chip">Liga</div>
-        <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
-        <button id="btnBackHome" class="btn">Wróć</button>
-      </div>
-
-      <div class="roomsGrid">
-        <div class="panel">
-          <div class="title">Pokoje typerów</div>
-          <div class="sub">Dołącz lub utwórz pokój.</div>
-          <div id="debugRooms" class="hintTxt">—</div>
-        </div>
-
-        <div class="panel">
-          <div class="title">Nowy pokój</div>
+      <!-- SETTINGS MODAL -->
+      <div id="settingsModal">
+        <div class="modalCard panel">
           <div class="row">
-            <input id="inpRoomName" class="input" placeholder="Nazwa pokoju (np. Domowy)" />
-            <button id="btnCreateRoom" class="btn primary">Utwórz</button>
+            <div class="chip">Ustawienia</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnSettingsClose">Zamknij</button>
           </div>
-        </div>
-
-        <div class="panel">
-          <div class="title">Dołącz do pokoju</div>
-          <div class="row">
-            <input id="inpJoinCode" class="input" placeholder="Wpisz kod (np. AB12CD)" maxlength="6" />
-            <button id="btnJoinRoom" class="btn primary">Dołącz</button>
+          <div style="margin-top:12px" class="panel block">
+            <div class="help">To jest kontener pod Twoje ustawienia (profile / język / czyszczenie danych). Logika jest w app.js.</div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ROOM -->
-    <section id="room" class="screen">
-      <div class="layout3">
+      <!-- CONTINUE MODAL -->
+      <div id="continueModal">
+        <div id="continueCard">
+          <div id="continueTitle">Kontynuować?</div>
+          <p id="continueText">—</p>
+          <div class="row">
+            <button class="btn" id="btnContinueYes">Tak, kontynuuj</button>
+            <button class="btn" id="btnContinueNo">Nie, wybierz pokój</button>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnContinueForget">Zapomnij pokój</button>
+          </div>
+        </div>
+      </div>
 
-        <aside class="leftBar">
-          <div class="panel">
-            <div class="title">Pokój</div>
-            <div class="sub">Nick: <span id="nickLabelRoom">—</span></div>
+      <!-- SPLASH -->
+      <section id="splash" class="screen active">
+        <div class="splashCard">
+          <div style="font-size:22px;font-weight:1000;">Typer</div>
+          <div class="hint" id="splashHint">Ładowanie…</div>
+          <div class="err" id="splashErr"></div>
+          <div class="spinner"></div>
+        </div>
+      </section>
 
-            <div class="roomCard">
-              <div class="roomName" id="roomName">—</div>
-              <div class="roomAdmin">Admin: <span id="roomAdmin">—</span></div>
+      <!-- MENU (START) -->
+      <section id="menu" class="screen">
+        <div class="homeOverlay"></div>
 
-              <div class="row roomCodeRow">
-                <div class="codeLabel">Kod:</div>
-                <div class="codeVal" id="roomCode">------</div>
-                <button id="btnCopyCode" class="btn small">Kopiuj</button>
+        <button class="gearBtn" id="btnOpenSettings" title="Ustawienia" aria-label="Ustawienia">⚙</button>
+
+        <div class="homeButtons" aria-label="Menu główne">
+          <button class="imgBtn" id="btnOpenRooms" aria-label="Pokoje typerów">
+            <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
+          </button>
+
+          <button class="imgBtn" id="btnOpenStats" aria-label="Statystyki">
+            <img src="btn_statystyki.png" alt="Statystyki">
+          </button>
+
+          <button class="imgBtn" id="btnExitApp" aria-label="Wyjście">
+            <img src="btn_wyjscie.png" alt="Wyjście">
+          </button>
+        </div>
+      </section>
+
+      <!-- ROOMS -->
+      <section id="rooms" class="screen">
+        <div class="roomsBox panel">
+          <div class="row">
+            <div class="chip">Pokoje typerów</div>
+            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
+            <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Nowy pokój</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
+              <button class="btn" id="btnCreateRoom">Utwórz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Dołącz do pokoju</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
+              <button class="btn" id="btnJoinRoom">Dołącz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Debug</h2>
+            <div class="help" id="debugRooms">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROOM -->
+      <section id="room" class="screen">
+        <div id="roomRoot" style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
+
+          <!-- LEFT -->
+          <div class="leftBar panel">
+            <div class="col" style="gap:10px">
+              <div class="chip">Pokój</div>
+              <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div class="title" id="roomName">—</div>
+              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
+              <div class="row" style="margin-top:10px">
+                <div class="chip" style="flex:1;justify-content:space-between;">
+                  Kod: <span id="roomCode">—</span>
+                </div>
+                <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
               </div>
+              <div class="row" style="margin-top:10px">
+                <button class="btn btnSmall" id="btnLeave">Opuść</button>
+                <button class="btn btnSmall" id="btnRefresh">Odśwież</button>
+              </div>
+            </div>
 
+            <div class="panel" style="padding:14px">
+              <div class="title">Akcje</div>
+              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              <div class="col" style="margin-top:10px">
+                <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+                <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
+              </div>
+            </div>
+
+            <div class="spacer"></div>
+            <button class="btn" id="btnBackFromRoom">Wróć</button>
+          </div>
+
+          <!-- MIDDLE -->
+          <div class="mid">
+            <div class="panel midHead">
               <div class="row">
-                <button id="btnLeave" class="btn">Opuść</button>
-                <button id="btnRefresh" class="btn">Odśwież</button>
+                <div>
+                  <div class="title">Spotkania</div>
+                  <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                </div>
+                <div class="spacer"></div>
+                <div class="chip">Mecze: <span id="matchesCount">0</span></div>
               </div>
             </div>
+
+            <div class="panel matchesWrap" id="matchesList"></div>
           </div>
 
-          <div class="panel">
-            <div class="title">Akcje</div>
-            <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
-            <button id="btnSaveAll" class="btn wide" disabled>Zapisz typy</button>
-            <button id="btnAddQueue" class="btn wide">Dodaj kolejkę (test)</button>
-          </div>
-
-          <button id="btnBackFromRoom" class="btn wide backBtn">Wróć</button>
-        </aside>
-
-        <main class="mid">
-          <div class="midHead">
+          <!-- RIGHT -->
+          <div class="rightBar panel">
             <div>
-              <div class="title">Spotkania</div>
-              <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+              <div class="title">Gracze</div>
+              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
             </div>
-            <div class="chip">Mecze: <span id="matchesCount">0</span></div>
+            <div class="playersList" id="playersList"></div>
+            <div style="margin-top:auto">
+              <button class="btn" id="btnOpenLeagueFromRoom" style="width:100%">Tabela ligi typerów</button>
+            </div>
           </div>
 
-          <div id="matchesList" class="matchesList"></div>
-        </main>
-
-        <aside class="rightBar">
-          <div class="title">Gracze</div>
-          <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
-          <div id="playersList" class="playersList"></div>
-        </aside>
-
-      </div>
-    </section>
-
-    <!-- SETTINGS MODAL -->
-    <div id="settingsModal" class="modal" style="display:none;">
-      <div class="modalCard">
-        <div class="modalHead">
-          <div class="modalTitle">
-            <div id="settingsTitle">Ustawienia</div>
-            <div id="settingsSub" class="hintTxt">Nick, język, profile (współdzielenie)</div>
-          </div>
-          <button id="btnSettingsClose" class="btn">Zamknij</button>
         </div>
+      </section>
 
-        <div class="cardBlock">
-          <div class="title">Profil gracza (współdzielenie)</div>
-          <div class="hintTxt">
-            Jeśli kilka osób gra na jednym komputerze – każdy ma swój profil. Profil trzyma osobno: nick, ostatni pokój i język.
-          </div>
-
+      <!-- LEAGUE (placeholder screen) -->
+      <section id="league" class="screen">
+        <div class="panel" style="width:min(980px,96%);padding:16px">
           <div class="row">
-            <select id="selProfile" class="select"></select>
-            <button id="btnProfileSwitch" class="btn">Przełącz</button>
-            <button id="btnProfileAdd" class="btn">Dodaj</button>
-            <button id="btnProfileRemove" class="btn">Usuń</button>
+            <div class="chip">Tabela ligi typerów</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
           </div>
-
-          <div class="row">
-            <input id="inpNickSettings" class="input" placeholder="Nick (3–16)" />
-            <button id="btnNickSave" class="btn primary">Zapisz nick</button>
+          <div class="panel block" style="margin-top:12px">
+            <div class="help">
+              To jest ekran pod tabelę. Logika rankingów/historii kolejek zostaje w app.js (dodamy później).
+            </div>
           </div>
         </div>
+      </section>
 
-        <div class="cardBlock">
-          <div class="title">Język</div>
-          <div class="row">
-            <button id="btnLangPL" class="btn">🇵🇱 Polski</button>
-            <button id="btnLangEN" class="btn">🇬🇧 English</button>
-            <div class="chip" style="margin-left:auto;">Aktualny: <span id="langLabel">Polski</span></div>
-          </div>
-        </div>
-
-        <div class="cardBlock danger">
-          <div class="title">Dane lokalne</div>
-          <div class="hintTxt">Wyczyści: nick, ostatni pokój, język, profile.</div>
-          <div class="row">
-            <button id="btnClearLocal" class="btn dangerBtn">Wyczyść dane lokalne</button>
-            <button id="btnClearLocalCancel" class="btn">Anuluj</button>
-          </div>
-        </div>
-      </div>
+      <div class="toast" id="toast"></div>
+      <div class="footerRight" id="footerRight">—</div>
     </div>
-
-    <div id="toast" class="toast" style="display:none;"></div>
-    <div id="footerRight" class="footerRight">BUILD</div>
   </div>
+
+  <script>
+    const hint = document.getElementById("splashHint");
+    const errBox = document.getElementById("splashErr");
+    function showErr(title, msg){
+      hint.textContent = "STOP: wykryto błąd.";
+      errBox.style.display = "block";
+      errBox.textContent = title + "\n\n" + msg;
+    }
+    window.addEventListener("error", (e) => {
+      showErr("window.error", (e?.message || "unknown") + "\n" + (e?.filename || "") + ":" + (e?.lineno || "?"));
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
+    });
+  </script>
 
   <script type="module" src="./app.js?v=2003"></script>
 </body>
