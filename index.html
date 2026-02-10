@@ -27,10 +27,10 @@
       overflow:hidden;
     }
 
-    /* GLOBAL BACKGROUND (zmieniane z JS) */
+    /* BACKGROUND */
     #bg{
       position:fixed; inset:0;
-      background: #071229 center/cover no-repeat;
+      background:#071229 center/cover no-repeat;
       z-index:0;
       transform: translateZ(0);
     }
@@ -82,7 +82,7 @@
       display:none;white-space:pre-wrap
     }
 
-    /* COMMON UI */
+    /* COMMON */
     .panel{
       border:1px solid var(--stroke);
       border-radius:var(--r);
@@ -149,7 +149,7 @@
       font-size:12px;font-weight:800
     }
 
-    /* ===== HOME (MENU STARTOWE) ===== */
+    /* ===== HOME ===== */
     #menu{align-items:stretch;justify-content:center;position:relative;}
     .homeOverlay{position:absolute; inset:0;background: rgba(0,0,0,.10);}
 
@@ -189,7 +189,7 @@
       border-radius:18px;
     }
 
-    /* Zębatka – na dole po LEWEJ, BIAŁA */
+    /* Zębatka na dole po LEWEJ – biała */
     .gearBtn{
       position:absolute;
       left:22px;
@@ -211,7 +211,7 @@
     .gearSvg{
       width:30px;height:30px;
       fill:none;
-      stroke:#fff;              /* BIAŁA */
+      stroke:#fff;
       stroke-width:2.2;
       stroke-linecap:round;
       stroke-linejoin:round;
@@ -219,8 +219,8 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,.55));
     }
 
-    /* ===== SETTINGS MODAL ===== */
-    #settingsModal{
+    /* ===== MODALS ===== */
+    .modalBg{
       position:absolute; inset:0;
       display:none;
       align-items:center; justify-content:center;
@@ -264,15 +264,6 @@
     }
 
     /* Continue modal */
-    #continueModal{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:56;
-      background:rgba(0,0,0,.45);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-    }
     #continueCard{
       width:min(720px,92%);
       border:1px solid rgba(255,255,255,.14);
@@ -284,7 +275,52 @@
     #continueTitle{font-size:20px;font-weight:1000;margin:0 0 6px 0}
     #continueText{color:rgba(255,255,255,.80);font-weight:800;white-space:pre-wrap;margin:0 0 14px 0}
 
-    /* screens placeholders */
+    /* Nick modal (ładne, zamiast prompt) */
+    #nickCard{
+      width:min(560px,92%);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      background:rgba(8,22,52,.78);
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      padding:18px;
+    }
+    .nickHeader{
+      display:flex;align-items:center;gap:10px;
+      margin-bottom:8px;
+    }
+    .nickBadge{
+      width:38px;height:38px;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:1000;
+    }
+    .nickTitle{font-size:20px;font-weight:1000;margin:0}
+    .nickDesc{color:rgba(255,255,255,.78);font-weight:800;margin:6px 0 14px 0}
+
+    /* ===== SETTINGS FLOW (WELCOME vs DETAILS) ===== */
+    .welcomeBox{
+      padding:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18);
+      border-radius:18px;
+    }
+    .welcomeTitle{
+      font-size:18px;font-weight:1000;margin:0 0 6px 0;
+    }
+    .welcomeLine{
+      color:rgba(255,255,255,.82);
+      font-weight:900;
+      margin:6px 0;
+    }
+    .welcomeHint{
+      color:rgba(255,255,255,.70);
+      font-weight:800;
+      margin:8px 0 0 0;
+      font-size:12px;
+    }
+
+    /* screens */
     #rooms{padding:16px;gap:14px;align-items:stretch;justify-content:center}
     .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
     .block{padding:14px}
@@ -292,7 +328,6 @@
     .help{color:var(--muted);font-weight:800;font-size:13px}
 
     #room{padding:16px;gap:14px;align-items:stretch}
-    .footerRight{position:absolute;right:18px;bottom:14px}
   </style>
 </head>
 
@@ -303,7 +338,7 @@
     <div class="frame">
 
       <!-- SETTINGS MODAL -->
-      <div id="settingsModal">
+      <div id="settingsModal" class="modalBg">
         <div class="modalCard panel">
           <div class="row">
             <div class="chip" id="st_title">Ustawienia</div>
@@ -313,57 +348,89 @@
 
           <div class="col" style="margin-top:12px;gap:12px">
 
-            <!-- PROFILES -->
-            <div class="modalSection">
-              <h3 id="st_profilesTitle">Profil gracza (współdzielenie)</h3>
-              <div class="tiny" id="st_profilesHint">
-                Jeśli kilka osób gra na jednym komputerze — każdy ma swój profil. Profil trzyma: nick, ostatni pokój i język.
-              </div>
-
-              <div class="row" style="margin-top:10px;flex-wrap:wrap">
-                <select id="selProfiles" style="min-width:280px;flex:1"></select>
-                <button class="btn" id="btnProfileSwitch">Przełącz</button>
-                <button class="btn" id="btnProfileAdd">Dodaj</button>
-                <button class="btn btnDanger" id="btnProfileDelete">Usuń</button>
-              </div>
-
-              <div class="row" style="margin-top:10px;flex-wrap:wrap">
-                <input id="inpNickSettings" placeholder="Nick" style="min-width:260px;flex:1" />
-                <button class="btn" id="btnSaveNickSettings">Zapisz nick</button>
-              </div>
-            </div>
-
-            <!-- LANGUAGE -->
-            <div class="modalSection">
-              <h3 id="st_langTitle">Język</h3>
-              <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
-                <button class="langBtn" id="btnLangPL">🇵🇱 <span>Polski</span></button>
-                <button class="langBtn" id="btnLangEN">🇬🇧 <span>English</span></button>
+            <!-- WELCOME MODE -->
+            <div id="settingsWelcome" class="welcomeBox" style="display:none;">
+              <div class="row">
+                <div class="chip" id="st_welcomeChip">Witaj ponownie</div>
                 <div class="spacer"></div>
-                <div class="chip" id="st_langCurrent">Aktualny: —</div>
+                <div class="chip"><span id="st_welcomeNick">—</span></div>
+              </div>
+
+              <div class="row" style="margin-top:12px;flex-wrap:wrap">
+                <div class="col" style="flex:1;min-width:260px">
+                  <div class="welcomeLine" id="st_welcomeRoomLine">Ostatni pokój: —</div>
+                  <div class="welcomeHint" id="st_welcomeHint">
+                    Możesz wejść od razu do pokoju albo zmienić profil gracza.
+                  </div>
+                </div>
+                <div class="row" style="gap:10px;flex-wrap:wrap">
+                  <button class="btn" id="btnEnterRoomFromSettings">Wejdź do pokoju</button>
+                  <button class="btn" id="btnChangeProfileFlow">Zmień profil gracza</button>
+                </div>
               </div>
             </div>
 
-            <!-- CLEAR LOCAL -->
-            <div class="modalSection">
-              <h3 id="st_localTitle">Dane lokalne</h3>
-              <div class="tiny" id="st_localHint">
-                Wyczyści: nick, ostatni pokój, język, profile (czyli reset tej gry na tym komputerze).
-              </div>
+            <!-- DETAILS MODE (profiles/lang/local/nick) -->
+            <div id="settingsDetails" class="col" style="gap:12px;">
 
-              <div class="row" style="margin-top:10px;flex-wrap:wrap">
-                <button class="btn btnDanger" id="btnClearLocal">Wyczyść dane lokalne</button>
+              <div class="row" style="display:none" id="detailsTopBar">
+                <div class="chip" id="st_detailsTitle">Profil / język</div>
                 <div class="spacer"></div>
-                <button class="btn" id="btnClearCancel">Anuluj</button>
+                <button class="btn btnSmall" id="btnBackToWelcome">Wróć</button>
               </div>
-            </div>
 
+              <!-- PROFILES -->
+              <div class="modalSection">
+                <h3 id="st_profilesTitle">Profil gracza (współdzielenie)</h3>
+                <div class="tiny" id="st_profilesHint">
+                  Jeśli kilka osób gra na jednym komputerze — każdy ma swój profil. Profil trzyma: nick, ostatni pokój i język.
+                </div>
+
+                <div class="row" style="margin-top:10px;flex-wrap:wrap">
+                  <select id="selProfiles" style="min-width:280px;flex:1"></select>
+                  <button class="btn" id="btnProfileSwitch">Przełącz</button>
+                  <button class="btn" id="btnProfileAdd">Dodaj</button>
+                  <button class="btn btnDanger" id="btnProfileDelete">Usuń</button>
+                </div>
+
+                <div class="row" style="margin-top:10px;flex-wrap:wrap">
+                  <input id="inpNickSettings" placeholder="Nick" style="min-width:260px;flex:1" />
+                  <button class="btn" id="btnSaveNickSettings">Zapisz nick</button>
+                </div>
+              </div>
+
+              <!-- LANGUAGE -->
+              <div class="modalSection">
+                <h3 id="st_langTitle">Język</h3>
+                <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
+                  <button class="langBtn" id="btnLangPL">🇵🇱 <span>Polski</span></button>
+                  <button class="langBtn" id="btnLangEN">🇬🇧 <span>English</span></button>
+                  <div class="spacer"></div>
+                  <div class="chip" id="st_langCurrent">Aktualny: —</div>
+                </div>
+              </div>
+
+              <!-- CLEAR LOCAL -->
+              <div class="modalSection">
+                <h3 id="st_localTitle">Dane lokalne</h3>
+                <div class="tiny" id="st_localHint">
+                  Wyczyści: nick, ostatni pokój, język, profile (czyli reset tej gry na tym komputerze).
+                </div>
+
+                <div class="row" style="margin-top:10px;flex-wrap:wrap">
+                  <button class="btn btnDanger" id="btnClearLocal">Wyczyść dane lokalne</button>
+                  <div class="spacer"></div>
+                  <button class="btn" id="btnClearCancel">Anuluj</button>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
 
       <!-- CONTINUE MODAL -->
-      <div id="continueModal">
+      <div id="continueModal" class="modalBg" style="z-index:56;">
         <div id="continueCard">
           <div id="continueTitle">Kontynuować?</div>
           <p id="continueText">—</p>
@@ -372,6 +439,34 @@
             <button class="btn" id="btnContinueNo">Nie, wybierz pokój</button>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnContinueForget">Zapomnij pokój</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NICK MODAL -->
+      <div id="nickModal" class="modalBg" style="z-index:57;">
+        <div id="nickCard">
+          <div class="nickHeader">
+            <div class="nickBadge">👤</div>
+            <div>
+              <h3 class="nickTitle" id="nickTitle">Podaj swój nick</h3>
+              <div class="sub" id="nickSub">Będzie używany w pokojach i tabeli ligi.</div>
+            </div>
+          </div>
+
+          <p class="nickDesc" id="nickDesc">
+            Wpisz czytelny nick (3–16 znaków). Możesz go zmienić później w Ustawieniach.
+          </p>
+
+          <div class="row">
+            <input id="inpNickModal" placeholder="Nick (np. Mariusz)" style="flex:1;min-width:220px" />
+            <button class="btn" id="btnNickSave">Dalej</button>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <div class="tiny" id="nickError" style="color:rgba(255,160,160,.95);display:none;">—</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnNickCancel">Anuluj</button>
           </div>
         </div>
       </div>
@@ -391,7 +486,6 @@
         <div class="homeOverlay"></div>
 
         <button class="gearBtn" id="btnOpenSettings" title="Ustawienia" aria-label="Ustawienia">
-          <!-- biała zębatka SVG -->
           <svg class="gearSvg" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
             <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5z"></path>
@@ -450,7 +544,7 @@
         </div>
       </section>
 
-      <!-- ROOM (placeholder jak wcześniej, nie ruszam teraz) -->
+      <!-- ROOM (placeholder) -->
       <section id="room" class="screen">
         <div class="panel" style="width:min(900px,96%);margin:auto;padding:18px">
           <div class="title">Pokój</div>
@@ -482,6 +576,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2004"></script>
+  <script type="module" src="./app.js?v=2005"></script>
 </body>
 </html>
