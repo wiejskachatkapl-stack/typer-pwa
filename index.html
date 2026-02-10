@@ -10,39 +10,18 @@
   <style>
     :root{
       --bg:#071229;
-      --glass: rgba(8, 22, 52, .58);
-      --glass2: rgba(8, 22, 52, .42);
+      --glass: rgba(8, 22, 52, .55);
+      --glass2: rgba(8, 22, 52, .40);
       --stroke: rgba(255,255,255,.12);
-      --stroke2: rgba(255,255,255,.16);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.72);
       --shadow: 0 14px 50px rgba(0,0,0,.45);
       --r: 22px;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      background:var(--bg);
-      overflow:hidden;
-    }
-
-    #bg{
-      position:fixed; inset:0;
-      background:#071229 center/cover no-repeat;
-      z-index:0;
-    }
-
-    #app{
-      position:fixed; inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:14px;
-      z-index:1;
-    }
-
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
+    #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
+    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:1}
     .frame{
       width:min(1580px,96vw);
       height:min(920px,94vh);
@@ -50,23 +29,17 @@
       border-radius:26px;
       background:rgba(0,0,0,.10);
       box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-      overflow:hidden;
-      position:relative;
+      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      overflow:hidden;position:relative;
     }
-
     .screen{display:none;height:100%;width:100%}
     .screen.active{display:flex}
 
-    /* ===== SPLASH ===== */
+    /* SPLASH */
     #splash{align-items:center;justify-content:center;padding:24px}
     .splashCard{
-      width:min(820px,92%);
-      border:1px solid var(--stroke);
-      border-radius:22px;
-      background:var(--glass2);
-      padding:22px;
+      width:min(820px,92%);border:1px solid var(--stroke);
+      border-radius:22px;background:var(--glass2);padding:22px;
     }
     .spinner{
       width:26px;height:26px;border-radius:50%;
@@ -75,15 +48,11 @@
       animation:spin 1s linear infinite;margin-top:12px;
     }
     @keyframes spin{to{transform:rotate(360deg)}}
-    .hint{margin-top:8px;color:var(--muted);font-weight:800;white-space:pre-wrap}
-    .err{
-      margin-top:10px;padding:10px 12px;border-radius:14px;
-      border:1px solid rgba(255,120,120,.35);
-      background:rgba(255,60,60,.12);
-      display:none;white-space:pre-wrap
-    }
+    .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
+    .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
 
-    /* ===== COMMON ===== */
+    /* COMMON UI */
     .panel{
       border:1px solid var(--stroke);
       border-radius:var(--r);
@@ -92,7 +61,6 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
-
     .btn{
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.10);
@@ -106,28 +74,15 @@
     }
     .btn:hover{background:rgba(255,255,255,.14)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
-
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
-
-    .chip{
-      display:inline-flex;
-      gap:10px;
-      align-items:center;
-      padding:10px 14px;
-      border-radius:18px;
-      background:rgba(0,0,0,.20);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:900;
-    }
-
+    .chip{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.12);font-weight:900}
     .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
     .sub{color:var(--muted);font-weight:700;font-size:13px}
-
     .row{display:flex;gap:10px;align-items:center}
     .col{display:flex;flex-direction:column;gap:10px}
     .spacer{flex:1}
 
-    input{
+    input, select{
       border:1px solid rgba(255,255,255,.15);
       background:rgba(0,0,0,.22);
       color:var(--text);
@@ -145,162 +100,72 @@
       color:rgba(255,255,255,.85);
       padding:10px 14px;border-radius:16px;font-weight:800;
       display:none;
-      z-index:60;
     }
     .footerRight{
-      position:absolute;right:18px;bottom:14px;
-      color:rgba(255,255,255,.55);
-      font-size:12px;font-weight:900;
-      z-index:10;
+      position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
     }
 
-    /* ===== HOME (MENU PNG) ===== */
-    #home{
-      align-items:center;
-      justify-content:center;
-      position:relative;
+    /* HOME (ekran startowy z jednym tłem i 3 przyciskami) */
+    #home{align-items:center;justify-content:center;position:relative}
+    .homeWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+    .homeImg{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
     .homeBtns{
       position:absolute;
       left:50%;
-      top:52%;
+      top:54%;
       transform:translate(-50%,-50%);
       display:flex;
       gap:40px;
       align-items:center;
       justify-content:center;
-      padding:10px;
+      pointer-events:auto;
     }
     .imgBtn{
-      appearance:none;
-      border:0;
-      background:transparent;
       cursor:pointer;
+      border:none;
+      background:transparent;
       padding:0;
-      line-height:0;
-      filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
-      transform: translateZ(0);
+      margin:0;
+      display:block;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .imgBtn img{
       display:block;
-      height:250px;
+      height:92px; /* <--- TU ZMIENIASZ WIELKOŚĆ PRZYCISKÓW NA STRONIE STARTOWEJ */
       width:auto;
-      border-radius:16px;
     }
-    .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
-    .imgBtn:active{transform: translateY(1px)}
-
-    /* ===== NOWE: ZĘBATKA USTAWIEŃ ===== */
+    .imgBtn:active{transform:scale(.99)}
     .homeGear{
       position:absolute;
-      left:26px;
+      left:22px;
       top:50%;
       transform:translateY(-50%);
       width:98px;
       height:98px;
-      border-radius:999px;
+      border-radius:50%;
       border:1px solid rgba(255,255,255,.16);
-      background:rgba(8,22,52,.55);
-      box-shadow:0 18px 60px rgba(0,0,0,.45);
+      background:rgba(0,0,0,.25);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      box-shadow:0 12px 35px rgba(0,0,0,.35);
+      display:flex;align-items:center;justify-content:center;
       cursor:pointer;
       user-select:none;
-      transition: transform .12s ease, background .12s ease;
     }
-    .homeGear:hover{
-      background:rgba(8,22,52,.65);
-      transform:translateY(-50%) scale(1.03);
-    }
-    .homeGear:active{
-      transform:translateY(-50%) scale(0.99);
-    }
-    .homeGear span{
-      font-size:44px;
-      line-height:1;
-      filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
-    }
+    .homeGear:hover{background:rgba(0,0,0,.32)}
+    .homeGear svg{opacity:.9}
 
-    /* ===== ROOMS ===== */
-    #rooms{padding:16px;gap:14px}
-    .roomsBox{
-      width:min(980px,100%);
-      margin:auto;
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:14px
-    }
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
-
-    /* ===== CONTINUE ===== */
-    #continue{
-      padding:16px;
-      align-items:center;
-      justify-content:center;
-    }
-    .continueBox{
-      width:min(980px,100%);
-      margin:auto;
-      padding:16px;
-    }
-    .continueCard{
-      padding:16px;
-      border-radius:22px;
-      border:1px solid var(--stroke2);
-      background:rgba(8,22,52,.62);
-      box-shadow:0 20px 70px rgba(0,0,0,.45);
-    }
-    .continueTop{
-      display:flex;
-      gap:14px;
-      align-items:center;
-      justify-content:space-between;
-      padding-bottom:12px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      margin-bottom:12px;
-    }
-    .pill{
-      padding:8px 12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.18);
-      font-weight:1000;
-    }
-    .continueGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-top:10px;
-    }
-    .miniCard{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.16);
-      border-radius:18px;
-      padding:12px;
-    }
-    .bigQ{
-      margin-top:12px;
-      font-weight:1000;
-    }
-    .continueBtns{
-      display:flex;
-      gap:10px;
-      margin-top:14px;
-      align-items:center;
-    }
-
-    /* ===== ROOM ===== */
+    /* ROOMS / ROOM */
     #room{padding:16px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
-    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
-
+    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .midHead{padding:14px}
     .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
     .matchCard{
@@ -323,15 +188,6 @@
     .scoreBox{display:flex;align-items:center;gap:8px}
     .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
-    .resultPill{
-      margin-left:8px;
-      padding:8px 10px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.18);
-      font-weight:1000;
-      white-space:nowrap;
-    }
 
     .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .playerRow{
@@ -341,156 +197,49 @@
       display:flex;gap:10px;align-items:center;justify-content:space-between;
       font-weight:900;
     }
-    .badge{
-      padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:1000;font-size:12px
-    }
-    .eyeBtn{
-      width:36px;height:28px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.08);
-      color:rgba(255,255,255,.85);
-      font-weight:1000;
-      cursor:pointer;
-      display:flex;align-items:center;justify-content:center;
-    }
-    .eyeBtn:disabled{opacity:.35;cursor:not-allowed}
+    .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
 
-    .rightFooterBtn{
-      position:absolute;
-      left:14px;
-      right:14px;
-      bottom:14px;
-    }
-    .rightFooterBtn .btn{width:100%}
-
-    /* ===== RESULTS SCREEN ===== */
-    #results{
-      padding:16px;
-      align-items:center;
-      justify-content:center;
-    }
-    .resultsWrap{
-      width:min(1100px,100%);
-      margin:auto;
-      padding:14px;
-    }
-    .resultsTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .resultsList{
-      max-height:min(680px,70vh);
-      overflow:auto;
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    /* ===== LEAGUE ===== */
-    #league{
-      padding:16px;
-      align-items:center;
-      justify-content:center;
-    }
-    .leagueWrap{
-      width:min(1100px,100%);
-      margin:auto;
-      padding:14px;
-    }
-    .leagueTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .leagueTopLeft{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    table{
-      width:100%;
-      border-collapse:collapse;
-      overflow:hidden;
-      border-radius:18px;
-    }
-    th,td{
-      padding:12px 12px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      font-weight:900;
-    }
-    th{color:rgba(255,255,255,.80);text-align:left;font-size:12px;letter-spacing:.2px}
-    tr:hover td{background:rgba(255,255,255,.04)}
-    .linkRow{cursor:pointer}
-
-    /* ===== MODAL ===== */
+    /* MODALS */
     .modal{
       position:absolute; inset:0;
       display:none;
       align-items:center; justify-content:center;
-      z-index:80;
-      background:rgba(0,0,0,.35);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      z-index:60;
+      background:rgba(0,0,0,.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
-    .modal.active{display:flex}
     .modalCard{
-      width:min(1100px,94%);
-      max-height:min(760px,90%);
-      overflow:hidden;
+      width:min(820px,92%);
       border:1px solid rgba(255,255,255,.14);
-      background:rgba(8,22,52,.72);
       border-radius:22px;
-      box-shadow:0 24px 90px rgba(0,0,0,.55);
-      display:flex;
-      flex-direction:column;
+      background:rgba(8,22,52,.72);
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      padding:18px;
     }
-    .modalHead{
+    .modalTop{display:flex;align-items:center;gap:12px}
+    .modalIcon{
+      width:44px;height:44px;border-radius:14px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;align-items:center;justify-content:center;
+      flex:0 0 44px;
+    }
+    .modalTitle{font-size:20px;font-weight:1000;margin:0}
+    .modalSub{color:rgba(255,255,255,.75);font-weight:800;margin:2px 0 0 0;font-size:13px}
+    .modalBody{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+    .cardBlock{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18);
+      border-radius:18px;
       padding:14px;
-      display:flex; align-items:center; gap:10px;
-      border-bottom:1px solid rgba(255,255,255,.10);
     }
-    .modalBody{
-      padding:14px;
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+    .danger{
+      border-color: rgba(255,120,120,.28);
+      background: rgba(255,60,60,.10);
     }
-    .dot{
-      width:10px;height:10px;border-radius:999px;
-      display:inline-block;
-      border:1px solid rgba(255,255,255,.25);
-    }
-    .dot.green{background:#2bff88}
-    .dot.yellow{background:#ffd24a}
-    .dot.red{background:#ff4d4d}
-    .dot.gray{background:rgba(255,255,255,.35)}
+    .hintTxt{color:rgba(255,255,255,.70);font-weight:800;font-size:13px;line-height:1.35}
 
-    /* ===== SETTINGS (modal) ===== */
-    .flagBtn{
-      width:64px;
-      height:44px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(0,0,0,.22);
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:26px;
-      font-weight:1000;
-      user-select:none;
-    }
-    .flagBtn:hover{background:rgba(0,0,0,.28)}
-    .flagBtn.active{
-      outline:2px solid rgba(43,255,136,.55);
-      background:rgba(43,255,136,.14);
-    }
   </style>
 </head>
 
@@ -499,6 +248,77 @@
 
   <div id="app">
     <div class="frame">
+
+      <!-- SETTINGS MODAL -->
+      <div id="settingsModal" class="modal">
+        <div class="modalCard">
+          <div class="modalTop">
+            <div class="modalIcon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+                <path d="M19.4 15a7.7 7.7 0 0 0 .1-1 7.7 7.7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a8 8 0 0 0-1.7-1l-.3-2.6H9l-.3 2.6a8 8 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7.7 7.7 0 0 0-.1 1 7.7 7.7 0 0 0 .1 1l-2 1.5 2 3.4 2.4-1a8 8 0 0 0 1.7 1l.3 2.6h6l.3-2.6a8 8 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5Z"
+                      stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div style="min-width:0">
+              <h3 class="modalTitle" id="settingsTitle">Ustawienia</h3>
+              <p class="modalSub" id="settingsSub">Nick, język, profile (współdzielenie)</p>
+            </div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnSettingsClose">Zamknij</button>
+          </div>
+
+          <div class="modalBody">
+
+            <div class="cardBlock">
+              <div class="row" style="align-items:flex-start">
+                <div style="flex:1;min-width:0">
+                  <div class="title" style="margin:0 0 4px 0;font-size:18px">Profil gracza (współdzielenie)</div>
+                  <div class="hintTxt">
+                    Jeśli kilka osób gra na jednym komputerze – każdy ma swój profil.
+                    Profil trzyma osobno: nick, ostatni pokój i język.
+                  </div>
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <select id="selProfile" style="flex:1"></select>
+                <button class="btn" id="btnProfileSwitch">Przełącz</button>
+                <button class="btn" id="btnProfileAdd">Dodaj</button>
+                <button class="btn" id="btnProfileRemove">Usuń</button>
+              </div>
+
+              <div class="row" style="margin-top:10px">
+                <input id="inpNickSettings" placeholder="Nick (3–16)" style="flex:1" />
+                <button class="btn" id="btnNickSave">Zapisz nick</button>
+              </div>
+            </div>
+
+            <div class="cardBlock">
+              <div class="title" style="margin:0 0 4px 0;font-size:18px">Język</div>
+              <div class="row" style="margin-top:10px;gap:12px">
+                <button class="btn" id="btnLangPL">🇵🇱 Polski</button>
+                <button class="btn" id="btnLangEN">🇬🇧 English</button>
+                <div class="spacer"></div>
+                <div class="chip">Aktualny: <span id="langLabel">—</span></div>
+              </div>
+            </div>
+
+            <div class="cardBlock danger">
+              <div class="title" style="margin:0 0 4px 0;font-size:18px">Dane lokalne</div>
+              <div class="hintTxt">
+                Wyczyści: nick, ostatni pokój, język, profile (czyli reset przeglądarki dla tej gry).
+              </div>
+              <div class="row" style="margin-top:10px">
+                <button class="btn" id="btnClearLocal">Wyczyść dane lokalne</button>
+                <div class="spacer"></div>
+                <button class="btn btnSmall" id="btnClearLocalCancel">Anuluj</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
 
       <!-- SPLASH -->
       <section id="splash" class="screen active">
@@ -512,112 +332,82 @@
 
       <!-- HOME -->
       <section id="home" class="screen">
-        <!-- NOWE: zębatka ustawień -->
-        <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
-          <span>⚙️</span>
+        <div class="homeWrap">
+          <img class="homeImg" id="homeImg" src="./img_menu_pc.png" alt="Menu" />
         </div>
 
-        <div class="homeBtns" aria-label="Menu">
-          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
-            <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
-          </button>
-          <button class="imgBtn" id="btnHomeStats" title="Statystyki">
-            <img src="btn_statystyki.png" alt="Statystyki">
-          </button>
-          <button class="imgBtn" id="btnHomeExit" title="Wyjście">
-            <img src="btn_wyjscie.png" alt="Wyjście">
-          </button>
+        <!-- ZĘBATKA -->
+        <div class="homeGear" id="btnOpenSettings" title="Ustawienia">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
+            <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z" stroke="rgba(255,255,255,.92)" stroke-width="2"/>
+            <path d="M19.4 15a7.7 7.7 0 0 0 .1-1 7.7 7.7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a8 8 0 0 0-1.7-1l-.3-2.6H9l-.3 2.6a8 8 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7.7 7.7 0 0 0-.1 1 7.7 7.7 0 0 0 .1 1l-2 1.5 2 3.4 2.4-1a8 8 0 0 0 1.7 1l.3 2.6h6l.3-2.6a8 8 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5Z"
+                  stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
         </div>
-      </section>
 
-      <!-- CONTINUE -->
-      <section id="continue" class="screen">
-        <div class="continueBox panel">
-          <div class="continueCard">
-            <div class="continueTop">
-              <div>
-                <div class="title" style="margin:0" id="t_continue_title">Kontynuować?</div>
-                <div class="sub" id="t_continue_sub">Wykryto wcześniejszą rozgrywkę</div>
-              </div>
-              <div class="pill">Typer</div>
-            </div>
-
-            <div class="continueGrid">
-              <div class="miniCard">
-                <div class="sub" id="t_continue_hello">Witaj ponownie</div>
-                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contNick">—</div>
-              </div>
-              <div class="miniCard">
-                <div class="sub" id="t_continue_room">Grasz w pokoju</div>
-                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contRoomName">—</div>
-              </div>
-            </div>
-
-            <div class="bigQ" id="t_continue_q">Czy chcesz kontynuować grę w tym pokoju?</div>
-
-            <div class="continueBtns">
-              <button class="btn" id="btnContYes">Tak</button>
-              <button class="btn" id="btnContNo">Nie</button>
-              <div class="spacer"></div>
-              <button class="btn btnSmall" id="btnContForget">Zapomnij pokój</button>
-            </div>
-          </div>
+        <!-- 3 PRZYCISKI (PNG) -->
+        <div class="homeBtns">
+          <button class="imgBtn" id="btnHomeRooms" aria-label="Pokoje typerów">
+            <img src="./btn_pokoje_typerow.png" alt="Pokoje typerów">
+          </button>
+          <button class="imgBtn" id="btnHomeStats" aria-label="Statystyki">
+            <img src="./btn_statystyki.png" alt="Statystyki">
+          </button>
+          <button class="imgBtn" id="btnHomeExit" aria-label="Wyjście">
+            <img src="./btn_wyjscie.png" alt="Wyjście">
+          </button>
         </div>
       </section>
 
-      <!-- ROOMS -->
+      <!-- ROOMS (tu zostawiamy Twoje dotychczasowe UI; w app.js i tak sterujemy logiką) -->
       <section id="rooms" class="screen">
-        <div class="roomsBox panel">
+        <div class="panel" style="width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
           <div class="row">
-            <div class="chip" id="t_rooms_title">Pokoje typerów</div>
+            <div class="chip">Liga</div>
+            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
             <div class="spacer"></div>
-            <div class="chip"><span id="t_nick">Nick</span>: <span id="nickLabelRooms">—</span></div>
-            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
-            <button class="btn btnSmall" id="btnBackHomeFromRooms">Wróć</button>
+            <button class="btn btnSmall" id="btnBackHome">Wróć</button>
           </div>
 
-          <div class="panel block">
-            <h2 id="t_join_title">Dołącz do pokoju</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
-              <button class="btn" id="btnJoinRoom">Dołącz</button>
-            </div>
-            <div class="help" style="margin-top:8px" id="t_join_help">Wpisz kod od admina.</div>
-          </div>
-
-          <div class="panel block">
-            <h2 id="t_create_title">Utwórz nowy pokój</h2>
+          <div class="panel" style="padding:14px">
+            <div class="title">Nowy pokój</div>
             <div class="row" style="margin-top:10px">
               <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
               <button class="btn" id="btnCreateRoom">Utwórz</button>
             </div>
-            <div class="help" style="margin-top:8px" id="t_create_help">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
           </div>
 
-          <div class="panel block">
-            <h2>Debug</h2>
-            <div class="help" id="debugRooms">—</div>
+          <div class="panel" style="padding:14px">
+            <div class="title">Dołącz do pokoju</div>
+            <div class="row" style="margin-top:10px">
+              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
+              <button class="btn" id="btnJoinRoom">Dołącz</button>
+            </div>
+          </div>
+
+          <div class="panel" style="padding:14px">
+            <div class="sub" id="debugRooms">—</div>
           </div>
         </div>
       </section>
 
       <!-- ROOM -->
       <section id="room" class="screen">
-        <div style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
+        <div id="roomRoot" style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
 
           <!-- LEFT -->
           <div class="leftBar panel">
             <div class="col" style="gap:10px">
-              <div class="chip" id="t_room_room">Pokój</div>
-              <div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
+              <div class="chip">Pokój</div>
+              <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
             </div>
 
             <div class="panel" style="padding:14px">
               <div class="title" id="roomName">—</div>
-              <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
+              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
               <div class="row" style="margin-top:10px">
                 <div class="chip" style="flex:1;justify-content:space-between;">
-                  <span id="t_code">Kod</span>: <span id="roomCode">—</span>
+                  Kod: <span id="roomCode">—</span>
                 </div>
                 <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
               </div>
@@ -628,16 +418,10 @@
             </div>
 
             <div class="panel" style="padding:14px">
-              <div class="title" id="t_actions">Akcje</div>
-              <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              <div class="title">Akcje</div>
+              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
-
-                <!-- ADMIN -->
-                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
-                <button class="btn" id="btnEndRound" style="display:none" disabled>Zakończ kolejkę</button>
-
-                <button class="btn" id="btnMyQueue" style="display:none">Własna kolejka</button>
                 <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
               </div>
             </div>
@@ -651,13 +435,11 @@
             <div class="panel midHead">
               <div class="row">
                 <div>
-                  <div class="title" id="t_matches">Spotkania</div>
-                  <div class="sub" id="t_matches_sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                  <div class="title">Spotkania</div>
+                  <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
                 </div>
                 <div class="spacer"></div>
-                <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
-                <div class="chip"><span id="t_games">Mecze</span>: <span id="matchesCount">0</span></div>
-                <div class="chip"><span id="t_points_round">PUNKTY (kolejka)</span>: <span id="myPointsLabel">—</span></div>
+                <div class="chip">Mecze: <span id="matchesCount">0</span></div>
               </div>
             </div>
 
@@ -667,94 +449,14 @@
           <!-- RIGHT -->
           <div class="rightBar panel">
             <div>
-              <div class="title" id="t_players">Gracze</div>
-              <div class="sub" id="t_players_sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
+              <div class="title">Gracze</div>
+              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
             </div>
             <div class="playersList" id="playersList"></div>
-
-            <div class="rightFooterBtn">
-              <button class="btn" id="btnLeagueFromRoom">Tabela ligi typerów</button>
-            </div>
           </div>
 
         </div>
       </section>
-
-      <!-- RESULTS (ADMIN) -->
-      <section id="results" class="screen">
-        <div class="resultsWrap panel">
-          <div class="resultsTop">
-            <div class="row" style="gap:10px;flex-wrap:wrap">
-              <div class="chip" id="t_results">Wyniki</div>
-              <div class="chip"><span id="t_room">Pokój</span>: <span id="resRoomName">—</span></div>
-              <div class="chip"><span id="t_round2">KOLEJKA</span>: <span id="resRound">—</span></div>
-            </div>
-            <div class="row">
-              <button class="btn btnSmall" id="btnResBack">Wróć</button>
-              <button class="btn btnSmall" id="btnResSave">Zapisz wyniki</button>
-            </div>
-          </div>
-
-          <div class="panel resultsList" id="resultsList"></div>
-          <div class="sub" style="padding:10px 14px" id="t_results_hint">
-            Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
-          </div>
-        </div>
-      </section>
-
-      <!-- LEAGUE -->
-      <section id="league" class="screen">
-        <div class="leagueWrap panel">
-          <div class="leagueTop">
-            <div class="leagueTopLeft">
-              <div class="chip" id="t_league">Tabela ligi typerów</div>
-              <div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
-              <div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
-              <div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
-            </div>
-            <div class="row">
-              <button class="btn btnSmall" id="btnLeagueRefresh">Odśwież</button>
-              <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
-            </div>
-          </div>
-
-          <div class="panel" style="padding:14px">
-            <div class="title" style="margin:0 0 10px 0" id="t_ranking">Ranking</div>
-            <div class="sub" style="margin-bottom:10px" id="leagueHint">
-              Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).
-            </div>
-
-            <div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
-              <table id="leagueTable">
-                <thead>
-                <tr>
-                  <th style="width:60px">#</th>
-                  <th id="t_player_col">Gracz</th>
-                  <th style="width:120px" id="t_rounds_col">Kolejki</th>
-                  <th style="width:120px" id="t_points_col">Punkty</th>
-                </tr>
-                </thead>
-                <tbody id="leagueBody">
-                <tr><td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <!-- MODAL -->
-      <div class="modal" id="modal">
-        <div class="modalCard">
-          <div class="modalHead">
-            <div class="chip" id="modalTitle">—</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="modalClose">Zamknij</button>
-          </div>
-          <div class="modalBody" id="modalBody"></div>
-        </div>
-      </div>
 
       <div class="toast" id="toast"></div>
       <div class="footerRight" id="footerRight">—</div>
@@ -777,6 +479,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2004"></script>
+  <script type="module" src="./app.js?v=2002"></script>
 </body>
 </html>
