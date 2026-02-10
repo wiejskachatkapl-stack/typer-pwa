@@ -1,10 +1,10 @@
-const BUILD = 2004;
+const BUILD = 2005;
 
 // TŁA:
 const BG_HOME = "img_menu_pc.png"; // START
 const BG_APP  = "img_tlo.png";     // RESZTA
 
-// STORAGE (nowe, pod profile)
+// STORAGE (profile)
 const KEY_PROFILES = "typer_profiles_v1";
 const KEY_ACTIVE_PROFILE = "typer_active_profile_v1";
 
@@ -73,14 +73,23 @@ const I18N = {
     joinRoom: "Dołącz do pokoju",
     joinHint: "Wpisz kod od admina.",
     back: "Wróć",
-    promptNick: "Podaj nick (3–16 znaków):",
     nickBad: "Nick musi mieć 3–16 znaków.",
     cleared: "Wyczyszczono dane lokalne",
     profileAdded: "Dodano profil",
     profileDeleted: "Usunięto profil",
     profileSwitched: "Przełączono profil",
     nickSaved: "Zapisano nick",
-    askClear: "Na pewno wyczyścić dane lokalne? (usunie profile, nick, język i ostatni pokój)"
+    askClear: "Na pewno wyczyścić dane lokalne? (usunie profile, nick, język i ostatni pokój)",
+    welcomeBack: "Witaj ponownie",
+    lastRoom: "Ostatni pokój",
+    enterRoom: "Wejdź do pokoju",
+    changeProfile: "Zmień profil gracza",
+    detailsBack: "Wróć",
+    nickModalTitle: "Podaj swój nick",
+    nickModalSub: "Będzie używany w pokojach i tabeli ligi.",
+    nickModalDesc: "Wpisz czytelny nick (3–16 znaków). Możesz go zmienić później w Ustawieniach.",
+    next: "Dalej",
+    noRoom: "Brak zapisanego pokoju w tym profilu."
   },
   en: {
     settings: "Settings",
@@ -104,14 +113,23 @@ const I18N = {
     joinRoom: "Join room",
     joinHint: "Enter the admin code.",
     back: "Back",
-    promptNick: "Enter nickname (3–16 chars):",
     nickBad: "Nickname must be 3–16 characters.",
     cleared: "Local data cleared",
     profileAdded: "Profile added",
     profileDeleted: "Profile deleted",
     profileSwitched: "Profile switched",
     nickSaved: "Nickname saved",
-    askClear: "Clear local data? (removes profiles, nickname, language and last room)"
+    askClear: "Clear local data? (removes profiles, nickname, language and last room)",
+    welcomeBack: "Welcome back",
+    lastRoom: "Last room",
+    enterRoom: "Enter room",
+    changeProfile: "Switch player profile",
+    detailsBack: "Back",
+    nickModalTitle: "Enter your nickname",
+    nickModalSub: "Used in rooms and league table.",
+    nickModalDesc: "Choose a readable nickname (3–16 chars). You can change it later in Settings.",
+    next: "Continue",
+    noRoom: "No saved room in this profile."
   }
 };
 
@@ -156,7 +174,6 @@ function ensureProfiles(){
   let profiles = loadProfiles();
   let activeId = getActiveProfileId();
 
-  // jeśli brak profili — utwórz domyślny
   if(profiles.length === 0){
     const p = { id: uid6(), nick: "", lastRoom: "", lang: "pl" };
     profiles = [p];
@@ -165,7 +182,6 @@ function ensureProfiles(){
     activeId = p.id;
   }
 
-  // jeśli aktywny nie istnieje — ustaw pierwszy
   if(!profiles.some(p => p.id === activeId)){
     setActiveProfileId(profiles[0].id);
   }
@@ -212,7 +228,14 @@ function applyI18n(){
   if(el("btnClearLocal")) el("btnClearLocal").textContent = t("clearLocal");
   if(el("btnClearCancel")) el("btnClearCancel").textContent = t("cancel");
 
-  // Rooms header texts
+  // Welcome flow
+  if(el("st_welcomeChip")) el("st_welcomeChip").textContent = t("welcomeBack");
+  if(el("btnEnterRoomFromSettings")) el("btnEnterRoomFromSettings").textContent = t("enterRoom");
+  if(el("btnChangeProfileFlow")) el("btnChangeProfileFlow").textContent = t("changeProfile");
+  if(el("btnBackToWelcome")) el("btnBackToWelcome").textContent = t("detailsBack");
+  if(el("st_detailsTitle")) el("st_detailsTitle").textContent = "Profil / język";
+
+  // Rooms
   if(el("rooms_title")) el("rooms_title").textContent = t("roomsTitle");
   if(el("rooms_nickLabel")) el("rooms_nickLabel").textContent = t("roomsNick");
   if(el("rooms_newRoom")) el("rooms_newRoom").textContent = t("newRoom");
@@ -228,6 +251,13 @@ function applyI18n(){
   if(el("inpJoinCode")) el("inpJoinCode").placeholder = (getActiveProfile().lang === "en")
     ? "Enter code (e.g. AB12CD)"
     : "Wpisz kod (np. AB12CD)";
+
+  // Nick modal texts
+  if(el("nickTitle")) el("nickTitle").textContent = t("nickModalTitle");
+  if(el("nickSub")) el("nickSub").textContent = t("nickModalSub");
+  if(el("nickDesc")) el("nickDesc").textContent = t("nickModalDesc");
+  if(el("btnNickSave")) el("btnNickSave").textContent = t("next");
+  if(el("btnNickCancel")) el("btnNickCancel").textContent = t("cancel");
 }
 
 function updateLangButtons(){
@@ -244,13 +274,54 @@ function refreshNickLabels(){
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
 }
 
-// ---------- Settings modal open/close ----------
-function openSettings(){
-  // wypełnij UI profili + nick input + lang
+// ---------- Settings welcome/details flow ----------
+function showSettingsWelcome(){
+  const prof = getActiveProfile();
+  const nick = (prof.nick || "").trim();
+  const lastRoom = (prof.lastRoom || "").trim().toUpperCase();
+
+  // jeśli brak nicku => od razu details
+  if(!nick){
+    showSettingsDetails(false);
+    return;
+  }
+
+  // pokaż welcome
+  el("settingsWelcome").style.display = "block";
+  el("settingsDetails").style.display = "none";
+  el("detailsTopBar").style.display = "none";
+
+  el("st_welcomeNick").textContent = nick;
+  if(lastRoom){
+    el("st_welcomeRoomLine").textContent = `${t("lastRoom")}: ${lastRoom}`;
+    el("btnEnterRoomFromSettings").disabled = false;
+  }else{
+    el("st_welcomeRoomLine").textContent = `${t("lastRoom")}: —`;
+    el("btnEnterRoomFromSettings").disabled = true;
+  }
+}
+
+function showSettingsDetails(showBackButton){
+  el("settingsWelcome").style.display = "none";
+  el("settingsDetails").style.display = "flex";
+  el("detailsTopBar").style.display = showBackButton ? "flex" : "none";
+
   renderProfilesSelect();
   el("inpNickSettings").value = getActiveProfile().nick || "";
   applyI18n();
   updateLangButtons();
+  refreshNickLabels();
+}
+
+function openSettings(){
+  renderProfilesSelect();
+  el("inpNickSettings").value = getActiveProfile().nick || "";
+  applyI18n();
+  updateLangButtons();
+  refreshNickLabels();
+
+  // nowy flow: welcome jeśli jest nick
+  showSettingsWelcome();
 
   const m = el("settingsModal");
   if(m) m.style.display = "flex";
@@ -279,22 +350,47 @@ function renderProfilesSelect(){
   }
 }
 
-// ---------- Nick handling ----------
-async function ensureNick(){
-  let nick = (getActiveProfile().nick || "").trim();
-  while(!nick){
-    nick = prompt(t("promptNick"), "") || "";
-    nick = nick.trim();
-    if (nick.length < 3 || nick.length > 16) {
-      nick = "";
-      alert(t("nickBad"));
-    }
-  }
-  updateActiveProfile({ nick });
-  return nick;
+// ---------- NICK MODAL (zamiast prompt) ----------
+let _nickResolve = null;
+
+function openNickModal(){
+  return new Promise((resolve)=>{
+    _nickResolve = resolve;
+
+    applyI18n();
+    const prof = getActiveProfile();
+    const lang = prof.lang || "pl";
+
+    el("inpNickModal").value = "";
+    el("inpNickModal").placeholder = (lang === "en") ? "Nickname (e.g. Mike)" : "Nick (np. Mariusz)";
+    el("nickError").style.display = "none";
+    el("nickError").textContent = "";
+
+    el("nickModal").style.display = "flex";
+    setTimeout(()=> el("inpNickModal").focus(), 50);
+  });
 }
 
-// ---------- Continue modal (zostaje, ale opiera się o lastRoom z profilu) ----------
+function closeNickModal(){
+  el("nickModal").style.display = "none";
+}
+
+function validateNick(v){
+  v = (v || "").trim();
+  if(v.length < 3 || v.length > 16) return { ok:false, v };
+  return { ok:true, v };
+}
+
+async function ensureNickNice(){
+  const nick = (getActiveProfile().nick || "").trim();
+  if(nick) return nick;
+
+  const ok = await openNickModal();
+  if(!ok) return ""; // anuluj
+  return (getActiveProfile().nick || "").trim();
+}
+
+// ---------- Continue modal ----------
 function showContinueModal({ code, roomName }){
   const modal = el("continueModal");
   const text = el("continueText");
@@ -317,7 +413,7 @@ function clearSavedRoom(){
   updateActiveProfile({ lastRoom: "" });
 }
 
-// ---------- Firebase minimal boot (tylko żeby zostawić kompatybilność) ----------
+// ---------- Firebase minimal boot ----------
 let app, auth;
 let userUid = null;
 
@@ -344,6 +440,27 @@ async function bootFirebase(){
   });
 }
 
+// ---------- Rooms open flow ----------
+async function handleOpenRooms(){
+  const nick = await ensureNickNice();
+  if(!nick){
+    // anulowano
+    showToast("Anulowano");
+    return;
+  }
+
+  refreshNickLabels();
+
+  const saved = (getActiveProfile().lastRoom || "").trim().toUpperCase();
+  if(saved && saved.length === 6){
+    showScreen("rooms");
+    showContinueModal({ code: saved, roomName: "(nazwa pokoju z Firestore)" });
+    return;
+  }
+  showScreen("rooms");
+  if(el("debugRooms")) el("debugRooms").textContent = "—";
+}
+
 // ---------- UI binding ----------
 function bindUI(){
   // HOME
@@ -356,6 +473,26 @@ function bindUI(){
   el("btnSettingsClose").onclick = ()=> closeSettings();
   el("btnClearCancel").onclick = ()=> closeSettings();
 
+  // Settings welcome buttons
+  el("btnChangeProfileFlow").onclick = ()=>{
+    // pokazujemy dopiero teraz wybór profilu/język/czyszczenie
+    showSettingsDetails(true);
+  };
+  el("btnBackToWelcome").onclick = ()=>{
+    showSettingsWelcome();
+  };
+  el("btnEnterRoomFromSettings").onclick = async ()=>{
+    const saved = (getActiveProfile().lastRoom || "").trim().toUpperCase();
+    if(!saved){
+      showToast(t("noRoom"));
+      return;
+    }
+    closeSettings();
+    // zachowujemy dotychczasowe zachowanie: rooms + modal kontynuacji
+    showScreen("rooms");
+    showContinueModal({ code: saved, roomName: "(nazwa pokoju z Firestore)" });
+  };
+
   // Settings: language
   el("btnLangPL").onclick = ()=> setLang("pl");
   el("btnLangEN").onclick = ()=> setLang("en");
@@ -363,14 +500,17 @@ function bindUI(){
   // Settings: save nick
   el("btnSaveNickSettings").onclick = ()=>{
     let v = (el("inpNickSettings").value || "").trim();
-    if(v.length < 3 || v.length > 16){
+    const check = validateNick(v);
+    if(!check.ok){
       showToast(t("nickBad"));
       return;
     }
-    updateActiveProfile({ nick: v });
+    updateActiveProfile({ nick: check.v });
     refreshNickLabels();
     renderProfilesSelect();
     showToast(t("nickSaved"));
+    // po zapisaniu nicku wracamy do welcome (żeby było czytelnie)
+    showSettingsWelcome();
   };
 
   // Settings: profiles
@@ -379,13 +519,16 @@ function bindUI(){
     const id = sel?.value || "";
     if(!id) return;
     setActiveProfileId(id);
-    // po switch: odśwież UI
+
     renderProfilesSelect();
     el("inpNickSettings").value = getActiveProfile().nick || "";
     applyI18n();
     updateLangButtons();
     refreshNickLabels();
     showToast(t("profileSwitched"));
+
+    // po przełączeniu profilu: pokaż welcome lub details (zależnie od nicku)
+    showSettingsWelcome();
   };
 
   el("btnProfileAdd").onclick = ()=>{
@@ -394,12 +537,16 @@ function bindUI(){
     profiles.push(newP);
     saveProfiles(profiles);
     setActiveProfileId(newP.id);
+
     renderProfilesSelect();
     el("inpNickSettings").value = "";
     applyI18n();
     updateLangButtons();
     refreshNickLabels();
     showToast(t("profileAdded"));
+
+    // nowy profil nie ma nicku => details
+    showSettingsDetails(true);
   };
 
   el("btnProfileDelete").onclick = ()=>{
@@ -412,28 +559,33 @@ function bindUI(){
     const left = profiles.filter(p => p.id !== activeId);
     saveProfiles(left);
     setActiveProfileId(left[0].id);
+
     renderProfilesSelect();
     el("inpNickSettings").value = getActiveProfile().nick || "";
     applyI18n();
     updateLangButtons();
     refreshNickLabels();
     showToast(t("profileDeleted"));
+    showSettingsWelcome();
   };
 
   // Settings: clear local
   el("btnClearLocal").onclick = ()=>{
     if(!confirm(t("askClear"))) return;
+
     localStorage.removeItem(KEY_PROFILES);
     localStorage.removeItem(KEY_ACTIVE_PROFILE);
-    // od razu odtwarzamy profil domyślny
+
     ensureProfiles();
     renderProfilesSelect();
     el("inpNickSettings").value = "";
     applyI18n();
     updateLangButtons();
     refreshNickLabels();
+
     showToast(t("cleared"));
-    closeSettings();
+    // po czyszczeniu: brak nicku => details
+    showSettingsDetails(false);
   };
 
   // ROOMS back
@@ -441,7 +593,6 @@ function bindUI(){
 
   // kontynuacja modal
   el("btnContinueYes").onclick = async ()=>{
-    // Tu podłączysz potem wejście do pokoju
     hideContinueModal();
     showToast("Kontynuuj — podłączymy do pokoju w następnym kroku");
     showScreen("rooms");
@@ -459,24 +610,28 @@ function bindUI(){
 
   // placeholder room back
   el("btnBackFromRoom").onclick = ()=> showScreen("menu");
-}
 
-// ---------- Rooms open flow (nick/continue) ----------
-async function handleOpenRooms(){
-  await ensureNick();
-  refreshNickLabels();
-
-  // jeśli profil ma zapisany lastRoom -> pytanie o kontynuację
-  const saved = (getActiveProfile().lastRoom || "").trim().toUpperCase();
-  if(saved && saved.length === 6){
-    // tu w realnej wersji sprawdzisz Firestore czy pokój istnieje i pobierzesz nazwę.
-    // Na razie pokazujemy modal testowo.
-    showScreen("rooms");
-    showContinueModal({ code: saved, roomName: "(nazwa pokoju z Firestore)" });
-    return;
-  }
-  showScreen("rooms");
-  if(el("debugRooms")) el("debugRooms").textContent = "—";
+  // NICK MODAL
+  el("btnNickCancel").onclick = ()=>{
+    closeNickModal();
+    if(_nickResolve){ _nickResolve(false); _nickResolve = null; }
+  };
+  el("btnNickSave").onclick = ()=>{
+    const v = el("inpNickModal").value;
+    const check = validateNick(v);
+    if(!check.ok){
+      el("nickError").style.display = "block";
+      el("nickError").textContent = t("nickBad");
+      return;
+    }
+    updateActiveProfile({ nick: check.v });
+    closeNickModal();
+    if(_nickResolve){ _nickResolve(true); _nickResolve = null; }
+  };
+  el("inpNickModal").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter") el("btnNickSave").click();
+    if(e.key === "Escape") el("btnNickCancel").click();
+  });
 }
 
 // ---------- start ----------
@@ -485,7 +640,6 @@ async function handleOpenRooms(){
     showScreen("splash");
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
-    // Profiles + lang from start
     ensureProfiles();
     applyI18n();
     updateLangButtons();
@@ -496,7 +650,6 @@ async function handleOpenRooms(){
     refreshNickLabels();
     bindUI();
 
-    // start menu
     showScreen("menu");
   }catch(e){
     console.error(e);
