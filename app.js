@@ -1,4 +1,4 @@
-const BUILD = 2002;
+const BUILD = 2003;
 
 // TŁO stałe (za frame) – możesz zostawić img_tlo.png albo dać img_menu_pc.png
 const BG_TLO = "img_tlo.png";
@@ -96,6 +96,188 @@ function clearAllLocal(){
   localStorage.removeItem(KEY_PROFILES);
 }
 
+// ====== i18n (PL/EN) ======
+const I18N = {
+  pl: {
+    // Settings
+    settings_title: "Ustawienia",
+    settings_sub: "Nick, język, profile (współdzielenie)",
+    settings_close: "Zamknij",
+
+    settings_profile_title: "Profil gracza (współdzielenie)",
+    settings_profile_desc:
+      "Jeśli kilka osób gra na jednym komputerze – każdy ma swój profil.\nProfil trzyma osobno: nick, ostatni pokój i język.",
+    settings_profile_switch: "Przełącz",
+    settings_profile_add: "Dodaj",
+    settings_profile_remove: "Usuń",
+    settings_nick_save: "Zapisz nick",
+    settings_nick_ph: "Nick (3–16)",
+
+    settings_lang_title: "Język",
+    settings_lang_pl: "🇵🇱 Polski",
+    settings_lang_en: "🇬🇧 English",
+    settings_lang_current: "Aktualny:",
+
+    settings_local_title: "Dane lokalne",
+    settings_local_desc:
+      "Wyczyści: nick, ostatni pokój, język, profile (czyli reset przeglądarki dla tej gry).",
+    settings_local_clear: "Wyczyść dane lokalne",
+    settings_cancel: "Anuluj",
+
+    // Home
+    home_stats_soon: "Statystyki: wkrótce (podłączymy).",
+    home_exit_info: "Wyjście: w web nie zamkniemy karty automatycznie 🙂",
+
+    // Rooms screen
+    rooms_league: "Liga",
+    rooms_nick: "Nick:",
+    rooms_back: "Wróć",
+    rooms_new_room: "Nowy pokój",
+    rooms_join_room: "Dołącz do pokoju",
+    rooms_create: "Utwórz",
+    rooms_join: "Dołącz",
+    rooms_roomname_ph: "Nazwa pokoju (np. Domowy)",
+    rooms_code_ph: "Wpisz kod (np. AB12CD)",
+
+    // Room screen
+    room_title_matches: "Spotkania",
+    room_sub_matches: "Uzupełnij typy (0–20). Wyniki admin wpisze osobno.",
+    room_matches_count: "Mecze:",
+    room_players_title: "Gracze",
+    room_players_sub: "Zielone ✓ = typy zapisane, czerwone ✗ = brak.",
+    room_actions_title: "Akcje",
+    room_actions_sub: "Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.",
+    room_save_picks: "Zapisz typy",
+    room_add_queue_test: "Dodaj kolejkę (test)",
+    room_copy: "Kopiuj",
+    room_leave: "Opuść",
+    room_refresh: "Odśwież",
+    room_back: "Wróć",
+
+    // Toasts / prompts
+    toast_need_roomname: "Podaj nazwę pokoju",
+    toast_join_bad_code: "Kod musi mieć 6 znaków",
+    toast_no_room: "Nie ma takiego pokoju",
+    toast_copied: "Skopiowano kod",
+    toast_copy_fail: "Nie udało się skopiować",
+    toast_left_room: "Opuszczono pokój",
+    toast_only_admin: "Tylko admin",
+    toast_added_queue: "Dodano kolejkę (test)",
+    toast_saved_picks: "Zapisano typy ✅",
+    toast_fill_all: "Uzupełnij wszystkie typy",
+    toast_no_matches: "Brak meczów",
+    toast_in_room: "W pokoju:",
+    toast_profile_added: "Dodano profil:",
+    toast_profile_switched: "Przełączono profil",
+    toast_profile_deleted: "Profil usunięty",
+    toast_profile_cant_last: "Nie można usunąć ostatniego profilu",
+    toast_nick_saved: "Zapisano nick",
+    toast_nick_bad: "Nick 3–16 znaków",
+    toast_lang_pl: "Język: Polski",
+    toast_lang_en: "Language: English",
+    toast_cleared: "Wyczyszczono dane. Odświeżam…",
+
+    prompt_profile_name: "Nazwa profilu (np. Ania):",
+    prompt_nick: "Podaj nick (3–16 znaków):",
+    alert_nick_bad: "Nick musi mieć 3–16 znaków.",
+    confirm_delete_profile: "Usunąć profil",
+    confirm_delete_profile_tail: "(Usunie nick/pokój/język tego profilu)",
+    confirm_clear_local: "Na pewno wyczyścić dane lokalne?\n(Nick, pokój, język, profile)",
+  },
+
+  en: {
+    // Settings
+    settings_title: "Settings",
+    settings_sub: "Nickname, language, profiles (shared PC)",
+    settings_close: "Close",
+
+    settings_profile_title: "Player profile (shared PC)",
+    settings_profile_desc:
+      "If multiple people play on one computer — each should use a profile.\nA profile stores separately: nickname, last room and language.",
+    settings_profile_switch: "Switch",
+    settings_profile_add: "Add",
+    settings_profile_remove: "Remove",
+    settings_nick_save: "Save nickname",
+    settings_nick_ph: "Nickname (3–16)",
+
+    settings_lang_title: "Language",
+    settings_lang_pl: "🇵🇱 Polish",
+    settings_lang_en: "🇬🇧 English",
+    settings_lang_current: "Current:",
+
+    settings_local_title: "Local data",
+    settings_local_desc:
+      "This will clear: nickname, last room, language, profiles (browser reset for this game).",
+    settings_local_clear: "Clear local data",
+    settings_cancel: "Cancel",
+
+    // Home
+    home_stats_soon: "Stats: coming soon.",
+    home_exit_info: "Exit: on the web we can't close the tab automatically 🙂",
+
+    // Rooms screen
+    rooms_league: "League",
+    rooms_nick: "Nick:",
+    rooms_back: "Back",
+    rooms_new_room: "Create room",
+    rooms_join_room: "Join room",
+    rooms_create: "Create",
+    rooms_join: "Join",
+    rooms_roomname_ph: "Room name (e.g. Home)",
+    rooms_code_ph: "Enter code (e.g. AB12CD)",
+
+    // Room screen
+    room_title_matches: "Matches",
+    room_sub_matches: "Enter your picks (0–20). Admin enters results separately.",
+    room_matches_count: "Matches:",
+    room_players_title: "Players",
+    room_players_sub: "Green ✓ = submitted, red ✗ = missing.",
+    room_actions_title: "Actions",
+    room_actions_sub: "Submit picks only after filling all matches.",
+    room_save_picks: "Submit picks",
+    room_add_queue_test: "Add round (test)",
+    room_copy: "Copy",
+    room_leave: "Leave",
+    room_refresh: "Refresh",
+    room_back: "Back",
+
+    // Toasts / prompts
+    toast_need_roomname: "Enter room name",
+    toast_join_bad_code: "Code must be 6 characters",
+    toast_no_room: "Room not found",
+    toast_copied: "Code copied",
+    toast_copy_fail: "Copy failed",
+    toast_left_room: "Left the room",
+    toast_only_admin: "Admin only",
+    toast_added_queue: "Round added (test)",
+    toast_saved_picks: "Picks saved ✅",
+    toast_fill_all: "Fill all picks",
+    toast_no_matches: "No matches",
+    toast_in_room: "In room:",
+    toast_profile_added: "Profile added:",
+    toast_profile_switched: "Profile switched",
+    toast_profile_deleted: "Profile removed",
+    toast_profile_cant_last: "Can't remove the last profile",
+    toast_nick_saved: "Nickname saved",
+    toast_nick_bad: "Nickname must be 3–16 chars",
+    toast_lang_pl: "Language: Polish",
+    toast_lang_en: "Language: English",
+    toast_cleared: "Local data cleared. Reloading…",
+
+    prompt_profile_name: "Profile name (e.g. Anna):",
+    prompt_nick: "Enter nickname (3–16 chars):",
+    alert_nick_bad: "Nickname must be 3–16 characters.",
+    confirm_delete_profile: "Remove profile",
+    confirm_delete_profile_tail: "(This will remove nickname/room/language for that profile)",
+    confirm_clear_local: "Clear local data?\n(Nickname, room, language, profiles)",
+  }
+};
+
+function t(key){
+  const lang = getLang();
+  return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.pl[key] || key);
+}
+
 // ====== Firebase ======
 const firebaseConfig = {
   apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
@@ -113,12 +295,12 @@ const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage =
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
 function showToast(msg){
-  const t = el("toast");
-  if (!t) return;
-  t.textContent = msg;
-  t.style.display = "block";
+  const tEl = el("toast");
+  if (!tEl) return;
+  tEl.textContent = msg;
+  tEl.style.display = "block";
   clearTimeout(showToast._tm);
-  showToast._tm = setTimeout(()=> t.style.display="none", 2600);
+  showToast._tm = setTimeout(()=> tEl.style.display="none", 2600);
 }
 
 function showScreen(id){
@@ -147,13 +329,131 @@ function refreshNickLabels(){
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
 }
 
+// ====== i18n apply (podmienia teksty w UI) ======
+function applyI18n(){
+  // Settings
+  if (el("settingsTitle")) el("settingsTitle").textContent = t("settings_title");
+  if (el("settingsSub")) el("settingsSub").textContent = t("settings_sub");
+  if (el("btnSettingsClose")) el("btnSettingsClose").textContent = t("settings_close");
+
+  // sekcje w settings: bierzemy z DOM (nagłówki są w HTML) więc podmieniamy przez selektory:
+  // (bezpiecznie – jak ktoś zmieni HTML, nie wywali)
+  const blocks = el("settingsModal")?.querySelectorAll(".cardBlock") || [];
+  // 0: profile, 1: lang, 2: local (wg naszego index.html)
+  if(blocks[0]){
+    const title = blocks[0].querySelector(".title");
+    const desc = blocks[0].querySelector(".hintTxt");
+    if(title) title.textContent = t("settings_profile_title");
+    if(desc) desc.textContent = t("settings_profile_desc");
+  }
+  if(blocks[1]){
+    const title = blocks[1].querySelector(".title");
+    if(title) title.textContent = t("settings_lang_title");
+  }
+  if(blocks[2]){
+    const title = blocks[2].querySelector(".title");
+    const desc = blocks[2].querySelector(".hintTxt");
+    if(title) title.textContent = t("settings_local_title");
+    if(desc) desc.textContent = t("settings_local_desc");
+  }
+
+  // Settings buttons/inputs
+  if (el("btnProfileSwitch")) el("btnProfileSwitch").textContent = t("settings_profile_switch");
+  if (el("btnProfileAdd")) el("btnProfileAdd").textContent = t("settings_profile_add");
+  if (el("btnProfileRemove")) el("btnProfileRemove").textContent = t("settings_profile_remove");
+  if (el("btnNickSave")) el("btnNickSave").textContent = t("settings_nick_save");
+  if (el("inpNickSettings")) el("inpNickSettings").placeholder = t("settings_nick_ph");
+
+  if (el("btnLangPL")) el("btnLangPL").textContent = t("settings_lang_pl");
+  if (el("btnLangEN")) el("btnLangEN").textContent = t("settings_lang_en");
+  // “Aktualny: …”
+  const langLabel = el("langLabel");
+  if(langLabel){
+    const l = getLang()==="en" ? "English" : "Polski";
+    langLabel.textContent = l;
+  }
+  // chip “Aktualny: …” to jest tekst w HTML “Aktualny: ” + span,
+  // więc podmieniamy sam napis w chipie:
+  const langChip = el("settingsModal")?.querySelector(".chip");
+  if(langChip){
+    // chip ma format: "Aktualny: " + <span id="langLabel">
+    const span = el("langLabel");
+    if(span){
+      langChip.innerHTML = `${t("settings_lang_current")} <span id="langLabel">${span.textContent}</span>`;
+    }
+  }
+
+  if (el("btnClearLocal")) el("btnClearLocal").textContent = t("settings_local_clear");
+  if (el("btnClearLocalCancel")) el("btnClearLocalCancel").textContent = t("settings_cancel");
+
+  // Rooms screen
+  const roomsTopChips = el("rooms")?.querySelectorAll(".chip") || [];
+  if(roomsTopChips[0]) roomsTopChips[0].textContent = t("rooms_league");
+  if(roomsTopChips[1]){
+    // "Nick: <span>"
+    const span = el("nickLabelRooms");
+    roomsTopChips[1].innerHTML = `${t("rooms_nick")} <span id="nickLabelRooms">${span?.textContent || "—"}</span>`;
+  }
+
+  if (el("btnBackHome")) el("btnBackHome").textContent = t("rooms_back");
+  // panele “Nowy pokój” / “Dołącz do pokoju”
+  const roomsPanels = el("rooms")?.querySelectorAll(".panel") || [];
+  // roomsPanels[1] = Nowy pokój, roomsPanels[2] = Dołącz (wg index.html)
+  if(roomsPanels[1]){
+    const tt = roomsPanels[1].querySelector(".title");
+    if(tt) tt.textContent = t("rooms_new_room");
+  }
+  if(roomsPanels[2]){
+    const tt = roomsPanels[2].querySelector(".title");
+    if(tt) tt.textContent = t("rooms_join_room");
+  }
+  if (el("btnCreateRoom")) el("btnCreateRoom").textContent = t("rooms_create");
+  if (el("btnJoinRoom")) el("btnJoinRoom").textContent = t("rooms_join");
+  if (el("inpRoomName")) el("inpRoomName").placeholder = t("rooms_roomname_ph");
+  if (el("inpJoinCode")) el("inpJoinCode").placeholder = t("rooms_code_ph");
+
+  // Room screen
+  const midTitle = el("room")?.querySelector(".midHead .title");
+  const midSub = el("room")?.querySelector(".midHead .sub");
+  if(midTitle) midTitle.textContent = t("room_title_matches");
+  if(midSub) midSub.textContent = t("room_sub_matches");
+
+  const matchesChip = el("room")?.querySelector(".midHead .chip");
+  if(matchesChip){
+    const count = el("matchesCount")?.textContent || "0";
+    matchesChip.innerHTML = `${t("room_matches_count")} <span id="matchesCount">${count}</span>`;
+  }
+
+  const rightTitle = el("room")?.querySelector(".rightBar .title");
+  const rightSub = el("room")?.querySelector(".rightBar .sub");
+  if(rightTitle) rightTitle.textContent = t("room_players_title");
+  if(rightSub) rightSub.textContent = t("room_players_sub");
+
+  // Left action texts/buttons
+  const leftPanels = el("room")?.querySelectorAll(".leftBar .panel") || [];
+  // leftPanels[1] = room info panel, leftPanels[2] = actions panel (wg index.html)
+  if(leftPanels[2]){
+    const tt = leftPanels[2].querySelector(".title");
+    const ss = leftPanels[2].querySelector(".sub");
+    if(tt) tt.textContent = t("room_actions_title");
+    if(ss) ss.textContent = t("room_actions_sub");
+  }
+
+  if (el("btnSaveAll")) el("btnSaveAll").textContent = t("room_save_picks");
+  if (el("btnAddQueue")) el("btnAddQueue").textContent = t("room_add_queue_test");
+  if (el("btnCopyCode")) el("btnCopyCode").textContent = t("room_copy");
+  if (el("btnLeave")) el("btnLeave").textContent = t("room_leave");
+  if (el("btnRefresh")) el("btnRefresh").textContent = t("room_refresh");
+  if (el("btnBackFromRoom")) el("btnBackFromRoom").textContent = t("room_back");
+}
+
 async function ensureNick(){
   let nick = getNick();
   while(!nick){
-    nick = prompt("Podaj nick (3–16 znaków):", "") || "";
+    nick = prompt(t("prompt_nick"), "") || "";
     nick = nick.trim();
     if (nick.length < 3 || nick.length > 16) nick = "";
-    if (!nick) alert("Nick musi mieć 3–16 znaków.");
+    if (!nick) alert(t("alert_nick_bad"));
   }
   setNick(nick);
   return nick;
@@ -184,18 +484,20 @@ function syncSettingsUI(){
   // nick / lang label
   el("inpNickSettings").value = getNick() || "";
   el("langLabel").textContent = (getLang()==="en") ? "English" : "Polski";
+
+  applyI18n();
 }
 
 function addProfile(){
   const profiles = loadProfiles();
-  let name = prompt("Nazwa profilu (np. Ania):", "") || "";
+  let name = prompt(t("prompt_profile_name"), "") || "";
   name = name.trim();
-  if(name.length < 2) { showToast("Podaj nazwę profilu"); return; }
+  if(name.length < 2) { showToast("OK"); showToast(t("toast_need_roomname")); return; } // drobne zabezp.
   const id = uid6();
   profiles.push({ id, name });
   saveProfiles(profiles);
   setActiveProfileId(id);
-  showToast(`Dodano profil: ${name}`);
+  showToast(`${t("toast_profile_added")} ${name}`);
   refreshNickLabels();
   syncSettingsUI();
 }
@@ -204,11 +506,11 @@ function removeProfile(){
   const profiles = loadProfiles();
   const active = getActiveProfileId();
   if(profiles.length <= 1){
-    showToast("Nie można usunąć ostatniego profilu");
+    showToast(t("toast_profile_cant_last"));
     return;
   }
   const p = profiles.find(x=>x.id===active);
-  const ok = confirm(`Usunąć profil "${p?.name || active}"?\n(Usunie nick/pokój/język tego profilu)`);
+  const ok = confirm(`${t("confirm_delete_profile")} "${p?.name || active}"?\n${t("confirm_delete_profile_tail")}`);
   if(!ok) return;
 
   // usuń dane profilu
@@ -220,7 +522,7 @@ function removeProfile(){
   saveProfiles(next);
   setActiveProfileId(next[0].id);
 
-  showToast("Profil usunięty");
+  showToast(t("toast_profile_deleted"));
   refreshNickLabels();
   syncSettingsUI();
 }
@@ -229,29 +531,26 @@ function switchProfile(){
   const sel = el("selProfile");
   const id = sel.value;
   setActiveProfileId(id);
-  showToast("Przełączono profil");
+  showToast(t("toast_profile_switched"));
   refreshNickLabels();
   syncSettingsUI();
-
-  // po przełączeniu profil może mieć zapisany pokój (więc user szybciej wróci)
-  // nic nie wymuszamy – użytkownik zdecyduje klikając „Pokoje typerów”
 }
 
 function saveNickFromSettings(){
   let nick = (el("inpNickSettings").value || "").trim();
   if(nick.length < 3 || nick.length > 16){
-    showToast("Nick 3–16 znaków");
+    showToast(t("toast_nick_bad"));
     return;
   }
   setNick(nick);
   refreshNickLabels();
-  showToast("Zapisano nick");
+  showToast(t("toast_nick_saved"));
 }
 
 function setLangUI(lang){
   setLang(lang);
   syncSettingsUI();
-  showToast(lang==="en" ? "Language: English" : "Język: Polski");
+  showToast(lang==="en" ? t("toast_lang_en") : t("toast_lang_pl"));
 }
 
 // ====== Firebase runtime ======
@@ -293,11 +592,11 @@ function recomputeSubmittedMap(){
 }
 
 // ---------- boot ----------
-async function boot(){
+async function bootApp(){
   setBg(BG_TLO);
   setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
-  ensureProfiles(); // <-- ważne dla współdzielenia
+  ensureProfiles(); // ważne dla współdzielenia
   refreshNickLabels();
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
@@ -335,8 +634,9 @@ async function boot(){
   setFooter(`BUILD ${BUILD}`);
   bindUI();
 
-  // Nick – jeśli profil nie ma nicku, poprosimy przy pierwszym wejściu w pokoje,
-  // ale możesz też ustawić zębatką.
+  applyI18n();
+  syncSettingsUI();
+
   showScreen("home");
 }
 
@@ -344,26 +644,26 @@ async function boot(){
 function bindUI(){
   // HOME
   el("btnHomeRooms").onclick = async ()=>{
-    // jeśli brak nicka – pytamy tutaj, żeby nie było dodatkowych ekranów
     if(!getNick()) await ensureNick();
     refreshNickLabels();
+    applyI18n();
+
     showScreen("rooms");
     el("debugRooms").textContent = "—";
 
-    // Jeśli w tym profilu jest zapisany pokój – możesz od razu wejść lub tworzyć/join
     const saved = getSavedRoom();
     if(saved && saved.length===6){
-      el("debugRooms").textContent = `Wykryto ostatni pokój: ${saved}. Możesz wpisać kod i dołączyć lub utworzyć nowy.`;
+      el("debugRooms").textContent = `${t("toast_in_room")} ${saved}`;
       el("inpJoinCode").value = saved;
     }
   };
 
   el("btnHomeStats").onclick = ()=>{
-    showToast("Statystyki: wkrótce (podłączymy).");
+    showToast(t("home_stats_soon"));
   };
 
   el("btnHomeExit").onclick = ()=>{
-    showToast("Wyjście: w web nie zamkniemy karty automatycznie 🙂");
+    showToast(t("home_exit_info"));
   };
 
   // Settings open
@@ -387,20 +687,20 @@ function bindUI(){
 
   // Clear local
   el("btnClearLocal").onclick = ()=>{
-    const ok = confirm("Na pewno wyczyścić dane lokalne?\n(Nick, pokój, język, profile)");
+    const ok = confirm(t("confirm_clear_local"));
     if(!ok) return;
     clearAllLocal();
-    showToast("Wyczyszczono dane. Odświeżam…");
+    showToast(t("toast_cleared"));
     setTimeout(()=> location.reload(), 500);
   };
 
   // ROOMS
-  el("btnBackHome").onclick = ()=> showScreen("home");
+  el("btnBackHome").onclick = ()=> { applyI18n(); showScreen("home"); };
 
   el("btnCreateRoom").onclick = async ()=>{
     const name = (el("inpRoomName").value || "").trim();
     if(name.length < 2){
-      showToast("Podaj nazwę pokoju");
+      showToast(t("toast_need_roomname"));
       return;
     }
     if(!getNick()) await ensureNick();
@@ -410,7 +710,7 @@ function bindUI(){
   el("btnJoinRoom").onclick = async ()=>{
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
     if(code.length !== 6){
-      showToast("Kod musi mieć 6 znaków");
+      showToast(t("toast_join_bad_code"));
       return;
     }
     if(!getNick()) await ensureNick();
@@ -423,9 +723,9 @@ function bindUI(){
     if(!currentRoomCode) return;
     try{
       await navigator.clipboard.writeText(currentRoomCode);
-      showToast("Skopiowano kod");
+      showToast(t("toast_copied"));
     }catch{
-      showToast("Nie udało się skopiować");
+      showToast(t("toast_copy_fail"));
     }
   };
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
@@ -450,7 +750,7 @@ function genCode6(){
 
 async function createRoom(roomName){
   const nick = getNick();
-  el("debugRooms").textContent = "Tworzę pokój…";
+  el("debugRooms").textContent = "…";
 
   for(let tries=0; tries<12; tries++){
     const code = genCode6();
@@ -470,22 +770,21 @@ async function createRoom(roomName){
     });
 
     setSavedRoom(code);
-    el("debugRooms").textContent = `Utworzono pokój ${code}`;
     await openRoom(code);
     return;
   }
-  el("debugRooms").textContent = "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
+  el("debugRooms").textContent = "ERROR";
 }
 
 async function joinRoom(code){
   const nick = getNick();
-  el("debugRooms").textContent = "Dołączam…";
+  el("debugRooms").textContent = "…";
 
   const ref = roomRef(code);
   const snap = await boot.getDoc(ref);
   if(!snap.exists()){
-    el("debugRooms").textContent = "Nie ma takiego pokoju.";
-    showToast("Nie ma takiego pokoju");
+    el("debugRooms").textContent = t("toast_no_room");
+    showToast(t("toast_no_room"));
     return;
   }
 
@@ -494,7 +793,6 @@ async function joinRoom(code){
   }, { merge:true });
 
   setSavedRoom(code);
-  el("debugRooms").textContent = `Dołączono do ${code}`;
   await openRoom(code);
 }
 
@@ -520,7 +818,7 @@ async function leaveRoom(){
   renderPlayers([]);
 
   showScreen("rooms");
-  showToast("Opuszczono pokój");
+  showToast(t("toast_left_room"));
 }
 
 function cleanupRoomListeners(){
@@ -568,6 +866,8 @@ async function openRoom(code, opts={}){
   const isAdmin = (currentRoom.adminUid === userUid);
   el("btnAddQueue").style.display = isAdmin ? "block" : "none";
 
+  applyI18n();
+
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
     currentRoom = d.data();
@@ -613,7 +913,7 @@ async function openRoom(code, opts={}){
     renderMatches();
   });
 
-  if(!silent) showToast(`W pokoju: ${code}`);
+  if(!silent) showToast(`${t("toast_in_room")} ${code}`);
 }
 
 // ---------- Picks (TY) ----------
@@ -639,11 +939,11 @@ function allMyPicksFilled(){
 async function saveAllPicks(){
   if(!currentRoomCode) return;
   if(!matchesCache.length){
-    showToast("Brak meczów");
+    showToast(t("toast_no_matches"));
     return;
   }
   if(!allMyPicksFilled()){
-    showToast("Uzupełnij wszystkie typy");
+    showToast(t("toast_fill_all"));
     return;
   }
 
@@ -655,7 +955,7 @@ async function saveAllPicks(){
     picks: picksCache
   }, { merge:true });
 
-  showToast("Zapisano typy ✅");
+  showToast(t("toast_saved_picks"));
 }
 
 // ---------- Render ----------
@@ -689,7 +989,7 @@ function renderPlayers(players){
     status.style.fontSize = "18px";
     status.style.lineHeight = "1";
     status.style.color = ok ? "#33ff88" : "#ff4d4d";
-    status.title = ok ? "Typy zapisane" : "Brak zapisanych typów";
+    status.title = ok ? "Submitted" : "Missing";
 
     left.appendChild(name);
     left.appendChild(status);
@@ -707,7 +1007,7 @@ function renderPlayers(players){
     if(p.uid === userUid){
       const b2 = document.createElement("div");
       b2.className = "badge";
-      b2.textContent = "TY";
+      b2.textContent = (getLang()==="en") ? "YOU" : "TY";
       right.appendChild(b2);
     }
 
@@ -746,7 +1046,7 @@ function renderMatches(){
   if(!list) return;
   list.innerHTML = "";
 
-  el("matchesCount").textContent = String(matchesCache.length || 0);
+  if (el("matchesCount")) el("matchesCount").textContent = String(matchesCache.length || 0);
 
   for(const m of matchesCache){
     const card = document.createElement("div");
@@ -815,6 +1115,7 @@ function renderMatches(){
   }
 
   updateSaveButtonState();
+  applyI18n(); // żeby chip “Mecze:” był w dobrym języku nawet po renderze
 }
 
 function updateSaveButtonState(){
@@ -827,7 +1128,7 @@ function updateSaveButtonState(){
 async function addTestQueue(){
   if(!currentRoomCode) return;
   if(currentRoom?.adminUid !== userUid){
-    showToast("Tylko admin");
+    showToast(t("toast_only_admin"));
     return;
   }
 
@@ -856,7 +1157,7 @@ async function addTestQueue(){
     });
   });
   await b.commit();
-  showToast("Dodano kolejkę (test)");
+  showToast(t("toast_added_queue"));
 }
 
 // ---------- start ----------
@@ -864,7 +1165,7 @@ async function addTestQueue(){
   try{
     setBg(BG_TLO);
     setSplash(`BUILD ${BUILD}\nŁadowanie…`);
-    await boot();
+    await bootApp();
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
