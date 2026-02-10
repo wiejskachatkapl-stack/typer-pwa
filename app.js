@@ -3,6 +3,9 @@ const BUILD = 2003;
 // TŁO stałe (za frame) – możesz zostawić img_tlo.png albo dać img_menu_pc.png
 const BG_TLO = "img_tlo.png";
 
+// 🔧 FIX: brakowało definicji "boot"
+const boot = {};
+
 // ====== PROFILOWANIE (współdzielenie komputera) ======
 const KEY_ACTIVE_PROFILE = "typer_active_profile_v1";
 const KEY_PROFILES = "typer_profiles_v1";
@@ -99,7 +102,6 @@ function clearAllLocal(){
 // ====== i18n (PL/EN) ======
 const I18N = {
   pl: {
-    // Settings
     settings_title: "Ustawienia",
     settings_sub: "Nick, język, profile (współdzielenie)",
     settings_close: "Zamknij",
@@ -124,11 +126,9 @@ const I18N = {
     settings_local_clear: "Wyczyść dane lokalne",
     settings_cancel: "Anuluj",
 
-    // Home
     home_stats_soon: "Statystyki: wkrótce (podłączymy).",
     home_exit_info: "Wyjście: w web nie zamkniemy karty automatycznie 🙂",
 
-    // Rooms screen
     rooms_league: "Liga",
     rooms_nick: "Nick:",
     rooms_back: "Wróć",
@@ -139,7 +139,6 @@ const I18N = {
     rooms_roomname_ph: "Nazwa pokoju (np. Domowy)",
     rooms_code_ph: "Wpisz kod (np. AB12CD)",
 
-    // Room screen
     room_title_matches: "Spotkania",
     room_sub_matches: "Uzupełnij typy (0–20). Wyniki admin wpisze osobno.",
     room_matches_count: "Mecze:",
@@ -154,7 +153,6 @@ const I18N = {
     room_refresh: "Odśwież",
     room_back: "Wróć",
 
-    // Toasts / prompts
     toast_need_roomname: "Podaj nazwę pokoju",
     toast_join_bad_code: "Kod musi mieć 6 znaków",
     toast_no_room: "Nie ma takiego pokoju",
@@ -186,7 +184,6 @@ const I18N = {
   },
 
   en: {
-    // Settings
     settings_title: "Settings",
     settings_sub: "Nickname, language, profiles (shared PC)",
     settings_close: "Close",
@@ -211,11 +208,9 @@ const I18N = {
     settings_local_clear: "Clear local data",
     settings_cancel: "Cancel",
 
-    // Home
     home_stats_soon: "Stats: coming soon.",
     home_exit_info: "Exit: on the web we can't close the tab automatically 🙂",
 
-    // Rooms screen
     rooms_league: "League",
     rooms_nick: "Nick:",
     rooms_back: "Back",
@@ -226,7 +221,6 @@ const I18N = {
     rooms_roomname_ph: "Room name (e.g. Home)",
     rooms_code_ph: "Enter code (e.g. AB12CD)",
 
-    // Room screen
     room_title_matches: "Matches",
     room_sub_matches: "Enter your picks (0–20). Admin enters results separately.",
     room_matches_count: "Matches:",
@@ -241,7 +235,6 @@ const I18N = {
     room_refresh: "Refresh",
     room_back: "Back",
 
-    // Toasts / prompts
     toast_need_roomname: "Enter room name",
     toast_join_bad_code: "Code must be 6 characters",
     toast_no_room: "Room not found",
@@ -331,15 +324,11 @@ function refreshNickLabels(){
 
 // ====== i18n apply (podmienia teksty w UI) ======
 function applyI18n(){
-  // Settings
   if (el("settingsTitle")) el("settingsTitle").textContent = t("settings_title");
   if (el("settingsSub")) el("settingsSub").textContent = t("settings_sub");
   if (el("btnSettingsClose")) el("btnSettingsClose").textContent = t("settings_close");
 
-  // sekcje w settings: bierzemy z DOM (nagłówki są w HTML) więc podmieniamy przez selektory:
-  // (bezpiecznie – jak ktoś zmieni HTML, nie wywali)
   const blocks = el("settingsModal")?.querySelectorAll(".cardBlock") || [];
-  // 0: profile, 1: lang, 2: local (wg naszego index.html)
   if(blocks[0]){
     const title = blocks[0].querySelector(".title");
     const desc = blocks[0].querySelector(".hintTxt");
@@ -357,7 +346,6 @@ function applyI18n(){
     if(desc) desc.textContent = t("settings_local_desc");
   }
 
-  // Settings buttons/inputs
   if (el("btnProfileSwitch")) el("btnProfileSwitch").textContent = t("settings_profile_switch");
   if (el("btnProfileAdd")) el("btnProfileAdd").textContent = t("settings_profile_add");
   if (el("btnProfileRemove")) el("btnProfileRemove").textContent = t("settings_profile_remove");
@@ -366,17 +354,15 @@ function applyI18n(){
 
   if (el("btnLangPL")) el("btnLangPL").textContent = t("settings_lang_pl");
   if (el("btnLangEN")) el("btnLangEN").textContent = t("settings_lang_en");
-  // “Aktualny: …”
+
   const langLabel = el("langLabel");
   if(langLabel){
     const l = getLang()==="en" ? "English" : "Polski";
     langLabel.textContent = l;
   }
-  // chip “Aktualny: …” to jest tekst w HTML “Aktualny: ” + span,
-  // więc podmieniamy sam napis w chipie:
+
   const langChip = el("settingsModal")?.querySelector(".chip");
   if(langChip){
-    // chip ma format: "Aktualny: " + <span id="langLabel">
     const span = el("langLabel");
     if(span){
       langChip.innerHTML = `${t("settings_lang_current")} <span id="langLabel">${span.textContent}</span>`;
@@ -386,19 +372,16 @@ function applyI18n(){
   if (el("btnClearLocal")) el("btnClearLocal").textContent = t("settings_local_clear");
   if (el("btnClearLocalCancel")) el("btnClearLocalCancel").textContent = t("settings_cancel");
 
-  // Rooms screen
   const roomsTopChips = el("rooms")?.querySelectorAll(".chip") || [];
   if(roomsTopChips[0]) roomsTopChips[0].textContent = t("rooms_league");
   if(roomsTopChips[1]){
-    // "Nick: <span>"
     const span = el("nickLabelRooms");
     roomsTopChips[1].innerHTML = `${t("rooms_nick")} <span id="nickLabelRooms">${span?.textContent || "—"}</span>`;
   }
 
   if (el("btnBackHome")) el("btnBackHome").textContent = t("rooms_back");
-  // panele “Nowy pokój” / “Dołącz do pokoju”
+
   const roomsPanels = el("rooms")?.querySelectorAll(".panel") || [];
-  // roomsPanels[1] = Nowy pokój, roomsPanels[2] = Dołącz (wg index.html)
   if(roomsPanels[1]){
     const tt = roomsPanels[1].querySelector(".title");
     if(tt) tt.textContent = t("rooms_new_room");
@@ -412,7 +395,6 @@ function applyI18n(){
   if (el("inpRoomName")) el("inpRoomName").placeholder = t("rooms_roomname_ph");
   if (el("inpJoinCode")) el("inpJoinCode").placeholder = t("rooms_code_ph");
 
-  // Room screen
   const midTitle = el("room")?.querySelector(".midHead .title");
   const midSub = el("room")?.querySelector(".midHead .sub");
   if(midTitle) midTitle.textContent = t("room_title_matches");
@@ -429,9 +411,7 @@ function applyI18n(){
   if(rightTitle) rightTitle.textContent = t("room_players_title");
   if(rightSub) rightSub.textContent = t("room_players_sub");
 
-  // Left action texts/buttons
   const leftPanels = el("room")?.querySelectorAll(".leftBar .panel") || [];
-  // leftPanels[1] = room info panel, leftPanels[2] = actions panel (wg index.html)
   if(leftPanels[2]){
     const tt = leftPanels[2].querySelector(".title");
     const ss = leftPanels[2].querySelector(".sub");
@@ -470,7 +450,6 @@ function closeSettings(){
 function syncSettingsUI(){
   const { profiles, active } = ensureProfiles();
 
-  // select profilu
   const sel = el("selProfile");
   sel.innerHTML = "";
   profiles.forEach(p=>{
@@ -481,7 +460,6 @@ function syncSettingsUI(){
     sel.appendChild(opt);
   });
 
-  // nick / lang label
   el("inpNickSettings").value = getNick() || "";
   el("langLabel").textContent = (getLang()==="en") ? "English" : "Polski";
 
@@ -492,11 +470,13 @@ function addProfile(){
   const profiles = loadProfiles();
   let name = prompt(t("prompt_profile_name"), "") || "";
   name = name.trim();
-  if(name.length < 2) { showToast("OK"); showToast(t("toast_need_roomname")); return; } // drobne zabezp.
+  if(name.length < 2) return;
+
   const id = uid6();
   profiles.push({ id, name });
   saveProfiles(profiles);
   setActiveProfileId(id);
+
   showToast(`${t("toast_profile_added")} ${name}`);
   refreshNickLabels();
   syncSettingsUI();
@@ -513,7 +493,6 @@ function removeProfile(){
   const ok = confirm(`${t("confirm_delete_profile")} "${p?.name || active}"?\n${t("confirm_delete_profile_tail")}`);
   if(!ok) return;
 
-  // usuń dane profilu
   localStorage.removeItem(kNick(active));
   localStorage.removeItem(kRoom(active));
   localStorage.removeItem(kLang(active));
@@ -565,10 +544,10 @@ let unsubPicks = null;
 let currentRoomCode = null;
 let currentRoom = null;
 
-let matchesCache = [];   // [{id, home, away, idx}]
-let picksCache = {};     // matchId -> {h,a}
-let picksDocByUid = {};  // uid -> picks object
-let submittedByUid = {}; // uid -> boolean
+let matchesCache = [];
+let picksCache = {};
+let picksDocByUid = {};
+let submittedByUid = {};
 let lastPlayers = [];
 
 // ---------- status helpers ----------
@@ -596,7 +575,7 @@ async function bootApp(){
   setBg(BG_TLO);
   setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
-  ensureProfiles(); // ważne dla współdzielenia
+  ensureProfiles();
   refreshNickLabels();
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
@@ -642,7 +621,6 @@ async function bootApp(){
 
 // ---------- UI binding ----------
 function bindUI(){
-  // HOME
   el("btnHomeRooms").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     refreshNickLabels();
@@ -666,26 +644,20 @@ function bindUI(){
     showToast(t("home_exit_info"));
   };
 
-  // Settings open
   el("btnOpenSettings").onclick = ()=> openSettings();
 
-  // Settings close
   el("btnSettingsClose").onclick = ()=> closeSettings();
   el("btnClearLocalCancel").onclick = ()=> closeSettings();
 
-  // Settings: profile
   el("btnProfileAdd").onclick = ()=> addProfile();
   el("btnProfileRemove").onclick = ()=> removeProfile();
   el("btnProfileSwitch").onclick = ()=> switchProfile();
 
-  // Settings: nick
   el("btnNickSave").onclick = ()=> saveNickFromSettings();
 
-  // Settings: language
   el("btnLangPL").onclick = ()=> setLangUI("pl");
   el("btnLangEN").onclick = ()=> setLangUI("en");
 
-  // Clear local
   el("btnClearLocal").onclick = ()=>{
     const ok = confirm(t("confirm_clear_local"));
     if(!ok) return;
@@ -694,7 +666,6 @@ function bindUI(){
     setTimeout(()=> location.reload(), 500);
   };
 
-  // ROOMS
   el("btnBackHome").onclick = ()=> { applyI18n(); showScreen("home"); };
 
   el("btnCreateRoom").onclick = async ()=>{
@@ -717,7 +688,6 @@ function bindUI(){
     await joinRoom(code);
   };
 
-  // ROOM
   el("btnBackFromRoom").onclick = ()=>{ showScreen("rooms"); };
   el("btnCopyCode").onclick = async ()=>{
     if(!currentRoomCode) return;
@@ -843,7 +813,6 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
-  // reset
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -857,7 +826,6 @@ async function openRoom(code, opts={}){
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
 
-  // UI left
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
   el("roomCode").textContent = code;
@@ -877,7 +845,6 @@ async function openRoom(code, opts={}){
     el("btnAddQueue").style.display = isAdm ? "block" : "none";
   });
 
-  // live players
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
@@ -886,7 +853,6 @@ async function openRoom(code, opts={}){
     renderPlayers(arr);
   });
 
-  // live picks (status)
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
     qs.forEach(d=>{
@@ -897,7 +863,6 @@ async function openRoom(code, opts={}){
     renderPlayers(lastPlayers);
   });
 
-  // live matches
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
   unsubMatches = boot.onSnapshot(mq, async (qs)=>{
     const arr = [];
@@ -989,7 +954,6 @@ function renderPlayers(players){
     status.style.fontSize = "18px";
     status.style.lineHeight = "1";
     status.style.color = ok ? "#33ff88" : "#ff4d4d";
-    status.title = ok ? "Submitted" : "Missing";
 
     left.appendChild(name);
     left.appendChild(status);
@@ -1115,7 +1079,7 @@ function renderMatches(){
   }
 
   updateSaveButtonState();
-  applyI18n(); // żeby chip “Mecze:” był w dobrym języku nawet po renderze
+  applyI18n();
 }
 
 function updateSaveButtonState(){
