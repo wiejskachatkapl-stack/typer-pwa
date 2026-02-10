@@ -190,6 +190,40 @@
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
+    /* ===== NOWE: ZĘBATKA USTAWIEŃ ===== */
+    .homeGear{
+      position:absolute;
+      left:26px;
+      top:50%;
+      transform:translateY(-50%);
+      width:98px;
+      height:98px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(8,22,52,.55);
+      box-shadow:0 18px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .homeGear:hover{
+      background:rgba(8,22,52,.65);
+      transform:translateY(-50%) scale(1.03);
+    }
+    .homeGear:active{
+      transform:translateY(-50%) scale(0.99);
+    }
+    .homeGear span{
+      font-size:44px;
+      line-height:1;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
+    }
+
     /* ===== ROOMS ===== */
     #rooms{padding:16px;gap:14px}
     .roomsBox{
@@ -436,6 +470,27 @@
     .dot.yellow{background:#ffd24a}
     .dot.red{background:#ff4d4d}
     .dot.gray{background:rgba(255,255,255,.35)}
+
+    /* ===== SETTINGS (modal) ===== */
+    .flagBtn{
+      width:64px;
+      height:44px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.22);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:26px;
+      font-weight:1000;
+      user-select:none;
+    }
+    .flagBtn:hover{background:rgba(0,0,0,.28)}
+    .flagBtn.active{
+      outline:2px solid rgba(43,255,136,.55);
+      background:rgba(43,255,136,.14);
+    }
   </style>
 </head>
 
@@ -457,6 +512,11 @@
 
       <!-- HOME -->
       <section id="home" class="screen">
+        <!-- NOWE: zębatka ustawień -->
+        <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
+          <span>⚙️</span>
+        </div>
+
         <div class="homeBtns" aria-label="Menu">
           <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
             <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
@@ -476,24 +536,24 @@
           <div class="continueCard">
             <div class="continueTop">
               <div>
-                <div class="title" style="margin:0">Kontynuować?</div>
-                <div class="sub">Wykryto wcześniejszą rozgrywkę</div>
+                <div class="title" style="margin:0" id="t_continue_title">Kontynuować?</div>
+                <div class="sub" id="t_continue_sub">Wykryto wcześniejszą rozgrywkę</div>
               </div>
               <div class="pill">Typer</div>
             </div>
 
             <div class="continueGrid">
               <div class="miniCard">
-                <div class="sub">Witaj ponownie</div>
+                <div class="sub" id="t_continue_hello">Witaj ponownie</div>
                 <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contNick">—</div>
               </div>
               <div class="miniCard">
-                <div class="sub">Grasz w pokoju</div>
+                <div class="sub" id="t_continue_room">Grasz w pokoju</div>
                 <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contRoomName">—</div>
               </div>
             </div>
 
-            <div class="bigQ">Czy chcesz kontynuować grę w tym pokoju?</div>
+            <div class="bigQ" id="t_continue_q">Czy chcesz kontynuować grę w tym pokoju?</div>
 
             <div class="continueBtns">
               <button class="btn" id="btnContYes">Tak</button>
@@ -509,29 +569,29 @@
       <section id="rooms" class="screen">
         <div class="roomsBox panel">
           <div class="row">
-            <div class="chip">Pokoje typerów</div>
+            <div class="chip" id="t_rooms_title">Pokoje typerów</div>
             <div class="spacer"></div>
-            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
+            <div class="chip"><span id="t_nick">Nick</span>: <span id="nickLabelRooms">—</span></div>
             <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
             <button class="btn btnSmall" id="btnBackHomeFromRooms">Wróć</button>
           </div>
 
           <div class="panel block">
-            <h2>Dołącz do pokoju</h2>
+            <h2 id="t_join_title">Dołącz do pokoju</h2>
             <div class="row" style="margin-top:10px">
               <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
               <button class="btn" id="btnJoinRoom">Dołącz</button>
             </div>
-            <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
+            <div class="help" style="margin-top:8px" id="t_join_help">Wpisz kod od admina.</div>
           </div>
 
           <div class="panel block">
-            <h2>Utwórz nowy pokój</h2>
+            <h2 id="t_create_title">Utwórz nowy pokój</h2>
             <div class="row" style="margin-top:10px">
               <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
               <button class="btn" id="btnCreateRoom">Utwórz</button>
             </div>
-            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            <div class="help" style="margin-top:8px" id="t_create_help">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
           </div>
 
           <div class="panel block">
@@ -548,16 +608,16 @@
           <!-- LEFT -->
           <div class="leftBar panel">
             <div class="col" style="gap:10px">
-              <div class="chip">Pokój</div>
-              <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
+              <div class="chip" id="t_room_room">Pokój</div>
+              <div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
             </div>
 
             <div class="panel" style="padding:14px">
               <div class="title" id="roomName">—</div>
-              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
+              <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
               <div class="row" style="margin-top:10px">
                 <div class="chip" style="flex:1;justify-content:space-between;">
-                  Kod: <span id="roomCode">—</span>
+                  <span id="t_code">Kod</span>: <span id="roomCode">—</span>
                 </div>
                 <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
               </div>
@@ -568,8 +628,8 @@
             </div>
 
             <div class="panel" style="padding:14px">
-              <div class="title">Akcje</div>
-              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              <div class="title" id="t_actions">Akcje</div>
+              <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
 
@@ -591,13 +651,13 @@
             <div class="panel midHead">
               <div class="row">
                 <div>
-                  <div class="title">Spotkania</div>
-                  <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                  <div class="title" id="t_matches">Spotkania</div>
+                  <div class="sub" id="t_matches_sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
                 </div>
                 <div class="spacer"></div>
-                <div class="chip">KOLEJKA: <span id="roundLabel">—</span></div>
-                <div class="chip">Mecze: <span id="matchesCount">0</span></div>
-                <div class="chip">PUNKTY (kolejka): <span id="myPointsLabel">—</span></div>
+                <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
+                <div class="chip"><span id="t_games">Mecze</span>: <span id="matchesCount">0</span></div>
+                <div class="chip"><span id="t_points_round">PUNKTY (kolejka)</span>: <span id="myPointsLabel">—</span></div>
               </div>
             </div>
 
@@ -607,8 +667,8 @@
           <!-- RIGHT -->
           <div class="rightBar panel">
             <div>
-              <div class="title">Gracze</div>
-              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
+              <div class="title" id="t_players">Gracze</div>
+              <div class="sub" id="t_players_sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
             </div>
             <div class="playersList" id="playersList"></div>
 
@@ -625,9 +685,9 @@
         <div class="resultsWrap panel">
           <div class="resultsTop">
             <div class="row" style="gap:10px;flex-wrap:wrap">
-              <div class="chip">Wyniki</div>
-              <div class="chip">Pokój: <span id="resRoomName">—</span></div>
-              <div class="chip">KOLEJKA: <span id="resRound">—</span></div>
+              <div class="chip" id="t_results">Wyniki</div>
+              <div class="chip"><span id="t_room">Pokój</span>: <span id="resRoomName">—</span></div>
+              <div class="chip"><span id="t_round2">KOLEJKA</span>: <span id="resRound">—</span></div>
             </div>
             <div class="row">
               <button class="btn btnSmall" id="btnResBack">Wróć</button>
@@ -636,7 +696,7 @@
           </div>
 
           <div class="panel resultsList" id="resultsList"></div>
-          <div class="sub" style="padding:10px 14px">
+          <div class="sub" style="padding:10px 14px" id="t_results_hint">
             Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
           </div>
         </div>
@@ -647,10 +707,10 @@
         <div class="leagueWrap panel">
           <div class="leagueTop">
             <div class="leagueTopLeft">
-              <div class="chip">Tabela ligi typerów</div>
-              <div class="chip">Pokój: <span id="leagueRoomName">—</span></div>
-              <div class="chip">Nick: <span id="leagueNick">—</span></div>
-              <div class="chip">Po kolejce: <span id="leagueAfterRound">—</span></div>
+              <div class="chip" id="t_league">Tabela ligi typerów</div>
+              <div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
+              <div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
+              <div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
             </div>
             <div class="row">
               <button class="btn btnSmall" id="btnLeagueRefresh">Odśwież</button>
@@ -659,7 +719,7 @@
           </div>
 
           <div class="panel" style="padding:14px">
-            <div class="title" style="margin:0 0 10px 0">Ranking</div>
+            <div class="title" style="margin:0 0 10px 0" id="t_ranking">Ranking</div>
             <div class="sub" style="margin-bottom:10px" id="leagueHint">
               Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).
             </div>
@@ -669,9 +729,9 @@
                 <thead>
                 <tr>
                   <th style="width:60px">#</th>
-                  <th>Gracz</th>
-                  <th style="width:120px">Kolejki</th>
-                  <th style="width:120px">Punkty</th>
+                  <th id="t_player_col">Gracz</th>
+                  <th style="width:120px" id="t_rounds_col">Kolejki</th>
+                  <th style="width:120px" id="t_points_col">Punkty</th>
                 </tr>
                 </thead>
                 <tbody id="leagueBody">
@@ -717,6 +777,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2003"></script>
+  <script type="module" src="./app.js?v=2004"></script>
 </body>
 </html>
