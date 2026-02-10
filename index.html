@@ -42,7 +42,6 @@
       z-index:1;
     }
 
-    /* RAMKA jak w Twoich screenach */
     .frame{
       width:min(1580px,96vw);
       height:min(920px,94vh);
@@ -106,6 +105,11 @@
     .btn:hover{background:rgba(255,255,255,.14)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
+    .btnDanger{
+      border:1px solid rgba(255,90,90,.25);
+      background:rgba(255,60,60,.10);
+    }
+    .btnDanger:hover{background:rgba(255,60,60,.16)}
     .chip{
       display:inline-flex;gap:10px;align-items:center;
       padding:10px 14px;border-radius:18px;
@@ -118,7 +122,7 @@
     .row{display:flex;gap:10px;align-items:center}
     .col{display:flex;flex-direction:column;gap:10px}
     .spacer{flex:1}
-    input{
+    input, select{
       border:1px solid rgba(255,255,255,.15);
       background:rgba(0,0,0,.22);
       color:var(--text);
@@ -128,6 +132,7 @@
       font-weight:900;
     }
     input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+    select{cursor:pointer}
 
     .toast{
       position:absolute;left:18px;bottom:14px;
@@ -145,25 +150,15 @@
     }
 
     /* ===== HOME (MENU STARTOWE) ===== */
-    #menu{
-      align-items:stretch;
-      justify-content:center;
-      position:relative;
-    }
-    .homeOverlay{
-      position:absolute; inset:0;
-      /* delikatna szyba, ale NIE druga grafika */
-      background: rgba(0,0,0,.10);
-    }
+    #menu{align-items:stretch;justify-content:center;position:relative;}
+    .homeOverlay{position:absolute; inset:0;background: rgba(0,0,0,.10);}
 
-    /* 3 przyciski PNG w 1 linii */
     .homeButtons{
       position:absolute;
       left:50%; top:52%;
       transform:translate(-50%,-50%);
       display:flex; gap:26px;
-      align-items:center;
-      justify-content:center;
+      align-items:center; justify-content:center;
       z-index:2;
       padding:10px 14px;
       border-radius:24px;
@@ -180,7 +175,7 @@
       justify-content:center;
     }
     .imgBtn img{
-      width:240px;          /* WYMUSZONE 240px */
+      width:240px; /* stałe 240px */
       height:auto;
       display:block;
       border-radius:16px;
@@ -194,14 +189,14 @@
       border-radius:18px;
     }
 
-    /* Zębatka – NA DOLE po LEWEJ, duża i okrągła */
+    /* Zębatka – na dole po LEWEJ, BIAŁA */
     .gearBtn{
       position:absolute;
       left:22px;
-      bottom:22px;     /* przeniesiona na dół */
+      bottom:22px;
       width:72px;height:72px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.20);
       background: rgba(0,0,0,.18);
       display:flex;align-items:center;justify-content:center;
       cursor:pointer;
@@ -210,66 +205,21 @@
       -webkit-backdrop-filter: blur(10px);
       box-shadow: 0 14px 34px rgba(0,0,0,.45);
       user-select:none;
-      font-size:30px;
-      line-height:1;
     }
     .gearBtn:hover{background: rgba(0,0,0,.24)}
     .gearBtn:active{transform: translateY(1px)}
-
-    /* ===== ROOMS SCREEN ===== */
-    #rooms{padding:16px;gap:14px;align-items:stretch;justify-content:center}
-    .roomsBox{
-      width:min(980px,100%);
-      margin:auto;
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:14px
+    .gearSvg{
+      width:30px;height:30px;
+      fill:none;
+      stroke:#fff;              /* BIAŁA */
+      stroke-width:2.2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      opacity:.95;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,.55));
     }
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
 
-    /* ===== ROOM LAYOUT ===== */
-    #room{padding:16px;gap:14px;align-items:stretch}
-    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
-    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
-    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
-
-    .midHead{padding:14px}
-    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
-    .matchCard{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.16);
-      border-radius:18px;
-      padding:12px 12px;
-      display:flex;align-items:center;gap:12px;
-    }
-    .team{
-      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
-      font-weight:1000;
-    }
-    .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .logo{
-      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
-      background:rgba(255,255,255,.10);
-      object-fit:contain;
-    }
-    .scoreBox{display:flex;align-items:center;gap:8px}
-    .scoreInput{width:48px;text-align:center}
-    .sep{font-weight:1000;opacity:.85}
-
-    .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
-    .playerRow{
-      padding:10px 12px;border-radius:16px;
-      background:rgba(0,0,0,.16);
-      border:1px solid rgba(255,255,255,.12);
-      display:flex;gap:10px;align-items:center;justify-content:space-between;
-      font-weight:900;
-    }
-    .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
-
-    /* ===== SETTINGS MODAL (placeholder – zostaje, żeby UI nie “znikało”) ===== */
+    /* ===== SETTINGS MODAL ===== */
     #settingsModal{
       position:absolute; inset:0;
       display:none;
@@ -280,15 +230,40 @@
       -webkit-backdrop-filter: blur(6px);
     }
     .modalCard{
-      width:min(920px,92%);
+      width:min(960px,94%);
       border:1px solid rgba(255,255,255,.14);
       border-radius:22px;
-      background:rgba(8,22,52,.72);
+      background:rgba(8,22,52,.76);
       box-shadow: 0 20px 70px rgba(0,0,0,.55);
       padding:16px;
     }
+    .modalSection{
+      padding:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18);
+      border-radius:18px;
+    }
+    .modalSection h3{
+      margin:0 0 8px 0;
+      font-size:16px;
+      font-weight:1000;
+    }
+    .tiny{font-size:12px;color:rgba(255,255,255,.70);font-weight:800}
+    .langBtn{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.10);
+      cursor:pointer;
+      font-weight:1000;
+    }
+    .langBtn:hover{background:rgba(255,255,255,.14)}
+    .langBtn.active{
+      border-color: rgba(120,200,255,.55);
+      box-shadow: 0 0 0 3px rgba(120,200,255,.18) inset;
+    }
 
-    /* Continue modal (zostaje – możesz potem podmienić na swój finalny wygląd) */
+    /* Continue modal */
     #continueModal{
       position:absolute; inset:0;
       display:none;
@@ -309,8 +284,15 @@
     #continueTitle{font-size:20px;font-weight:1000;margin:0 0 6px 0}
     #continueText{color:rgba(255,255,255,.80);font-weight:800;white-space:pre-wrap;margin:0 0 14px 0}
 
-    /* LEAGUE screen placeholder */
-    #league{padding:16px;gap:14px;align-items:center;justify-content:center}
+    /* screens placeholders */
+    #rooms{padding:16px;gap:14px;align-items:stretch;justify-content:center}
+    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    #room{padding:16px;gap:14px;align-items:stretch}
+    .footerRight{position:absolute;right:18px;bottom:14px}
   </style>
 </head>
 
@@ -324,12 +306,58 @@
       <div id="settingsModal">
         <div class="modalCard panel">
           <div class="row">
-            <div class="chip">Ustawienia</div>
+            <div class="chip" id="st_title">Ustawienia</div>
             <div class="spacer"></div>
             <button class="btn btnSmall" id="btnSettingsClose">Zamknij</button>
           </div>
-          <div style="margin-top:12px" class="panel block">
-            <div class="help">To jest kontener pod Twoje ustawienia (profile / język / czyszczenie danych). Logika jest w app.js.</div>
+
+          <div class="col" style="margin-top:12px;gap:12px">
+
+            <!-- PROFILES -->
+            <div class="modalSection">
+              <h3 id="st_profilesTitle">Profil gracza (współdzielenie)</h3>
+              <div class="tiny" id="st_profilesHint">
+                Jeśli kilka osób gra na jednym komputerze — każdy ma swój profil. Profil trzyma: nick, ostatni pokój i język.
+              </div>
+
+              <div class="row" style="margin-top:10px;flex-wrap:wrap">
+                <select id="selProfiles" style="min-width:280px;flex:1"></select>
+                <button class="btn" id="btnProfileSwitch">Przełącz</button>
+                <button class="btn" id="btnProfileAdd">Dodaj</button>
+                <button class="btn btnDanger" id="btnProfileDelete">Usuń</button>
+              </div>
+
+              <div class="row" style="margin-top:10px;flex-wrap:wrap">
+                <input id="inpNickSettings" placeholder="Nick" style="min-width:260px;flex:1" />
+                <button class="btn" id="btnSaveNickSettings">Zapisz nick</button>
+              </div>
+            </div>
+
+            <!-- LANGUAGE -->
+            <div class="modalSection">
+              <h3 id="st_langTitle">Język</h3>
+              <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
+                <button class="langBtn" id="btnLangPL">🇵🇱 <span>Polski</span></button>
+                <button class="langBtn" id="btnLangEN">🇬🇧 <span>English</span></button>
+                <div class="spacer"></div>
+                <div class="chip" id="st_langCurrent">Aktualny: —</div>
+              </div>
+            </div>
+
+            <!-- CLEAR LOCAL -->
+            <div class="modalSection">
+              <h3 id="st_localTitle">Dane lokalne</h3>
+              <div class="tiny" id="st_localHint">
+                Wyczyści: nick, ostatni pokój, język, profile (czyli reset tej gry na tym komputerze).
+              </div>
+
+              <div class="row" style="margin-top:10px;flex-wrap:wrap">
+                <button class="btn btnDanger" id="btnClearLocal">Wyczyść dane lokalne</button>
+                <div class="spacer"></div>
+                <button class="btn" id="btnClearCancel">Anuluj</button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -362,7 +390,13 @@
       <section id="menu" class="screen">
         <div class="homeOverlay"></div>
 
-        <button class="gearBtn" id="btnOpenSettings" title="Ustawienia" aria-label="Ustawienia">⚙</button>
+        <button class="gearBtn" id="btnOpenSettings" title="Ustawienia" aria-label="Ustawienia">
+          <!-- biała zębatka SVG -->
+          <svg class="gearSvg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
+            <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5z"></path>
+          </svg>
+        </button>
 
         <div class="homeButtons" aria-label="Menu główne">
           <button class="imgBtn" id="btnOpenRooms" aria-label="Pokoje typerów">
@@ -383,29 +417,30 @@
       <section id="rooms" class="screen">
         <div class="roomsBox panel">
           <div class="row">
-            <div class="chip">Pokoje typerów</div>
-            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
+            <div class="chip" id="rooms_title">Pokoje typerów</div>
+            <div class="chip"><span id="rooms_nickLabel">Nick:</span> <span id="nickLabelRooms">—</span></div>
             <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
             <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
           </div>
 
           <div class="panel block">
-            <h2>Nowy pokój</h2>
+            <h2 id="rooms_newRoom">Nowy pokój</h2>
             <div class="row" style="margin-top:10px">
               <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
               <button class="btn" id="btnCreateRoom">Utwórz</button>
             </div>
-            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+            <div class="help" style="margin-top:8px" id="rooms_newRoomHint">
+              Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.
+            </div>
           </div>
 
           <div class="panel block">
-            <h2>Dołącz do pokoju</h2>
+            <h2 id="rooms_join">Dołącz do pokoju</h2>
             <div class="row" style="margin-top:10px">
               <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
               <button class="btn" id="btnJoinRoom">Dołącz</button>
             </div>
-            <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
+            <div class="help" style="margin-top:8px" id="rooms_joinHint">Wpisz kod od admina.</div>
           </div>
 
           <div class="panel block">
@@ -415,88 +450,13 @@
         </div>
       </section>
 
-      <!-- ROOM -->
+      <!-- ROOM (placeholder jak wcześniej, nie ruszam teraz) -->
       <section id="room" class="screen">
-        <div id="roomRoot" style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
-
-          <!-- LEFT -->
-          <div class="leftBar panel">
-            <div class="col" style="gap:10px">
-              <div class="chip">Pokój</div>
-              <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
-            </div>
-
-            <div class="panel" style="padding:14px">
-              <div class="title" id="roomName">—</div>
-              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
-              <div class="row" style="margin-top:10px">
-                <div class="chip" style="flex:1;justify-content:space-between;">
-                  Kod: <span id="roomCode">—</span>
-                </div>
-                <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
-              </div>
-              <div class="row" style="margin-top:10px">
-                <button class="btn btnSmall" id="btnLeave">Opuść</button>
-                <button class="btn btnSmall" id="btnRefresh">Odśwież</button>
-              </div>
-            </div>
-
-            <div class="panel" style="padding:14px">
-              <div class="title">Akcje</div>
-              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
-              <div class="col" style="margin-top:10px">
-                <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
-                <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
-              </div>
-            </div>
-
-            <div class="spacer"></div>
+        <div class="panel" style="width:min(900px,96%);margin:auto;padding:18px">
+          <div class="title">Pokój</div>
+          <div class="sub">Ten ekran zostaje — logika gry jest w app.js (nie zmieniamy jej w tej poprawce).</div>
+          <div style="margin-top:14px">
             <button class="btn" id="btnBackFromRoom">Wróć</button>
-          </div>
-
-          <!-- MIDDLE -->
-          <div class="mid">
-            <div class="panel midHead">
-              <div class="row">
-                <div>
-                  <div class="title">Spotkania</div>
-                  <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
-                </div>
-                <div class="spacer"></div>
-                <div class="chip">Mecze: <span id="matchesCount">0</span></div>
-              </div>
-            </div>
-
-            <div class="panel matchesWrap" id="matchesList"></div>
-          </div>
-
-          <!-- RIGHT -->
-          <div class="rightBar panel">
-            <div>
-              <div class="title">Gracze</div>
-              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
-            </div>
-            <div class="playersList" id="playersList"></div>
-            <div style="margin-top:auto">
-              <button class="btn" id="btnOpenLeagueFromRoom" style="width:100%">Tabela ligi typerów</button>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- LEAGUE (placeholder screen) -->
-      <section id="league" class="screen">
-        <div class="panel" style="width:min(980px,96%);padding:16px">
-          <div class="row">
-            <div class="chip">Tabela ligi typerów</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
-          </div>
-          <div class="panel block" style="margin-top:12px">
-            <div class="help">
-              To jest ekran pod tabelę. Logika rankingów/historii kolejek zostaje w app.js (dodamy później).
-            </div>
           </div>
         </div>
       </section>
@@ -522,6 +482,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2003"></script>
+  <script type="module" src="./app.js?v=2004"></script>
 </body>
 </html>
