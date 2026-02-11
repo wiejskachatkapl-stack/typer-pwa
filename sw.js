@@ -1,51 +1,57 @@
-const CACHE_NAME = "typer-pwa-cache-v1019";
+const BUILD = 1013;
+const CACHE = `typer-cache-v${BUILD}`;
+
 const ASSETS = [
   "./",
-  "./index.html",
-  "./app.js?v=1019",
-  "./manifest.json",
-  "./img_menu.png",
-  "./img_menu_pc.png",
-  "./img_tlo.png",
+  "./index.html?v=1013",
+  "./app.js?v=1013",
+  "./manifest.json?v=1013",
+  "./img_starter.png?v=1013",
+  "./img_menu.png?v=1013",
+  "./img_menu_pc.png?v=1013",
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : Promise.resolve())));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  const isHTML = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
-  const isJS = url.pathname.endsWith("/app.js") || url.search.includes("v=");
+  // tylko GET
+  if (req.method !== "GET") return;
 
-  if (isHTML || isJS) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
-    );
+  // cache-first dla własnych plików
+  if (url.origin === location.origin) {
+    event.respondWith((async () => {
+      const cached = await caches.match(req, { ignoreSearch: false });
+      if (cached) return cached;
+      const res = await fetch(req);
+      const cache = await caches.open(CACHE);
+      cache.put(req, res.clone());
+      return res;
+    })());
     return;
   }
 
-  event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req))
-  );
+  // dla zewnętrznych: network-first
+  event.respondWith((async () => {
+    try {
+      return await fetch(req);
+    } catch {
+      const cached = await caches.match(req);
+      return cached || new Response("offline", { status: 503 });
+    }
+  })());
 });

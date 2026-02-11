@@ -2,399 +2,454 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#08122a" />
   <title>Typer</title>
-
-  <link rel="preload" as="image" href="img_menu_pc.png">
-  <link rel="preload" as="image" href="img_tlo.png">
+  <link rel="manifest" href="manifest.json" />
 
   <style>
     :root{
-      --glass: rgba(10,20,40,.55);
-      --glass2: rgba(10,20,40,.35);
-      --border: rgba(255,255,255,.12);
+      --bg:#071229;
+      --glass: rgba(8, 22, 52, .55);
+      --glass2: rgba(8, 22, 52, .40);
+      --stroke: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.70);
-      --btn: rgba(255,255,255,.10);
-      --btn2: rgba(255,255,255,.16);
-      --shadow: 0 14px 40px rgba(0,0,0,.45);
+      --muted: rgba(255,255,255,.72);
+      --shadow: 0 14px 50px rgba(0,0,0,.45);
+      --r: 22px;
     }
-    html,body{height:100%; margin:0; font-family:system-ui,Segoe UI,Arial; color:var(--text); background:#000;}
-    #bg{
-      position:fixed; inset:0;
-      background-size:cover;
-      background-position:center;
-      background-repeat:no-repeat;
-    }
-
-    .screen{position:relative; z-index:2; display:none; height:100%; width:100%;}
-    .screen.active{display:block;}
-
-    /* MENU START */
-    #menuWrap{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-    }
-    #gearWrap{
-      position:absolute;
-      left:22px; bottom:22px;
-      width:58px; height:58px;
-      display:flex; align-items:center; justify-content:center;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid var(--border);
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);overflow:hidden}
+    #bg{position:fixed;inset:0;background:#071229 center/cover no-repeat;z-index:0}
+    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:1}
+    .frame{
+      width:min(1580px,96vw);
+      height:min(920px,94vh);
+      border:1px solid var(--stroke);
+      border-radius:26px;
+      background:rgba(0,0,0,.10);
       box-shadow:var(--shadow);
-      cursor:pointer;
-      user-select:none;
+      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      overflow:hidden;position:relative;
     }
-    #gearWrap img{ width:28px; height:28px; filter:brightness(10); opacity:.95; }
-
-    .menuBtns{
-      display:flex; gap:24px;
-      align-items:center; justify-content:center;
-    }
-    .btnImg{
-      width:240px; height:auto;
-      cursor:pointer;
-      user-select:none;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
-      transition: transform .10s ease;
-    }
-    .btnImg:active{ transform: scale(.98); }
+    .screen{display:none;height:100%;width:100%}
+    .screen.active{display:flex}
 
     /* SPLASH */
-    #splashWrap{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    #splash{align-items:center;justify-content:center;padding:24px}
+    .splashCard{
+      width:min(820px,92%);border:1px solid var(--stroke);
+      border-radius:22px;background:var(--glass2);padding:22px;
     }
-    .card{
-      width:min(760px, 92vw);
-      padding:18px 18px;
-      border-radius:18px;
-      background:var(--glass);
-      border:1px solid var(--border);
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(14px);
+    .spinner{
+      width:26px;height:26px;border-radius:50%;
+      border:3px solid rgba(255,255,255,.25);
+      border-top-color:rgba(255,255,255,.9);
+      animation:spin 1s linear infinite;margin-top:12px;
     }
-    .muted{color:var(--muted); font-size:13px; white-space:pre-line;}
-    .title{font-weight:700; font-size:18px; margin-bottom:8px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
+    .err{margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);display:none;white-space:pre-wrap}
 
-    /* ROOMS */
-    #roomsWrap{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    }
-    .roomsCard{ width:min(920px, 94vw); }
-    .row{ display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
-    .field{
-      flex:1;
-      background:rgba(0,0,0,.25);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px 12px;
-    }
-    input{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
+    /* COMMON UI */
+    .panel{
+      border:1px solid var(--stroke);
+      border-radius:var(--r);
+      background:var(--glass);
+      box-shadow:0 10px 30px rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
     .btn{
-      padding:10px 14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:var(--btn);
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.10);
       color:var(--text);
+      padding:10px 14px;
+      border-radius:16px;
+      font-weight:900;
       cursor:pointer;
       user-select:none;
-      font-weight:600;
+      white-space:nowrap;
     }
-    .btn:hover{ background:var(--btn2); }
-    .btn:disabled{ opacity:.45; cursor:not-allowed; }
+    .btn:hover{background:rgba(255,255,255,.14)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
+    .chip{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:18px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.12);font-weight:900}
+    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
+    .sub{color:var(--muted);font-weight:700;font-size:13px}
+    .row{display:flex;gap:10px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:10px}
+    .spacer{flex:1}
+
+    input, select{
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      outline:none;
+      font-weight:900;
+    }
+    input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+
+    .toast{
+      position:absolute;left:18px;bottom:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.85);
+      padding:10px 14px;border-radius:16px;font-weight:800;
+      display:none;
+    }
+    .footerRight{
+      position:absolute;right:18px;bottom:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:800
+    }
+
+    /* MAIN MENU (obraz tła + 3 przyciski PNG) */
+    #mainMenu{align-items:center;justify-content:center}
+    .menuImgWrap{
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      position:relative;
+    }
+    #menuBgImg{
+      width:100%;height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .menuBtns{
+      position:absolute;
+      left:50%;
+      top:52%;
+      transform:translate(-50%,-50%);
+      display:flex;
+      gap:34px;
+      align-items:center;
+      justify-content:center;
+      pointer-events:auto;
+    }
+    .imgBtn{
+      width:280px;
+      height:auto;
+      cursor:pointer;
+      user-select:none;
+      -webkit-user-drag:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
+      transition: transform .08s ease;
+    }
+    .imgBtn:active{ transform: scale(0.98); }
+
+    /* ROOM LAYOUT */
+    #room{padding:16px;gap:14px;align-items:stretch}
+    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
+    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+
+    .midHead{padding:14px}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
+    .matchCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:18px;
+      padding:12px 12px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .team{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      font-weight:1000;
+    }
+    .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .logo{
+      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      background:rgba(255,255,255,.10);
+      object-fit:contain;
+    }
+    .scoreBox{display:flex;align-items:center;gap:8px}
+    .scoreInput{width:48px;text-align:center}
+    .sep{font-weight:1000;opacity:.85}
+
+    .miniResult{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:14px;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.20);
+      background:rgba(255,255,255,.25);
+      flex:0 0 10px;
+      box-shadow:0 0 0 3px rgba(0,0,0,.15) inset;
+    }
+    .dotGreen{ background:#33ff88; }
+    .dotYellow{ background:#ffd84d; }
+    .dotRed{ background:#ff4d4d; }
+    .dotNeutral{ background:rgba(255,255,255,.25); }
+
+    .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .playerRow{
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;gap:10px;align-items:center;justify-content:space-between;
+      font-weight:900;
+    }
+    .badge{padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);font-weight:1000;font-size:12px}
+
+    /* ROOMS SCREEN */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
 
     /* MODALS */
     .modal{
-      position:fixed; inset:0; z-index:50;
-      display:none; align-items:center; justify-content:center;
-      background:rgba(0,0,0,.45);
-      backdrop-filter: blur(8px);
-    }
-    .modal .card{ width:min(880px, 92vw); }
-    .modalRow{ display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; margin-top:14px;}
-    .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid var(--border);
-      font-size:13px;
-      font-weight:700;
-    }
-    .error{ color:#ffb0b0; font-size:13px; display:none; margin-top:8px; }
-
-    /* SETTINGS */
-    #settingsModal .card{ width:min(920px, 92vw); }
-    #settingsBody{ display:flex; flex-direction:column; gap:12px; }
-    .section{
-      background:rgba(0,0,0,.18);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:12px;
-    }
-    .topbar{ display:flex; justify-content:space-between; align-items:center; gap:10px;}
-    .pillBtn{ padding:8px 12px; border-radius:999px; }
-    .langBtn.active{ outline:2px solid rgba(255,255,255,.25); }
-
-    /* ROOM placeholder */
-    #roomWrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-
-    /* TOAST */
-    #toast{
-      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-      z-index:90;
+      position:absolute; inset:0;
       display:none;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      box-shadow:var(--shadow);
-      font-weight:700;
+      align-items:center; justify-content:center;
+      z-index:50;
+      background:rgba(0,0,0,.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
-
-    /* FOOTER BUILD */
-    #footerRight{
-      position:fixed; right:14px; bottom:10px; z-index:5;
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      text-shadow:0 1px 3px rgba(0,0,0,.6);
+    .modalCard{
+      width:min(920px,94%);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:22px;
+      background:rgba(8,22,52,.78);
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      padding:18px;
     }
-
-    /* DIAG BAR (bez F12) */
-    #diagBar{
-      position:fixed; right:14px; bottom:34px; z-index:6;
-      padding:6px 10px;
-      border-radius:999px;
+    .modalTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0}
+    .listGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+      max-height:360px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .pickItem{
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.18);
       border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.35);
-      color:rgba(255,255,255,.85);
-      font-size:12px;
-      max-width:min(520px, 86vw);
-      overflow:hidden;
-      white-space:nowrap;
-      text-overflow:ellipsis;
-      pointer-events:none;
+      display:flex;align-items:center;gap:10px;justify-content:space-between;
+      font-weight:900;
     }
+
   </style>
 </head>
 
 <body>
   <div id="bg"></div>
 
-  <div id="footerRight">BUILD</div>
-  <div id="diagBar">DIAG: start</div>
-  <div id="toast"></div>
+  <div id="app">
+    <div class="frame">
 
-  <!-- SPLASH -->
-  <div id="splash" class="screen active">
-    <div id="splashWrap">
-      <div class="card">
-        <div class="title">Typer</div>
-        <div id="splashHint" class="muted">Ładowanie…</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MENU -->
-  <div id="menu" class="screen">
-    <div id="menuWrap">
-      <div id="gearWrap" title="Ustawienia">
-        <!-- biały tryb dzięki filter w CSS -->
-        <img src="ico_gear.png" alt="Settings"/>
-      </div>
-
-      <div class="menuBtns">
-        <img id="btnOpenRooms" class="btnImg" src="btn_pokoje_typerow.png" alt="Pokoje typerów">
-        <img id="btnOpenStats" class="btnImg" src="btn_statystyki.png" alt="Statystyki">
-        <img id="btnExitApp" class="btnImg" src="btn_wyjscie.png" alt="Wyjście">
-      </div>
-    </div>
-  </div>
-
-  <!-- ROOMS -->
-  <div id="rooms" class="screen">
-    <div id="roomsWrap">
-      <div class="card roomsCard">
-        <div class="topbar">
-          <div class="chip" id="rooms_title">Pokoje typerów</div>
-          <div class="chip"><span id="rooms_nickLabel">Nick:</span> <b id="nickLabelRooms">—</b></div>
+      <!-- SPLASH -->
+      <section id="splash" class="screen active">
+        <div class="splashCard">
+          <div style="font-size:22px;font-weight:1000;">Typer</div>
+          <div class="hint" id="splashHint">Ładowanie…</div>
+          <div class="err" id="splashErr"></div>
+          <div class="spinner"></div>
         </div>
+      </section>
 
-        <div style="height:10px"></div>
+      <!-- MAIN MENU IMAGE -->
+      <section id="mainMenu" class="screen">
+        <div class="menuImgWrap">
+          <img id="menuBgImg" src="img_menu_pc.png" alt="Menu" />
+          <div class="menuBtns">
+            <img id="btnMenuRooms" class="imgBtn" src="btn_pokoje_typerow.png" alt="Pokoje typerów" />
+            <img id="btnMenuStats" class="imgBtn" src="btn_statystyki.png" alt="Statystyki" />
+            <img id="btnMenuExit" class="imgBtn" src="btn_wyjscie.png" alt="Wyjście" />
+          </div>
+        </div>
+      </section>
 
-        <div class="section">
-          <div style="font-weight:800" id="rooms_newRoom">Utwórz nowy pokój</div>
-          <div class="muted" id="rooms_newRoomHint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
-          <div style="height:10px"></div>
+      <!-- ROOMS -->
+      <section id="rooms" class="screen">
+        <div class="roomsBox panel">
           <div class="row">
-            <div class="field">
-              <input id="inpRoomName" placeholder="Nazwa pokoju (opcjonalnie)">
+            <div class="chip">Pokoje typerów</div>
+            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
+            <button class="btn btnSmall" id="btnBackMain">Wróć</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Nowy pokój</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
+              <button class="btn" id="btnCreateRoom">Utwórz</button>
             </div>
-            <button id="btnCreateRoom" class="btn">Utwórz</button>
+            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Dołącz do pokoju</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
+              <button class="btn" id="btnJoinRoom">Dołącz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Debug</h2>
+            <div class="help" id="debugRooms">—</div>
           </div>
         </div>
+      </section>
 
-        <div style="height:12px"></div>
+      <!-- ROOM -->
+      <section id="room" class="screen">
+        <div id="roomRoot" style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
 
-        <div class="section">
-          <div style="font-weight:800" id="rooms_join">Dołącz do pokoju</div>
-          <div class="muted" id="rooms_joinHint">Wpisz kod od admina.</div>
-          <div style="height:10px"></div>
+          <!-- LEFT -->
+          <div class="leftBar panel">
+            <div class="col" style="gap:10px">
+              <div class="chip">Pokój</div>
+              <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div class="title" id="roomName">—</div>
+              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
+              <div class="row" style="margin-top:10px">
+                <div class="chip" style="flex:1;justify-content:space-between;">
+                  Kod: <span id="roomCode">—</span>
+                </div>
+                <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
+              </div>
+              <div class="row" style="margin-top:10px">
+                <button class="btn btnSmall" id="btnLeave">Opuść</button>
+                <button class="btn btnSmall" id="btnRefresh">Odśwież</button>
+              </div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div class="title">Akcje</div>
+              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              <div class="col" style="margin-top:10px">
+                <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+
+                <!-- admin -->
+                <button class="btn" id="btnCustomQueue" style="display:none">Własna kolejka</button>
+                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
+                <button class="btn" id="btnFinishQueue" style="display:none">Zakończ kolejkę</button>
+              </div>
+            </div>
+
+            <div class="spacer"></div>
+            <button class="btn" id="btnBackFromRoom">Wróć</button>
+          </div>
+
+          <!-- MIDDLE -->
+          <div class="mid">
+            <div class="panel midHead">
+              <div class="row">
+                <div>
+                  <div class="title">Spotkania</div>
+                  <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                </div>
+                <div class="spacer"></div>
+
+                <div class="chip">KOLEJKA: <span id="queueLabel">—</span></div>
+                <div class="chip">Mecze: <span id="matchesCount">0</span></div>
+              </div>
+            </div>
+
+            <div class="panel matchesWrap" id="matchesList"></div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="rightBar panel">
+            <div>
+              <div class="title">Gracze</div>
+              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak.</div>
+            </div>
+            <div class="playersList" id="playersList"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- MODAL: CUSTOM QUEUE -->
+      <div id="modalCustom" class="modal">
+        <div class="modalCard">
           <div class="row">
-            <div class="field">
-              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)">
-            </div>
-            <button id="btnJoinRoom" class="btn">Dołącz</button>
-          </div>
-        </div>
-
-        <div style="height:10px"></div>
-        <div class="muted" id="debugRooms">—</div>
-
-        <div style="height:12px"></div>
-        <button id="btnBackMenu" class="btn">Wróć</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ROOM placeholder -->
-  <div id="room" class="screen">
-    <div id="roomWrap">
-      <div class="card">
-        <div class="title">Pokój</div>
-        <div class="muted" id="roomInfoText">—</div>
-        <div style="height:12px"></div>
-        <button id="btnBackFromRoom" class="btn">Wróć</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTINUE MODAL -->
-  <div id="continueModal" class="modal">
-    <div class="card">
-      <div class="title">Kontynuować?</div>
-      <div class="muted" id="continueText">—</div>
-      <div class="modalRow">
-        <button id="btnContinueYes" class="btn">Tak, kontynuuj</button>
-        <button id="btnContinueNo" class="btn">Nie, wybierz pokój</button>
-        <button id="btnContinueForget" class="btn">Zapomnij pokój</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NICK MODAL -->
-  <div id="nickModal" class="modal">
-    <div class="card">
-      <div class="title" id="nickTitle">Podaj swój nick</div>
-      <div class="muted" id="nickSub">Będzie używany w pokojach i tabeli ligi.</div>
-      <div style="height:8px"></div>
-      <div class="muted" id="nickDesc">Wpisz czytelny nick (3–16 znaków). Możesz go zmienić później w Ustawieniach.</div>
-      <div style="height:12px"></div>
-      <input id="inpNickModal" placeholder="Nick (np. Mariusz)">
-      <div id="nickError" class="error">—</div>
-      <div class="modalRow">
-        <button id="btnNickCancel" class="btn">Anuluj</button>
-        <button id="btnNickSave" class="btn">Dalej</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS MODAL -->
-  <div id="settingsModal" class="modal">
-    <div class="card">
-      <div class="topbar">
-        <div class="chip" id="st_title">Ustawienia</div>
-        <button id="btnSettingsClose" class="btn pillBtn">Zamknij</button>
-      </div>
-
-      <div style="height:12px"></div>
-
-      <!-- WELCOME VIEW -->
-      <div id="settingsWelcome" style="display:none;">
-        <div class="section">
-          <div class="topbar">
-            <div class="chip" id="st_welcomeChip">Witaj ponownie</div>
-            <div class="chip"><b id="st_welcomeNick">—</b></div>
+            <div class="modalTitle">Własna kolejka (max 10)</div>
+            <div class="spacer"></div>
+            <div class="chip">Dodane: <span id="customCount">0</span>/10</div>
           </div>
 
-          <div style="height:10px"></div>
-          <div class="muted" id="st_welcomeRoomLine">Ostatni pokój: —</div>
-          <div style="height:12px"></div>
+          <div class="row" style="margin-top:8px">
+            <select id="selLeague" style="flex:1"></select>
+            <button class="btn btnSmall" id="btnCloseCustom">Zamknij</button>
+          </div>
 
-          <div class="row" style="justify-content:flex-end">
-            <button id="btnEnterRoomFromSettings" class="btn">Wejdź do pokoju</button>
-            <button id="btnChangeProfileFlow" class="btn">Zmień profil gracza</button>
+          <div class="sub" style="margin-top:10px">Klikaj “Dodaj” przy meczach. Po dodaniu 10 pojawi się zapis.</div>
+
+          <div class="listGrid" id="customMatchesList"></div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="btnConfirm10" disabled>Zapisz kolejkę (10)</button>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnClearCustom">Wyczyść wybór</button>
           </div>
         </div>
       </div>
 
-      <!-- DETAILS VIEW -->
-      <div id="settingsDetails" style="display:none;">
-        <div id="detailsTopBar" class="row" style="justify-content:flex-start; margin-bottom:10px; display:none;">
-          <button id="btnBackToWelcome" class="btn">Wróć</button>
-        </div>
-
-        <div id="settingsBody">
-          <div class="section">
-            <div style="font-weight:800" id="st_profilesTitle">Profil gracza (współdzielenie)</div>
-            <div class="muted" id="st_profilesHint">—</div>
-
-            <div style="height:10px"></div>
-
-            <div class="row">
-              <div class="field">
-                <select id="selProfiles" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:var(--text);">
-                </select>
-              </div>
-              <button id="btnProfileSwitch" class="btn">Przełącz</button>
-              <button id="btnProfileAdd" class="btn">Dodaj</button>
-              <button id="btnProfileDelete" class="btn">Usuń</button>
-            </div>
-
-            <div style="height:10px"></div>
-            <div class="row">
-              <div class="field">
-                <input id="inpNickSettings" placeholder="Nick">
-              </div>
-              <button id="btnSaveNickSettings" class="btn">Zapisz nick</button>
-            </div>
+      <!-- MODAL: RESULTS -->
+      <div id="modalResults" class="modal">
+        <div class="modalCard">
+          <div class="row">
+            <div class="modalTitle">Wpisz wyniki (admin)</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="btnCloseResults">Zamknij</button>
           </div>
+          <div class="sub">Wpisz wyniki i zapisz. Gracze zobaczą kropki: 🟢/🟡/🔴.</div>
 
-          <div class="section">
-            <div style="font-weight:800" id="st_langTitle">Język</div>
-            <div style="height:10px"></div>
-            <div class="row">
-              <button id="btnLangPL" class="btn langBtn">🇵🇱 Polski</button>
-              <button id="btnLangEN" class="btn langBtn">🇬🇧 English</button>
-              <div class="chip" id="st_langCurrent">Aktualny: Polski</div>
-            </div>
-          </div>
+          <div class="listGrid" id="resultsList" style="grid-template-columns:1fr;"></div>
 
-          <div class="section" style="border-color: rgba(255,120,120,.28);">
-            <div style="font-weight:800" id="st_localTitle">Dane lokalne</div>
-            <div class="muted" id="st_localHint">—</div>
-            <div style="height:10px"></div>
-            <div class="row" style="justify-content:space-between">
-              <button id="btnClearLocal" class="btn">Wyczyść dane lokalne</button>
-              <button id="btnClearCancel" class="btn">Anuluj</button>
-            </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="btnSaveResults">Zapisz wyniki</button>
+            <div class="spacer"></div>
           </div>
         </div>
       </div>
 
+      <div class="toast" id="toast"></div>
+      <div class="footerRight" id="footerRight">—</div>
     </div>
   </div>
 
-  <script type="module" src="app.js"></script>
+  <script>
+    const hint = document.getElementById("splashHint");
+    const errBox = document.getElementById("splashErr");
+    function showErr(title, msg){
+      hint.textContent = "STOP: wykryto błąd.";
+      errBox.style.display = "block";
+      errBox.textContent = title + "\n\n" + msg;
+    }
+    window.addEventListener("error", (e) => {
+      showErr("window.error", (e?.message || "unknown") + "\n" + (e?.filename || "") + ":" + (e?.lineno || "?"));
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
+    });
+  </script>
+
+  <script type="module" src="./app.js?v=1230"></script>
 </body>
 </html>
