@@ -1,4 +1,4 @@
-const BUILD = 2008;
+const BUILD = 2009;
 
 // TŁA:
 const BG_HOME = "img_menu_pc.png"; // START
@@ -24,6 +24,12 @@ const el = (id) => document.getElementById(id);
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
+function diag(msg){
+  const d = el("diagBar");
+  if(d) d.textContent = "DIAG: " + msg;
+  console.log("[DIAG]", msg);
+}
+
 function hardAlert(msg){
   console.log("[ALERT]", msg);
   alert(msg);
@@ -46,12 +52,14 @@ function showScreen(id){
 
   if(id === "menu" || id === "splash") setBg(BG_HOME);
   else setBg(BG_APP);
+
+  diag("screen=" + id);
 }
 
 function setSplash(msg){
   const h = el("splashHint");
   if (h) h.textContent = msg;
-  console.log(msg);
+  diag(msg.replace(/\n/g," | "));
 }
 
 function safeCall(fn, ...args){
@@ -60,6 +68,7 @@ function safeCall(fn, ...args){
   }catch(e){
     console.error("[safeCall error]", e);
     showToast("Błąd: " + (e?.message || String(e)));
+    diag("safeCall error: " + (e?.message || String(e)));
   }
   return undefined;
 }
@@ -249,6 +258,7 @@ function setLang(lang){
   applyI18n();
   updateLangButtons();
   showToast(lang === "pl" ? "Polski ✅" : "English ✅");
+  diag("lang=" + lang);
 }
 
 // ---------- PIN (local) ----------
@@ -272,6 +282,7 @@ async function ensurePinSet(){
   }
   const h = await sha256(normPin(p) + "|" + prof.id);
   updateActiveProfile({ pinHash: h });
+  diag("PIN set OK");
   return true;
 }
 
@@ -289,9 +300,10 @@ async function verifyPin(){
       continue;
     }
     const h = await sha256(normPin(p) + "|" + prof.id);
-    if(h === prof.pinHash) return true;
+    if(h === prof.pinHash){ diag("PIN OK"); return true; }
     showToast(t("pinWrong"));
   }
+  diag("PIN FAIL");
   return false;
 }
 
@@ -370,6 +382,7 @@ async function createRoom(roomName){
     });
 
     updateActiveProfile({ lastRoom: code, lastRoomName: name });
+    diag("room created code=" + code);
     return { code, name };
   }
   throw new Error("Nie udało się wygenerować kodu (spróbuj ponownie).");
@@ -383,6 +396,7 @@ async function joinRoom(codeInput){
   if(!room) throw new Error(t("roomNotFound"));
 
   updateActiveProfile({ lastRoom: code, lastRoomName: room.name || "" });
+  diag("room joined code=" + code);
   return { code, name: room.name || "" };
 }
 
@@ -463,7 +477,7 @@ function renderProfilesSelect(){
   }
 }
 
-// ---------- Settings welcome/details flow ----------
+// ---------- Settings flow ----------
 function showSettingsWelcome(){
   const prof = getActiveProfile();
   const nick = (prof.nick || "").trim();
@@ -489,11 +503,12 @@ function showSettingsWelcome(){
     el("st_welcomeRoomLine").textContent = `${t("lastRoom")}: —`;
     el("btnEnterRoomFromSettings").disabled = true;
   }
+  diag("settings welcome");
 }
 
 function showSettingsDetails(showBackButton){
   el("settingsWelcome").style.display = "none";
-  el("settingsDetails").style.display = "flex";
+  el("settingsDetails").style.display = "block";
   el("detailsTopBar").style.display = showBackButton ? "flex" : "none";
 
   renderProfilesSelect();
@@ -501,6 +516,7 @@ function showSettingsDetails(showBackButton){
   applyI18n();
   updateLangButtons();
   refreshNickLabels();
+  diag("settings details");
 }
 
 function openSettings(){
@@ -512,9 +528,7 @@ function openSettings(){
   showSettingsWelcome();
   el("settingsModal").style.display = "flex";
 }
-function closeSettings(){
-  el("settingsModal").style.display = "none";
-}
+function closeSettings(){ el("settingsModal").style.display = "none"; }
 
 // ---------- NICK MODAL ----------
 let _nickResolve = null;
@@ -536,9 +550,7 @@ function openNickModal(){
     setTimeout(()=> el("inpNickModal").focus(), 50);
   });
 }
-function closeNickModal(){
-  el("nickModal").style.display = "none";
-}
+function closeNickModal(){ el("nickModal").style.display = "none"; }
 function validateNick(v){
   v = (v || "").trim();
   if(v.length < 3 || v.length > 16) return { ok:false, v };
@@ -582,6 +594,7 @@ async function showContinueModalForCode(code){
     `${t("pinNeed")}`;
 
   modal.style.display = "flex";
+  diag("continue modal for " + code);
 }
 
 function hideContinueModal(){ el("continueModal").style.display = "none"; }
@@ -603,58 +616,46 @@ async function handleOpenRooms(){
   if(el("debugRooms")) el("debugRooms").textContent = "—";
 }
 
-// ---------- ROOM: AUTO-WPIĘCIE STAREJ LOGIKI ----------
+// ---------- ROOM: legacy detect ----------
 let CURRENT_ROOM = { code:"", name:"" };
 
 function detectLegacyOpenRoom(){
-  // Najbardziej prawdopodobne nazwy z poprzednich wersji:
-  const candidates = [];
+  const list = [];
 
-  // 1) window.boot.*
-  if (window.boot){
-    candidates.push(
-      window.boot.openRoom,
-      window.boot.enterRoom,
-      window.boot.startRoom,
-      window.boot.goRoom,
-      window.boot.open,
-      window.boot.enter
-    );
+  // boot.*
+  if(window.boot){
+    if(typeof window.boot.openRoom === "function") list.push({name:"boot.openRoom", fn:window.boot.openRoom});
+    if(typeof window.boot.enterRoom === "function") list.push({name:"boot.enterRoom", fn:window.boot.enterRoom});
+    if(typeof window.boot.startRoom === "function") list.push({name:"boot.startRoom", fn:window.boot.startRoom});
+    if(typeof window.boot.goRoom === "function") list.push({name:"boot.goRoom", fn:window.boot.goRoom});
   }
 
-  // 2) window.Typer / window.TyperApp / window.app
-  if (window.Typer){
-    candidates.push(window.Typer.openRoom, window.Typer.enterRoom, window.Typer.startRoom);
+  // Typer / TyperApp / app
+  if(window.Typer){
+    if(typeof window.Typer.openRoom === "function") list.push({name:"Typer.openRoom", fn:window.Typer.openRoom});
+    if(typeof window.Typer.enterRoom === "function") list.push({name:"Typer.enterRoom", fn:window.Typer.enterRoom});
   }
-  if (window.TyperApp){
-    candidates.push(window.TyperApp.openRoom, window.TyperApp.enterRoom, window.TyperApp.startRoom);
+  if(window.TyperApp){
+    if(typeof window.TyperApp.openRoom === "function") list.push({name:"TyperApp.openRoom", fn:window.TyperApp.openRoom});
+    if(typeof window.TyperApp.enterRoom === "function") list.push({name:"TyperApp.enterRoom", fn:window.TyperApp.enterRoom});
   }
-  if (window.app){
-    candidates.push(window.app.openRoom, window.app.enterRoom, window.app.startRoom);
+  if(window.app){
+    if(typeof window.app.openRoom === "function") list.push({name:"app.openRoom", fn:window.app.openRoom});
+    if(typeof window.app.enterRoom === "function") list.push({name:"app.enterRoom", fn:window.app.enterRoom});
   }
 
-  // 3) global funkcje (czasem były jako window.openRoom)
-  candidates.push(
-    window.openRoom,
-    window.enterRoom,
-    window.startRoom,
-    window.renderRoom,
-    window.showRoom
-  );
+  // global
+  if(typeof window.openRoom === "function") list.push({name:"window.openRoom", fn:window.openRoom});
+  if(typeof window.enterRoom === "function") list.push({name:"window.enterRoom", fn:window.enterRoom});
+  if(typeof window.startRoom === "function") list.push({name:"window.startRoom", fn:window.startRoom});
+  if(typeof window.renderRoom === "function") list.push({name:"window.renderRoom", fn:window.renderRoom});
 
-  // Zwróć pierwszą działającą funkcję
-  for(const fn of candidates){
-    if(typeof fn === "function") return fn;
-  }
-  return null;
+  return list.length ? list[0] : null;
 }
 
 async function openRoomScreen(code){
   const okPin = await verifyPin();
-  if(!okPin){
-    showToast(t("pinWrong"));
-    return;
-  }
+  if(!okPin){ showToast(t("pinWrong")); return; }
 
   showToast(t("roomOpen"));
   showScreen("room");
@@ -666,11 +667,10 @@ async function openRoomScreen(code){
     CURRENT_ROOM = { code, name: (getActiveProfile().lastRoomName || "") || "" };
   }
 
-  // 1) Spróbuj odpalić starą logikę
-  const legacyFn = detectLegacyOpenRoom();
-  if(legacyFn){
-    console.log("[LEGACY] found openRoom fn:", legacyFn.name || "(anonymous)");
-    // próbujemy różne sygnatury (code / roomObject)
+  const legacy = detectLegacyOpenRoom();
+  if(legacy){
+    diag("LEGACY: " + legacy.name);
+
     const roomObj = {
       code: CURRENT_ROOM.code,
       name: CURRENT_ROOM.name,
@@ -678,48 +678,39 @@ async function openRoomScreen(code){
       profileId: getActiveProfile().id
     };
 
-    // Najpierw klasycznie (code)
-    let res = safeCall(legacyFn, CURRENT_ROOM.code);
+    let res = safeCall(legacy.fn, CURRENT_ROOM.code);
+    if(res === undefined) res = safeCall(legacy.fn, roomObj);
 
-    // Jeśli legacy oczekuje obiektu (często tak bywa), spróbuj też obiekt
-    if(res === undefined){
-      res = safeCall(legacyFn, roomObj);
-    }
-
-    // Jeśli legacy zwraca Promise i wywali błąd — złapiemy
     if(res && typeof res.then === "function"){
       res.catch(e=>{
         console.error("[LEGACY async error]", e);
-        showToast("Błąd w starej logice: " + (e?.message || String(e)));
+        showToast("Błąd starej logiki: " + (e?.message || String(e)));
+        diag("LEGACY async error: " + (e?.message || String(e)));
       });
     }
-
-    // ✅ Jeśli legacyFn istnieje, to zakładamy że sama wyrenderuje ekran typowania.
-    // Nie nadpisujemy już placeholderem.
     return;
   }
 
-  // 2) Fallback: pokaż informację (żebyś widział że pokój istnieje)
+  diag("LEGACY: brak");
   const info =
     `Pokój: ${CURRENT_ROOM.name || "—"}\n` +
     `Kod: ${CURRENT_ROOM.code}\n` +
     `Nick: ${(getActiveProfile().nick||"").trim() || "—"}\n\n` +
     `Nie wykryto starej logiki (boot/app).`;
 
-  const holder = el("roomInfoText"); // jeśli masz ten id - pokaże, jak nie masz - nic
+  const holder = el("roomInfoText");
   if(holder) holder.textContent = info;
-  console.log("[ROOM fallback]", CURRENT_ROOM);
 }
 
 // ---------- UI binding ----------
 function bindUI(){
-  // HOME
+  // MENU
   el("btnOpenRooms").onclick = async ()=>{ await handleOpenRooms(); };
   el("btnOpenStats").onclick = ()=>{ showToast("Statystyki — wkrótce"); };
   el("btnExitApp").onclick = ()=>{ showToast("Wyjście — zamknij kartę / aplikację"); };
+  el("gearWrap").onclick = ()=> openSettings();
 
   // Settings
-  el("btnOpenSettings").onclick = ()=> openSettings();
   el("btnSettingsClose").onclick = ()=> closeSettings();
   el("btnClearCancel").onclick = ()=> closeSettings();
 
@@ -835,7 +826,7 @@ function bindUI(){
     }catch(e){
       const msg = e?.message || String(e);
       showToast(msg);
-      console.error(e);
+      diag("createRoom error: " + msg);
     }
   };
 
@@ -857,7 +848,7 @@ function bindUI(){
     }catch(e){
       const msg = e?.message || String(e);
       showToast(msg);
-      console.error(e);
+      diag("joinRoom error: " + msg);
     }
   };
 
@@ -922,9 +913,11 @@ function bindUI(){
     bindUI();
 
     showScreen("menu");
+    diag("ready");
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
+    diag("FATAL: " + (e?.message || String(e)));
     throw e;
   }
 })();

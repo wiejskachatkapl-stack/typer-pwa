@@ -2,580 +2,399 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#08122a" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Typer</title>
-  <link rel="manifest" href="manifest.json" />
+
+  <link rel="preload" as="image" href="img_menu_pc.png">
+  <link rel="preload" as="image" href="img_tlo.png">
 
   <style>
     :root{
-      --bg:#071229;
-      --glass: rgba(8, 22, 52, .55);
-      --glass2: rgba(8, 22, 52, .40);
-      --stroke: rgba(255,255,255,.12);
+      --glass: rgba(10,20,40,.55);
+      --glass2: rgba(10,20,40,.35);
+      --border: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --shadow: 0 14px 50px rgba(0,0,0,.45);
-      --r: 22px;
+      --muted: rgba(255,255,255,.70);
+      --btn: rgba(255,255,255,.10);
+      --btn2: rgba(255,255,255,.16);
+      --shadow: 0 14px 40px rgba(0,0,0,.45);
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      background:var(--bg);
-      overflow:hidden;
-    }
-
-    /* BACKGROUND */
+    html,body{height:100%; margin:0; font-family:system-ui,Segoe UI,Arial; color:var(--text); background:#000;}
     #bg{
       position:fixed; inset:0;
-      background:#071229 center/cover no-repeat;
-      z-index:0;
-      transform: translateZ(0);
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
     }
 
-    #app{
-      position:fixed; inset:0;
+    .screen{position:relative; z-index:2; display:none; height:100%; width:100%;}
+    .screen.active{display:block;}
+
+    /* MENU START */
+    #menuWrap{
+      position:absolute; inset:0;
       display:flex; align-items:center; justify-content:center;
-      padding:14px;
-      z-index:1;
     }
-
-    .frame{
-      width:min(1580px,96vw);
-      height:min(920px,94vh);
-      border:1px solid var(--stroke);
-      border-radius:26px;
-      background:rgba(0,0,0,.10);
+    #gearWrap{
+      position:absolute;
+      left:22px; bottom:22px;
+      width:58px; height:58px;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--border);
       box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-      overflow:hidden;
-      position:relative;
+      cursor:pointer;
+      user-select:none;
     }
+    #gearWrap img{ width:28px; height:28px; filter:brightness(10); opacity:.95; }
 
-    .screen{display:none;height:100%;width:100%}
-    .screen.active{display:flex}
+    .menuBtns{
+      display:flex; gap:24px;
+      align-items:center; justify-content:center;
+    }
+    .btnImg{
+      width:240px; height:auto;
+      cursor:pointer;
+      user-select:none;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .10s ease;
+    }
+    .btnImg:active{ transform: scale(.98); }
 
     /* SPLASH */
-    #splash{align-items:center;justify-content:center;padding:24px}
-    .splashCard{
-      width:min(820px,92%);
-      border:1px solid var(--stroke);
-      border-radius:22px;
-      background:var(--glass2);
-      padding:22px;
+    #splashWrap{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     }
-    .spinner{
-      width:26px;height:26px;border-radius:50%;
-      border:3px solid rgba(255,255,255,.25);
-      border-top-color:rgba(255,255,255,.9);
-      animation:spin 1s linear infinite;margin-top:12px;
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .hint{margin-top:8px;color:var(--muted);font-weight:700;white-space:pre-wrap}
-    .err{
-      margin-top:10px;padding:10px 12px;border-radius:14px;
-      border:1px solid rgba(255,120,120,.35);
-      background:rgba(255,60,60,.12);
-      display:none;white-space:pre-wrap
-    }
-
-    /* COMMON */
-    .panel{
-      border:1px solid var(--stroke);
-      border-radius:var(--r);
+    .card{
+      width:min(760px, 92vw);
+      padding:18px 18px;
+      border-radius:18px;
       background:var(--glass);
-      box-shadow:0 10px 30px rgba(0,0,0,.30);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .muted{color:var(--muted); font-size:13px; white-space:pre-line;}
+    .title{font-weight:700; font-size:18px; margin-bottom:8px;}
+
+    /* ROOMS */
+    #roomsWrap{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    }
+    .roomsCard{ width:min(920px, 94vw); }
+    .row{ display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+    .field{
+      flex:1;
+      background:rgba(0,0,0,.25);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px 12px;
+    }
+    input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
     }
     .btn{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.10);
-      color:var(--text);
       padding:10px 14px;
-      border-radius:16px;
-      font-weight:900;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--btn);
+      color:var(--text);
       cursor:pointer;
       user-select:none;
-      white-space:nowrap;
+      font-weight:600;
     }
-    .btn:hover{background:rgba(255,255,255,.14)}
-    .btn:disabled{opacity:.45;cursor:not-allowed}
-    .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
-    .btnDanger{
-      border:1px solid rgba(255,90,90,.25);
-      background:rgba(255,60,60,.10);
-    }
-    .btnDanger:hover{background:rgba(255,60,60,.16)}
-    .chip{
-      display:inline-flex;gap:10px;align-items:center;
-      padding:10px 14px;border-radius:18px;
-      background:rgba(0,0,0,.20);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:900
-    }
-    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
-    .sub{color:var(--muted);font-weight:700;font-size:13px}
-    .row{display:flex;gap:10px;align-items:center}
-    .col{display:flex;flex-direction:column;gap:10px}
-    .spacer{flex:1}
-    input, select{
-      border:1px solid rgba(255,255,255,.15);
-      background:rgba(0,0,0,.22);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:14px;
-      outline:none;
-      font-weight:900;
-    }
-    input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
-    select{cursor:pointer}
+    .btn:hover{ background:var(--btn2); }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; }
 
-    .toast{
-      position:absolute;left:18px;bottom:14px;
-      background:rgba(0,0,0,.35);
-      border:1px solid rgba(255,255,255,.12);
-      color:rgba(255,255,255,.85);
-      padding:10px 14px;border-radius:16px;font-weight:800;
-      display:none;
-      z-index:60;
-    }
-    .footerRight{
-      position:absolute;right:18px;bottom:14px;
-      color:rgba(255,255,255,.55);
-      font-size:12px;font-weight:800
-    }
-
-    /* ===== HOME ===== */
-    #menu{align-items:stretch;justify-content:center;position:relative;}
-    .homeOverlay{position:absolute; inset:0;background: rgba(0,0,0,.10);}
-
-    .homeButtons{
-      position:absolute;
-      left:50%; top:52%;
-      transform:translate(-50%,-50%);
-      display:flex; gap:26px;
-      align-items:center; justify-content:center;
-      z-index:2;
-      padding:10px 14px;
-      border-radius:24px;
-      background: rgba(0,0,0,.10);
-      border:1px solid rgba(255,255,255,.10);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    .imgBtn{
-      all:unset;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .imgBtn img{
-      width:240px; /* stałe 240px */
-      height:auto;
-      display:block;
-      border-radius:16px;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
-      transform: translateZ(0);
-    }
-    .imgBtn:active img{transform: translateY(1px)}
-    .imgBtn:focus-visible{
-      outline:2px solid rgba(120,200,255,.8);
-      outline-offset:6px;
-      border-radius:18px;
-    }
-
-    /* Zębatka na dole po LEWEJ – biała */
-    .gearBtn{
-      position:absolute;
-      left:22px;
-      bottom:22px;
-      width:72px;height:72px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.20);
-      background: rgba(0,0,0,.18);
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer;
-      z-index:3;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 14px 34px rgba(0,0,0,.45);
-      user-select:none;
-    }
-    .gearBtn:hover{background: rgba(0,0,0,.24)}
-    .gearBtn:active{transform: translateY(1px)}
-    .gearSvg{
-      width:30px;height:30px;
-      fill:none;
-      stroke:#fff;
-      stroke-width:2.2;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-      opacity:.95;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,.55));
-    }
-
-    /* ===== MODALS ===== */
-    .modalBg{
-      position:absolute; inset:0;
-      display:none;
-      align-items:center; justify-content:center;
-      z-index:55;
+    /* MODALS */
+    .modal{
+      position:fixed; inset:0; z-index:50;
+      display:none; align-items:center; justify-content:center;
       background:rgba(0,0,0,.45);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(8px);
     }
-    .modalCard{
-      width:min(960px,94%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(8,22,52,.76);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      padding:16px;
+    .modal .card{ width:min(880px, 92vw); }
+    .modalRow{ display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; margin-top:14px;}
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--border);
+      font-size:13px;
+      font-weight:700;
     }
-    .modalSection{
-      padding:14px;
-      border:1px solid rgba(255,255,255,.10);
+    .error{ color:#ffb0b0; font-size:13px; display:none; margin-top:8px; }
+
+    /* SETTINGS */
+    #settingsModal .card{ width:min(920px, 92vw); }
+    #settingsBody{ display:flex; flex-direction:column; gap:12px; }
+    .section{
       background:rgba(0,0,0,.18);
-      border-radius:18px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
     }
-    .modalSection h3{
-      margin:0 0 8px 0;
-      font-size:16px;
-      font-weight:1000;
-    }
-    .tiny{font-size:12px;color:rgba(255,255,255,.70);font-weight:800}
-    .langBtn{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:10px 14px;border-radius:16px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.10);
-      cursor:pointer;
-      font-weight:1000;
-    }
-    .langBtn:hover{background:rgba(255,255,255,.14)}
-    .langBtn.active{
-      border-color: rgba(120,200,255,.55);
-      box-shadow: 0 0 0 3px rgba(120,200,255,.18) inset;
+    .topbar{ display:flex; justify-content:space-between; align-items:center; gap:10px;}
+    .pillBtn{ padding:8px 12px; border-radius:999px; }
+    .langBtn.active{ outline:2px solid rgba(255,255,255,.25); }
+
+    /* ROOM placeholder */
+    #roomWrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+    /* TOAST */
+    #toast{
+      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+      z-index:90;
+      display:none;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      font-weight:700;
     }
 
-    /* Continue modal */
-    #continueCard{
-      width:min(720px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(8,22,52,.72);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      padding:18px;
-    }
-    #continueTitle{font-size:20px;font-weight:1000;margin:0 0 6px 0}
-    #continueText{color:rgba(255,255,255,.80);font-weight:800;white-space:pre-wrap;margin:0 0 14px 0}
-
-    /* Nick modal (ładne, zamiast prompt) */
-    #nickCard{
-      width:min(560px,92%);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:22px;
-      background:rgba(8,22,52,.78);
-      box-shadow: 0 20px 70px rgba(0,0,0,.55);
-      padding:18px;
-    }
-    .nickHeader{
-      display:flex;align-items:center;gap:10px;
-      margin-bottom:8px;
-    }
-    .nickBadge{
-      width:38px;height:38px;border-radius:14px;
-      display:flex;align-items:center;justify-content:center;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:1000;
-    }
-    .nickTitle{font-size:20px;font-weight:1000;margin:0}
-    .nickDesc{color:rgba(255,255,255,.78);font-weight:800;margin:6px 0 14px 0}
-
-    /* ===== SETTINGS FLOW (WELCOME vs DETAILS) ===== */
-    .welcomeBox{
-      padding:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(0,0,0,.18);
-      border-radius:18px;
-    }
-    .welcomeTitle{
-      font-size:18px;font-weight:1000;margin:0 0 6px 0;
-    }
-    .welcomeLine{
-      color:rgba(255,255,255,.82);
-      font-weight:900;
-      margin:6px 0;
-    }
-    .welcomeHint{
-      color:rgba(255,255,255,.70);
-      font-weight:800;
-      margin:8px 0 0 0;
+    /* FOOTER BUILD */
+    #footerRight{
+      position:fixed; right:14px; bottom:10px; z-index:5;
+      color:rgba(255,255,255,.55);
       font-size:12px;
+      text-shadow:0 1px 3px rgba(0,0,0,.6);
     }
 
-    /* screens */
-    #rooms{padding:16px;gap:14px;align-items:stretch;justify-content:center}
-    .roomsBox{width:min(980px,100%);margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .block{padding:14px}
-    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
-    .help{color:var(--muted);font-weight:800;font-size:13px}
-
-    #room{padding:16px;gap:14px;align-items:stretch}
+    /* DIAG BAR (bez F12) */
+    #diagBar{
+      position:fixed; right:14px; bottom:34px; z-index:6;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.35);
+      color:rgba(255,255,255,.85);
+      font-size:12px;
+      max-width:min(520px, 86vw);
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+      pointer-events:none;
+    }
   </style>
 </head>
 
 <body>
   <div id="bg"></div>
 
-  <div id="app">
-    <div class="frame">
+  <div id="footerRight">BUILD</div>
+  <div id="diagBar">DIAG: start</div>
+  <div id="toast"></div>
 
-      <!-- SETTINGS MODAL -->
-      <div id="settingsModal" class="modalBg">
-        <div class="modalCard panel">
-          <div class="row">
-            <div class="chip" id="st_title">Ustawienia</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnSettingsClose">Zamknij</button>
-          </div>
-
-          <div class="col" style="margin-top:12px;gap:12px">
-
-            <!-- WELCOME MODE -->
-            <div id="settingsWelcome" class="welcomeBox" style="display:none;">
-              <div class="row">
-                <div class="chip" id="st_welcomeChip">Witaj ponownie</div>
-                <div class="spacer"></div>
-                <div class="chip"><span id="st_welcomeNick">—</span></div>
-              </div>
-
-              <div class="row" style="margin-top:12px;flex-wrap:wrap">
-                <div class="col" style="flex:1;min-width:260px">
-                  <div class="welcomeLine" id="st_welcomeRoomLine">Ostatni pokój: —</div>
-                  <div class="welcomeHint" id="st_welcomeHint">
-                    Możesz wejść od razu do pokoju albo zmienić profil gracza.
-                  </div>
-                </div>
-                <div class="row" style="gap:10px;flex-wrap:wrap">
-                  <button class="btn" id="btnEnterRoomFromSettings">Wejdź do pokoju</button>
-                  <button class="btn" id="btnChangeProfileFlow">Zmień profil gracza</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- DETAILS MODE (profiles/lang/local/nick) -->
-            <div id="settingsDetails" class="col" style="gap:12px;">
-
-              <div class="row" style="display:none" id="detailsTopBar">
-                <div class="chip" id="st_detailsTitle">Profil / język</div>
-                <div class="spacer"></div>
-                <button class="btn btnSmall" id="btnBackToWelcome">Wróć</button>
-              </div>
-
-              <!-- PROFILES -->
-              <div class="modalSection">
-                <h3 id="st_profilesTitle">Profil gracza (współdzielenie)</h3>
-                <div class="tiny" id="st_profilesHint">
-                  Jeśli kilka osób gra na jednym komputerze — każdy ma swój profil. Profil trzyma: nick, ostatni pokój i język.
-                </div>
-
-                <div class="row" style="margin-top:10px;flex-wrap:wrap">
-                  <select id="selProfiles" style="min-width:280px;flex:1"></select>
-                  <button class="btn" id="btnProfileSwitch">Przełącz</button>
-                  <button class="btn" id="btnProfileAdd">Dodaj</button>
-                  <button class="btn btnDanger" id="btnProfileDelete">Usuń</button>
-                </div>
-
-                <div class="row" style="margin-top:10px;flex-wrap:wrap">
-                  <input id="inpNickSettings" placeholder="Nick" style="min-width:260px;flex:1" />
-                  <button class="btn" id="btnSaveNickSettings">Zapisz nick</button>
-                </div>
-              </div>
-
-              <!-- LANGUAGE -->
-              <div class="modalSection">
-                <h3 id="st_langTitle">Język</h3>
-                <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:8px">
-                  <button class="langBtn" id="btnLangPL">🇵🇱 <span>Polski</span></button>
-                  <button class="langBtn" id="btnLangEN">🇬🇧 <span>English</span></button>
-                  <div class="spacer"></div>
-                  <div class="chip" id="st_langCurrent">Aktualny: —</div>
-                </div>
-              </div>
-
-              <!-- CLEAR LOCAL -->
-              <div class="modalSection">
-                <h3 id="st_localTitle">Dane lokalne</h3>
-                <div class="tiny" id="st_localHint">
-                  Wyczyści: nick, ostatni pokój, język, profile (czyli reset tej gry na tym komputerze).
-                </div>
-
-                <div class="row" style="margin-top:10px;flex-wrap:wrap">
-                  <button class="btn btnDanger" id="btnClearLocal">Wyczyść dane lokalne</button>
-                  <div class="spacer"></div>
-                  <button class="btn" id="btnClearCancel">Anuluj</button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
+  <!-- SPLASH -->
+  <div id="splash" class="screen active">
+    <div id="splashWrap">
+      <div class="card">
+        <div class="title">Typer</div>
+        <div id="splashHint" class="muted">Ładowanie…</div>
       </div>
-
-      <!-- CONTINUE MODAL -->
-      <div id="continueModal" class="modalBg" style="z-index:56;">
-        <div id="continueCard">
-          <div id="continueTitle">Kontynuować?</div>
-          <p id="continueText">—</p>
-          <div class="row">
-            <button class="btn" id="btnContinueYes">Tak, kontynuuj</button>
-            <button class="btn" id="btnContinueNo">Nie, wybierz pokój</button>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnContinueForget">Zapomnij pokój</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- NICK MODAL -->
-      <div id="nickModal" class="modalBg" style="z-index:57;">
-        <div id="nickCard">
-          <div class="nickHeader">
-            <div class="nickBadge">👤</div>
-            <div>
-              <h3 class="nickTitle" id="nickTitle">Podaj swój nick</h3>
-              <div class="sub" id="nickSub">Będzie używany w pokojach i tabeli ligi.</div>
-            </div>
-          </div>
-
-          <p class="nickDesc" id="nickDesc">
-            Wpisz czytelny nick (3–16 znaków). Możesz go zmienić później w Ustawieniach.
-          </p>
-
-          <div class="row">
-            <input id="inpNickModal" placeholder="Nick (np. Mariusz)" style="flex:1;min-width:220px" />
-            <button class="btn" id="btnNickSave">Dalej</button>
-          </div>
-
-          <div class="row" style="margin-top:12px">
-            <div class="tiny" id="nickError" style="color:rgba(255,160,160,.95);display:none;">—</div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnNickCancel">Anuluj</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SPLASH -->
-      <section id="splash" class="screen active">
-        <div class="splashCard">
-          <div style="font-size:22px;font-weight:1000;">Typer</div>
-          <div class="hint" id="splashHint">Ładowanie…</div>
-          <div class="err" id="splashErr"></div>
-          <div class="spinner"></div>
-        </div>
-      </section>
-
-      <!-- MENU (START) -->
-      <section id="menu" class="screen">
-        <div class="homeOverlay"></div>
-
-        <button class="gearBtn" id="btnOpenSettings" title="Ustawienia" aria-label="Ustawienia">
-          <svg class="gearSvg" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
-            <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5z"></path>
-          </svg>
-        </button>
-
-        <div class="homeButtons" aria-label="Menu główne">
-          <button class="imgBtn" id="btnOpenRooms" aria-label="Pokoje typerów">
-            <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
-          </button>
-
-          <button class="imgBtn" id="btnOpenStats" aria-label="Statystyki">
-            <img src="btn_statystyki.png" alt="Statystyki">
-          </button>
-
-          <button class="imgBtn" id="btnExitApp" aria-label="Wyjście">
-            <img src="btn_wyjscie.png" alt="Wyjście">
-          </button>
-        </div>
-      </section>
-
-      <!-- ROOMS -->
-      <section id="rooms" class="screen">
-        <div class="roomsBox panel">
-          <div class="row">
-            <div class="chip" id="rooms_title">Pokoje typerów</div>
-            <div class="chip"><span id="rooms_nickLabel">Nick:</span> <span id="nickLabelRooms">—</span></div>
-            <div class="spacer"></div>
-            <button class="btn btnSmall" id="btnBackMenu">Wróć</button>
-          </div>
-
-          <div class="panel block">
-            <h2 id="rooms_newRoom">Nowy pokój</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
-              <button class="btn" id="btnCreateRoom">Utwórz</button>
-            </div>
-            <div class="help" style="margin-top:8px" id="rooms_newRoomHint">
-              Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.
-            </div>
-          </div>
-
-          <div class="panel block">
-            <h2 id="rooms_join">Dołącz do pokoju</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
-              <button class="btn" id="btnJoinRoom">Dołącz</button>
-            </div>
-            <div class="help" style="margin-top:8px" id="rooms_joinHint">Wpisz kod od admina.</div>
-          </div>
-
-          <div class="panel block">
-            <h2>Debug</h2>
-            <div class="help" id="debugRooms">—</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ROOM (placeholder) -->
-      <section id="room" class="screen">
-        <div class="panel" style="width:min(900px,96%);margin:auto;padding:18px">
-          <div class="title">Pokój</div>
-          <div class="sub">Ten ekran zostaje — logika gry jest w app.js (nie zmieniamy jej w tej poprawce).</div>
-          <div style="margin-top:14px">
-            <button class="btn" id="btnBackFromRoom">Wróć</button>
-          </div>
-        </div>
-      </section>
-
-      <div class="toast" id="toast"></div>
-      <div class="footerRight" id="footerRight">—</div>
     </div>
   </div>
 
-  <script>
-    const hint = document.getElementById("splashHint");
-    const errBox = document.getElementById("splashErr");
-    function showErr(title, msg){
-      hint.textContent = "STOP: wykryto błąd.";
-      errBox.style.display = "block";
-      errBox.textContent = title + "\n\n" + msg;
-    }
-    window.addEventListener("error", (e) => {
-      showErr("window.error", (e?.message || "unknown") + "\n" + (e?.filename || "") + ":" + (e?.lineno || "?"));
-    });
-    window.addEventListener("unhandledrejection", (e) => {
-      showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
-    });
-  </script>
+  <!-- MENU -->
+  <div id="menu" class="screen">
+    <div id="menuWrap">
+      <div id="gearWrap" title="Ustawienia">
+        <!-- biały tryb dzięki filter w CSS -->
+        <img src="ico_gear.png" alt="Settings"/>
+      </div>
 
-  <script type="module" src="./app.js?v=2005"></script>
+      <div class="menuBtns">
+        <img id="btnOpenRooms" class="btnImg" src="btn_pokoje_typerow.png" alt="Pokoje typerów">
+        <img id="btnOpenStats" class="btnImg" src="btn_statystyki.png" alt="Statystyki">
+        <img id="btnExitApp" class="btnImg" src="btn_wyjscie.png" alt="Wyjście">
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOMS -->
+  <div id="rooms" class="screen">
+    <div id="roomsWrap">
+      <div class="card roomsCard">
+        <div class="topbar">
+          <div class="chip" id="rooms_title">Pokoje typerów</div>
+          <div class="chip"><span id="rooms_nickLabel">Nick:</span> <b id="nickLabelRooms">—</b></div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="section">
+          <div style="font-weight:800" id="rooms_newRoom">Utwórz nowy pokój</div>
+          <div class="muted" id="rooms_newRoomHint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+          <div style="height:10px"></div>
+          <div class="row">
+            <div class="field">
+              <input id="inpRoomName" placeholder="Nazwa pokoju (opcjonalnie)">
+            </div>
+            <button id="btnCreateRoom" class="btn">Utwórz</button>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="section">
+          <div style="font-weight:800" id="rooms_join">Dołącz do pokoju</div>
+          <div class="muted" id="rooms_joinHint">Wpisz kod od admina.</div>
+          <div style="height:10px"></div>
+          <div class="row">
+            <div class="field">
+              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)">
+            </div>
+            <button id="btnJoinRoom" class="btn">Dołącz</button>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="muted" id="debugRooms">—</div>
+
+        <div style="height:12px"></div>
+        <button id="btnBackMenu" class="btn">Wróć</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOM placeholder -->
+  <div id="room" class="screen">
+    <div id="roomWrap">
+      <div class="card">
+        <div class="title">Pokój</div>
+        <div class="muted" id="roomInfoText">—</div>
+        <div style="height:12px"></div>
+        <button id="btnBackFromRoom" class="btn">Wróć</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTINUE MODAL -->
+  <div id="continueModal" class="modal">
+    <div class="card">
+      <div class="title">Kontynuować?</div>
+      <div class="muted" id="continueText">—</div>
+      <div class="modalRow">
+        <button id="btnContinueYes" class="btn">Tak, kontynuuj</button>
+        <button id="btnContinueNo" class="btn">Nie, wybierz pokój</button>
+        <button id="btnContinueForget" class="btn">Zapomnij pokój</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NICK MODAL -->
+  <div id="nickModal" class="modal">
+    <div class="card">
+      <div class="title" id="nickTitle">Podaj swój nick</div>
+      <div class="muted" id="nickSub">Będzie używany w pokojach i tabeli ligi.</div>
+      <div style="height:8px"></div>
+      <div class="muted" id="nickDesc">Wpisz czytelny nick (3–16 znaków). Możesz go zmienić później w Ustawieniach.</div>
+      <div style="height:12px"></div>
+      <input id="inpNickModal" placeholder="Nick (np. Mariusz)">
+      <div id="nickError" class="error">—</div>
+      <div class="modalRow">
+        <button id="btnNickCancel" class="btn">Anuluj</button>
+        <button id="btnNickSave" class="btn">Dalej</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="modal">
+    <div class="card">
+      <div class="topbar">
+        <div class="chip" id="st_title">Ustawienia</div>
+        <button id="btnSettingsClose" class="btn pillBtn">Zamknij</button>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <!-- WELCOME VIEW -->
+      <div id="settingsWelcome" style="display:none;">
+        <div class="section">
+          <div class="topbar">
+            <div class="chip" id="st_welcomeChip">Witaj ponownie</div>
+            <div class="chip"><b id="st_welcomeNick">—</b></div>
+          </div>
+
+          <div style="height:10px"></div>
+          <div class="muted" id="st_welcomeRoomLine">Ostatni pokój: —</div>
+          <div style="height:12px"></div>
+
+          <div class="row" style="justify-content:flex-end">
+            <button id="btnEnterRoomFromSettings" class="btn">Wejdź do pokoju</button>
+            <button id="btnChangeProfileFlow" class="btn">Zmień profil gracza</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAILS VIEW -->
+      <div id="settingsDetails" style="display:none;">
+        <div id="detailsTopBar" class="row" style="justify-content:flex-start; margin-bottom:10px; display:none;">
+          <button id="btnBackToWelcome" class="btn">Wróć</button>
+        </div>
+
+        <div id="settingsBody">
+          <div class="section">
+            <div style="font-weight:800" id="st_profilesTitle">Profil gracza (współdzielenie)</div>
+            <div class="muted" id="st_profilesHint">—</div>
+
+            <div style="height:10px"></div>
+
+            <div class="row">
+              <div class="field">
+                <select id="selProfiles" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:var(--text);">
+                </select>
+              </div>
+              <button id="btnProfileSwitch" class="btn">Przełącz</button>
+              <button id="btnProfileAdd" class="btn">Dodaj</button>
+              <button id="btnProfileDelete" class="btn">Usuń</button>
+            </div>
+
+            <div style="height:10px"></div>
+            <div class="row">
+              <div class="field">
+                <input id="inpNickSettings" placeholder="Nick">
+              </div>
+              <button id="btnSaveNickSettings" class="btn">Zapisz nick</button>
+            </div>
+          </div>
+
+          <div class="section">
+            <div style="font-weight:800" id="st_langTitle">Język</div>
+            <div style="height:10px"></div>
+            <div class="row">
+              <button id="btnLangPL" class="btn langBtn">🇵🇱 Polski</button>
+              <button id="btnLangEN" class="btn langBtn">🇬🇧 English</button>
+              <div class="chip" id="st_langCurrent">Aktualny: Polski</div>
+            </div>
+          </div>
+
+          <div class="section" style="border-color: rgba(255,120,120,.28);">
+            <div style="font-weight:800" id="st_localTitle">Dane lokalne</div>
+            <div class="muted" id="st_localHint">—</div>
+            <div style="height:10px"></div>
+            <div class="row" style="justify-content:space-between">
+              <button id="btnClearLocal" class="btn">Wyczyść dane lokalne</button>
+              <button id="btnClearCancel" class="btn">Anuluj</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
