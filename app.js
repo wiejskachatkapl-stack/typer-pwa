@@ -1,4 +1,4 @@
-const BUILD = 2006;
+const BUILD = 2008;
 
 // TŁA:
 const BG_HOME = "img_menu_pc.png"; // START
@@ -24,9 +24,14 @@ const el = (id) => document.getElementById(id);
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
+function hardAlert(msg){
+  console.log("[ALERT]", msg);
+  alert(msg);
+}
+
 function showToast(msg){
   const t = el("toast");
-  if (!t) return;
+  if (!t) { hardAlert(msg); return; }
   t.textContent = msg;
   t.style.display = "block";
   clearTimeout(showToast._tm);
@@ -49,6 +54,16 @@ function setSplash(msg){
   console.log(msg);
 }
 
+function safeCall(fn, ...args){
+  try{
+    if(typeof fn === "function") return fn(...args);
+  }catch(e){
+    console.error("[safeCall error]", e);
+    showToast("Błąd: " + (e?.message || String(e)));
+  }
+  return undefined;
+}
+
 // ---------- i18n ----------
 const I18N = {
   pl: {
@@ -63,7 +78,7 @@ const I18N = {
     langTitle: "Język",
     current: "Aktualny",
     localTitle: "Dane lokalne",
-    localHint: "Wyczyści: nick, ostatni pokój, język, profile (czyli reset tej gry na tym komputerze).",
+    localHint: "Wyczyści: nick, ostatni pokój, język, profile (reset tej gry na tym komputerze).",
     clearLocal: "Wyczyść dane lokalne",
     cancel: "Anuluj",
     roomsTitle: "Pokoje typerów",
@@ -97,7 +112,12 @@ const I18N = {
     badCode: "Kod powinien mieć 6 znaków.",
     badRoomName: "Nazwa pokoju: 2–24 znaki.",
     roomNotFound: "Nie znaleziono pokoju o takim kodzie.",
-    roomOpen: "Otwieram pokój…"
+    roomOpen: "Otwieram pokój…",
+    pinSetTitle: "Ustaw PIN (4 cyfry)",
+    pinEnterTitle: "Podaj PIN (4 cyfry)",
+    pinWrong: "Zły PIN.",
+    pinNeed: "Aby wejść do pokoju, podaj PIN.",
+    pinHint: "PIN jest lokalny (na tym komputerze)."
   },
   en: {
     settings: "Settings",
@@ -145,7 +165,12 @@ const I18N = {
     badCode: "Code must be 6 characters.",
     badRoomName: "Room name: 2–24 chars.",
     roomNotFound: "Room not found.",
-    roomOpen: "Opening room…"
+    roomOpen: "Opening room…",
+    pinSetTitle: "Set PIN (4 digits)",
+    pinEnterTitle: "Enter PIN (4 digits)",
+    pinWrong: "Wrong PIN.",
+    pinNeed: "To enter the room, enter your PIN.",
+    pinHint: "PIN is local (this computer only)."
   }
 };
 
@@ -191,7 +216,7 @@ function ensureProfiles(){
   let activeId = getActiveProfileId();
 
   if(profiles.length === 0){
-    const p = { id: uid6(), nick: "", lastRoom: "", lastRoomName: "", lang: "pl" };
+    const p = { id: uid6(), nick: "", lastRoom: "", lastRoomName: "", lang: "pl", pinHash: "" };
     profiles = [p];
     saveProfiles(profiles);
     setActiveProfileId(p.id);
@@ -226,26 +251,67 @@ function setLang(lang){
   showToast(lang === "pl" ? "Polski ✅" : "English ✅");
 }
 
+// ---------- PIN (local) ----------
+async function sha256(text){
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  const arr = Array.from(new Uint8Array(buf));
+  return arr.map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function normPin(p){ return String(p||"").trim(); }
+function isPinValid(p){ return /^\d{4}$/.test(normPin(p)); }
+
+async function ensurePinSet(){
+  const prof = getActiveProfile();
+  if(prof.pinHash) return true;
+
+  const p = prompt(`${t("pinSetTitle")}\n${t("pinHint")}`);
+  if(!isPinValid(p)){
+    showToast(t("pinWrong"));
+    return false;
+  }
+  const h = await sha256(normPin(p) + "|" + prof.id);
+  updateActiveProfile({ pinHash: h });
+  return true;
+}
+
+async function verifyPin(){
+  const prof = getActiveProfile();
+  if(!prof.pinHash){
+    const ok = await ensurePinSet();
+    return ok;
+  }
+
+  for(let attempt=1; attempt<=3; attempt++){
+    const p = prompt(`${t("pinEnterTitle")}\n${t("pinNeed")}\n(${attempt}/3)`);
+    if(!isPinValid(p)){
+      showToast(t("pinWrong"));
+      continue;
+    }
+    const h = await sha256(normPin(p) + "|" + prof.id);
+    if(h === prof.pinHash) return true;
+    showToast(t("pinWrong"));
+  }
+  return false;
+}
+
 // ---------- Firebase / Firestore ----------
 let app, auth, db;
 let userUid = null;
 
-// Firestore helpers (lazy imports)
 let _fs = null;
 async function fs(){
   if(_fs) return _fs;
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
   const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
-  const {
-    getFirestore, doc, setDoc, getDoc, serverTimestamp
-  } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const { getFirestore, doc, setDoc, getDoc, serverTimestamp } =
+    await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
 
-  // auth
   await new Promise((resolve, reject)=>{
     const unsub = onAuthStateChanged(auth, async(u)=>{
       try{
@@ -280,11 +346,14 @@ async function getRoomByCode(code){
 async function createRoom(roomName){
   const { doc, setDoc, getDoc, serverTimestamp } = await fs();
 
-  const name = (roomName || "").trim();
+  let name = (roomName || "").trim();
+  if(!name){
+    const nick = (getActiveProfile().nick || "").trim() || "Gracz";
+    name = `Pokój ${nick}`;
+  }
   if(name.length < 2 || name.length > 24) throw new Error(t("badRoomName"));
 
-  // znajdź wolny kod (kilka prób)
-  for(let i=0;i<10;i++){
+  for(let i=0;i<12;i++){
     const code = uid6();
     const ref = doc(db, "rooms", code);
     const snap = await getDoc(ref);
@@ -300,9 +369,7 @@ async function createRoom(roomName){
       status: "open"
     });
 
-    // zapisz lokalnie (profil)
     updateActiveProfile({ lastRoom: code, lastRoomName: name });
-
     return { code, name };
   }
   throw new Error("Nie udało się wygenerować kodu (spróbuj ponownie).");
@@ -321,7 +388,6 @@ async function joinRoom(codeInput){
 
 // ---------- UI update ----------
 function applyI18n(){
-  // Settings
   if(el("st_title")) el("st_title").textContent = t("settings");
   if(el("btnSettingsClose")) el("btnSettingsClose").textContent = t("close");
   if(el("st_profilesTitle")) el("st_profilesTitle").textContent = t("profilesTitle");
@@ -336,13 +402,11 @@ function applyI18n(){
   if(el("btnClearLocal")) el("btnClearLocal").textContent = t("clearLocal");
   if(el("btnClearCancel")) el("btnClearCancel").textContent = t("cancel");
 
-  // Welcome flow
   if(el("st_welcomeChip")) el("st_welcomeChip").textContent = t("welcomeBack");
   if(el("btnEnterRoomFromSettings")) el("btnEnterRoomFromSettings").textContent = t("enterRoom");
   if(el("btnChangeProfileFlow")) el("btnChangeProfileFlow").textContent = t("changeProfile");
   if(el("btnBackToWelcome")) el("btnBackToWelcome").textContent = t("detailsBack");
 
-  // Rooms
   if(el("rooms_title")) el("rooms_title").textContent = t("roomsTitle");
   if(el("rooms_nickLabel")) el("rooms_nickLabel").textContent = t("roomsNick");
   if(el("rooms_newRoom")) el("rooms_newRoom").textContent = t("newRoom");
@@ -352,14 +416,13 @@ function applyI18n(){
   if(el("btnBackMenu")) el("btnBackMenu").textContent = t("back");
 
   if(el("inpRoomName")) el("inpRoomName").placeholder = (getActiveProfile().lang === "en")
-    ? "Room name (e.g. Home)"
-    : "Nazwa pokoju (np. Domowy)";
+    ? "Room name (optional)"
+    : "Nazwa pokoju (opcjonalnie)";
 
   if(el("inpJoinCode")) el("inpJoinCode").placeholder = (getActiveProfile().lang === "en")
     ? "Enter code (e.g. AB12CD)"
     : "Wpisz kod (np. AB12CD)";
 
-  // Nick modal texts
   if(el("nickTitle")) el("nickTitle").textContent = t("nickModalTitle");
   if(el("nickSub")) el("nickSub").textContent = t("nickModalSub");
   if(el("nickDesc")) el("nickDesc").textContent = t("nickModalDesc");
@@ -487,6 +550,10 @@ async function ensureNickNice(){
 
   const ok = await openNickModal();
   if(!ok) return "";
+
+  const pinOk = await ensurePinSet();
+  if(!pinOk) return "";
+
   return (getActiveProfile().nick || "").trim();
 }
 
@@ -499,7 +566,6 @@ async function showContinueModalForCode(code){
   const nick = (getActiveProfile().nick || "").trim() || "—";
   let roomName = (getActiveProfile().lastRoomName || "").trim();
 
-  // spróbuj dociągnąć nazwę z Firestore jeśli brak
   try{
     if(!roomName){
       const room = await getRoomByCode(code);
@@ -512,7 +578,8 @@ async function showContinueModalForCode(code){
     `${nick}\n\n` +
     `Grasz w pokoju: ${roomName || "—"}\n` +
     `Kod: ${code}\n\n` +
-    `Czy chcesz kontynuować w tym pokoju?`;
+    `Czy chcesz kontynuować w tym pokoju?\n\n` +
+    `${t("pinNeed")}`;
 
   modal.style.display = "flex";
 }
@@ -536,11 +603,112 @@ async function handleOpenRooms(){
   if(el("debugRooms")) el("debugRooms").textContent = "—";
 }
 
-// ---------- Enter room (tu zostaje placeholder, ale już zapisuje i pokazuje) ----------
+// ---------- ROOM: AUTO-WPIĘCIE STAREJ LOGIKI ----------
+let CURRENT_ROOM = { code:"", name:"" };
+
+function detectLegacyOpenRoom(){
+  // Najbardziej prawdopodobne nazwy z poprzednich wersji:
+  const candidates = [];
+
+  // 1) window.boot.*
+  if (window.boot){
+    candidates.push(
+      window.boot.openRoom,
+      window.boot.enterRoom,
+      window.boot.startRoom,
+      window.boot.goRoom,
+      window.boot.open,
+      window.boot.enter
+    );
+  }
+
+  // 2) window.Typer / window.TyperApp / window.app
+  if (window.Typer){
+    candidates.push(window.Typer.openRoom, window.Typer.enterRoom, window.Typer.startRoom);
+  }
+  if (window.TyperApp){
+    candidates.push(window.TyperApp.openRoom, window.TyperApp.enterRoom, window.TyperApp.startRoom);
+  }
+  if (window.app){
+    candidates.push(window.app.openRoom, window.app.enterRoom, window.app.startRoom);
+  }
+
+  // 3) global funkcje (czasem były jako window.openRoom)
+  candidates.push(
+    window.openRoom,
+    window.enterRoom,
+    window.startRoom,
+    window.renderRoom,
+    window.showRoom
+  );
+
+  // Zwróć pierwszą działającą funkcję
+  for(const fn of candidates){
+    if(typeof fn === "function") return fn;
+  }
+  return null;
+}
+
 async function openRoomScreen(code){
+  const okPin = await verifyPin();
+  if(!okPin){
+    showToast(t("pinWrong"));
+    return;
+  }
+
   showToast(t("roomOpen"));
   showScreen("room");
-  // tu docelowo wróci Twoja logika typowania/pokoju
+
+  try{
+    const room = await getRoomByCode(code);
+    CURRENT_ROOM = { code, name: room?.name || (getActiveProfile().lastRoomName || "") || "" };
+  }catch{
+    CURRENT_ROOM = { code, name: (getActiveProfile().lastRoomName || "") || "" };
+  }
+
+  // 1) Spróbuj odpalić starą logikę
+  const legacyFn = detectLegacyOpenRoom();
+  if(legacyFn){
+    console.log("[LEGACY] found openRoom fn:", legacyFn.name || "(anonymous)");
+    // próbujemy różne sygnatury (code / roomObject)
+    const roomObj = {
+      code: CURRENT_ROOM.code,
+      name: CURRENT_ROOM.name,
+      nick: (getActiveProfile().nick || "").trim(),
+      profileId: getActiveProfile().id
+    };
+
+    // Najpierw klasycznie (code)
+    let res = safeCall(legacyFn, CURRENT_ROOM.code);
+
+    // Jeśli legacy oczekuje obiektu (często tak bywa), spróbuj też obiekt
+    if(res === undefined){
+      res = safeCall(legacyFn, roomObj);
+    }
+
+    // Jeśli legacy zwraca Promise i wywali błąd — złapiemy
+    if(res && typeof res.then === "function"){
+      res.catch(e=>{
+        console.error("[LEGACY async error]", e);
+        showToast("Błąd w starej logice: " + (e?.message || String(e)));
+      });
+    }
+
+    // ✅ Jeśli legacyFn istnieje, to zakładamy że sama wyrenderuje ekran typowania.
+    // Nie nadpisujemy już placeholderem.
+    return;
+  }
+
+  // 2) Fallback: pokaż informację (żebyś widział że pokój istnieje)
+  const info =
+    `Pokój: ${CURRENT_ROOM.name || "—"}\n` +
+    `Kod: ${CURRENT_ROOM.code}\n` +
+    `Nick: ${(getActiveProfile().nick||"").trim() || "—"}\n\n` +
+    `Nie wykryto starej logiki (boot/app).`;
+
+  const holder = el("roomInfoText"); // jeśli masz ten id - pokaże, jak nie masz - nic
+  if(holder) holder.textContent = info;
+  console.log("[ROOM fallback]", CURRENT_ROOM);
 }
 
 // ---------- UI binding ----------
@@ -571,11 +739,12 @@ function bindUI(){
   el("btnLangEN").onclick = ()=> setLang("en");
 
   // Settings nick
-  el("btnSaveNickSettings").onclick = ()=>{
+  el("btnSaveNickSettings").onclick = async ()=>{
     const v = (el("inpNickSettings").value || "").trim();
     const check = validateNick(v);
     if(!check.ok){ showToast(t("nickBad")); return; }
     updateActiveProfile({ nick: check.v });
+    await ensurePinSet();
     refreshNickLabels();
     renderProfilesSelect();
     showToast(t("nickSaved"));
@@ -598,7 +767,7 @@ function bindUI(){
 
   el("btnProfileAdd").onclick = ()=>{
     const profiles = ensureProfiles();
-    const newP = { id: uid6(), nick: "", lastRoom: "", lastRoomName:"", lang: getActiveProfile().lang || "pl" };
+    const newP = { id: uid6(), nick: "", lastRoom: "", lastRoomName:"", lang: getActiveProfile().lang || "pl", pinHash: "" };
     profiles.push(newP);
     saveProfiles(profiles);
     setActiveProfileId(newP.id);
@@ -647,7 +816,7 @@ function bindUI(){
   // ROOMS back
   el("btnBackMenu").onclick = ()=> showScreen("menu");
 
-  // ROOMS create/join  ✅✅✅
+  // ROOMS create/join
   el("btnCreateRoom").onclick = async ()=>{
     try{
       const nick = await ensureNickNice();
@@ -657,15 +826,16 @@ function bindUI(){
       showToast(t("creating"));
 
       const r = await createRoom(name);
-      el("debugRooms").textContent = `Utworzono: ${r.name} / ${r.code}`;
 
-      // od razu pokaż modal kontynuacji (już ma lastRoom)
+      if(el("debugRooms")) el("debugRooms").textContent = `Utworzono: ${r.name} / ${r.code}`;
+
       await showContinueModalForCode(r.code);
       showToast(`${t("created")}: ${r.code}`);
-      // odśwież ustawienia (żeby pokój się pojawił w “Witaj ponownie”)
       showSettingsWelcome();
     }catch(e){
-      showToast(e?.message || String(e));
+      const msg = e?.message || String(e);
+      showToast(msg);
+      console.error(e);
     }
   };
 
@@ -678,13 +848,16 @@ function bindUI(){
       showToast(t("joining"));
 
       const r = await joinRoom(code);
-      el("debugRooms").textContent = `Dołączono: ${r.name} / ${r.code}`;
+
+      if(el("debugRooms")) el("debugRooms").textContent = `Dołączono: ${r.name} / ${r.code}`;
 
       await showContinueModalForCode(r.code);
       showToast(`${t("joined")}: ${r.code}`);
       showSettingsWelcome();
     }catch(e){
-      showToast(e?.message || String(e));
+      const msg = e?.message || String(e);
+      showToast(msg);
+      console.error(e);
     }
   };
 
@@ -696,7 +869,6 @@ function bindUI(){
   };
   el("btnContinueNo").onclick = ()=>{
     hideContinueModal();
-    // zostajemy na ekranie Rooms (żeby tworzyć/dołączać)
     showScreen("rooms");
   };
   el("btnContinueForget").onclick = ()=>{
