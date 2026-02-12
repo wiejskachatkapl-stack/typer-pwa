@@ -1,38 +1,44 @@
-const CACHE = "typer-cache-v1";
+/* sw.js — BUILD 2011 (cache fix) */
+
+const BUILD = 2011;
+const CACHE = `typer-cache-${BUILD}`;
+
 const ASSETS = [
   "./",
   "./index.html",
   "./app.js",
   "./manifest.json",
+  "./sw.js",
+
+  // Tła
   "./img_menu_pc.png",
   "./img_tlo.png",
+
+  // Ikony/UI
+  "./ico_gear.png",
   "./btn_pokoje_typerow.png",
   "./btn_statystyki.png",
   "./btn_wyjscie.png",
-  "./ico_gear.png"
+
+  // (Jeśli używasz innych plików graficznych w typowaniu – dodaj je tu)
 ];
 
-self.addEventListener("install", (e)=>{
-  e.waitUntil(
-    caches.open(CACHE).then(c=>c.addAll(ASSETS)).then_links?.(()=>self.skipWaiting()) ?? self.skipWaiting()
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener("activate", (e)=>{
-  e.waitUntil(
-    caches.keys().then(keys=>Promise.all(keys.map(k=>k!==CACHE ? caches.delete(k) : null)))
-      .then(()=>self.clients.claim())
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((k) => (k !== CACHE ? caches.delete(k) : null)))
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", (e)=>{
-  e.respondWith(
-    caches.match(e.request).then(cached=>{
-      return cached || fetch(e.request).then(resp=>{
-        const copy = resp.clone();
-        caches.open(CACHE).then(c=>c.put(e.request, copy)).catch(()=>{});
-        return resp;
-      }).catch(()=>cached);
-    })
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
