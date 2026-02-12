@@ -1,9 +1,4 @@
-/* =========================================================
-   TYPUJ SPORT - app.js
-   ZASADA: w tym pliku są moduły, ale nie mieszamy odpowiedzialności.
-   ========================================================= */
-
-const BUILD = 2010;
+const BUILD = 2011;
 
 /* =========================
    1) ASSETS / UI CONST
@@ -14,7 +9,7 @@ const Assets = {
 };
 
 const UI = {
-  screens: ["splash","menu","startFlow","rooms"],
+  screens: ["splash","menu","startFlow","rooms","room"],
   el(id){ return document.getElementById(id); },
   showScreen(id){
     UI.screens.forEach(s=>{
@@ -50,7 +45,6 @@ const Background = {
 
 /* =========================
    2) STORAGE / PROFILES
-   (współdzielenie + nick + język + lastRoom + pinHash)
    ========================= */
 const StorageProfiles = (() => {
   const KEY_PROFILES = "typer_profiles_v2";
@@ -109,12 +103,7 @@ const StorageProfiles = (() => {
     save(profiles);
   }
 
-  function clearAll(){
-    localStorage.removeItem(KEY_PROFILES);
-    localStorage.removeItem(KEY_ACTIVE);
-  }
-
-  return { ensure, active, update, clearAll };
+  return { ensure, active, update };
 })();
 
 /* =========================
@@ -126,30 +115,11 @@ const I18n = (() => {
       splashFirebase: "Ładowanie Firebase…",
       settings: "Ustawienia",
       close: "Zamknij",
-      nick: "Nick",
-      save: "Zapisz",
-      nickHint: "Zmieniasz nick lokalnie (dla tego profilu).",
-      lang: "Język",
-      current: "Aktualny",
-      clearTitle: "Dane lokalne",
-      clearHint: "Wyczyści: nick, język, ostatni pokój, PIN (dla tego profilu).",
-      clear: "Wyczyść dane lokalne",
-      cancel: "Anuluj",
-
-      nickFirstTitle: "Podaj swój nick",
-      nickFirstSub: "To będzie widoczne w pokojach i tabeli ligi.",
-      next: "Dalej",
       nickBad: "Nick musi mieć 3–16 znaków.",
-
       welcomeTitle: "Witaj ponownie",
       enterRoom: "Wejdź do pokoju",
       changeRoom: "Zmień pokój",
-
-      chooseRoomTitle: "Pokój typerów",
       chooseRoomSub: "Wybierz co chcesz zrobić:",
-      newRoom: "Nowy pokój typerów",
-      joinRoom: "Wejdź do pokoju",
-
       roomsTitle: "Pokoje typerów",
       roomsNick: "Nick:",
       create: "Utwórz",
@@ -162,42 +132,22 @@ const I18n = (() => {
       badCode: "Kod powinien mieć 6 znaków.",
       roomNotFound: "Nie znaleziono pokoju.",
       badRoomName: "Nazwa pokoju: 2–24 znaki.",
-
       pinSet: "Ustaw PIN (4 cyfry)\nPIN jest lokalny (na tym komputerze).",
       pinEnter: "Podaj PIN (4 cyfry)",
       pinWrong: "Zły PIN.",
       noRoomSaved: "Brak zapisanego pokoju.",
-      cleared: "Wyczyszczono dane lokalne.",
-      askClear: "Na pewno wyczyścić dane lokalne tego profilu?"
+      roomLoading: "Ładowanie pokoju…",
+      roomNoLegacy: "Nie wykryto mechaniki typowania.\n\nTo oznacza, że w tej wersji nie ma Twojego starego kodu typowania (openRoom/boot).\n\nWklej działającą wersję typowania do TypingEngine albo dodaj stare funkcje globalne."
     },
     en: {
       splashFirebase: "Loading Firebase…",
       settings: "Settings",
       close: "Close",
-      nick: "Nickname",
-      save: "Save",
-      nickHint: "Nickname is stored locally (for this profile).",
-      lang: "Language",
-      current: "Current",
-      clearTitle: "Local data",
-      clearHint: "Clears: nickname, language, last room, PIN (for this profile).",
-      clear: "Clear local data",
-      cancel: "Cancel",
-
-      nickFirstTitle: "Enter your nickname",
-      nickFirstSub: "It will be visible in rooms and league table.",
-      next: "Continue",
       nickBad: "Nickname must be 3–16 characters.",
-
       welcomeTitle: "Welcome back",
       enterRoom: "Enter room",
       changeRoom: "Change room",
-
-      chooseRoomTitle: "Typer room",
       chooseRoomSub: "Choose what you want to do:",
-      newRoom: "Create new room",
-      joinRoom: "Enter room",
-
       roomsTitle: "Rooms",
       roomsNick: "Nick:",
       create: "Create",
@@ -210,13 +160,12 @@ const I18n = (() => {
       badCode: "Code must be 6 characters.",
       roomNotFound: "Room not found.",
       badRoomName: "Room name: 2–24 chars.",
-
       pinSet: "Set PIN (4 digits)\nPIN is local (this computer).",
       pinEnter: "Enter PIN (4 digits)",
       pinWrong: "Wrong PIN.",
       noRoomSaved: "No saved room.",
-      cleared: "Local data cleared.",
-      askClear: "Clear local data for this profile?"
+      roomLoading: "Loading room…",
+      roomNoLegacy: "Typing engine not detected.\n\nThis build doesn't include your previous typing code (openRoom/boot).\n\nPaste the old typing logic into TypingEngine or expose global openRoom function."
     }
   };
 
@@ -225,44 +174,11 @@ const I18n = (() => {
     const l = lang();
     return dict[l]?.[key] ?? dict.pl[key] ?? key;
   }
-
-  function applyStatic(){
-    UI.el("st_title").textContent = t("settings");
-    UI.el("st_close").textContent = t("close");
-    UI.el("st_nickTitle").textContent = t("nick");
-    UI.el("st_nickSave").textContent = t("save");
-    UI.el("st_nickHint").textContent = t("nickHint");
-    UI.el("st_langTitle").textContent = t("lang");
-    UI.el("st_clearTitle").textContent = t("clearTitle");
-    UI.el("st_clearHint").textContent = t("clearHint");
-    UI.el("st_clearBtn").textContent = t("clear");
-    UI.el("st_cancelBtn").textContent = t("cancel");
-
-    UI.el("nm_title").textContent = t("nickFirstTitle");
-    UI.el("nm_sub").textContent = t("nickFirstSub");
-    UI.el("nm_ok").textContent = t("next");
-    UI.el("nm_cancel").textContent = t("cancel");
-
-    UI.el("rooms_title").textContent = t("roomsTitle");
-    UI.el("rooms_nickLabel").textContent = t("roomsNick");
-    UI.el("btnCreateRoom").textContent = t("create");
-    UI.el("btnJoinRoom").textContent = t("join");
-    UI.el("btnRoomsBack").textContent = t("back");
-
-    UI.el("st_langCurrent").textContent = `${t("current")}: ${lang()==="pl"?"Polski":"English"}`;
-  }
-
-  function setLang(l){
-    StorageProfiles.update({ lang:l });
-    applyStatic();
-    UI.toast(l==="pl" ? "Polski ✅" : "English ✅");
-  }
-
-  return { t, lang, applyStatic, setLang };
+  return { t, lang };
 })();
 
 /* =========================
-   4) PIN (lokalny, 4 cyfry)
+   4) PIN
    ========================= */
 const Pin = (() => {
   async function sha256(text){
@@ -289,7 +205,6 @@ const Pin = (() => {
     if(!p.pinHash){
       return await ensureSet();
     }
-
     for(let i=1;i<=3;i++){
       const pin = prompt(`${I18n.t("pinEnter")}\n(${i}/3)`);
       if(!isValid(pin)){ UI.toast(I18n.t("pinWrong")); continue; }
@@ -307,7 +222,6 @@ const Pin = (() => {
    5) FIREBASE SERVICE
    ========================= */
 const FirebaseService = (() => {
-  // Twoje dane:
   const firebaseConfig = {
     apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
     authDomain: "typer-b3087.firebaseapp.com",
@@ -417,28 +331,80 @@ const RoomsService = (() => {
     return { code, name: room.name || "" };
   }
 
-  return { normCode, getRoomByCode, createRoom, joinRoom };
+  return { getRoomByCode, createRoom, joinRoom };
 })();
 
 /* =========================
-   7) TYPING ENGINE (TU JEST TYPOWANIE)
-   NIE RUSZAMY GO PRZY ZMIANACH STARTU/USTAWIEŃ.
+   7) TYPING ENGINE (MOST DO STAREJ LOGIKI)
    ========================= */
 const TypingEngine = (() => {
-  // ✅ JEDYNY “STYK” Z RESZTĄ APP:
-  // mount({ roomCode, roomName, nick, profileId })
+  function detectLegacy(){
+    const cands = [];
+
+    // boot.*
+    if(window.boot){
+      if(typeof window.boot.openRoom === "function") cands.push({ name:"boot.openRoom", fn: window.boot.openRoom });
+      if(typeof window.boot.enterRoom === "function") cands.push({ name:"boot.enterRoom", fn: window.boot.enterRoom });
+      if(typeof window.boot.startRoom === "function") cands.push({ name:"boot.startRoom", fn: window.boot.startRoom });
+    }
+
+    // app / Typer
+    if(window.app){
+      if(typeof window.app.openRoom === "function") cands.push({ name:"app.openRoom", fn: window.app.openRoom });
+      if(typeof window.app.enterRoom === "function") cands.push({ name:"app.enterRoom", fn: window.app.enterRoom });
+    }
+    if(window.Typer){
+      if(typeof window.Typer.openRoom === "function") cands.push({ name:"Typer.openRoom", fn: window.Typer.openRoom });
+      if(typeof window.Typer.enterRoom === "function") cands.push({ name:"Typer.enterRoom", fn: window.Typer.enterRoom });
+    }
+
+    // global
+    if(typeof window.openRoom === "function") cands.push({ name:"window.openRoom", fn: window.openRoom });
+    if(typeof window.enterRoom === "function") cands.push({ name:"window.enterRoom", fn: window.enterRoom });
+
+    return cands[0] || null;
+  }
+
   function mount(ctx){
-    // TU MA WEJŚĆ TWOJA ISTNIEJĄCA LOGIKA TYPOWANIA.
-    // W tym szkielecie pokazuję tylko placeholder:
-    UI.toast(`OK: wejście do pokoju "${ctx.roomName}" (kod ukryty)`);
-    // -> tutaj normalnie renderujesz ekran typowania.
+    // pokazujemy ekran hosta
+    UI.showScreen("room");
+    UI.el("room_title").textContent = "Pokój";
+    UI.el("room_info").textContent = I18n.t("roomLoading");
+
+    // próbujemy uruchomić starą logikę typowania
+    const legacy = detectLegacy();
+    if(legacy){
+      UI.el("room_info").textContent = `Start: ${legacy.name}\nNick: ${ctx.nick}\nPokój: ${ctx.roomName}\n\n(Jeśli nadal nie widać typowania — stara logika nie renderuje na tym ekranie.)`;
+
+      try{
+        // najpierw spróbujmy z samym code, potem z obiektem
+        let res = legacy.fn(ctx.roomCode);
+        if(res === undefined) res = legacy.fn(ctx);
+
+        // obsługa async
+        if(res && typeof res.then === "function"){
+          res.catch(err=>{
+            console.error(err);
+            UI.el("room_info").textContent = "Błąd starej logiki: " + (err?.message || String(err));
+          });
+        }
+        return;
+      }catch(e){
+        console.error(e);
+        UI.el("room_info").textContent = "Błąd starej logiki: " + (e?.message || String(e));
+        return;
+      }
+    }
+
+    // nie znaleziono mechaniki typowania
+    UI.el("room_info").textContent = I18n.t("roomNoLegacy");
   }
 
   return { mount };
 })();
 
 /* =========================
-   8) UI ROUTER / START FLOW
+   8) APP FLOW / UI
    ========================= */
 const App = (() => {
   function validateNick(v){
@@ -451,85 +417,40 @@ const App = (() => {
     UI.el("rooms_nick").textContent = nick;
   }
 
-  function openSettings(){
-    I18n.applyStatic();
-    UI.el("st_nickInp").value = StorageProfiles.active().nick || "";
-    UI.el("settingsModal").style.display = "flex";
-  }
-  function closeSettings(){
-    UI.el("settingsModal").style.display = "none";
-  }
-
-  function openNickFirst(){
-    I18n.applyStatic();
-    UI.el("nm_inp").value = "";
-    UI.el("nm_err").style.display = "none";
-    UI.el("nickModal").style.display = "flex";
-    setTimeout(()=> UI.el("nm_inp").focus(), 50);
-  }
-  function closeNickFirst(){
-    UI.el("nickModal").style.display = "none";
-  }
-
   async function ensureNickAndPin(){
     const nick = (StorageProfiles.active().nick||"").trim();
     if(nick) return true;
 
-    openNickFirst();
+    // uproszczony pierwszy nick (bez modali tu, żeby nie mieszać — masz już swój modal w index, możesz go dopiąć później)
+    const v = prompt("Podaj nick (3–16):");
+    if(!validateNick(v)){ UI.toast(I18n.t("nickBad")); return false; }
+    StorageProfiles.update({ nick:v.trim() });
 
-    return await new Promise((resolve)=>{
-      UI.el("nm_cancel").onclick = ()=>{
-        closeNickFirst();
-        resolve(false);
-      };
-      UI.el("nm_ok").onclick = async ()=>{
-        const v = UI.el("nm_inp").value;
-        if(!validateNick(v)){
-          UI.el("nm_err").textContent = I18n.t("nickBad");
-          UI.el("nm_err").style.display = "block";
-          return;
-        }
-        StorageProfiles.update({ nick:v.trim() });
-        closeNickFirst();
-
-        const okPin = await Pin.ensureSet();
-        if(!okPin) return resolve(false);
-
-        resolve(true);
-      };
-    });
+    const okPin = await Pin.ensureSet();
+    return okPin;
   }
 
   function openWelcomeOrChooseRoom(){
     const prof = StorageProfiles.active();
     const nick = (prof.nick||"").trim();
-
-    // Jeśli brak nicku, wymusimy nick modal, a potem wrócimy tu
-    if(!nick){
-      UI.showScreen("menu");
-      return;
-    }
+    if(!nick){ UI.showScreen("menu"); return; }
 
     const hasRoom = (prof.lastRoom||"").trim().length === 6;
 
     UI.el("sf_title").textContent = I18n.t("welcomeTitle");
     UI.el("sf_sub").textContent = hasRoom
-      ? `${nick}\n\n${I18n.t("enterRoom")} → ${prof.lastRoomName || "—"}`
+      ? `${nick}\n\nWejdź do pokoju → ${prof.lastRoomName || "—"}`
       : `${nick}\n\n${I18n.t("chooseRoomSub")}`;
 
-    UI.el("sf_btnA").textContent = hasRoom ? I18n.t("enterRoom") : I18n.t("newRoom");
-    UI.el("sf_btnB").textContent = hasRoom ? I18n.t("changeRoom") : I18n.t("joinRoom");
+    UI.el("sf_btnA").textContent = hasRoom ? I18n.t("enterRoom") : "Nowy pokój typerów";
+    UI.el("sf_btnB").textContent = hasRoom ? I18n.t("changeRoom") : "Wejdź do pokoju";
 
     UI.el("sf_btnA").onclick = async ()=>{
-      if(hasRoom){
-        await enterSavedRoom();
-      }else{
-        UI.showScreen("rooms"); // user wybierze create
-        refreshRoomsNick();
-      }
+      if(hasRoom) await enterSavedRoom();
+      else { UI.showScreen("rooms"); refreshRoomsNick(); }
     };
     UI.el("sf_btnB").onclick = ()=>{
-      UI.showScreen("rooms"); // user wybierze join
+      UI.showScreen("rooms");
       refreshRoomsNick();
     };
 
@@ -544,52 +465,25 @@ const App = (() => {
     const okPin = await Pin.verify();
     if(!okPin) return;
 
-    // ważne: nie pokazujemy kodu na UI, ale używamy go w logice
     const ctx = {
       roomCode: code,
       roomName: prof.lastRoomName || "",
       nick: (prof.nick||"").trim(),
       profileId: prof.id
     };
+
     TypingEngine.mount(ctx);
   }
 
   function bindUI(){
-    // MENU
     UI.el("btnOpenRooms").onclick = async ()=>{
       const ok = await ensureNickAndPin();
       if(!ok) return;
       openWelcomeOrChooseRoom();
     };
-    UI.el("btnOpenStats").onclick = ()=> UI.toast("Statystyki — później (LeagueService)");
+    UI.el("btnOpenStats").onclick = ()=> UI.toast("Statystyki — później");
     UI.el("btnExitApp").onclick = ()=> UI.toast("Wyjście — zamknij kartę / aplikację");
-    UI.el("gearWrap").onclick = ()=> openSettings();
 
-    // SETTINGS
-    UI.el("st_close").onclick = ()=> closeSettings();
-    UI.el("st_cancelBtn").onclick = ()=> closeSettings();
-    UI.el("st_langPL").onclick = ()=> I18n.setLang("pl");
-    UI.el("st_langEN").onclick = ()=> I18n.setLang("en");
-
-    UI.el("st_nickSave").onclick = async ()=>{
-      const v = (UI.el("st_nickInp").value||"").trim();
-      if(!validateNick(v)){ UI.toast(I18n.t("nickBad")); return; }
-      StorageProfiles.update({ nick:v });
-      await Pin.ensureSet();
-      I18n.applyStatic();
-      UI.toast("OK ✅");
-    };
-
-    UI.el("st_clearBtn").onclick = ()=>{
-      if(!confirm(I18n.t("askClear"))) return;
-      // czyścimy TYLKO dane profilu (bez kasowania całej gry)
-      StorageProfiles.update({ nick:"", lang:"pl", lastRoom:"", lastRoomName:"", pinHash:"" });
-      I18n.applyStatic();
-      UI.toast(I18n.t("cleared"));
-      closeSettings();
-    };
-
-    // ROOMS
     UI.el("btnRoomsBack").onclick = ()=> UI.showScreen("menu");
 
     UI.el("btnCreateRoom").onclick = async ()=>{
@@ -599,11 +493,9 @@ const App = (() => {
 
         UI.toast(I18n.t("creating"));
         const name = UI.el("inpRoomName").value || "";
-        const r = await RoomsService.createRoom(name);
-
-        // po utworzeniu od razu wejście do pokoju (PIN już mamy)
+        await RoomsService.createRoom(name);
         await enterSavedRoom();
-        UI.toast(`${I18n.t("created")}`);
+        UI.toast(I18n.t("created"));
       }catch(e){
         UI.toast(e?.message || String(e));
       }
@@ -617,18 +509,18 @@ const App = (() => {
         UI.toast(I18n.t("joining"));
         const code = UI.el("inpJoinCode").value || "";
         await RoomsService.joinRoom(code);
-
         await enterSavedRoom();
-        UI.toast(`${I18n.t("joined")}`);
+        UI.toast(I18n.t("joined"));
       }catch(e){
         UI.toast(e?.message || String(e));
       }
     };
+
+    UI.el("btnRoomBack").onclick = ()=> UI.showScreen("menu");
   }
 
   async function start(){
     StorageProfiles.ensure();
-    I18n.applyStatic();
 
     UI.showScreen("splash");
     UI.splash(`BUILD ${BUILD}\n${I18n.t("splashFirebase")}`);
@@ -638,7 +530,6 @@ const App = (() => {
     UI.footer(`BUILD ${BUILD}`);
     bindUI();
 
-    // start w menu
     UI.showScreen("menu");
     Background.set(Assets.BG_HOME);
   }
