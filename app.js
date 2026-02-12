@@ -229,14 +229,49 @@ async function openRooms(){
 
 // ---------- PLACEHOLDER wejścia do pokoju (TU W TWOIM DZIAŁAJĄCYM app.js masz typowanie) ----------
 async function enterRoomBySaved(){
+
   const code = getActiveRoom();
-  if(!code){ showToast("Brak zapisanego pokoju."); return; }
+  if(!code){
+    showToast("Brak zapisanego pokoju.");
+    return;
+  }
 
-  // UWAGA: tutaj normalnie w Twojej działającej wersji wchodzisz do typowania.
-  // W tej wersji minimalnie przełączamy ekran na #room – reszta jest w Twojej logice typowania.
   showScreen("room");
-}
 
+  // 🔥 PRZYWRACAMY TWOJĄ STARĄ LOGIKĘ TYPOWANIA
+  if(window.boot && typeof window.boot.openRoom === "function"){
+    window.boot.openRoom(code);
+    return;
+  }
+
+  if(window.app && typeof window.app.openRoom === "function"){
+    window.app.openRoom(code);
+    return;
+  }
+
+  if(window.Typer && typeof window.Typer.openRoom === "function"){
+    window.Typer.openRoom(code);
+    return;
+  }
+
+  if(typeof window.openRoom === "function"){
+    window.openRoom(code);
+    return;
+  }
+
+  if(typeof window.enterRoom === "function"){
+    window.enterRoom(code);
+    return;
+  }
+
+  if(typeof window.startRoom === "function"){
+    window.startRoom(code);
+    return;
+  }
+
+  // jeśli nic nie znaleziono
+  showToast("BŁĄD: nie znaleziono funkcji typowania!");
+}
 // ---------- bind UI ----------
 function bindUI(){
   // menu
