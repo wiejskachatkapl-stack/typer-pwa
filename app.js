@@ -107,7 +107,7 @@ const I18N = {
     welcomeBack: "Witaj ponownie",
     lastRoom: "Ostatni pokój",
     enterRoom: "Wejdź do pokoju",
-    changeRoom: "Zmień pokój",
+    changeProfile: "Zmień profil gracza",
     detailsBack: "Wróć",
     nickModalTitle: "Podaj swój nick",
     nickModalSub: "Będzie używany w pokojach i tabeli ligi.",
@@ -121,21 +121,7 @@ const I18N = {
     badCode: "Kod powinien mieć 6 znaków.",
     badRoomName: "Nazwa pokoju: 2–24 znaki.",
     roomNotFound: "Nie znaleziono pokoju o takim kodzie.",
-    roomOpen: "Otwieram pokój…",
-    pinSetTitle: "Ustaw PIN (4 cyfry)",
-    pinEnterTitle: "Podaj PIN (4 cyfry)",
-    pinWrong: "Zły PIN.",
-    pinNeed: "Aby wejść do pokoju, podaj PIN.",
-    pinHint: "PIN jest lokalny (na tym komputerze).",
-    startupAddProfile: "Dodaj profil gracza",
-    startupAddProfileHint: "Wpisz swój nick (3–16 znaków).",
-    startupWelcome: "Witaj ponownie",
-    startupChoose: "Co chcesz zrobić?",
-    startupChooseHint: "Możesz utworzyć nowy pokój albo wejść do istniejącego.",
-    btnNewRoom: "Nowy pokój typerów",
-    btnJoinRoom: "Wejdź do pokoju",
-    btnChangeRoom: "Zmień pokój",
-    btnChangeNick: "Zmień nick",
+    roomOpen: "Otwieram pokój…"
   },
   en: {
     settings: "Settings",
@@ -154,7 +140,7 @@ const I18N = {
     cancel: "Cancel",
     roomsTitle: "Rooms",
     roomsNick: "Nick:",
-    newRoom: "New room",
+    newRoom: "Create room",
     newRoomHint: "Room code has 6 chars. The creator becomes admin.",
     joinRoom: "Join room",
     joinHint: "Enter the admin code.",
@@ -169,7 +155,7 @@ const I18N = {
     welcomeBack: "Welcome back",
     lastRoom: "Last room",
     enterRoom: "Enter room",
-    changeRoom: "Change room",
+    changeProfile: "Switch player profile",
     detailsBack: "Back",
     nickModalTitle: "Enter your nickname",
     nickModalSub: "Used in rooms and league table.",
@@ -183,21 +169,7 @@ const I18N = {
     badCode: "Code must be 6 characters.",
     badRoomName: "Room name: 2–24 chars.",
     roomNotFound: "Room not found.",
-    roomOpen: "Opening room…",
-    pinSetTitle: "Set PIN (4 digits)",
-    pinEnterTitle: "Enter PIN (4 digits)",
-    pinWrong: "Wrong PIN.",
-    pinNeed: "To enter the room, enter your PIN.",
-    pinHint: "PIN is local (this computer only).",
-    startupAddProfile: "Add player profile",
-    startupAddProfileHint: "Enter your nickname (3–16 chars).",
-    startupWelcome: "Welcome back",
-    startupChoose: "What do you want to do?",
-    startupChooseHint: "Create a new room or enter an existing one.",
-    btnNewRoom: "New room",
-    btnJoinRoom: "Enter room",
-    btnChangeRoom: "Change room",
-    btnChangeNick: "Change nickname",
+    roomOpen: "Opening room…"
   }
 };
 
@@ -243,7 +215,7 @@ function ensureProfiles(){
   let activeId = getActiveProfileId();
 
   if(profiles.length === 0){
-    const p = { id: uid6(), nick: "", lastRoom: "", lastRoomName: "", lang: "pl", pinHash: "" };
+    const p = { id: uid6(), nick: "", lastRoom: "", lastRoomName: "", lang: "pl" };
     profiles = [p];
     saveProfiles(profiles);
     setActiveProfileId(p.id);
@@ -277,52 +249,6 @@ function setLang(lang){
   updateLangButtons();
   showToast(lang === "pl" ? "Polski ✅" : "English ✅");
   diag("lang=" + lang);
-}
-
-// ---------- PIN (local) ----------
-async function sha256(text){
-  const enc = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest("SHA-256", enc);
-  const arr = Array.from(new Uint8Array(buf));
-  return arr.map(b=>b.toString(16).padStart(2,"0")).join("");
-}
-function normPin(p){ return String(p||"").trim(); }
-function isPinValid(p){ return /^\d{4}$/.test(normPin(p)); }
-
-async function ensurePinSet(){
-  const prof = getActiveProfile();
-  if(prof.pinHash) return true;
-
-  const p = prompt(`${t("pinSetTitle")}\n${t("pinHint")}`);
-  if(!isPinValid(p)){
-    showToast(t("pinWrong"));
-    return false;
-  }
-  const h = await sha256(normPin(p) + "|" + prof.id);
-  updateActiveProfile({ pinHash: h });
-  diag("PIN set OK");
-  return true;
-}
-
-async function verifyPin(){
-  const prof = getActiveProfile();
-  if(!prof.pinHash){
-    const ok = await ensurePinSet();
-    return ok;
-  }
-
-  for(let attempt=1; attempt<=3; attempt++){
-    const p = prompt(`${t("pinEnterTitle")}\n${t("pinNeed")}\n(${attempt}/3)`);
-    if(!isPinValid(p)){
-      showToast(t("pinWrong"));
-      continue;
-    }
-    const h = await sha256(normPin(p) + "|" + prof.id);
-    if(h === prof.pinHash){ diag("PIN OK"); return true; }
-    showToast(t("pinWrong"));
-  }
-  diag("PIN FAIL");
-  return false;
 }
 
 // ---------- Firebase / Firestore ----------
@@ -436,9 +362,8 @@ function applyI18n(){
 
   if(el("st_welcomeChip")) el("st_welcomeChip").textContent = t("welcomeBack");
   if(el("btnEnterRoomFromSettings")) el("btnEnterRoomFromSettings").textContent = t("enterRoom");
-  if(el("btnChangeProfileFlow")) el("btnChangeProfileFlow").textContent = t("changeRoom");
+  if(el("btnChangeProfileFlow")) el("btnChangeProfileFlow").textContent = t("changeProfile");
   if(el("btnBackToWelcome")) el("btnBackToWelcome").textContent = t("detailsBack");
-  if(el("btnQuickChangeNick")) el("btnQuickChangeNick").textContent = t("btnChangeNick");
 
   if(el("rooms_title")) el("rooms_title").textContent = t("roomsTitle");
   if(el("rooms_nickLabel")) el("rooms_nickLabel").textContent = t("roomsNick");
@@ -514,8 +439,9 @@ function showSettingsWelcome(){
 
   el("st_welcomeNick").textContent = nick;
 
+  // ✅ nie pokazujemy kodu jako “jawny”, tylko nazwa pokoju
   if(lastRoom){
-    const label = lastName ? `${lastRoom} • ${lastName}` : lastRoom;
+    const label = lastName ? `${lastName}` : "—";
     el("st_welcomeRoomLine").textContent = `${t("lastRoom")}: ${label}`;
     el("btnEnterRoomFromSettings").disabled = false;
   }else{
@@ -575,146 +501,14 @@ function validateNick(v){
   if(v.length < 3 || v.length > 16) return { ok:false, v };
   return { ok:true, v };
 }
-
-// ---------- STARTUP MODAL (new simplified flow) ----------
-function openStartupModal(){
-  el("startupModal").style.display = "flex";
-}
-function closeStartupModal(){
-  el("startupModal").style.display = "none";
-}
-
-function setStartupContent({ title, text, showNickInput, actions }){
-  el("startupTitle").textContent = title;
-  el("startupText").textContent = text;
-
-  el("startupNickBlock").style.display = showNickInput ? "block" : "none";
-  el("startupNickError").style.display = "none";
-  el("startupNickError").textContent = "";
-
-  const box = el("startupActions");
-  box.innerHTML = "";
-
-  for(const a of actions){
-    const b = document.createElement("button");
-    b.className = "btn";
-    b.textContent = a.label;
-    if(a.disabled) b.disabled = true;
-    b.onclick = a.onClick;
-    box.appendChild(b);
-  }
-}
-
-function showStartupAddProfile(){
-  const lang = getActiveProfile().lang || "pl";
-  el("inpStartupNick").value = "";
-  el("inpStartupNick").placeholder = (lang === "en") ? "Nickname (e.g. Mike)" : "Nick (np. Mariusz)";
-
-  setStartupContent({
-    title: t("startupAddProfile"),
-    text: t("startupAddProfileHint"),
-    showNickInput: true,
-    actions: [
-      {
-        label: t("next"),
-        onClick: async ()=>{
-          const v = el("inpStartupNick").value || "";
-          const check = validateNick(v);
-          if(!check.ok){
-            el("startupNickError").style.display = "block";
-            el("startupNickError").textContent = t("nickBad");
-            return;
-          }
-          updateActiveProfile({ nick: check.v });
-          refreshNickLabels();
-          applyI18n();
-          updateLangButtons();
-          // PIN możesz zostawić (ustawimy przy wejściu do pokoju)
-          showStartupChooseRoom();
-        }
-      }
-    ]
-  });
-
-  openStartupModal();
-  setTimeout(()=> el("inpStartupNick").focus(), 50);
-}
-
-function showStartupChooseRoom(){
-  const nick = (getActiveProfile().nick || "").trim() || "—";
-
-  setStartupContent({
-    title: t("startupChoose"),
-    text: `${t("startupChooseHint")}\n\nNick: ${nick}`,
-    showNickInput: false,
-    actions: [
-      {
-        label: t("btnNewRoom"),
-        onClick: ()=>{
-          closeStartupModal();
-          openRoomsAndFocus("create");
-        }
-      },
-      {
-        label: t("btnJoinRoom"),
-        onClick: ()=>{
-          closeStartupModal();
-          openRoomsAndFocus("join");
-        }
-      }
-    ]
-  });
-
-  openStartupModal();
-}
-
-function showStartupWelcome(){
-  const prof = getActiveProfile();
-  const nick = (prof.nick || "").trim() || "—";
-  const lastRoom = (prof.lastRoom || "").trim().toUpperCase();
-  const lastName = (prof.lastRoomName || "").trim();
-  const lastLine = lastRoom ? `${lastRoom}${lastName ? " • " + lastName : ""}` : "—";
-
-  setStartupContent({
-    title: t("startupWelcome"),
-    text: `${nick}\n\n${t("lastRoom")}: ${lastLine}`,
-    showNickInput: false,
-    actions: [
-      {
-        label: t("enterRoom"),
-        disabled: !lastRoom,
-        onClick: async ()=>{
-          if(!lastRoom){
-            closeStartupModal();
-            openRoomsAndFocus("join");
-            return;
-          }
-          closeStartupModal();
-          // pokaż normalny modal "Kontynuować?" i dalej legacy room
-          showScreen("rooms");
-          await showContinueModalForCode(lastRoom);
-        }
-      },
-      {
-        label: t("btnChangeRoom"),
-        onClick: ()=>{
-          closeStartupModal();
-          openRoomsAndFocus("join");
-        }
-      }
-    ]
-  });
-
-  openStartupModal();
-}
-
-function startupFlow(){
+async function ensureNickNice(){
   const nick = (getActiveProfile().nick || "").trim();
-  if(!nick){
-    showStartupAddProfile();
-    return;
-  }
-  showStartupWelcome();
+  if(nick) return nick;
+
+  const ok = await openNickModal();
+  if(!ok) return "";
+
+  return (getActiveProfile().nick || "").trim();
 }
 
 // ---------- Continue modal ----------
@@ -734,12 +528,11 @@ async function showContinueModalForCode(code){
     }
   }catch{}
 
+  // ✅ bez kodu w tekście (kod zostaje w profilu, ale nie wyświetlamy)
   text.textContent =
     `${nick}\n\n` +
-    `Grasz w pokoju: ${roomName || "—"}\n` +
-    `Kod: ${code}\n\n` +
-    `Czy chcesz kontynuować w tym pokoju?\n\n` +
-    `${t("pinNeed")}`;
+    `Grasz w pokoju: ${roomName || "—"}\n\n` +
+    `Czy chcesz kontynuować w tym pokoju?`;
 
   modal.style.display = "flex";
   diag("continue modal for " + code);
@@ -748,115 +541,106 @@ async function showContinueModalForCode(code){
 function hideContinueModal(){ el("continueModal").style.display = "none"; }
 function clearSavedRoom(){ updateActiveProfile({ lastRoom: "", lastRoomName: "" }); }
 
-// ---------- Rooms open / focus ----------
-function openRoomsAndFocus(mode){
-  showScreen("rooms");
+// ---------- Rooms open flow ----------
+async function handleOpenRooms(){
+  const nick = await ensureNickNice();
+  if(!nick){ showToast("Anulowano"); return; }
   refreshNickLabels();
+
+  const saved = (getActiveProfile().lastRoom || "").trim().toUpperCase();
+  showScreen("rooms");
+  if(saved && saved.length === 6){
+    await showContinueModalForCode(saved);
+    return;
+  }
   if(el("debugRooms")) el("debugRooms").textContent = "—";
-
-  setTimeout(()=>{
-    if(mode === "create"){
-      el("inpRoomName")?.focus();
-      el("secCreateRoom")?.scrollIntoView({behavior:"smooth", block:"center"});
-    }else{
-      el("inpJoinCode")?.focus();
-      el("secJoinRoom")?.scrollIntoView({behavior:"smooth", block:"center"});
-    }
-  }, 60);
 }
 
-// ---------- ROOM: legacy detect ----------
-let CURRENT_ROOM = { code:"", name:"" };
+// ---------- ✅ KLUCZ: wykrycie i odpalenie Twojej logiki typowania ----------
+function detectTyperOpenRoom(){
+  const candidates = [];
 
-function detectLegacyOpenRoom(){
-  const list = [];
+  const pushIf = (name, fn) => { if(typeof fn === "function") candidates.push({name, fn}); };
 
-  if(window.boot){
-    if(typeof window.boot.openRoom === "function") list.push({name:"boot.openRoom", fn:window.boot.openRoom});
-    if(typeof window.boot.enterRoom === "function") list.push({name:"boot.enterRoom", fn:window.boot.enterRoom});
-    if(typeof window.boot.startRoom === "function") list.push({name:"boot.startRoom", fn:window.boot.startRoom});
-    if(typeof window.boot.goRoom === "function") list.push({name:"boot.goRoom", fn:window.boot.goRoom});
-  }
+  // różne znane miejsca
+  pushIf("boot.openRoom", window.boot?.openRoom);
+  pushIf("boot.enterRoom", window.boot?.enterRoom);
+  pushIf("boot.showRoom", window.boot?.showRoom);
+  pushIf("boot.goRoom", window.boot?.goRoom);
 
-  if(window.Typer){
-    if(typeof window.Typer.openRoom === "function") list.push({name:"Typer.openRoom", fn:window.Typer.openRoom});
-    if(typeof window.Typer.enterRoom === "function") list.push({name:"Typer.enterRoom", fn:window.Typer.enterRoom});
-  }
-  if(window.TyperApp){
-    if(typeof window.TyperApp.openRoom === "function") list.push({name:"TyperApp.openRoom", fn:window.TyperApp.openRoom});
-    if(typeof window.TyperApp.enterRoom === "function") list.push({name:"TyperApp.enterRoom", fn:window.TyperApp.enterRoom});
-  }
-  if(window.app){
-    if(typeof window.app.openRoom === "function") list.push({name:"app.openRoom", fn:window.app.openRoom});
-    if(typeof window.app.enterRoom === "function") list.push({name:"app.enterRoom", fn:window.app.enterRoom});
-  }
+  pushIf("Typer.openRoom", window.Typer?.openRoom);
+  pushIf("TyperApp.openRoom", window.TyperApp?.openRoom);
+  pushIf("app.openRoom", window.app?.openRoom);
 
-  if(typeof window.openRoom === "function") list.push({name:"window.openRoom", fn:window.openRoom});
-  if(typeof window.enterRoom === "function") list.push({name:"window.enterRoom", fn:window.enterRoom});
-  if(typeof window.startRoom === "function") list.push({name:"window.startRoom", fn:window.startRoom});
-  if(typeof window.renderRoom === "function") list.push({name:"window.renderRoom", fn:window.renderRoom});
+  pushIf("window.openRoom", window.openRoom);
+  pushIf("window.enterRoom", window.enterRoom);
+  pushIf("window.goRoom", window.goRoom);
+  pushIf("window.showRoom", window.showRoom);
 
-  return list.length ? list[0] : null;
+  // BONUS: czasem masz to jako startGame / openTyperRoom
+  pushIf("window.openTyperRoom", window.openTyperRoom);
+  pushIf("window.startTyperRoom", window.startTyperRoom);
+  pushIf("window.startRoom", window.startRoom);
+
+  return candidates.length ? candidates[0] : null;
 }
 
-async function openRoomScreen(code){
-  const okPin = await verifyPin();
-  if(!okPin){ showToast(t("pinWrong")); return; }
+async function openRoomByTyperLogic(code){
+  // zawsze tło aplikacji
+  setBg(BG_APP);
 
-  showToast(t("roomOpen"));
-  showScreen("room");
+  const found = detectTyperOpenRoom();
+  if(found){
+    diag("[TYPER] found fn: " + found.name);
+    showToast(t("roomOpen"));
 
-  try{
-    const room = await getRoomByCode(code);
-    CURRENT_ROOM = { code, name: room?.name || (getActiveProfile().lastRoomName || "") || "" };
-  }catch{
-    CURRENT_ROOM = { code, name: (getActiveProfile().lastRoomName || "") || "" };
-  }
+    // NIE pokazujemy placeholdera jeśli mamy typowanie
+    // (czyli nie robimy showScreen("room") – tylko zostawiamy to, co robi Twoja logika)
+    // ale zapewniamy, że nie siedzimy w menu
+    showScreen("rooms");
 
-  const legacy = detectLegacyOpenRoom();
-  if(legacy){
-    diag("LEGACY: " + legacy.name);
-
+    // wywołujemy w dwóch wariantach: string i obiekt (bo nie wiadomo jak masz)
     const roomObj = {
-      code: CURRENT_ROOM.code,
-      name: CURRENT_ROOM.name,
-      nick: (getActiveProfile().nick || "").trim(),
+      code,
+      name: (getActiveProfile().lastRoomName || ""),
+      nick: (getActiveProfile().nick || ""),
       profileId: getActiveProfile().id
     };
 
-    let res = safeCall(legacy.fn, CURRENT_ROOM.code);
-    if(res === undefined) res = safeCall(legacy.fn, roomObj);
+    let r = safeCall(found.fn, code);
+    if(r === undefined) r = safeCall(found.fn, roomObj);
 
-    if(res && typeof res.then === "function"){
-      res.catch(e=>{
-        console.error("[LEGACY async error]", e);
-        showToast("Błąd starej logiki: " + (e?.message || String(e)));
-        diag("LEGACY async error: " + (e?.message || String(e)));
+    if(r && typeof r.then === "function"){
+      r.catch(e=>{
+        console.error("[TYPER async error]", e);
+        showToast("Błąd logiki typowania: " + (e?.message || String(e)));
+        diag("[TYPER async error] " + (e?.message || String(e)));
       });
     }
-    return;
+    return true;
   }
 
-  diag("LEGACY: brak");
-  const info =
-    `Pokój: ${CURRENT_ROOM.name || "—"}\n` +
-    `Kod: ${CURRENT_ROOM.code}\n` +
-    `Nick: ${(getActiveProfile().nick||"").trim() || "—"}\n\n` +
-    `Nie wykryto starej logiki (boot/app).`;
-
+  // jeśli nie wykryto — wtedy dopiero placeholder (żebyś widział że coś nie gra)
+  diag("[TYPER] NOT FOUND (brak funkcji openRoom/enterRoom)");
+  showScreen("room");
   const holder = el("roomInfoText");
-  if(holder) holder.textContent = info;
+  if(holder){
+    holder.textContent =
+      `Pokój: ${(getActiveProfile().lastRoomName || "—")}\n` +
+      `Nick: ${(getActiveProfile().nick || "—")}\n\n` +
+      `Nie wykryto funkcji typowania (openRoom/enterRoom).\n` +
+      `DIAG pokaże co jest.`;
+  }
+  return false;
 }
 
 // ---------- UI binding ----------
 function bindUI(){
-  // GLOBAL gear
-  el("gearWrap").onclick = ()=> openSettings();
-
   // MENU
-  el("btnOpenRooms").onclick = ()=> openRoomsAndFocus("join");
+  el("btnOpenRooms").onclick = async ()=>{ await handleOpenRooms(); };
   el("btnOpenStats").onclick = ()=>{ showToast("Statystyki — wkrótce"); };
   el("btnExitApp").onclick = ()=>{ showToast("Wyjście — zamknij kartę / aplikację"); };
+  el("gearWrap").onclick = ()=> openSettings();
 
   // Settings
   el("btnSettingsClose").onclick = ()=> closeSettings();
@@ -873,21 +657,11 @@ function bindUI(){
     await showContinueModalForCode(saved);
   };
 
-  el("btnQuickChangeNick").onclick = async ()=>{
-    // szybka zmiana nicku przez nickModal
-    closeSettings();
-    const ok = await openNickModal();
-    if(!ok) return;
-    showToast(t("nickSaved"));
-    // po zmianie pokaż welcome modal startowy
-    startupFlow();
-  };
-
   // Settings language
   el("btnLangPL").onclick = ()=> setLang("pl");
   el("btnLangEN").onclick = ()=> setLang("en");
 
-  // Settings nick (details view)
+  // Settings nick
   el("btnSaveNickSettings").onclick = async ()=>{
     const v = (el("inpNickSettings").value || "").trim();
     const check = validateNick(v);
@@ -915,7 +689,7 @@ function bindUI(){
 
   el("btnProfileAdd").onclick = ()=>{
     const profiles = ensureProfiles();
-    const newP = { id: uid6(), nick: "", lastRoom: "", lastRoomName:"", lang: getActiveProfile().lang || "pl", pinHash: "" };
+    const newP = { id: uid6(), nick: "", lastRoom: "", lastRoomName:"", lang: getActiveProfile().lang || "pl" };
     profiles.push(newP);
     saveProfiles(profiles);
     setActiveProfileId(newP.id);
@@ -959,37 +733,28 @@ function bindUI(){
     refreshNickLabels();
     showToast(t("cleared"));
     showSettingsDetails(false);
-
-    // po czyszczeniu od razu przepływ startowy
-    closeSettings();
-    startupFlow();
   };
 
   // ROOMS back
-  el("btnBackMenu").onclick = ()=>{
-    showScreen("menu");
-    startupFlow(); // wracamy do okienka welcome/choose
-  };
+  el("btnBackMenu").onclick = ()=> showScreen("menu");
 
   // ROOMS create/join
   el("btnCreateRoom").onclick = async ()=>{
     try{
-      const nick = (getActiveProfile().nick || "").trim();
-      if(!nick){
-        showToast("Najpierw ustaw nick");
-        startupFlow();
-        return;
-      }
+      const nick = await ensureNickNice();
+      if(!nick) return;
 
       const name = el("inpRoomName").value || "";
       showToast(t("creating"));
 
       const r = await createRoom(name);
 
-      if(el("debugRooms")) el("debugRooms").textContent = `Utworzono: ${r.name} / ${r.code}`;
+      // ✅ nie pokazujemy kodu na ekranie (tylko nazwa)
+      if(el("debugRooms")) el("debugRooms").textContent = `Utworzono: ${r.name}`;
 
       await showContinueModalForCode(r.code);
-      showToast(`${t("created")}: ${r.code}`);
+      showToast(t("created"));
+      showSettingsWelcome();
     }catch(e){
       const msg = e?.message || String(e);
       showToast(msg);
@@ -999,22 +764,20 @@ function bindUI(){
 
   el("btnJoinRoom").onclick = async ()=>{
     try{
-      const nick = (getActiveProfile().nick || "").trim();
-      if(!nick){
-        showToast("Najpierw ustaw nick");
-        startupFlow();
-        return;
-      }
+      const nick = await ensureNickNice();
+      if(!nick) return;
 
       const code = el("inpJoinCode").value || "";
       showToast(t("joining"));
 
       const r = await joinRoom(code);
 
-      if(el("debugRooms")) el("debugRooms").textContent = `Dołączono: ${r.name} / ${r.code}`;
+      // ✅ nie pokazujemy kodu na ekranie (tylko nazwa)
+      if(el("debugRooms")) el("debugRooms").textContent = `Dołączono: ${r.name || "pokój"}`;
 
       await showContinueModalForCode(r.code);
-      showToast(`${t("joined")}: ${r.code}`);
+      showToast(t("joined"));
+      showSettingsWelcome();
     }catch(e){
       const msg = e?.message || String(e);
       showToast(msg);
@@ -1026,26 +789,26 @@ function bindUI(){
   el("btnContinueYes").onclick = async ()=>{
     const code = (getActiveProfile().lastRoom || "").trim().toUpperCase();
     hideContinueModal();
-    if(code) await openRoomScreen(code);
+    if(code){
+      await openRoomByTyperLogic(code); // ✅ TU WRACA TYPOWANIE
+    }
   };
   el("btnContinueNo").onclick = ()=>{
     hideContinueModal();
-    openRoomsAndFocus("join");
+    showScreen("rooms");
   };
   el("btnContinueForget").onclick = ()=>{
     clearSavedRoom();
     hideContinueModal();
     showToast("Zapomniano pokój");
-    openRoomsAndFocus("join");
+    showScreen("rooms");
+    showSettingsWelcome();
   };
 
   // placeholder room back
-  el("btnBackFromRoom").onclick = ()=>{
-    showScreen("menu");
-    startupFlow();
-  };
+  el("btnBackFromRoom").onclick = ()=> showScreen("menu");
 
-  // NICK MODAL (generic)
+  // NICK MODAL
   el("btnNickCancel").onclick = ()=>{
     closeNickModal();
     if(_nickResolve){ _nickResolve(false); _nickResolve = null; }
@@ -1059,7 +822,6 @@ function bindUI(){
       return;
     }
     updateActiveProfile({ nick: check.v });
-    refreshNickLabels();
     closeNickModal();
     if(_nickResolve){ _nickResolve(true); _nickResolve = null; }
   };
@@ -1086,11 +848,10 @@ function bindUI(){
     bindUI();
 
     showScreen("menu");
-    diag("ready");
 
-    // uruchom uproszczony przepływ od razu po starcie
-    startupFlow();
-
+    // ✅ DIAG pokaże, czy wykrywa typowanie:
+    const found = detectTyperOpenRoom();
+    diag("ready | typerFn=" + (found ? found.name : "NONE"));
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));

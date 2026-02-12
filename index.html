@@ -30,9 +30,13 @@
     .screen{position:relative; z-index:2; display:none; height:100%; width:100%;}
     .screen.active{display:block;}
 
-    /* GLOBAL gear (always visible) */
+    /* MENU START */
+    #menuWrap{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+    }
     #gearWrap{
-      position:fixed;
+      position:absolute;
       left:22px; bottom:22px;
       width:58px; height:58px;
       display:flex; align-items:center; justify-content:center;
@@ -42,15 +46,11 @@
       box-shadow:var(--shadow);
       cursor:pointer;
       user-select:none;
-      z-index:80;
     }
-    #gearWrap img{ width:28px; height:28px; filter:brightness(10); opacity:.95; }
 
-    /* MENU START */
-    #menuWrap{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-    }
+    /* ✅ Zębatka jako SVG (żeby nie znikała gdy brak ico_gear.png) */
+    #gearWrap svg{ width:28px; height:28px; opacity:.95; }
+
     .menuBtns{
       display:flex; gap:24px;
       align-items:center; justify-content:center;
@@ -78,7 +78,7 @@
       backdrop-filter: blur(14px);
     }
     .muted{color:var(--muted); font-size:13px; white-space:pre-line;}
-    .title{font-weight:800; font-size:18px; margin-bottom:8px;}
+    .title{font-weight:700; font-size:18px; margin-bottom:8px;}
 
     /* ROOMS */
     #roomsWrap{
@@ -93,7 +93,7 @@
       border-radius:14px;
       padding:12px 12px;
     }
-    input, select{
+    input{
       width:100%;
       padding:10px 12px;
       border-radius:12px;
@@ -110,14 +110,14 @@
       color:var(--text);
       cursor:pointer;
       user-select:none;
-      font-weight:700;
+      font-weight:600;
     }
     .btn:hover{ background:var(--btn2); }
     .btn:disabled{ opacity:.45; cursor:not-allowed; }
 
     /* MODALS */
     .modal{
-      position:fixed; inset:0; z-index:90;
+      position:fixed; inset:0; z-index:50;
       display:none; align-items:center; justify-content:center;
       background:rgba(0,0,0,.45);
       backdrop-filter: blur(8px);
@@ -130,7 +130,7 @@
       background:rgba(255,255,255,.08);
       border:1px solid var(--border);
       font-size:13px;
-      font-weight:800;
+      font-weight:700;
     }
     .error{ color:#ffb0b0; font-size:13px; display:none; margin-top:8px; }
 
@@ -147,13 +147,13 @@
     .pillBtn{ padding:8px 12px; border-radius:999px; }
     .langBtn.active{ outline:2px solid rgba(255,255,255,.25); }
 
-    /* ROOM placeholder */
+    /* ROOM placeholder (zostaje, ale my NIE będziemy tu wchodzić jeśli wykryje się typowanie) */
     #roomWrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
 
     /* TOAST */
     #toast{
       position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-      z-index:95;
+      z-index:90;
       display:none;
       padding:10px 14px;
       border-radius:999px;
@@ -161,12 +161,12 @@
       background:rgba(0,0,0,.55);
       backdrop-filter: blur(10px);
       box-shadow:var(--shadow);
-      font-weight:800;
+      font-weight:700;
     }
 
     /* FOOTER BUILD */
     #footerRight{
-      position:fixed; right:14px; bottom:10px; z-index:85;
+      position:fixed; right:14px; bottom:10px; z-index:5;
       color:rgba(255,255,255,.55);
       font-size:12px;
       text-shadow:0 1px 3px rgba(0,0,0,.6);
@@ -174,7 +174,7 @@
 
     /* DIAG BAR (bez F12) */
     #diagBar{
-      position:fixed; right:14px; bottom:34px; z-index:86;
+      position:fixed; right:14px; bottom:34px; z-index:6;
       padding:6px 10px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,.12);
@@ -193,11 +193,6 @@
 <body>
   <div id="bg"></div>
 
-  <!-- GLOBAL SETTINGS GEAR -->
-  <div id="gearWrap" title="Ustawienia">
-    <img src="ico_gear.png" alt="Settings"/>
-  </div>
-
   <div id="footerRight">BUILD</div>
   <div id="diagBar">DIAG: start</div>
   <div id="toast"></div>
@@ -215,6 +210,14 @@
   <!-- MENU -->
   <div id="menu" class="screen">
     <div id="menuWrap">
+      <div id="gearWrap" title="Ustawienia">
+        <!-- ✅ SVG zębatka -->
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="white" stroke-width="2"/>
+          <path d="M19.4 15a8 8 0 0 0 .1-2l2-1.5-2-3.5-2.4 1a8 8 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a8 8 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a8 8 0 0 0 .1 2l-2 1.5 2 3.5 2.4-1a8 8 0 0 0 1.7 1l.3 2.6h4l.3-2.6a8 8 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
       <div class="menuBtns">
         <img id="btnOpenRooms" class="btnImg" src="btn_pokoje_typerow.png" alt="Pokoje typerów">
         <img id="btnOpenStats" class="btnImg" src="btn_statystyki.png" alt="Statystyki">
@@ -234,8 +237,8 @@
 
         <div style="height:10px"></div>
 
-        <div class="section" id="secCreateRoom">
-          <div style="font-weight:900" id="rooms_newRoom">Utwórz nowy pokój</div>
+        <div class="section">
+          <div style="font-weight:800" id="rooms_newRoom">Utwórz nowy pokój</div>
           <div class="muted" id="rooms_newRoomHint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
           <div style="height:10px"></div>
           <div class="row">
@@ -248,8 +251,8 @@
 
         <div style="height:12px"></div>
 
-        <div class="section" id="secJoinRoom">
-          <div style="font-weight:900" id="rooms_join">Dołącz do pokoju</div>
+        <div class="section">
+          <div style="font-weight:800" id="rooms_join">Dołącz do pokoju</div>
           <div class="muted" id="rooms_joinHint">Wpisz kod od admina.</div>
           <div style="height:10px"></div>
           <div class="row">
@@ -269,7 +272,7 @@
     </div>
   </div>
 
-  <!-- ROOM placeholder (legacy detect stays) -->
+  <!-- ROOM placeholder -->
   <div id="room" class="screen">
     <div id="roomWrap">
       <div class="card">
@@ -278,22 +281,6 @@
         <div style="height:12px"></div>
         <button id="btnBackFromRoom" class="btn">Wróć</button>
       </div>
-    </div>
-  </div>
-
-  <!-- STARTUP: FIRST RUN / WELCOME -->
-  <div id="startupModal" class="modal">
-    <div class="card">
-      <div class="title" id="startupTitle">—</div>
-      <div class="muted" id="startupText">—</div>
-
-      <div id="startupNickBlock" style="display:none;">
-        <div style="height:12px"></div>
-        <input id="inpStartupNick" placeholder="Nick (np. Mariusz)">
-        <div id="startupNickError" class="error">—</div>
-      </div>
-
-      <div class="modalRow" id="startupActions"></div>
     </div>
   </div>
 
@@ -310,7 +297,7 @@
     </div>
   </div>
 
-  <!-- NICK MODAL (used in settings, optional) -->
+  <!-- NICK MODAL -->
   <div id="nickModal" class="modal">
     <div class="card">
       <div class="title" id="nickTitle">Podaj swój nick</div>
@@ -350,9 +337,8 @@
           <div style="height:12px"></div>
 
           <div class="row" style="justify-content:flex-end">
-            <button id="btnQuickChangeNick" class="btn">Zmień nick</button>
             <button id="btnEnterRoomFromSettings" class="btn">Wejdź do pokoju</button>
-            <button id="btnChangeProfileFlow" class="btn">Zmień pokój</button>
+            <button id="btnChangeProfileFlow" class="btn">Zmień profil gracza</button>
           </div>
         </div>
       </div>
@@ -365,14 +351,15 @@
 
         <div id="settingsBody">
           <div class="section">
-            <div style="font-weight:900" id="st_profilesTitle">Profil gracza (współdzielenie)</div>
+            <div style="font-weight:800" id="st_profilesTitle">Profil gracza (współdzielenie)</div>
             <div class="muted" id="st_profilesHint">—</div>
 
             <div style="height:10px"></div>
 
             <div class="row">
               <div class="field">
-                <select id="selProfiles"></select>
+                <select id="selProfiles" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:var(--text);">
+                </select>
               </div>
               <button id="btnProfileSwitch" class="btn">Przełącz</button>
               <button id="btnProfileAdd" class="btn">Dodaj</button>
@@ -389,7 +376,7 @@
           </div>
 
           <div class="section">
-            <div style="font-weight:900" id="st_langTitle">Język</div>
+            <div style="font-weight:800" id="st_langTitle">Język</div>
             <div style="height:10px"></div>
             <div class="row">
               <button id="btnLangPL" class="btn langBtn">🇵🇱 Polski</button>
@@ -399,7 +386,7 @@
           </div>
 
           <div class="section" style="border-color: rgba(255,120,120,.28);">
-            <div style="font-weight:900" id="st_localTitle">Dane lokalne</div>
+            <div style="font-weight:800" id="st_localTitle">Dane lokalne</div>
             <div class="muted" id="st_localHint">—</div>
             <div style="height:10px"></div>
             <div class="row" style="justify-content:space-between">
