@@ -11,7 +11,6 @@
   <style>
     :root{
       --glass: rgba(10,20,40,.55);
-      --glass2: rgba(10,20,40,.35);
       --border: rgba(255,255,255,.12);
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.70);
@@ -20,80 +19,72 @@
       --shadow: 0 14px 40px rgba(0,0,0,.45);
     }
     html,body{height:100%; margin:0; font-family:system-ui,Segoe UI,Arial; color:var(--text); background:#000;}
-    #bg{
-      position:fixed; inset:0;
-      background-size:cover;
-      background-position:center;
-      background-repeat:no-repeat;
-    }
-
+    #bg{ position:fixed; inset:0; background-size:cover; background-position:center; background-repeat:no-repeat; }
     .screen{position:relative; z-index:2; display:none; height:100%; width:100%;}
     .screen.active{display:block;}
 
-    /* MENU START */
-    #menuWrap{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-    }
+    /* MENU */
+    #menuWrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
     #gearWrap{
-      position:absolute;
-      left:22px; bottom:22px;
+      position:absolute; left:22px; bottom:22px;
       width:58px; height:58px;
       display:flex; align-items:center; justify-content:center;
       border-radius:999px;
       background:rgba(255,255,255,.08);
       border:1px solid var(--border);
       box-shadow:var(--shadow);
-      cursor:pointer;
-      user-select:none;
+      cursor:pointer; user-select:none;
     }
-
-    /* ✅ Zębatka jako SVG (żeby nie znikała gdy brak ico_gear.png) */
-    #gearWrap svg{ width:28px; height:28px; opacity:.95; }
-
-    .menuBtns{
-      display:flex; gap:24px;
-      align-items:center; justify-content:center;
-    }
+    #gearWrap img{ width:28px; height:28px; filter:brightness(10); opacity:.95; }
+    .menuBtns{ display:flex; gap:24px; align-items:center; justify-content:center; }
     .btnImg{
       width:240px; height:auto;
-      cursor:pointer;
-      user-select:none;
+      cursor:pointer; user-select:none;
       filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
       transition: transform .10s ease;
     }
     .btnImg:active{ transform: scale(.98); }
 
-    /* SPLASH */
-    #splashWrap{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    }
+    /* CARDS / MODALS */
     .card{
       width:min(760px, 92vw);
-      padding:18px 18px;
+      padding:18px;
       border-radius:18px;
       background:var(--glass);
       border:1px solid var(--border);
       box-shadow:var(--shadow);
       backdrop-filter: blur(14px);
     }
+    .title{font-weight:800; font-size:18px; margin-bottom:8px;}
     .muted{color:var(--muted); font-size:13px; white-space:pre-line;}
-    .title{font-weight:700; font-size:18px; margin-bottom:8px;}
-
-    /* ROOMS */
-    #roomsWrap{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    .btn{
+      padding:10px 14px; border-radius:12px;
+      border:1px solid var(--border);
+      background:var(--btn);
+      color:var(--text);
+      cursor:pointer; user-select:none;
+      font-weight:700;
     }
-    .roomsCard{ width:min(920px, 94vw); }
-    .row{ display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+    .btn:hover{ background:var(--btn2); }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .modal{
+      position:fixed; inset:0; z-index:50;
+      display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.45);
+      backdrop-filter: blur(8px);
+    }
+    .modal .card{ width:min(920px, 92vw); }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .right{ justify-content:flex-end; }
     .field{
       flex:1;
       background:rgba(0,0,0,.25);
       border:1px solid var(--border);
       border-radius:14px;
-      padding:12px 12px;
+      padding:12px;
     }
-    input{
+    input,select{
       width:100%;
       padding:10px 12px;
       border-radius:12px;
@@ -102,104 +93,42 @@
       color:var(--text);
       outline:none;
     }
-    .btn{
-      padding:10px 14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:var(--btn);
-      color:var(--text);
-      cursor:pointer;
-      user-select:none;
-      font-weight:600;
-    }
-    .btn:hover{ background:var(--btn2); }
-    .btn:disabled{ opacity:.45; cursor:not-allowed; }
-
-    /* MODALS */
-    .modal{
-      position:fixed; inset:0; z-index:50;
-      display:none; align-items:center; justify-content:center;
-      background:rgba(0,0,0,.45);
-      backdrop-filter: blur(8px);
-    }
-    .modal .card{ width:min(880px, 92vw); }
-    .modalRow{ display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end; margin-top:14px;}
     .chip{
       display:inline-flex; align-items:center; gap:8px;
       padding:6px 10px; border-radius:999px;
       background:rgba(255,255,255,.08);
       border:1px solid var(--border);
       font-size:13px;
-      font-weight:700;
+      font-weight:800;
     }
-    .error{ color:#ffb0b0; font-size:13px; display:none; margin-top:8px; }
 
-    /* SETTINGS */
-    #settingsModal .card{ width:min(920px, 92vw); }
-    #settingsBody{ display:flex; flex-direction:column; gap:12px; }
-    .section{
-      background:rgba(0,0,0,.18);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:12px;
-    }
-    .topbar{ display:flex; justify-content:space-between; align-items:center; gap:10px;}
-    .pillBtn{ padding:8px 12px; border-radius:999px; }
-    .langBtn.active{ outline:2px solid rgba(255,255,255,.25); }
-
-    /* ROOM placeholder (zostaje, ale my NIE będziemy tu wchodzić jeśli wykryje się typowanie) */
-    #roomWrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-
-    /* TOAST */
     #toast{
       position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-      z-index:90;
-      display:none;
-      padding:10px 14px;
-      border-radius:999px;
+      z-index:90; display:none;
+      padding:10px 14px; border-radius:999px;
       border:1px solid var(--border);
       background:rgba(0,0,0,.55);
       backdrop-filter: blur(10px);
       box-shadow:var(--shadow);
-      font-weight:700;
+      font-weight:800;
     }
-
-    /* FOOTER BUILD */
     #footerRight{
       position:fixed; right:14px; bottom:10px; z-index:5;
       color:rgba(255,255,255,.55);
       font-size:12px;
       text-shadow:0 1px 3px rgba(0,0,0,.6);
     }
-
-    /* DIAG BAR (bez F12) */
-    #diagBar{
-      position:fixed; right:14px; bottom:34px; z-index:6;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.35);
-      color:rgba(255,255,255,.85);
-      font-size:12px;
-      max-width:min(520px, 86vw);
-      overflow:hidden;
-      white-space:nowrap;
-      text-overflow:ellipsis;
-      pointer-events:none;
-    }
   </style>
 </head>
 
 <body>
   <div id="bg"></div>
-
-  <div id="footerRight">BUILD</div>
-  <div id="diagBar">DIAG: start</div>
   <div id="toast"></div>
+  <div id="footerRight">BUILD</div>
 
   <!-- SPLASH -->
   <div id="splash" class="screen active">
-    <div id="splashWrap">
+    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
       <div class="card">
         <div class="title">Typer</div>
         <div id="splashHint" class="muted">Ładowanie…</div>
@@ -211,13 +140,8 @@
   <div id="menu" class="screen">
     <div id="menuWrap">
       <div id="gearWrap" title="Ustawienia">
-        <!-- ✅ SVG zębatka -->
-        <svg viewBox="0 0 24 24" fill="none">
-          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="white" stroke-width="2"/>
-          <path d="M19.4 15a8 8 0 0 0 .1-2l2-1.5-2-3.5-2.4 1a8 8 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a8 8 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a8 8 0 0 0 .1 2l-2 1.5 2 3.5 2.4-1a8 8 0 0 0 1.7 1l.3 2.6h4l.3-2.6a8 8 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-        </svg>
+        <img src="ico_gear.png" alt="Settings"/>
       </div>
-
       <div class="menuBtns">
         <img id="btnOpenRooms" class="btnImg" src="btn_pokoje_typerow.png" alt="Pokoje typerów">
         <img id="btnOpenStats" class="btnImg" src="btn_statystyki.png" alt="Statystyki">
@@ -226,23 +150,38 @@
     </div>
   </div>
 
-  <!-- ROOMS -->
+  <!-- START FLOW (witaj ponownie / nowy pokój / wejdź do pokoju) -->
+  <div id="startFlow" class="screen">
+    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+      <div class="card">
+        <div class="title" id="sf_title">—</div>
+        <div class="muted" id="sf_sub">—</div>
+        <div style="height:12px"></div>
+        <div class="row right">
+          <button id="sf_btnA" class="btn">—</button>
+          <button id="sf_btnB" class="btn">—</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOMS: create/join -->
   <div id="rooms" class="screen">
-    <div id="roomsWrap">
-      <div class="card roomsCard">
-        <div class="topbar">
+    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
           <div class="chip" id="rooms_title">Pokoje typerów</div>
-          <div class="chip"><span id="rooms_nickLabel">Nick:</span> <b id="nickLabelRooms">—</b></div>
+          <div class="chip"><span id="rooms_nickLabel">Nick:</span> <b id="rooms_nick">—</b></div>
         </div>
 
-        <div style="height:10px"></div>
+        <div style="height:12px"></div>
 
-        <div class="section">
-          <div style="font-weight:800" id="rooms_newRoom">Utwórz nowy pokój</div>
+        <div class="field">
+          <div style="font-weight:900" id="rooms_newRoom">Utwórz nowy pokój</div>
           <div class="muted" id="rooms_newRoomHint">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
           <div style="height:10px"></div>
           <div class="row">
-            <div class="field">
+            <div style="flex:1">
               <input id="inpRoomName" placeholder="Nazwa pokoju (opcjonalnie)">
             </div>
             <button id="btnCreateRoom" class="btn">Utwórz</button>
@@ -251,152 +190,86 @@
 
         <div style="height:12px"></div>
 
-        <div class="section">
-          <div style="font-weight:800" id="rooms_join">Dołącz do pokoju</div>
+        <div class="field">
+          <div style="font-weight:900" id="rooms_join">Dołącz do pokoju</div>
           <div class="muted" id="rooms_joinHint">Wpisz kod od admina.</div>
           <div style="height:10px"></div>
           <div class="row">
-            <div class="field">
+            <div style="flex:1">
               <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)">
             </div>
             <button id="btnJoinRoom" class="btn">Dołącz</button>
           </div>
         </div>
 
-        <div style="height:10px"></div>
-        <div class="muted" id="debugRooms">—</div>
-
         <div style="height:12px"></div>
-        <button id="btnBackMenu" class="btn">Wróć</button>
+        <div class="row right">
+          <button id="btnRoomsBack" class="btn">Wróć</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ROOM placeholder -->
-  <div id="room" class="screen">
-    <div id="roomWrap">
-      <div class="card">
-        <div class="title">Pokój</div>
-        <div class="muted" id="roomInfoText">—</div>
-        <div style="height:12px"></div>
-        <button id="btnBackFromRoom" class="btn">Wróć</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTINUE MODAL -->
-  <div id="continueModal" class="modal">
-    <div class="card">
-      <div class="title">Kontynuować?</div>
-      <div class="muted" id="continueText">—</div>
-      <div class="modalRow">
-        <button id="btnContinueYes" class="btn">Tak, kontynuuj</button>
-        <button id="btnContinueNo" class="btn">Nie, wybierz pokój</button>
-        <button id="btnContinueForget" class="btn">Zapomnij pokój</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NICK MODAL -->
-  <div id="nickModal" class="modal">
-    <div class="card">
-      <div class="title" id="nickTitle">Podaj swój nick</div>
-      <div class="muted" id="nickSub">Będzie używany w pokojach i tabeli ligi.</div>
-      <div style="height:8px"></div>
-      <div class="muted" id="nickDesc">Wpisz czytelny nick (3–16 znaków). Możesz go zmienić później w Ustawieniach.</div>
-      <div style="height:12px"></div>
-      <input id="inpNickModal" placeholder="Nick (np. Mariusz)">
-      <div id="nickError" class="error">—</div>
-      <div class="modalRow">
-        <button id="btnNickCancel" class="btn">Anuluj</button>
-        <button id="btnNickSave" class="btn">Dalej</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS MODAL -->
+  <!-- SETTINGS -->
   <div id="settingsModal" class="modal">
     <div class="card">
-      <div class="topbar">
+      <div class="row" style="justify-content:space-between">
         <div class="chip" id="st_title">Ustawienia</div>
-        <button id="btnSettingsClose" class="btn pillBtn">Zamknij</button>
+        <button id="st_close" class="btn">Zamknij</button>
       </div>
 
       <div style="height:12px"></div>
 
-      <!-- WELCOME VIEW -->
-      <div id="settingsWelcome" style="display:none;">
-        <div class="section">
-          <div class="topbar">
-            <div class="chip" id="st_welcomeChip">Witaj ponownie</div>
-            <div class="chip"><b id="st_welcomeNick">—</b></div>
-          </div>
+      <div class="field">
+        <div style="font-weight:900" id="st_nickTitle">Nick</div>
+        <div style="height:8px"></div>
+        <div class="row">
+          <div style="flex:1"><input id="st_nickInp" placeholder="Nick"></div>
+          <button id="st_nickSave" class="btn">Zapisz</button>
+        </div>
+        <div class="muted" id="st_nickHint" style="margin-top:8px;">—</div>
+      </div>
 
-          <div style="height:10px"></div>
-          <div class="muted" id="st_welcomeRoomLine">Ostatni pokój: —</div>
-          <div style="height:12px"></div>
+      <div style="height:12px"></div>
 
-          <div class="row" style="justify-content:flex-end">
-            <button id="btnEnterRoomFromSettings" class="btn">Wejdź do pokoju</button>
-            <button id="btnChangeProfileFlow" class="btn">Zmień profil gracza</button>
-          </div>
+      <div class="field">
+        <div style="font-weight:900" id="st_langTitle">Język</div>
+        <div style="height:8px"></div>
+        <div class="row">
+          <button id="st_langPL" class="btn">🇵🇱 Polski</button>
+          <button id="st_langEN" class="btn">🇬🇧 English</button>
+          <div class="chip" id="st_langCurrent">—</div>
         </div>
       </div>
 
-      <!-- DETAILS VIEW -->
-      <div id="settingsDetails" style="display:none;">
-        <div id="detailsTopBar" class="row" style="justify-content:flex-start; margin-bottom:10px; display:none;">
-          <button id="btnBackToWelcome" class="btn">Wróć</button>
-        </div>
+      <div style="height:12px"></div>
 
-        <div id="settingsBody">
-          <div class="section">
-            <div style="font-weight:800" id="st_profilesTitle">Profil gracza (współdzielenie)</div>
-            <div class="muted" id="st_profilesHint">—</div>
-
-            <div style="height:10px"></div>
-
-            <div class="row">
-              <div class="field">
-                <select id="selProfiles" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:var(--text);">
-                </select>
-              </div>
-              <button id="btnProfileSwitch" class="btn">Przełącz</button>
-              <button id="btnProfileAdd" class="btn">Dodaj</button>
-              <button id="btnProfileDelete" class="btn">Usuń</button>
-            </div>
-
-            <div style="height:10px"></div>
-            <div class="row">
-              <div class="field">
-                <input id="inpNickSettings" placeholder="Nick">
-              </div>
-              <button id="btnSaveNickSettings" class="btn">Zapisz nick</button>
-            </div>
-          </div>
-
-          <div class="section">
-            <div style="font-weight:800" id="st_langTitle">Język</div>
-            <div style="height:10px"></div>
-            <div class="row">
-              <button id="btnLangPL" class="btn langBtn">🇵🇱 Polski</button>
-              <button id="btnLangEN" class="btn langBtn">🇬🇧 English</button>
-              <div class="chip" id="st_langCurrent">Aktualny: Polski</div>
-            </div>
-          </div>
-
-          <div class="section" style="border-color: rgba(255,120,120,.28);">
-            <div style="font-weight:800" id="st_localTitle">Dane lokalne</div>
-            <div class="muted" id="st_localHint">—</div>
-            <div style="height:10px"></div>
-            <div class="row" style="justify-content:space-between">
-              <button id="btnClearLocal" class="btn">Wyczyść dane lokalne</button>
-              <button id="btnClearCancel" class="btn">Anuluj</button>
-            </div>
-          </div>
+      <div class="field" style="border-color:rgba(255,120,120,.28)">
+        <div style="font-weight:900" id="st_clearTitle">Dane lokalne</div>
+        <div class="muted" id="st_clearHint" style="margin-top:6px;">—</div>
+        <div style="height:10px"></div>
+        <div class="row" style="justify-content:space-between">
+          <button id="st_clearBtn" class="btn">Wyczyść dane lokalne</button>
+          <button id="st_cancelBtn" class="btn">Anuluj</button>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- NICK FIRST MODAL (ładne) -->
+  <div id="nickModal" class="modal">
+    <div class="card">
+      <div class="title" id="nm_title">Podaj swój nick</div>
+      <div class="muted" id="nm_sub">—</div>
+      <div style="height:12px"></div>
+      <input id="nm_inp" placeholder="Nick (np. Mariusz)">
+      <div class="muted" id="nm_err" style="color:#ffb0b0; display:none; margin-top:8px;">—</div>
+      <div style="height:12px"></div>
+      <div class="row right">
+        <button id="nm_cancel" class="btn">Anuluj</button>
+        <button id="nm_ok" class="btn">Dalej</button>
+      </div>
     </div>
   </div>
 

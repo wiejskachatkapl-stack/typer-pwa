@@ -1,57 +1,38 @@
-const BUILD = 1013;
-const CACHE = `typer-cache-v${BUILD}`;
-
+const CACHE = "typer-cache-v1";
 const ASSETS = [
   "./",
-  "./index.html?v=1013",
-  "./app.js?v=1013",
-  "./manifest.json?v=1013",
-  "./img_starter.png?v=1013",
-  "./img_menu.png?v=1013",
-  "./img_menu_pc.png?v=1013",
+  "./index.html",
+  "./app.js",
+  "./manifest.json",
+  "./img_menu_pc.png",
+  "./img_tlo.png",
+  "./btn_pokoje_typerow.png",
+  "./btn_statystyki.png",
+  "./btn_wyjscie.png",
+  "./ico_gear.png"
 ];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+self.addEventListener("install", (e)=>{
+  e.waitUntil(
+    caches.open(CACHE).then(c=>c.addAll(ASSETS)).then_links?.(()=>self.skipWaiting()) ?? self.skipWaiting()
   );
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : Promise.resolve())));
-    await self.clients.claim();
-  })());
+self.addEventListener("activate", (e)=>{
+  e.waitUntil(
+    caches.keys().then(keys=>Promise.all(keys.map(k=>k!==CACHE ? caches.delete(k) : null)))
+      .then(()=>self.clients.claim())
+  );
 });
 
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
-
-  // tylko GET
-  if (req.method !== "GET") return;
-
-  // cache-first dla własnych plików
-  if (url.origin === location.origin) {
-    event.respondWith((async () => {
-      const cached = await caches.match(req, { ignoreSearch: false });
-      if (cached) return cached;
-      const res = await fetch(req);
-      const cache = await caches.open(CACHE);
-      cache.put(req, res.clone());
-      return res;
-    })());
-    return;
-  }
-
-  // dla zewnętrznych: network-first
-  event.respondWith((async () => {
-    try {
-      return await fetch(req);
-    } catch {
-      const cached = await caches.match(req);
-      return cached || new Response("offline", { status: 503 });
-    }
-  })());
+self.addEventListener("fetch", (e)=>{
+  e.respondWith(
+    caches.match(e.request).then(cached=>{
+      return cached || fetch(e.request).then(resp=>{
+        const copy = resp.clone();
+        caches.open(CACHE).then(c=>c.put(e.request, copy)).catch(()=>{});
+        return resp;
+      }).catch(()=>cached);
+    })
+  );
 });
