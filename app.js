@@ -225,9 +225,14 @@ function getLang(){
 }
 function setLang(lang){
   const v = (lang === "en") ? "en" : "pl";
+  const prev = getLang();
   localStorage.setItem(KEY_LANG, v);
   applyLangToUI();
+  if(prev !== v){
+    showToast(v==="en" ? "Language: English" : "Język: Polski");
+  }
 }
+
 function t(key){
   const lang = getLang();
   return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.pl[key] || key);
@@ -570,14 +575,22 @@ function bindUI(){
   });
 
   // HOME: settings
-  el("btnHomeSettings").onclick = () => openSettings();
+  if(el("btnHomeSettings")) el("btnHomeSettings").onclick = () => openSettings();
 
   // HOME: language flags
-  if(el("btnLangPL")) el("btnLangPL").onclick = () => setLang("pl");
-  if(el("btnLangEN")) el("btnLangEN").onclick = () => setLang("en");
+  const bPL = el("btnLangPL");
+  const bEN = el("btnLangEN");
+  if(bPL) {
+    bPL.addEventListener("click", (e)=>{ e.preventDefault(); setLang("pl"); });
+    bPL.addEventListener("touchstart", (e)=>{ e.preventDefault(); setLang("pl"); }, {passive:false});
+  }
+  if(bEN) {
+    bEN.addEventListener("click", (e)=>{ e.preventDefault(); setLang("en"); });
+    bEN.addEventListener("touchstart", (e)=>{ e.preventDefault(); setLang("en"); }, {passive:false});
+  }
 
   // HOME
-  el("btnHomeRooms").onclick = async ()=>{
+  if(el("btnHomeRooms")) el("btnHomeRooms").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
@@ -587,7 +600,7 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  el("btnHomeStats").onclick = async ()=>{
+  if(el("btnHomeStats")) el("btnHomeStats").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
@@ -598,7 +611,7 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
+  if(el("btnHomeExit")) el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
 
   // CONTINUE
   el("btnContYes").onclick = async ()=>{
