@@ -1,4 +1,4 @@
-const BUILD = 2008;
+const BUILD = 2009;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -146,7 +146,10 @@ const I18N = {
     nickLabel: "Nick (3–16 znaków):",
     nickPlaceholder: "np. Mariusz",
     nickInvalid: "Nick musi mieć 3–16 znaków.",
-    nickRequired: "Nick jest wymagany."
+    nickRequired: "Nick jest wymagany.",
+    ok: "OK",
+    cancel: "Anuluj",
+    langOnHome: "Język ustawiasz na stronie głównej."
 },
   en: {
     settings: "Settings",
@@ -219,7 +222,10 @@ const I18N = {
     nickLabel: "Nick (3–16 chars):",
     nickPlaceholder: "e.g. Player",
     nickInvalid: "Nick must be 3–16 characters.",
-    nickRequired: "Nick is required."
+    nickRequired: "Nick is required.",
+    ok: "OK",
+    cancel: "Cancel",
+    langOnHome: "Language is set on the home screen."
 }
 };
 function getLang(){
@@ -501,6 +507,21 @@ function nickModalAsk(){
 
     row.appendChild(input);
 
+    const meta = document.createElement("div");
+    meta.className = "nickMeta";
+
+    const tip = document.createElement("div");
+    tip.textContent = (getLang() === "pl") ? "3–16 znaków • litery/cyfry" : "3–16 chars • letters/numbers";
+
+    const count = document.createElement("div");
+    count.className = "nickCount";
+    const updateCount = () => { count.textContent = `${(input.value||"").length}/16`; };
+    updateCount();
+    input.addEventListener("input", updateCount);
+
+    meta.appendChild(tip);
+    meta.appendChild(count);
+
     const btns = document.createElement("div");
     btns.className = "nickBtns";
 
@@ -510,7 +531,7 @@ function nickModalAsk(){
     btnCancel.textContent = t("cancel");
 
     const btnOk = document.createElement("button");
-    btnOk.className = "btn btnSmall";
+    btnOk.className = "btn btnSmall btnPrimary";
     btnOk.type = "button";
     btnOk.textContent = t("ok");
 
@@ -520,15 +541,30 @@ function nickModalAsk(){
     wrap.appendChild(hero);
     wrap.appendChild(label);
     wrap.appendChild(row);
+    wrap.appendChild(meta);
     wrap.appendChild(btns);
 
-    modalOpen("", wrap);
+    modalOpen(t("addProfileTitle"), wrap);
+
+    const closeBtn = el("modalClose");
+    const prevCloseText = closeBtn ? closeBtn.textContent : null;
+    const prevCloseOnClick = closeBtn ? closeBtn.onclick : null;
+
     setTimeout(()=>{ try{ input.focus(); input.select(); }catch(e){} }, 50);
 
     const closeAndResolve = (val)=>{
+      if(closeBtn){
+        if(prevCloseText !== null) closeBtn.textContent = prevCloseText;
+        closeBtn.onclick = prevCloseOnClick || (()=> modalClose());
+      }
       modalClose();
       resolve(val);
     };
+
+    if(closeBtn){
+      closeBtn.textContent = t("cancel");
+      closeBtn.onclick = () => closeAndResolve(null);
+    }
 
     btnCancel.onclick = ()=> closeAndResolve(null);
 
