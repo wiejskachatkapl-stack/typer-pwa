@@ -211,24 +211,7 @@
       user-select:none;
       transition: transform .12s ease, background .12s ease;
     }
-    
-    .homeLang{
-      position:absolute;
-      right:26px;
-      top:22px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:center;
-      z-index:5;
-    }
-    .homeLang .flagBtn{
-      width:76px;
-      height:54px;
-      border-radius:16px;
-      font-size:30px;
-    }
-.homeGear:hover{
+    .homeGear:hover{
       background:rgba(8,22,52,.65);
       transform:translateY(-50%) scale(1.03);
     }
@@ -508,6 +491,23 @@
       outline:2px solid rgba(43,255,136,.55);
       background:rgba(43,255,136,.14);
     }
+
+    /* ===== HOME LANG (FLAGS) ===== */
+    .homeLang{
+      position:absolute;
+      top:18px;
+      right:18px;
+      display:flex;
+      gap:10px;
+      z-index:20;
+    }
+    .homeLang .flagBtn{
+      width:72px;
+      height:50px;
+      font-size:30px;
+      border-radius:16px;
+    }
+
   </style>
 </head>
 
@@ -529,19 +529,18 @@
 
       <!-- HOME -->
       <section id="home" class="screen">
-        <!-- NOWE: zębatka ustawień -->
-        <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
-          <span>⚙️</span>
-        </div>
-
-        
-        <!-- NOWE: wybór języka na stronie głównej -->
-        <div class="homeLang" aria-label="Wybór języka">
+        <!-- NOWE: flagi języka (góra-prawa) -->
+        <div class="homeLang" aria-label="Language">
           <button class="flagBtn" id="btnLangPL" title="Polski">🇵🇱</button>
           <button class="flagBtn" id="btnLangEN" title="English">🇬🇧</button>
         </div>
 
-<div class="homeBtns" aria-label="Menu">
+<!-- NOWE: zębatka ustawień -->
+        <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
+          <span>⚙️</span>
+        </div>
+
+        <div class="homeBtns" aria-label="Menu">
           <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
             <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
           </button>
