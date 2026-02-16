@@ -228,6 +228,12 @@ function applyLangToUI(){
   const he = el("btnHomeExit");
   if(he) he.title = t("exit");
 
+  // HOME: aktywne flagi języka
+  const fpl = el("btnLangPL");
+  const fen = el("btnLangEN");
+  if(fpl) fpl.classList.toggle("active", getLang()==="pl");
+  if(fen) fen.classList.toggle("active", getLang()==="en");
+
   // Continue
   if(el("t_continue_title")) el("t_continue_title").textContent = t("contTitle");
   if(el("t_continue_sub")) el("t_continue_sub").textContent = t("contSub");
@@ -330,49 +336,11 @@ function openSettings(){
   head.textContent = t("settings");
   wrap.appendChild(head);
 
-  const row = document.createElement("div");
-  row.className = "row";
-  row.style.flexWrap = "wrap";
-  row.style.alignItems = "center";
-
-  const label = document.createElement("div");
-  label.className = "chip";
-  label.textContent = t("language") + ":";
-  row.appendChild(label);
-
-  const btnPL = document.createElement("button");
-  btnPL.className = "flagBtn";
-  btnPL.textContent = "🇵🇱";
-  btnPL.title = "Polski";
-  btnPL.classList.toggle("active", getLang() === "pl");
-  btnPL.onclick = () => {
-    setLang("pl");
-    btnPL.classList.add("active");
-    btnEN.classList.remove("active");
-    modalOpen(t("settings"), wrap); // odśwież tytuł
-  };
-
-  const btnEN = document.createElement("button");
-  btnEN.className = "flagBtn";
-  btnEN.textContent = "🇬🇧";
-  btnEN.title = "English";
-  btnEN.classList.toggle("active", getLang() === "en");
-  btnEN.onclick = () => {
-    setLang("en");
-    btnEN.classList.add("active");
-    btnPL.classList.remove("active");
-    modalOpen(t("settings"), wrap);
-  };
-
-  row.appendChild(btnPL);
-  row.appendChild(btnEN);
-  wrap.appendChild(row);
-
   const info = document.createElement("div");
   info.className = "sub";
   info.textContent = (getLang() === "pl")
-    ? "Zmiana języka działa od razu na całej aplikacji."
-    : "Language changes apply immediately across the app.";
+    ? "Ustawienia będą rozbudowane wkrótce. Zmiana języka jest teraz na stronie głównej (flagi w prawym górnym rogu)."
+    : "More settings coming soon. Language selection is now on the Home screen (flags in the top-right corner).";
   wrap.appendChild(info);
 
   modalOpen(t("settings"), wrap);
@@ -571,6 +539,10 @@ function bindUI(){
 
   // HOME: settings
   el("btnHomeSettings").onclick = () => openSettings();
+
+  // HOME: language flags
+  if(el("btnLangPL")) el("btnLangPL").onclick = () => setLang("pl");
+  if(el("btnLangEN")) el("btnLangEN").onclick = () => setLang("en");
 
   // HOME
   el("btnHomeRooms").onclick = async ()=>{

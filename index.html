@@ -183,7 +183,7 @@
     }
     .imgBtn img{
       display:block;
-      height:230px;
+      height:240px;
       width:auto;
       border-radius:16px;
     }
@@ -211,7 +211,24 @@
       user-select:none;
       transition: transform .12s ease, background .12s ease;
     }
-    .homeGear:hover{
+    
+    .homeLang{
+      position:absolute;
+      right:26px;
+      top:22px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      z-index:5;
+    }
+    .homeLang .flagBtn{
+      width:76px;
+      height:54px;
+      border-radius:16px;
+      font-size:30px;
+    }
+.homeGear:hover{
       background:rgba(8,22,52,.65);
       transform:translateY(-50%) scale(1.03);
     }
@@ -517,7 +534,14 @@
           <span>⚙️</span>
         </div>
 
-        <div class="homeBtns" aria-label="Menu">
+        
+        <!-- NOWE: wybór języka na stronie głównej -->
+        <div class="homeLang" aria-label="Wybór języka">
+          <button class="flagBtn" id="btnLangPL" title="Polski">🇵🇱</button>
+          <button class="flagBtn" id="btnLangEN" title="English">🇬🇧</button>
+        </div>
+
+<div class="homeBtns" aria-label="Menu">
           <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
             <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
           </button>
