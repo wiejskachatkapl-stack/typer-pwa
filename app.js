@@ -82,6 +82,10 @@ const I18N = {
     roomsTitle: "Pokoje typerów",
     stats: "Statystyki",
     exit: "Wyjście",
+    clearProfile: "Wyczyść profil",
+    clearProfileSub: "Usuwa wszystkie dane z tej aplikacji na tym urządzeniu.",
+    clearProfileConfirm: "Na pewno wyczyścić profil?\n\nTo usunie nick, zapisany pokój, historię, ustawienia języka i cache offline.",
+    cleared: "Wyczyszczono profil."
 
     contTitle: "Kontynuować?",
     contSub: "Wykryto wcześniejszą rozgrywkę",
@@ -145,6 +149,10 @@ const I18N = {
     roomsTitle: "Typer rooms",
     stats: "Stats",
     exit: "Exit",
+    clearProfile: "Clear profile",
+    clearProfileSub: "Removes all app data on this device.",
+    clearProfileConfirm: "Clear profile now?\n\nThis will remove nick, saved room, history, language setting and offline cache.",
+    cleared: "Profile cleared."
 
     contTitle: "Continue?",
     contSub: "Previous room detected",
@@ -374,7 +382,56 @@ function openSettings(){
     : "Language changes apply immediately across the app.";
   wrap.appendChild(info);
 
+
+  const sep = document.createElement("div");
+  sep.style.height = "1px";
+  sep.style.background = "rgba(255,255,255,.10)";
+  sep.style.margin = "6px 0";
+  wrap.appendChild(sep);
+
+  const dangerSub = document.createElement("div");
+  dangerSub.className = "sub";
+  dangerSub.textContent = t("clearProfileSub");
+  wrap.appendChild(dangerSub);
+
+  const btnClear = document.createElement("button");
+  btnClear.className = "btn btnDanger";
+  btnClear.type = "button";
+  btnClear.textContent = t("clearProfile");
+  btnClear.addEventListener("click", clearProfile);
+  wrap.appendChild(btnClear);
+
   modalOpen(t("settings"), wrap);
+}
+
+
+
+async function clearProfile(){
+  const msg = t("clearProfileConfirm");
+  const ok = confirm(msg);
+  if(!ok) return;
+
+  try { localStorage.clear(); } catch(e){}
+  try { sessionStorage.clear(); } catch(e){}
+
+  // Clear PWA caches (offline files)
+  if (window.caches && typeof caches.keys === "function") {
+    try{
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }catch(e){}
+  }
+
+  // Unregister Service Workers (optional safety)
+  if (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistrations === "function") {
+    try{
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }catch(e){}
+  }
+
+  showToast(t("cleared"));
+  setTimeout(() => location.reload(), 500);
 }
 
 function getNick(){
