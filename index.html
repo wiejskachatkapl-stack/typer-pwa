@@ -2,314 +2,721 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#08122a" />
   <title>Typer</title>
-
-  <link rel="manifest" href="./manifest.json">
+  <link rel="manifest" href="manifest.json" />
 
   <style>
     :root{
-      --glass: rgba(10,20,40,.55);
-      --border: rgba(255,255,255,.12);
+      --bg:#071229;
+      --glass: rgba(8, 22, 52, .58);
+      --glass2: rgba(8, 22, 52, .42);
+      --stroke: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.16);
       --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.70);
-      --btn: rgba(255,255,255,.10);
-      --btn2: rgba(255,255,255,.16);
-      --shadow: 0 14px 40px rgba(0,0,0,.45);
+      --muted: rgba(255,255,255,.72);
+      --shadow: 0 14px 50px rgba(0,0,0,.45);
+      --r: 22px;
     }
-    html,body{height:100%; margin:0; font-family:system-ui,Segoe UI,Arial; color:var(--text); background:#000;}
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      overflow:hidden;
+    }
 
     #bg{
       position:fixed; inset:0;
-      background-size:cover;
-      background-position:center;
-      background-repeat:no-repeat;
+      background:#071229 center/cover no-repeat;
+      z-index:0;
     }
 
-    .screen{position:relative; z-index:2; display:none; height:100%; width:100%;}
-    .screen.active{display:block;}
+    #app{
+      position:fixed; inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:14px;
+      z-index:1;
+    }
 
-    .card{
-      width:min(960px, 94vw);
-      padding:16px 16px;
-      border-radius:18px;
-      background:var(--glass);
-      border:1px solid var(--border);
+    .frame{
+      width:min(1580px,96vw);
+      height:min(920px,94vh);
+      border:1px solid var(--stroke);
+      border-radius:26px;
+      background:rgba(0,0,0,.10);
       box-shadow:var(--shadow);
-      backdrop-filter: blur(14px);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      overflow:hidden;
+      position:relative;
     }
-    .muted{color:var(--muted); font-size:13px; white-space:pre-line;}
-    .title{font-weight:800; font-size:18px; margin-bottom:8px;}
 
-    .row{ display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
-    .field{
-      flex:1;
-      background:rgba(0,0,0,.25);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px 12px;
+    .screen{display:none;height:100%;width:100%}
+    .screen.active{display:flex}
+
+    /* ===== SPLASH ===== */
+    #splash{align-items:center;justify-content:center;padding:24px}
+    .splashCard{
+      width:min(820px,92%);
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      background:var(--glass2);
+      padding:22px;
     }
-    input{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
+    .spinner{
+      width:26px;height:26px;border-radius:50%;
+      border:3px solid rgba(255,255,255,.25);
+      border-top-color:rgba(255,255,255,.9);
+      animation:spin 1s linear infinite;margin-top:12px;
     }
-    select{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .hint{margin-top:8px;color:var(--muted);font-weight:800;white-space:pre-wrap}
+    .err{
+      margin-top:10px;padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(255,120,120,.35);
+      background:rgba(255,60,60,.12);
+      display:none;white-space:pre-wrap
     }
+
+    /* ===== COMMON ===== */
+    .panel{
+      border:1px solid var(--stroke);
+      border-radius:var(--r);
+      background:var(--glass);
+      box-shadow:0 10px 30px rgba(0,0,0,.30);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
     .btn{
-      padding:10px 14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:var(--btn);
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.10);
       color:var(--text);
+      padding:10px 14px;
+      border-radius:16px;
+      font-weight:900;
       cursor:pointer;
       user-select:none;
-      font-weight:700;
+      white-space:nowrap;
     }
-    .btn:hover{ background:var(--btn2); }
-    .btn:disabled{ opacity:.45; cursor:not-allowed; }
+    .btn:hover{background:rgba(255,255,255,.14)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+
+    .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
 
     .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid var(--border);
-      font-size:13px;
-      font-weight:800;
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 14px;
+      border-radius:18px;
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:900;
     }
 
-    /* MENU */
-    #mainMenuWrap{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
+    .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
+    .sub{color:var(--muted);font-weight:700;font-size:13px}
+
+    .row{display:flex;gap:10px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:10px}
+    .spacer{flex:1}
+
+    input{
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      outline:none;
+      font-weight:900;
     }
-    #menuBgImg{
-      position:absolute; inset:0;
-      width:100%; height:100%;
-      object-fit:cover;
-      filter:none;
-      pointer-events:none;
-      border-radius:0;
+    input::placeholder{color:rgba(255,255,255,.55);font-weight:800}
+
+    .toast{
+      position:absolute;left:18px;bottom:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.85);
+      padding:10px 14px;border-radius:16px;font-weight:800;
+      display:none;
+      z-index:60;
     }
-    .menuBtns{
+    .footerRight{
+      position:absolute;right:18px;bottom:14px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;font-weight:900;
+      z-index:10;
+    }
+
+    /* ===== HOME (MENU PNG) ===== */
+    #home{
+      align-items:center;
+      justify-content:center;
       position:relative;
-      display:flex; gap:24px;
-      align-items:center; justify-content:center;
-      z-index:3;
+    }
+    .homeBtns{
+      position:absolute;
+      left:50%;
+      top:52%;
+      transform:translate(-50%,-50%);
+      display:flex;
+      gap:40px;
+      align-items:center;
+      justify-content:center;
+      padding:10px;
     }
     .imgBtn{
-      width: 240px; height:auto;
+      appearance:none;
+      border:0;
+      background:transparent;
       cursor:pointer;
-      user-select:none;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
-      transition: transform .10s ease;
+      padding:0;
+      line-height:0;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
+      transform: translateZ(0);
     }
-    .imgBtn:active{ transform: scale(.98); }
-
-    /* ZĘBATKA (na dole po lewej) */
-    #gearWrap{
-      position:absolute; left:22px; bottom:22px;
-      width:62px; height:62px; border-radius:999px;
-      display:flex; align-items:center; justify-content:center;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:var(--shadow);
-      cursor:pointer; user-select:none;
-      z-index:5;
-    }
-    #gearWrap img{width:30px; height:30px; filter:brightness(10); opacity:.95;}
-
-    /* MODAL */
-    .modal{
-      position:fixed; inset:0; z-index:50;
-      display:none; align-items:center; justify-content:center;
-      background:rgba(0,0,0,.45);
-      backdrop-filter: blur(8px);
-    }
-    .section{
-      background:rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.12);
+    .imgBtn img{
+      display:block;
+      height:90px;
+      width:auto;
       border-radius:16px;
+    }
+    .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
+    .imgBtn:active{transform: translateY(1px)}
+
+    /* ===== ROOMS ===== */
+    #rooms{padding:16px;gap:14px}
+    .roomsBox{
+      width:min(980px,100%);
+      margin:auto;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px
+    }
+    .block{padding:14px}
+    .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
+    .help{color:var(--muted);font-weight:800;font-size:13px}
+
+    /* ===== CONTINUE ===== */
+    #continue{
+      padding:16px;
+      align-items:center;
+      justify-content:center;
+    }
+    .continueBox{
+      width:min(980px,100%);
+      margin:auto;
+      padding:16px;
+    }
+    .continueCard{
+      padding:16px;
+      border-radius:22px;
+      border:1px solid var(--stroke2);
+      background:rgba(8,22,52,.62);
+      box-shadow:0 20px 70px rgba(0,0,0,.45);
+    }
+    .continueTop{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      padding-bottom:12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      margin-bottom:12px;
+    }
+    .pill{
+      padding:8px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      font-weight:1000;
+    }
+    .continueGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+    .miniCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:18px;
       padding:12px;
     }
+    .bigQ{
+      margin-top:12px;
+      font-weight:1000;
+    }
+    .continueBtns{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+    }
 
-    /* TOAST */
-    #toast{
-      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-      z-index:90;
+    /* ===== ROOM ===== */
+    #room{padding:16px;gap:14px;align-items:stretch}
+    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
+    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
+
+    .midHead{padding:14px}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
+    .matchCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:18px;
+      padding:12px 12px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .team{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      font-weight:1000;
+    }
+    .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .logo{
+      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      background:rgba(255,255,255,.10);
+      object-fit:contain;
+    }
+    .scoreBox{display:flex;align-items:center;gap:8px}
+    .scoreInput{width:48px;text-align:center}
+    .sep{font-weight:1000;opacity:.85}
+    .resultPill{
+      margin-left:8px;
+      padding:8px 10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .playerRow{
+      padding:10px 12px;border-radius:16px;
+      background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;gap:10px;align-items:center;justify-content:space-between;
+      font-weight:900;
+    }
+    .badge{
+      padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:1000;font-size:12px
+    }
+    .eyeBtn{
+      width:36px;height:28px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.85);
+      font-weight:1000;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .eyeBtn:disabled{opacity:.35;cursor:not-allowed}
+
+    .rightFooterBtn{
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:14px;
+    }
+    .rightFooterBtn .btn{width:100%}
+
+    /* ===== RESULTS SCREEN ===== */
+    #results{
+      padding:16px;
+      align-items:center;
+      justify-content:center;
+    }
+    .resultsWrap{
+      width:min(1100px,100%);
+      margin:auto;
+      padding:14px;
+    }
+    .resultsTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .resultsList{
+      max-height:min(680px,70vh);
+      overflow:auto;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    /* ===== LEAGUE ===== */
+    #league{
+      padding:16px;
+      align-items:center;
+      justify-content:center;
+    }
+    .leagueWrap{
+      width:min(1100px,100%);
+      margin:auto;
+      padding:14px;
+    }
+    .leagueTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .leagueTopLeft{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:18px;
+    }
+    th,td{
+      padding:12px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      font-weight:900;
+    }
+    th{color:rgba(255,255,255,.80);text-align:left;font-size:12px;letter-spacing:.2px}
+    tr:hover td{background:rgba(255,255,255,.04)}
+    .linkRow{cursor:pointer}
+
+    /* ===== MODAL ===== */
+    .modal{
+      position:absolute; inset:0;
       display:none;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      box-shadow:var(--shadow);
-      font-weight:800;
+      align-items:center; justify-content:center;
+      z-index:80;
+      background:rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
-
-    /* FOOTER BUILD */
-    #footerRight{
-      position:fixed; right:14px; bottom:10px; z-index:5;
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      text-shadow:0 1px 3px rgba(0,0,0,.6);
+    .modal.active{display:flex}
+    .modalCard{
+      width:min(1100px,94%);
+      max-height:min(760px,90%);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(8,22,52,.72);
+      border-radius:22px;
+      box-shadow:0 24px 90px rgba(0,0,0,.55);
+      display:flex;
+      flex-direction:column;
     }
+    .modalHead{
+      padding:14px;
+      display:flex; align-items:center; gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .modalBody{
+      padding:14px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      display:inline-block;
+      border:1px solid rgba(255,255,255,.25);
+    }
+    .dot.green{background:#2bff88}
+    .dot.yellow{background:#ffd24a}
+    .dot.red{background:#ff4d4d}
+    .dot.gray{background:rgba(255,255,255,.35)}
   </style>
 </head>
 
 <body>
   <div id="bg"></div>
-  <div id="toast"></div>
-  <div id="footerRight">BUILD</div>
 
-  <!-- SPLASH -->
-  <div id="splash" class="screen active">
-    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-      <div class="card">
-        <div class="title">Typer</div>
-        <div id="splashHint" class="muted">Ładowanie…</div>
-      </div>
-    </div>
-  </div>
+  <div id="app">
+    <div class="frame">
 
-  <!-- MAIN MENU (START) -->
-  <div id="mainMenu" class="screen">
-    <div id="mainMenuWrap">
-      <img id="menuBgImg" src="img_menu_pc.png" alt="menu background" />
-
-      <div id="gearWrap" title="Ustawienia">
-        <img src="ico_gear.png" alt="Settings"/>
-      </div>
-
-      <div class="menuBtns">
-        <img id="btnMenuRooms" class="imgBtn" src="btn_pokoje_typerow.png" alt="Pokoje typerów">
-        <img id="btnMenuStats" class="imgBtn" src="btn_statystyki.png" alt="Statystyki">
-        <img id="btnMenuExit"  class="imgBtn" src="btn_wyjscie.png" alt="Wyjście">
-      </div>
-    </div>
-  </div>
-
-  <!-- ROOMS -->
-  <div id="rooms" class="screen">
-    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;">
-          <div class="chip">Pokoje typerów</div>
-          <div class="chip">Nick: <b id="nickLabelRooms">—</b></div>
+      <!-- SPLASH -->
+      <section id="splash" class="screen active">
+        <div class="splashCard">
+          <div style="font-size:22px;font-weight:1000;">Typer</div>
+          <div class="hint" id="splashHint">Ładowanie…</div>
+          <div class="err" id="splashErr"></div>
+          <div class="spinner"></div>
         </div>
+      </section>
 
-        <div style="height:12px"></div>
+      <!-- HOME -->
+      <section id="home" class="screen">
+        <div class="homeBtns" aria-label="Menu">
+          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
+            <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
+          </button>
+          <button class="imgBtn" id="btnHomeStats" title="Statystyki">
+            <img src="btn_statystyki.png" alt="Statystyki">
+          </button>
+          <button class="imgBtn" id="btnHomeExit" title="Wyjście">
+            <img src="btn_wyjscie.png" alt="Wyjście">
+          </button>
+        </div>
+      </section>
 
-        <div class="section">
-          <div style="font-weight:900">Utwórz nowy pokój</div>
-          <div class="muted">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
-          <div style="height:10px"></div>
-          <div class="row">
-            <div class="field">
-              <input id="inpRoomName" placeholder="Nazwa pokoju (opcjonalnie)">
+      <!-- CONTINUE -->
+      <section id="continue" class="screen">
+        <div class="continueBox panel">
+          <div class="continueCard">
+            <div class="continueTop">
+              <div>
+                <div class="title" style="margin:0">Kontynuować?</div>
+                <div class="sub">Wykryto wcześniejszą rozgrywkę</div>
+              </div>
+              <div class="pill">Typer</div>
             </div>
-            <button id="btnCreateRoom" class="btn">Utwórz</button>
+
+            <div class="continueGrid">
+              <div class="miniCard">
+                <div class="sub">Witaj ponownie</div>
+                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contNick">—</div>
+              </div>
+              <div class="miniCard">
+                <div class="sub">Grasz w pokoju</div>
+                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contRoomName">—</div>
+              </div>
+            </div>
+
+            <div class="bigQ">Czy chcesz kontynuować grę w tym pokoju?</div>
+
+            <div class="continueBtns">
+              <button class="btn" id="btnContYes">Tak</button>
+              <button class="btn" id="btnContNo">Nie</button>
+              <div class="spacer"></div>
+              <button class="btn btnSmall" id="btnContForget">Zapomnij pokój</button>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div style="height:12px"></div>
-
-        <div class="section">
-          <div style="font-weight:900">Dołącz do pokoju</div>
-          <div class="muted">Wpisz kod od admina.</div>
-          <div style="height:10px"></div>
+      <!-- ROOMS -->
+      <section id="rooms" class="screen">
+        <div class="roomsBox panel">
           <div class="row">
-            <div class="field">
-              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)">
+            <div class="chip">Pokoje typerów</div>
+            <div class="spacer"></div>
+            <div class="chip">Nick: <span id="nickLabelRooms">—</span></div>
+            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
+            <button class="btn btnSmall" id="btnBackHomeFromRooms">Wróć</button>
+          </div>
+
+          <div class="panel block">
+            <h2>Dołącz do pokoju</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
+              <button class="btn" id="btnJoinRoom">Dołącz</button>
             </div>
-            <button id="btnJoinRoom" class="btn">Dołącz</button>
+            <div class="help" style="margin-top:8px">Wpisz kod od admina.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Utwórz nowy pokój</h2>
+            <div class="row" style="margin-top:10px">
+              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
+              <button class="btn" id="btnCreateRoom">Utwórz</button>
+            </div>
+            <div class="help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+          </div>
+
+          <div class="panel block">
+            <h2>Debug</h2>
+            <div class="help" id="debugRooms">—</div>
           </div>
         </div>
+      </section>
 
-        <div style="height:10px"></div>
-        <div class="muted" id="debugRooms">—</div>
+      <!-- ROOM -->
+      <section id="room" class="screen">
+        <div style="display:flex;width:100%;height:100%;gap:14px;padding:16px">
 
-        <div style="height:12px"></div>
-        <div class="row" style="justify-content:space-between;">
-          <button id="btnBackMenu" class="btn">Wróć</button>
-          <button id="btnChangeNickRooms" class="btn">Zmień nick</button>
+          <!-- LEFT -->
+          <div class="leftBar panel">
+            <div class="col" style="gap:10px">
+              <div class="chip">Pokój</div>
+              <div class="chip">Nick: <span id="nickLabelRoom">—</span></div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div class="title" id="roomName">—</div>
+              <div class="sub">Admin: <span id="roomAdmin">—</span></div>
+              <div class="row" style="margin-top:10px">
+                <div class="chip" style="flex:1;justify-content:space-between;">
+                  Kod: <span id="roomCode">—</span>
+                </div>
+                <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
+              </div>
+              <div class="row" style="margin-top:10px">
+                <button class="btn btnSmall" id="btnLeave">Opuść</button>
+                <button class="btn btnSmall" id="btnRefresh">Odśwież</button>
+              </div>
+            </div>
+
+            <div class="panel" style="padding:14px">
+              <div class="title">Akcje</div>
+              <div class="sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
+              <div class="col" style="margin-top:10px">
+                <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+
+                <!-- ADMIN -->
+                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
+                <button class="btn" id="btnEndRound" style="display:none" disabled>Zakończ kolejkę</button>
+
+                <button class="btn" id="btnMyQueue" style="display:none">Własna kolejka</button>
+                <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
+              </div>
+            </div>
+
+            <div class="spacer"></div>
+            <button class="btn" id="btnBackFromRoom">Wróć</button>
+          </div>
+
+          <!-- MIDDLE -->
+          <div class="mid">
+            <div class="panel midHead">
+              <div class="row">
+                <div>
+                  <div class="title">Spotkania</div>
+                  <div class="sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                </div>
+                <div class="spacer"></div>
+                <div class="chip">KOLEJKA: <span id="roundLabel">—</span></div>
+                <div class="chip">Mecze: <span id="matchesCount">0</span></div>
+                <div class="chip">PUNKTY (kolejka): <span id="myPointsLabel">—</span></div>
+              </div>
+            </div>
+
+            <div class="panel matchesWrap" id="matchesList"></div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="rightBar panel">
+            <div>
+              <div class="title">Gracze</div>
+              <div class="sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
+            </div>
+            <div class="playersList" id="playersList"></div>
+
+            <div class="rightFooterBtn">
+              <button class="btn" id="btnLeagueFromRoom">Tabela ligi typerów</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- RESULTS (ADMIN) -->
+      <section id="results" class="screen">
+        <div class="resultsWrap panel">
+          <div class="resultsTop">
+            <div class="row" style="gap:10px;flex-wrap:wrap">
+              <div class="chip">Wyniki</div>
+              <div class="chip">Pokój: <span id="resRoomName">—</span></div>
+              <div class="chip">KOLEJKA: <span id="resRound">—</span></div>
+            </div>
+            <div class="row">
+              <button class="btn btnSmall" id="btnResBack">Wróć</button>
+              <button class="btn btnSmall" id="btnResSave">Zapisz wyniki</button>
+            </div>
+          </div>
+
+          <div class="panel resultsList" id="resultsList"></div>
+          <div class="sub" style="padding:10px 14px">
+            Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
+          </div>
+        </div>
+      </section>
+
+      <!-- LEAGUE -->
+      <section id="league" class="screen">
+        <div class="leagueWrap panel">
+          <div class="leagueTop">
+            <div class="leagueTopLeft">
+              <div class="chip">Tabela ligi typerów</div>
+              <div class="chip">Pokój: <span id="leagueRoomName">—</span></div>
+              <div class="chip">Nick: <span id="leagueNick">—</span></div>
+              <div class="chip">Po kolejce: <span id="leagueAfterRound">—</span></div>
+            </div>
+            <div class="row">
+              <button class="btn btnSmall" id="btnLeagueRefresh">Odśwież</button>
+              <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
+            </div>
+          </div>
+
+          <div class="panel" style="padding:14px">
+            <div class="title" style="margin:0 0 10px 0">Ranking</div>
+            <div class="sub" style="margin-bottom:10px" id="leagueHint">
+              Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).
+            </div>
+
+            <div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
+              <table id="leagueTable">
+                <thead>
+                <tr>
+                  <th style="width:60px">#</th>
+                  <th>Gracz</th>
+                  <th style="width:120px">Kolejki</th>
+                  <th style="width:120px">Punkty</th>
+                </tr>
+                </thead>
+                <tbody id="leagueBody">
+                <tr><td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- MODAL -->
+      <div class="modal" id="modal">
+        <div class="modalCard">
+          <div class="modalHead">
+            <div class="chip" id="modalTitle">—</div>
+            <div class="spacer"></div>
+            <button class="btn btnSmall" id="modalClose">Zamknij</button>
+          </div>
+          <div class="modalBody" id="modalBody"></div>
         </div>
       </div>
+
+      <div class="toast" id="toast"></div>
+      <div class="footerRight" id="footerRight">—</div>
     </div>
   </div>
 
-  <!-- ROOM (to jest Twoja działająca mechanika typowania – ZOSTAJE) -->
-  <div id="room" class="screen">
-    <!-- UWAGA: tutaj zostaje Twój istniejący layout typowania,
-         bo logika jest w Twoim app.js – nie ruszam tego w HTML.
-         Jeśli w Twoim działającym pliku index.html było tu więcej treści,
-         to skopiuj ją 1:1 (albo podeślij – wkleję). -->
-    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
-      <div class="card">
-        <div class="title">Pokój</div>
-        <div class="muted">Ekran pokoju jest sterowany przez Twoją logikę typowania w app.js.</div>
-        <div style="height:12px"></div>
-        <button id="btnBackFromRoom" class="btn">Wróć</button>
-      </div>
-    </div>
-  </div>
+  <script>
+    const hint = document.getElementById("splashHint");
+    const errBox = document.getElementById("splashErr");
+    function showErr(title, msg){
+      hint.textContent = "STOP: wykryto błąd.";
+      errBox.style.display = "block";
+      errBox.textContent = title + "\n\n" + msg;
+    }
+    window.addEventListener("error", (e) => {
+      showErr("window.error", (e?.message || "unknown") + "\n" + (e?.filename || "") + ":" + (e?.lineno || "?"));
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
+    });
+  </script>
 
-  <!-- SETTINGS MODAL -->
-  <div id="settingsModal" class="modal">
-    <div class="card" style="width:min(920px, 92vw);">
-      <div class="row" style="justify-content:space-between;">
-        <div class="chip" id="st_title">Ustawienia</div>
-        <button id="btnSettingsClose" class="btn" style="border-radius:999px;">Zamknij</button>
-      </div>
-
-      <div style="height:12px"></div>
-
-      <div class="section">
-        <div style="font-weight:900" id="st_langTitle">Język</div>
-        <div style="height:10px"></div>
-        <div class="row">
-          <button id="btnLangPL" class="btn">🇵🇱 Polski</button>
-          <button id="btnLangEN" class="btn">🇬🇧 English</button>
-          <div class="chip" id="st_langCurrent">Aktualny: Polski</div>
-        </div>
-      </div>
-
-      <div style="height:12px"></div>
-
-      <div class="section">
-        <div style="font-weight:900" id="st_nickTitle">Nick</div>
-        <div class="muted" id="st_nickHint">Zmień nick bez wchodzenia w „Pokoje”.</div>
-        <div style="height:10px"></div>
-        <div class="row">
-          <div class="field"><input id="inpNickSettings" placeholder="Nick"></div>
-          <button id="btnSaveNickSettings" class="btn">Zapisz nick</button>
-        </div>
-      </div>
-
-      <div style="height:12px"></div>
-
-      <div class="section" style="border-color: rgba(255,120,120,.28);">
-        <div style="font-weight:900" id="st_localTitle">Dane lokalne</div>
-        <div class="muted" id="st_localHint">Wyczyści: nick, ostatni pokój, język (reset na tym komputerze).</div>
-        <div style="height:10px"></div>
-        <div class="row" style="justify-content:flex-end;">
-          <button id="btnClearLocalSettings" class="btn">Wyczyść dane lokalne</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js?v=2003"></script>
 </body>
 </html>

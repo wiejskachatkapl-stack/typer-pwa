@@ -1,82 +1,57 @@
-/* sw.js — Typer (network-first for HTML/JS to avoid “stuck version”) */
-const VERSION = "2011";
-const CACHE_NAME = `typer-cache-${VERSION}`;
+const BUILD = 1013;
+const CACHE = `typer-cache-v${BUILD}`;
 
-const CORE_ASSETS = [
+const ASSETS = [
   "./",
-  "./index.html",
-  "./app.js",
-  "./manifest.json"
+  "./index.html?v=1013",
+  "./app.js?v=1013",
+  "./manifest.json?v=1013",
+  "./img_starter.png?v=1013",
+  "./img_menu.png?v=1013",
+  "./img_menu_pc.png?v=1013",
 ];
 
-// Install: pre-cache core
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
   event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(CORE_ASSETS.map((u) => new Request(u, { cache: "reload" })));
-    })()
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
   );
 });
 
-// Activate: cleanup old caches
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : Promise.resolve())));
-      await self.clients.claim();
-    })()
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : Promise.resolve())));
+    await self.clients.claim();
+  })());
 });
 
-// Helpers
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  try {
-    const fresh = await fetch(request);
-    // cache only OK responses
-    if (fresh && fresh.ok) cache.put(request, fresh.clone());
-    return fresh;
-  } catch (e) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    throw e;
-  }
-}
-
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  if (cached) return cached;
-  const fresh = await fetch(request);
-  if (fresh && fresh.ok) cache.put(request, fresh.clone());
-  return fresh;
-}
-
-// Fetch strategy:
-// - HTML navigations + index.html + app.js -> NETWORK FIRST
-// - other assets (png/jpg/css/firebase libs) -> CACHE FIRST
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // only same-origin
-  if (url.origin !== self.location.origin) return;
+  // tylko GET
+  if (req.method !== "GET") return;
 
-  const isHTML =
-    req.mode === "navigate" ||
-    (req.destination === "document") ||
-    url.pathname.endsWith("/index.html") ||
-    url.pathname.endsWith("index.html");
-
-  const isCriticalJS = url.pathname.endsWith("/app.js") || url.pathname.endsWith("app.js");
-
-  if (isHTML || isCriticalJS) {
-    event.respondWith(networkFirst(req));
+  // cache-first dla własnych plików
+  if (url.origin === location.origin) {
+    event.respondWith((async () => {
+      const cached = await caches.match(req, { ignoreSearch: false });
+      if (cached) return cached;
+      const res = await fetch(req);
+      const cache = await caches.open(CACHE);
+      cache.put(req, res.clone());
+      return res;
+    })());
     return;
   }
 
-  event.respondWith(cacheFirst(req));
+  // dla zewnętrznych: network-first
+  event.respondWith((async () => {
+    try {
+      return await fetch(req);
+    } catch {
+      const cached = await caches.match(req);
+      return cached || new Response("offline", { status: 503 });
+    }
+  })());
 });
