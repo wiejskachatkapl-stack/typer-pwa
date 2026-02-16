@@ -1,4 +1,4 @@
-const BUILD = 2003;
+const BUILD = 2004;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -6,6 +6,9 @@ const BG_ROOM = "img_tlo.png";
 const KEY_NICK = "typer_nick_v3";
 const KEY_ACTIVE_ROOM = "typer_active_room_v3";
 const KEY_ROOMS_HISTORY = "typer_rooms_history_v3";
+
+// NOWE: język
+const KEY_LANG = "typer_lang_v1"; // "pl" | "en"
 
 const firebaseConfig = {
   apiKey: "AIzaSyCE-uY6HnDWdfKW03hioAlLM8BLj851fco",
@@ -70,16 +73,324 @@ function normalizeSlug(s){
     .replace(/^_+|_+$/g, "");
 }
 
+// ===== i18n (PL/EN) =====
+const I18N = {
+  pl: {
+    settings: "Ustawienia",
+    language: "Język",
+    close: "Zamknij",
+    roomsTitle: "Pokoje typerów",
+    stats: "Statystyki",
+    exit: "Wyjście",
+
+    contTitle: "Kontynuować?",
+    contSub: "Wykryto wcześniejszą rozgrywkę",
+    contHello: "Witaj ponownie",
+    contRoom: "Grasz w pokoju",
+    contQ: "Czy chcesz kontynuować grę w tym pokoju?",
+    yes: "Tak",
+    no: "Nie",
+    forget: "Zapomnij pokój",
+
+    nick: "Nick",
+    joinTitle: "Dołącz do pokoju",
+    joinBtn: "Dołącz",
+    joinHelp: "Wpisz kod od admina.",
+    createTitle: "Utwórz nowy pokój",
+    createBtn: "Utwórz",
+    createHelp: "Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.",
+    changeNick: "Zmień nick",
+    back: "Wróć",
+
+    room: "Pokój",
+    admin: "Admin",
+    code: "Kod",
+    copy: "Kopiuj",
+    leave: "Opuść",
+    refresh: "Odśwież",
+    actions: "Akcje",
+    actionsSub: "Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.",
+    savePicks: "Zapisz typy",
+    enterResults: "Wpisz wyniki",
+    endRound: "Zakończ kolejkę",
+    myQueue: "Własna kolejka",
+    addQueue: "Dodaj kolejkę (test)",
+
+    matches: "Spotkania",
+    matchesSub: "Uzupełnij typy (0–20). Wyniki admin wpisze osobno.",
+    round: "KOLEJKA",
+    games: "Mecze",
+    pointsRound: "PUNKTY (kolejka)",
+
+    players: "Gracze",
+    playersSub: "Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.",
+    leagueBtn: "Tabela ligi typerów",
+
+    results: "Wyniki",
+    hintResults: "Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.",
+    saveResults: "Zapisz wyniki",
+
+    league: "Tabela ligi typerów",
+    afterRound: "Po kolejce",
+    ranking: "Ranking",
+    leagueHint: "Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).",
+    playerCol: "Gracz",
+    roundsCol: "Kolejki",
+    pointsCol: "Punkty"
+  },
+  en: {
+    settings: "Settings",
+    language: "Language",
+    close: "Close",
+    roomsTitle: "Typer rooms",
+    stats: "Stats",
+    exit: "Exit",
+
+    contTitle: "Continue?",
+    contSub: "Previous room detected",
+    contHello: "Welcome back",
+    contRoom: "You play in room",
+    contQ: "Do you want to continue in this room?",
+    yes: "Yes",
+    no: "No",
+    forget: "Forget room",
+
+    nick: "Nick",
+    joinTitle: "Join room",
+    joinBtn: "Join",
+    joinHelp: "Enter the code from admin.",
+    createTitle: "Create new room",
+    createBtn: "Create",
+    createHelp: "Room code has 6 chars. The creator becomes admin.",
+    changeNick: "Change nick",
+    back: "Back",
+
+    room: "Room",
+    admin: "Admin",
+    code: "Code",
+    copy: "Copy",
+    leave: "Leave",
+    refresh: "Refresh",
+    actions: "Actions",
+    actionsSub: "Save picks only after you fill all matches.",
+    savePicks: "Save picks",
+    enterResults: "Enter results",
+    endRound: "End round",
+    myQueue: "My fixture",
+    addQueue: "Add fixture (test)",
+
+    matches: "Matches",
+    matchesSub: "Fill picks (0–20). Admin enters results separately.",
+    round: "ROUND",
+    games: "Games",
+    pointsRound: "POINTS (round)",
+
+    players: "Players",
+    playersSub: "Green ✓ = picks saved, red ✗ = missing. Eye active after you save your picks.",
+    leagueBtn: "League table",
+
+    results: "Results",
+    hintResults: "Tip: fill all results and click “Save results”.",
+    saveResults: "Save results",
+
+    league: "League table",
+    afterRound: "After round",
+    ranking: "Ranking",
+    leagueHint: "Click a player to view stats (rounds + picks preview).",
+    playerCol: "Player",
+    roundsCol: "Rounds",
+    pointsCol: "Points"
+  }
+};
+
+function getLang(){
+  const v = (localStorage.getItem(KEY_LANG) || "").toLowerCase();
+  return (v === "en") ? "en" : "pl";
+}
+function setLang(lang){
+  const v = (lang === "en") ? "en" : "pl";
+  localStorage.setItem(KEY_LANG, v);
+  applyLangToUI();
+}
+function t(key){
+  const lang = getLang();
+  return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.pl[key] || key);
+}
+
+function applyLangToUI(){
+  // HOME titles (tooltipy)
+  const hs = el("btnHomeSettings");
+  if(hs) hs.title = t("settings");
+  const hr = el("btnHomeRooms");
+  if(hr) hr.title = t("roomsTitle");
+  const ht = el("btnHomeStats");
+  if(ht) ht.title = t("stats");
+  const he = el("btnHomeExit");
+  if(he) he.title = t("exit");
+
+  // Continue
+  if(el("t_continue_title")) el("t_continue_title").textContent = t("contTitle");
+  if(el("t_continue_sub")) el("t_continue_sub").textContent = t("contSub");
+  if(el("t_continue_hello")) el("t_continue_hello").textContent = t("contHello");
+  if(el("t_continue_room")) el("t_continue_room").textContent = t("contRoom");
+  if(el("t_continue_q")) el("t_continue_q").textContent = t("contQ");
+  if(el("btnContYes")) el("btnContYes").textContent = t("yes");
+  if(el("btnContNo")) el("btnContNo").textContent = t("no");
+  if(el("btnContForget")) el("btnContForget").textContent = t("forget");
+
+  // Rooms
+  if(el("t_rooms_title")) el("t_rooms_title").textContent = t("roomsTitle");
+  if(el("t_nick")) el("t_nick").textContent = t("nick");
+  if(el("btnChangeNickRooms")) el("btnChangeNickRooms").textContent = t("changeNick");
+  if(el("btnBackHomeFromRooms")) el("btnBackHomeFromRooms").textContent = t("back");
+  if(el("t_join_title")) el("t_join_title").textContent = t("joinTitle");
+  if(el("btnJoinRoom")) el("btnJoinRoom").textContent = t("joinBtn");
+  if(el("t_join_help")) el("t_join_help").textContent = t("joinHelp");
+  if(el("t_create_title")) el("t_create_title").textContent = t("createTitle");
+  if(el("btnCreateRoom")) el("btnCreateRoom").textContent = t("createBtn");
+  if(el("t_create_help")) el("t_create_help").textContent = t("createHelp");
+
+  // Room
+  if(el("t_room_room")) el("t_room_room").textContent = t("room");
+  if(el("t_nick2")) el("t_nick2").textContent = t("nick");
+  if(el("t_admin")) el("t_admin").textContent = t("admin");
+  if(el("t_code")) el("t_code").textContent = t("code");
+  if(el("btnCopyCode")) el("btnCopyCode").textContent = t("copy");
+  if(el("btnLeave")) el("btnLeave").textContent = t("leave");
+  if(el("btnRefresh")) el("btnRefresh").textContent = t("refresh");
+  if(el("t_actions")) el("t_actions").textContent = t("actions");
+  if(el("t_actions_sub")) el("t_actions_sub").textContent = t("actionsSub");
+  if(el("btnSaveAll")) el("btnSaveAll").textContent = t("savePicks");
+  if(el("btnEnterResults")) el("btnEnterResults").textContent = t("enterResults");
+  if(el("btnEndRound")) el("btnEndRound").textContent = t("endRound");
+  if(el("btnMyQueue")) el("btnMyQueue").textContent = t("myQueue");
+  if(el("btnAddQueue")) el("btnAddQueue").textContent = t("addQueue");
+  if(el("btnBackFromRoom")) el("btnBackFromRoom").textContent = t("back");
+
+  if(el("t_matches")) el("t_matches").textContent = t("matches");
+  if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
+  if(el("t_round")) el("t_round").textContent = t("round");
+  if(el("t_games")) el("t_games").textContent = t("games");
+  if(el("t_points_round")) el("t_points_round").textContent = t("pointsRound");
+
+  if(el("t_players")) el("t_players").textContent = t("players");
+  if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
+  if(el("btnLeagueFromRoom")) el("btnLeagueFromRoom").textContent = t("leagueBtn");
+
+  // Results
+  if(el("t_results")) el("t_results").textContent = t("results");
+  if(el("t_room")) el("t_room").textContent = t("room");
+  if(el("t_round2")) el("t_round2").textContent = t("round");
+  if(el("btnResBack")) el("btnResBack").textContent = t("back");
+  if(el("btnResSave")) el("btnResSave").textContent = t("saveResults");
+  if(el("t_results_hint")) el("t_results_hint").textContent = t("hintResults");
+
+  // League
+  if(el("t_league")) el("t_league").textContent = t("league");
+  if(el("t_room3")) el("t_room3").textContent = t("room");
+  if(el("t_nick3")) el("t_nick3").textContent = t("nick");
+  if(el("t_after_round")) el("t_after_round").textContent = t("afterRound");
+  if(el("btnLeagueRefresh")) el("btnLeagueRefresh").textContent = t("refresh");
+  if(el("btnLeagueBack")) el("btnLeagueBack").textContent = t("back");
+  if(el("t_ranking")) el("t_ranking").textContent = t("ranking");
+  if(el("leagueHint")) el("leagueHint").textContent = t("leagueHint");
+  if(el("t_player_col")) el("t_player_col").textContent = t("playerCol");
+  if(el("t_rounds_col")) el("t_rounds_col").textContent = t("roundsCol");
+  if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
+
+  // Modal close
+  if(el("modalClose")) el("modalClose").textContent = t("close");
+}
+
+// ===== Modal =====
+function modalOpen(title, bodyNode){
+  const m = el("modal");
+  const tEl = el("modalTitle");
+  const b = el("modalBody");
+  if(!m || !tEl || !b) return;
+  tEl.textContent = title || "—";
+  b.innerHTML = "";
+  if(bodyNode) b.appendChild(bodyNode);
+  m.classList.add("active");
+}
+function modalClose(){
+  const m = el("modal");
+  if(m) m.classList.remove("active");
+}
+
+// ===== Settings modal =====
+function openSettings(){
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.flexDirection = "column";
+  wrap.style.gap = "12px";
+
+  const head = document.createElement("div");
+  head.className = "chip";
+  head.textContent = t("settings");
+  wrap.appendChild(head);
+
+  const row = document.createElement("div");
+  row.className = "row";
+  row.style.flexWrap = "wrap";
+  row.style.alignItems = "center";
+
+  const label = document.createElement("div");
+  label.className = "chip";
+  label.textContent = t("language") + ":";
+  row.appendChild(label);
+
+  const btnPL = document.createElement("button");
+  btnPL.className = "flagBtn";
+  btnPL.textContent = "🇵🇱";
+  btnPL.title = "Polski";
+  btnPL.classList.toggle("active", getLang() === "pl");
+  btnPL.onclick = () => {
+    setLang("pl");
+    btnPL.classList.add("active");
+    btnEN.classList.remove("active");
+    modalOpen(t("settings"), wrap); // odśwież tytuł
+  };
+
+  const btnEN = document.createElement("button");
+  btnEN.className = "flagBtn";
+  btnEN.textContent = "🇬🇧";
+  btnEN.title = "English";
+  btnEN.classList.toggle("active", getLang() === "en");
+  btnEN.onclick = () => {
+    setLang("en");
+    btnEN.classList.add("active");
+    btnPL.classList.remove("active");
+    modalOpen(t("settings"), wrap);
+  };
+
+  row.appendChild(btnPL);
+  row.appendChild(btnEN);
+  wrap.appendChild(row);
+
+  const info = document.createElement("div");
+  info.className = "sub";
+  info.textContent = (getLang() === "pl")
+    ? "Zmiana języka działa od razu na całej aplikacji."
+    : "Language changes apply immediately across the app.";
+  wrap.appendChild(info);
+
+  modalOpen(t("settings"), wrap);
+}
+
 function getNick(){
   return (localStorage.getItem(KEY_NICK) || "").trim();
 }
 async function ensureNick(){
   let nick = getNick();
   while(!nick){
-    nick = prompt("Podaj nick (3–16 znaków):", "") || "";
+    const promptText = (getLang() === "en")
+      ? "Enter nick (3–16 chars):"
+      : "Podaj nick (3–16 znaków):";
+    nick = prompt(promptText, "") || "";
     nick = nick.trim();
     if (nick.length < 3 || nick.length > 16) nick = "";
-    if (!nick) alert("Nick musi mieć 3–16 znaków.");
+    if (!nick) alert(getLang()==="en" ? "Nick must be 3–16 characters." : "Nick musi mieć 3–16 znaków.");
   }
   localStorage.setItem(KEY_NICK, nick);
   refreshNickLabels();
@@ -110,22 +421,6 @@ function pushRoomHistory(code){
   localStorage.setItem(KEY_ROOMS_HISTORY, JSON.stringify(arr));
 }
 
-// ===== Modal =====
-function modalOpen(title, bodyNode){
-  const m = el("modal");
-  const t = el("modalTitle");
-  const b = el("modalBody");
-  if(!m || !t || !b) return;
-  t.textContent = title || "—";
-  b.innerHTML = "";
-  if(bodyNode) b.appendChild(bodyNode);
-  m.classList.add("active");
-}
-function modalClose(){
-  const m = el("modal");
-  if(m) m.classList.remove("active");
-}
-
 // Firebase boot
 let app, auth, db;
 let userUid = null;
@@ -140,21 +435,21 @@ let currentRoomCode = null;
 let currentRoom = null;
 let currentRoundNo = 1;
 
-let matchesCache = [];   // [{id, home, away, idx, resultH, resultA}]
-let picksCache = {};     // my picks: matchId -> {h,a}
-let picksDocByUid = {};  // uid -> picks object
-let submittedByUid = {}; // uid -> bool
+let matchesCache = [];
+let picksCache = {};
+let picksDocByUid = {};
+let submittedByUid = {};
 let lastPlayers = [];
 
-let pointsByUid = {}; // uid -> number (current round)
+let pointsByUid = {};
 let myPoints = null;
 
 function roomRef(code){ return boot.doc(db, "rooms", code); }
 function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
 function matchesCol(code){ return boot.collection(db, "rooms", code, "matches"); }
 function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
-function roundsCol(code){ return boot.collection(db, "rooms", code, "rounds"); } // archiwum
-function leagueCol(code){ return boot.collection(db, "rooms", code, "league"); } // suma
+function roundsCol(code){ return boot.collection(db, "rooms", code, "rounds"); }
+function leagueCol(code){ return boot.collection(db, "rooms", code, "league"); }
 
 function roundDocRef(code, roundNo){
   return boot.doc(db, "rooms", code, "rounds", `round_${roundNo}`);
@@ -274,6 +569,9 @@ function bindUI(){
     if(e.target && e.target.id === "modal") modalClose();
   });
 
+  // HOME: settings
+  el("btnHomeSettings").onclick = () => openSettings();
+
   // HOME
   el("btnHomeRooms").onclick = async ()=>{
     if(!getNick()) await ensureNick();
@@ -292,11 +590,11 @@ function bindUI(){
       await openLeagueTable(saved);
       return;
     }
-    showToast("Najpierw wybierz / dołącz do pokoju");
+    showToast(getLang()==="en" ? "Join a room first" : "Najpierw wybierz / dołącz do pokoju");
     showScreen("rooms");
   };
 
-  el("btnHomeExit").onclick = ()=> showToast("Możesz zamknąć kartę przeglądarki.");
+  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
 
   // CONTINUE
   el("btnContYes").onclick = async ()=>{
@@ -307,7 +605,7 @@ function bindUI(){
   el("btnContNo").onclick = ()=> showScreen("rooms");
   el("btnContForget").onclick = ()=>{
     clearSavedRoom();
-    showToast("Zapomniano pokój");
+    showToast(getLang()==="en" ? "Room forgotten" : "Zapomniano pokój");
     showScreen("rooms");
   };
 
@@ -316,18 +614,18 @@ function bindUI(){
   el("btnChangeNickRooms").onclick = async ()=>{
     localStorage.removeItem(KEY_NICK);
     await ensureNick();
-    showToast("Zmieniono nick");
+    showToast(getLang()==="en" ? "Nick changed" : "Zmieniono nick");
   };
   el("btnCreateRoom").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const name = (el("inpRoomName").value || "").trim();
-    if(name.length < 2){ showToast("Podaj nazwę pokoju"); return; }
+    if(name.length < 2){ showToast(getLang()==="en" ? "Enter room name" : "Podaj nazwę pokoju"); return; }
     await createRoom(name);
   };
   el("btnJoinRoom").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
-    if(code.length !== 6){ showToast("Kod musi mieć 6 znaków"); return; }
+    if(code.length !== 6){ showToast(getLang()==="en" ? "Code must be 6 chars" : "Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
   };
 
@@ -338,8 +636,8 @@ function bindUI(){
     if(!currentRoomCode) return;
     try{
       await navigator.clipboard.writeText(currentRoomCode);
-      showToast("Skopiowano kod");
-    }catch{ showToast("Nie udało się skopiować"); }
+      showToast(getLang()==="en" ? "Code copied" : "Skopiowano kod");
+    }catch{ showToast(getLang()==="en" ? "Copy failed" : "Nie udało się skopiować"); }
   };
 
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
@@ -349,8 +647,8 @@ function bindUI(){
 
   // ADMIN
   el("btnEnterResults").onclick = async ()=>{
-    if(!isAdmin()) { showToast("Tylko admin"); return; }
-    if(!matchesCache.length){ showToast("Brak meczów"); return; }
+    if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+    if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
     openResultsScreen();
   };
 
@@ -359,7 +657,7 @@ function bindUI(){
   };
 
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast("Własna kolejka – dopinamy dalej"); };
+  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -392,7 +690,7 @@ async function showContinueIfRoomExists(code){
     const snap = await boot.getDoc(roomRef(code));
     if(!snap.exists()){
       clearSavedRoom();
-      showToast("Zapisany pokój nie istnieje");
+      showToast(getLang()==="en" ? "Saved room not found" : "Zapisany pokój nie istnieje");
       showScreen("rooms");
       return;
     }
@@ -401,7 +699,7 @@ async function showContinueIfRoomExists(code){
     el("contRoomName").textContent = room?.name || "—";
     showScreen("continue");
   }catch{
-    showToast("Nie udało się sprawdzić pokoju");
+    showToast(getLang()==="en" ? "Cannot check room" : "Nie udało się sprawdzić pokoju");
     showScreen("rooms");
   }
 }
@@ -409,7 +707,7 @@ async function showContinueIfRoomExists(code){
 // ===== ROOMS LOGIC =====
 async function createRoom(roomName){
   const nick = getNick();
-  el("debugRooms").textContent = "Tworzę pokój…";
+  el("debugRooms").textContent = (getLang()==="en") ? "Creating room…" : "Tworzę pokój…";
 
   for(let tries=0; tries<12; tries++){
     const code = genCode6();
@@ -432,22 +730,24 @@ async function createRoom(roomName){
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
     pushRoomHistory(code);
 
-    el("debugRooms").textContent = `Utworzono pokój ${code}`;
+    el("debugRooms").textContent = (getLang()==="en") ? `Room created ${code}` : `Utworzono pokój ${code}`;
     await openRoom(code);
     return;
   }
-  el("debugRooms").textContent = "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
+  el("debugRooms").textContent = (getLang()==="en")
+    ? "Could not generate a free code (try again)."
+    : "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
 }
 
 async function joinRoom(code){
   const nick = getNick();
-  el("debugRooms").textContent = "Dołączam…";
+  el("debugRooms").textContent = (getLang()==="en") ? "Joining…" : "Dołączam…";
 
   const ref = roomRef(code);
   const snap = await boot.getDoc(ref);
   if(!snap.exists()){
-    el("debugRooms").textContent = "Nie ma takiego pokoju.";
-    showToast("Nie ma takiego pokoju");
+    el("debugRooms").textContent = (getLang()==="en") ? "Room not found." : "Nie ma takiego pokoju.";
+    showToast(getLang()==="en" ? "Room not found" : "Nie ma takiego pokoju");
     return;
   }
 
@@ -458,7 +758,7 @@ async function joinRoom(code){
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
   pushRoomHistory(code);
 
-  el("debugRooms").textContent = `Dołączono do ${code}`;
+  el("debugRooms").textContent = (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`;
   await openRoom(code);
 }
 
@@ -486,7 +786,7 @@ async function leaveRoom(){
   renderPlayers([]);
 
   showScreen("home");
-  showToast("Opuszczono pokój");
+  showToast(getLang()==="en" ? "Left room" : "Opuszczono pokój");
 }
 
 function cleanupRoomListeners(){
@@ -529,7 +829,7 @@ async function openRoom(code, opts={}){
   currentRoom = snap.data();
 
   currentRoundNo = currentRoom?.currentRoundNo || 1;
-  el("roundLabel").textContent = `KOLEJKA ${currentRoundNo}`;
+  el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
@@ -550,7 +850,7 @@ async function openRoom(code, opts={}){
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
     currentRoundNo = currentRoom?.currentRoundNo || 1;
-    el("roundLabel").textContent = `KOLEJKA ${currentRoundNo}`;
+    el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
@@ -599,7 +899,7 @@ async function openRoom(code, opts={}){
     if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
   });
 
-  if(!silent) showToast(`W pokoju: ${code}`);
+  if(!silent) showToast((getLang()==="en") ? `In room: ${code}` : `W pokoju: ${code}`);
 }
 
 // ===== PICKS =====
@@ -625,11 +925,11 @@ function allMyPicksFilled(){
 async function saveAllPicks(){
   if(!currentRoomCode) return;
   if(!matchesCache.length){
-    showToast("Brak meczów");
+    showToast(getLang()==="en" ? "No matches" : "Brak meczów");
     return;
   }
   if(!allMyPicksFilled()){
-    showToast("Uzupełnij wszystkie typy");
+    showToast(getLang()==="en" ? "Fill all picks" : "Uzupełnij wszystkie typy");
     return;
   }
 
@@ -641,7 +941,7 @@ async function saveAllPicks(){
     picks: picksCache
   }, { merge:true });
 
-  showToast("Zapisano typy ✅");
+  showToast(getLang()==="en" ? "Picks saved ✅" : "Zapisano typy ✅");
 
   recomputeSubmittedMap();
   recomputePoints();
@@ -681,7 +981,8 @@ function renderPlayers(players){
     status.style.fontSize = "18px";
     status.style.lineHeight = "1";
     status.style.color = ok ? "#33ff88" : "#ff4d4d";
-    status.title = ok ? "Typy zapisane" : "Brak zapisanych typów";
+    status.title = ok ? "Picks saved" : "Missing";
+    if(getLang()==="pl") status.title = ok ? "Typy zapisane" : "Brak zapisanych typów";
 
     left.appendChild(name);
     left.appendChild(status);
@@ -690,24 +991,22 @@ function renderPlayers(players){
     right.className = "row";
     right.style.gap = "8px";
 
-    // punkty (aktualna kolejka) tylko jak są wyniki kompletne
     if(resultsOk && isCompletePicksObject(picksDocByUid[p.uid])){
       const pts = pointsByUid[p.uid] ?? 0;
       const ptsBadge = document.createElement("div");
       ptsBadge.className = "badge";
-      ptsBadge.textContent = `${pts} pkt`;
+      ptsBadge.textContent = (getLang()==="en") ? `${pts} pts` : `${pts} pkt`;
       right.appendChild(ptsBadge);
     }
 
-    // oko
     const eye = document.createElement("button");
     eye.className = "eyeBtn";
     eye.textContent = "👁";
-    eye.title = myOk ? "Podgląd typów" : "Zapisz swoje typy, aby podglądać innych";
+    eye.title = myOk
+      ? (getLang()==="en" ? "Preview picks" : "Podgląd typów")
+      : (getLang()==="en" ? "Save your picks to preview others" : "Zapisz swoje typy, aby podglądać innych");
     eye.disabled = !myOk;
-    eye.onclick = ()=>{
-      openPicksPreview(p.uid, p.nick || "—");
-    };
+    eye.onclick = ()=> openPicksPreview(p.uid, p.nick || "—");
     right.appendChild(eye);
 
     if(p.uid === adminUid){
@@ -719,7 +1018,7 @@ function renderPlayers(players){
     if(p.uid === userUid){
       const b2 = document.createElement("div");
       b2.className = "badge";
-      b2.textContent = "TY";
+      b2.textContent = (getLang()==="en") ? "YOU" : "TY";
       right.appendChild(b2);
     }
 
@@ -759,13 +1058,14 @@ function renderMatches(){
     }
   }
 
-  // end-round enable
   if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
 
   if(!matchesCache.length){
     const info = document.createElement("div");
     info.className = "sub";
-    info.textContent = "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
+    info.textContent = (getLang()==="en")
+      ? "No active round. Admin can add a fixture."
+      : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
     updateSaveButtonState();
     return;
@@ -833,7 +1133,9 @@ function renderMatches(){
     if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
       const rp = document.createElement("div");
       rp.className = "resultPill";
-      rp.textContent = `Wynik: ${m.resultH}:${m.resultA}`;
+      rp.textContent = (getLang()==="en")
+        ? `Result: ${m.resultH}:${m.resultA}`
+        : `Wynik: ${m.resultH}:${m.resultA}`;
       score.appendChild(rp);
     }
 
@@ -870,19 +1172,19 @@ function openPicksPreview(uid, nick){
 
   const titleChip = document.createElement("div");
   titleChip.className = "chip";
-  titleChip.textContent = `Gracz: ${nick}`;
+  titleChip.textContent = (getLang()==="en") ? `Player: ${nick}` : `Gracz: ${nick}`;
 
   const roundChip = document.createElement("div");
   roundChip.className = "chip";
-  roundChip.textContent = `KOLEJKA ${currentRoundNo}`;
+  roundChip.textContent = `${t("round")} ${currentRoundNo}`;
 
   const ptsChip = document.createElement("div");
   ptsChip.className = "chip";
   if(allResultsComplete() && hasPicks){
     const pts = pointsByUid[uid] ?? 0;
-    ptsChip.textContent = `PUNKTY: ${pts}`;
+    ptsChip.textContent = (getLang()==="en") ? `POINTS: ${pts}` : `PUNKTY: ${pts}`;
   }else{
-    ptsChip.textContent = `PUNKTY: —`;
+    ptsChip.textContent = (getLang()==="en") ? `POINTS: —` : `PUNKTY: —`;
   }
 
   top.appendChild(titleChip);
@@ -893,9 +1195,11 @@ function openPicksPreview(uid, nick){
   if(!hasPicks){
     const info = document.createElement("div");
     info.className = "sub";
-    info.textContent = "Ten gracz nie ma jeszcze zapisanych typów w tej kolejce.";
+    info.textContent = (getLang()==="en")
+      ? "This player has not saved picks for this round."
+      : "Ten gracz nie ma jeszcze zapisanych typów w tej kolejce.";
     wrap.appendChild(info);
-    modalOpen(`Podgląd typów`, wrap);
+    modalOpen((getLang()==="en") ? "Picks preview" : "Podgląd typów", wrap);
     return;
   }
 
@@ -917,7 +1221,7 @@ function openPicksPreview(uid, nick){
     const p = picksObj[m.id];
     const pickPill = document.createElement("div");
     pickPill.className = "resultPill";
-    pickPill.textContent = `Typ: ${p.h}:${p.a}`;
+    pickPill.textContent = (getLang()==="en") ? `Pick: ${p.h}:${p.a}` : `Typ: ${p.h}:${p.a}`;
     score.appendChild(pickPill);
 
     const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
@@ -926,12 +1230,16 @@ function openPicksPreview(uid, nick){
 
     const resPill = document.createElement("div");
     resPill.className = "resultPill";
-    resPill.textContent = resOk ? `Wynik: ${m.resultH}:${m.resultA}` : "Wynik: —";
+    resPill.textContent = resOk
+      ? ((getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`)
+      : ((getLang()==="en") ? "Result: —" : "Wynik: —");
 
     const pts = resOk ? scoreOneMatch(p.h,p.a,m.resultH,m.resultA) : null;
     const ptsPill = document.createElement("div");
     ptsPill.className = "resultPill";
-    ptsPill.textContent = (pts === null) ? "pkt: —" : `pkt: ${pts}`;
+    ptsPill.textContent = (pts === null)
+      ? ((getLang()==="en") ? "pts: —" : "pkt: —")
+      : ((getLang()==="en") ? `pts: ${pts}` : `pkt: ${pts}`);
 
     score.appendChild(dot);
     score.appendChild(resPill);
@@ -954,7 +1262,7 @@ function openPicksPreview(uid, nick){
     wrap.appendChild(row);
   }
 
-  modalOpen(`Podgląd typów`, wrap);
+  modalOpen((getLang()==="en") ? "Picks preview" : "Podgląd typów", wrap);
 }
 
 // ===== RESULTS SCREEN (ADMIN) =====
@@ -965,7 +1273,7 @@ function openResultsScreen(){
   if(!isAdmin()) return;
 
   el("resRoomName").textContent = currentRoom?.name || "—";
-  el("resRound").textContent = `KOLEJKA ${currentRoundNo}`;
+  el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
 
   for(const m of matchesCache){
     resultsDraft[m.id] = {
@@ -1046,13 +1354,13 @@ function renderResultsList(){
 
 async function saveResults(){
   if(!currentRoomCode) return;
-  if(!isAdmin()) { showToast("Tylko admin"); return; }
-  if(!matchesCache.length) { showToast("Brak meczów"); return; }
+  if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+  if(!matchesCache.length) { showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
 
   for(const m of matchesCache){
     const d = resultsDraft[m.id];
     if(!d || !Number.isInteger(d.h) || !Number.isInteger(d.a)){
-      showToast("Uzupełnij wszystkie wyniki (0–20)");
+      showToast(getLang()==="en" ? "Fill all results (0–20)" : "Uzupełnij wszystkie wyniki (0–20)");
       return;
     }
   }
@@ -1075,18 +1383,22 @@ async function saveResults(){
   renderPlayers(lastPlayers);
   renderMatches();
 
-  showToast("Zapisano wyniki ✅");
+  showToast(getLang()==="en" ? "Results saved ✅" : "Zapisano wyniki ✅");
   showScreen("room");
 }
 
 // ===== ARCHIWUM KOLEJEK (HISTORIA) =====
 async function endRoundConfirmAndArchive(){
   if(!currentRoomCode) return;
-  if(!isAdmin()) { showToast("Tylko admin"); return; }
-  if(!matchesCache.length){ showToast("Brak meczów"); return; }
-  if(!allResultsComplete()){ showToast("Najpierw wpisz komplet wyników"); return; }
+  if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+  if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
+  if(!allResultsComplete()){ showToast(getLang()==="en" ? "Enter all results first" : "Najpierw wpisz komplet wyników"); return; }
 
-  const ok = confirm(`Zakończyć KOLEJKĘ ${currentRoundNo} i zapisać do historii?\n\nPo zakończeniu: mecze/typy tej kolejki zostaną zarchiwizowane, a aplikacja przejdzie do KOLEJKI ${currentRoundNo+1}.`);
+  const msg = (getLang()==="en")
+    ? `End ROUND ${currentRoundNo} and save it to history?\n\nAfter ending: matches/picks will be archived and the app moves to ROUND ${currentRoundNo+1}.`
+    : `Zakończyć KOLEJKĘ ${currentRoundNo} i zapisać do historii?\n\nPo zakończeniu: mecze/typy tej kolejki zostaną zarchiwizowane, a aplikacja przejdzie do KOLEJKI ${currentRoundNo+1}.`;
+
+  const ok = confirm(msg);
   if(!ok) return;
 
   await archiveCurrentRound();
@@ -1096,7 +1408,6 @@ async function archiveCurrentRound(){
   const code = currentRoomCode;
   const roundNo = currentRoundNo;
 
-  // 1) pobierz wszystkie typy z /picks
   const picksSnap = await boot.getDocs(picksCol(code));
   const picksByUid = {};
   const nickByUid = {};
@@ -1106,7 +1417,6 @@ async function archiveCurrentRound(){
     if(data?.nick) nickByUid[d.id] = data.nick;
   });
 
-  // 2) zbuduj listę meczów do archiwum
   const matches = matchesCache.map(m=>({
     id: m.id,
     idx: Number.isInteger(m.idx) ? m.idx : 0,
@@ -1116,11 +1426,8 @@ async function archiveCurrentRound(){
     resultA: m.resultA
   }));
 
-  // 3) policz punkty dla każdego uid, który ma komplet typów
   const pointsMap = {};
-  const playedMap = {};
   for(const [uid, picksObj] of Object.entries(picksByUid)){
-    // komplet = ma wszystkie typy
     let complete = true;
     for(const m of matchesCache){
       const p = picksObj?.[m.id];
@@ -1134,13 +1441,10 @@ async function archiveCurrentRound(){
       sum += scoreOneMatch(p.h, p.a, m.resultH, m.resultA) ?? 0;
     }
     pointsMap[uid] = sum;
-    playedMap[uid] = true;
   }
 
-  // 4) zapis do archiwum + aktualizacja ligi + czyszczenie bieżącej kolejki
   const b = boot.writeBatch(db);
 
-  // round doc
   const rd = roundDocRef(code, roundNo);
   b.set(rd, {
     roundNo,
@@ -1151,12 +1455,11 @@ async function archiveCurrentRound(){
     closedBy: userUid,
     matchesCount: matches.length,
     matches,
-    picksByUid,     // archiwum typów
+    picksByUid,
     pointsByUid: pointsMap,
     nickByUid
   }, { merge:false });
 
-  // update league totals (increment)
   for(const [uid, pts] of Object.entries(pointsMap)){
     const nick = nickByUid[uid] || (lastPlayers.find(p=>p.uid===uid)?.nick) || "—";
     const ld = leagueDocRef(code, uid);
@@ -1169,13 +1472,11 @@ async function archiveCurrentRound(){
     }, { merge:true });
   }
 
-  // update room -> next round
   b.update(roomRef(code), {
     currentRoundNo: roundNo + 1,
     updatedAt: boot.serverTimestamp()
   });
 
-  // delete current matches & picks (czyścimy na nową kolejkę)
   for(const m of matchesCache){
     b.delete(boot.doc(db, "rooms", code, "matches", m.id));
   }
@@ -1185,15 +1486,14 @@ async function archiveCurrentRound(){
 
   await b.commit();
 
-  // UI reset (zostanie też odświeżone snapshotami)
-  showToast(`Zakończono KOLEJKĘ ${roundNo} ✅`);
+  showToast(getLang()==="en" ? `ROUND ${roundNo} ended ✅` : `Zakończono KOLEJKĘ ${roundNo} ✅`);
 }
 
 // ===== TEST QUEUE =====
 async function addTestQueue(){
   if(!currentRoomCode) return;
   if(!isAdmin()){
-    showToast("Tylko admin");
+    showToast(getLang()==="en" ? "Admin only" : "Tylko admin");
     return;
   }
 
@@ -1222,7 +1522,7 @@ async function addTestQueue(){
     });
   });
   await b.commit();
-  showToast("Dodano kolejkę (test)");
+  showToast(getLang()==="en" ? "Fixture added (test)" : "Dodano kolejkę (test)");
 }
 
 // ===== LEAGUE (prawdziwa) =====
@@ -1237,14 +1537,14 @@ async function openLeagueTable(roomCode, opts={}) {
   const { silent=false } = opts;
   roomCode = (roomCode||"").trim().toUpperCase();
   if(roomCode.length !== 6){
-    showToast("Brak pokoju");
+    showToast(getLang()==="en" ? "No room" : "Brak pokoju");
     return;
   }
 
   try{
     const snap = await boot.getDoc(roomRef(roomCode));
     if(!snap.exists()){
-      showToast("Pokój nie istnieje");
+      showToast(getLang()==="en" ? "Room not found" : "Pokój nie istnieje");
       return;
     }
     const room = snap.data();
@@ -1255,7 +1555,6 @@ async function openLeagueTable(roomCode, opts={}) {
     el("leagueRoomName").textContent = leagueState.roomName;
     el("leagueAfterRound").textContent = String(leagueState.afterRound);
 
-    // Pobierz ranking z /league
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
 
@@ -1273,10 +1572,10 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.rows = arr;
     renderLeagueTable();
     showScreen("league");
-    if(!silent) showToast("Tabela ligi");
+    if(!silent) showToast(getLang()==="en" ? "League table" : "Tabela ligi");
   }catch(e){
     console.error(e);
-    showToast("Nie udało się otworzyć tabeli");
+    showToast(getLang()==="en" ? "Cannot open league table" : "Nie udało się otworzyć tabeli");
   }
 }
 
@@ -1293,7 +1592,7 @@ function renderLeagueTable(){
 
   if(!rows.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td>`;
+    tr.innerHTML = `<td colspan="4" style="color:rgba(255,255,255,.75)">${getLang()==="en" ? "No data…" : "Brak danych…"}</td>`;
     body.appendChild(tr);
     return;
   }
@@ -1303,7 +1602,7 @@ function renderLeagueTable(){
     tr.className = "linkRow";
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${escapeHtml(r.nick)}${(r.uid===userUid) ? " (TY)" : ""}</td>
+      <td>${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
@@ -1318,7 +1617,6 @@ async function openPlayerStatsFromLeague(uid, nick){
 
   const code = leagueState.roomCode;
 
-  // pobierz archiwalne kolejki (rounds) i wyświetl punkty gracza
   const q = boot.query(roundsCol(code), boot.orderBy("roundNo","desc"));
   const qs = await boot.getDocs(q);
 
@@ -1330,16 +1628,18 @@ async function openPlayerStatsFromLeague(uid, nick){
   const head = document.createElement("div");
   head.className="row";
   head.style.flexWrap="wrap";
-  head.appendChild(chip(`Pokój: ${leagueState.roomName}`));
-  head.appendChild(chip(`Gracz: ${nick}`));
+  head.appendChild(chip(`${t("room")}: ${leagueState.roomName}`));
+  head.appendChild(chip((getLang()==="en") ? `Player: ${nick}` : `Gracz: ${nick}`));
   wrap.appendChild(head);
 
   if(qs.empty){
     const info = document.createElement("div");
     info.className="sub";
-    info.textContent="Brak zakończonych kolejek w historii.";
+    info.textContent = (getLang()==="en")
+      ? "No finished rounds in history."
+      : "Brak zakończonych kolejek w historii.";
     wrap.appendChild(info);
-    modalOpen("Statystyki gracza", wrap);
+    modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
     return;
   }
 
@@ -1357,19 +1657,19 @@ async function openPlayerStatsFromLeague(uid, nick){
     left.style.display="flex";
     left.style.flexDirection="column";
     left.style.gap="4px";
-    left.innerHTML = `<div style="font-weight:1000">KOLEJKA ${rn}</div>
-                      <div class="sub">${played ? "Zagrana" : "Brak typów / niepełne"}</div>`;
+    left.innerHTML = `<div style="font-weight:1000">${t("round")} ${rn}</div>
+                      <div class="sub">${played ? (getLang()==="en" ? "Played" : "Zagrana") : (getLang()==="en" ? "No picks / incomplete" : "Brak typów / niepełne")}</div>`;
 
     const right = document.createElement("div");
     right.className="row";
 
     const ptsChip = document.createElement("div");
     ptsChip.className="chip";
-    ptsChip.textContent = `Punkty: ${played ? pts : "—"}`;
+    ptsChip.textContent = (getLang()==="en") ? `Points: ${played ? pts : "—"}` : `Punkty: ${played ? pts : "—"}`;
 
     const btn = document.createElement("button");
     btn.className="btn btnSmall";
-    btn.textContent="Podgląd";
+    btn.textContent = (getLang()==="en") ? "Preview" : "Podgląd";
     btn.disabled = !played;
     btn.onclick = async ()=>{
       await openArchivedPicksPreview(code, rn, uid, nick);
@@ -1383,12 +1683,12 @@ async function openPlayerStatsFromLeague(uid, nick){
     wrap.appendChild(row);
   });
 
-  modalOpen("Statystyki gracza", wrap);
+  modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
 }
 
 async function openArchivedPicksPreview(code, roundNo, uid, nick){
   const rd = await boot.getDoc(roundDocRef(code, roundNo));
-  if(!rd.exists()){ showToast("Brak archiwum tej kolejki"); return; }
+  if(!rd.exists()){ showToast(getLang()==="en" ? "Round archive missing" : "Brak archiwum tej kolejki"); return; }
   const data = rd.data();
 
   const matches = data.matches || [];
@@ -1403,18 +1703,20 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
   const top = document.createElement("div");
   top.className="row";
   top.style.flexWrap="wrap";
-  top.appendChild(chip(`Gracz: ${nick}`));
-  top.appendChild(chip(`KOLEJKA ${roundNo}`));
+  top.appendChild(chip((getLang()==="en") ? `Player: ${nick}` : `Gracz: ${nick}`));
+  top.appendChild(chip(`${t("round")} ${roundNo}`));
   const pts = data?.pointsByUid?.[uid];
-  top.appendChild(chip(`PUNKTY: ${pts ?? "—"}`));
+  top.appendChild(chip((getLang()==="en") ? `POINTS: ${pts ?? "—"}` : `PUNKTY: ${pts ?? "—"}`));
   wrap.appendChild(top);
 
   if(!picksObj){
     const info = document.createElement("div");
     info.className="sub";
-    info.textContent="Brak zapisanych typów w tej kolejce.";
+    info.textContent = (getLang()==="en")
+      ? "No saved picks in this round."
+      : "Brak zapisanych typów w tej kolejce.";
     wrap.appendChild(info);
-    modalOpen("Podgląd (archiwum)", wrap);
+    modalOpen((getLang()==="en") ? "Archive preview" : "Podgląd (archiwum)", wrap);
     return;
   }
 
@@ -1436,7 +1738,9 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
     const p = picksObj[m.id];
     const pickPill = document.createElement("div");
     pickPill.className="resultPill";
-    pickPill.textContent = p ? `Typ: ${p.h}:${p.a}` : "Typ: —";
+    pickPill.textContent = p
+      ? ((getLang()==="en") ? `Pick: ${p.h}:${p.a}` : `Typ: ${p.h}:${p.a}`)
+      : ((getLang()==="en") ? "Pick: —" : "Typ: —");
     score.appendChild(pickPill);
 
     const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA) && p;
@@ -1445,12 +1749,14 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
 
     const resPill = document.createElement("div");
     resPill.className="resultPill";
-    resPill.textContent = `Wynik: ${m.resultH}:${m.resultA}`;
+    resPill.textContent = (getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`;
 
     const ptsOne = resOk ? scoreOneMatch(p.h,p.a,m.resultH,m.resultA) : null;
     const ptsPill = document.createElement("div");
     ptsPill.className="resultPill";
-    ptsPill.textContent = (ptsOne===null) ? "pkt: —" : `pkt: ${ptsOne}`;
+    ptsPill.textContent = (ptsOne===null)
+      ? ((getLang()==="en") ? "pts: —" : "pkt: —")
+      : ((getLang()==="en") ? `pts: ${ptsOne}` : `pkt: ${ptsOne}`);
 
     score.appendChild(dot);
     score.appendChild(resPill);
@@ -1472,7 +1778,7 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
     wrap.appendChild(row);
   }
 
-  modalOpen("Podgląd (archiwum)", wrap);
+  modalOpen((getLang()==="en") ? "Archive preview" : "Podgląd (archiwum)", wrap);
 }
 
 function chip(text){
@@ -1502,6 +1808,9 @@ function escapeHtml(s){
     bindUI();
 
     if(getNick()) refreshNickLabels();
+
+    // zastosuj język od razu
+    applyLangToUI();
 
     showScreen("home");
   }catch(e){
