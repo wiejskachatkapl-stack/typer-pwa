@@ -324,19 +324,19 @@ function applyHomeButtonImages(){
   const lang = getLang();
   const map = BTN_HOME[lang] || BTN_HOME.pl;
 
-  const r = document.querySelector(\"#btnHomeRooms img\");
-  const s = document.querySelector(\"#btnHomeStats img\");
-  const e = document.querySelector(\"#btnHomeExit img\");
+  const r = document.querySelector("#btnHomeRooms img");
+  const s = document.querySelector("#btnHomeStats img");
+  const e = document.querySelector("#btnHomeExit img");
 
-  if(r){ r.src = map.rooms; r.alt = t(\"roomsTitle\"); }
-  if(s){ s.src = map.stats; s.alt = t(\"stats\"); }
-  if(e){ e.src = map.exit;  e.alt = t(\"exit\"); }
+  if(r){ r.src = map.rooms; r.alt = t("roomsTitle"); }
+  if(s){ s.src = map.stats; s.alt = t("stats"); }
+  if(e){ e.src = map.exit;  e.alt = t("exit"); }
 
-  const bPL = el(\"btnLangPL\");
-  const bEN = el(\"btnLangEN\");
+  const bPL = el("btnLangPL");
+  const bEN = el("btnLangEN");
   if(bPL && bEN){
-    bPL.classList.toggle(\"active\", lang === \"pl\");
-    bEN.classList.toggle(\"active\", lang === \"en\");
+    bPL.classList.toggle("active", lang === "pl");
+    bEN.classList.toggle("active", lang === "en");
   }
 }
 
