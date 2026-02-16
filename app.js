@@ -3,22 +3,6 @@ const BUILD = 2004;
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
 
-
-
-// HOME buttons images (PL/EN)
-const BTN_HOME = {
-  pl: {
-    rooms: "btn_pokoje_typerow.png",
-    stats: "btn_statystyki.png",
-    exit:  "btn_wyjscie.png"
-  },
-  en: {
-    rooms: "btn_typers_rooms.png",
-    stats: "btn_statistics.png",
-    exit:  "btn_exit.png"
-  }
-};
-
 const KEY_NICK = "typer_nick_v3";
 const KEY_ACTIVE_ROOM = "typer_active_room_v3";
 const KEY_ROOMS_HISTORY = "typer_rooms_history_v3";
@@ -225,17 +209,40 @@ function getLang(){
 }
 function setLang(lang){
   const v = (lang === "en") ? "en" : "pl";
-  const prev = getLang();
   localStorage.setItem(KEY_LANG, v);
   applyLangToUI();
-  if(prev !== v){
-    showToast(v==="en" ? "Language: English" : "Język: Polski");
-  }
 }
-
 function t(key){
   const lang = getLang();
   return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.pl[key] || key);
+}
+
+
+function updateHomeButtonsImages(){
+  const lang = getLang();
+  const map = (lang === "en")
+    ? { rooms:"btn_typers_rooms.png", stats:"btn_statistics.png", exit:"btn_exit.png" }
+    : { rooms:"btn_pokoje_typerow.png", stats:"btn_statystyki.png", exit:"btn_wyjscie.png" };
+
+  const imgRooms = el("btnHomeRooms") ? el("btnHomeRooms").querySelector("img") : null;
+  const imgStats = el("btnHomeStats") ? el("btnHomeStats").querySelector("img") : null;
+  const imgExit  = el("btnHomeExit") ? el("btnHomeExit").querySelector("img") : null;
+
+  if(imgRooms) { imgRooms.src = map.rooms; imgRooms.alt = t("roomsTitle"); }
+  if(imgStats) { imgStats.src = map.stats; imgStats.alt = t("stats"); }
+  if(imgExit)  { imgExit.src  = map.exit;  imgExit.alt  = t("exit"); }
+}
+
+function updateLangButtonsVisual(){
+  const pl = el("btnLangPL");
+  const en = el("btnLangEN");
+  if(!pl || !en) return;
+
+  const lang = getLang();
+  pl.classList.toggle("active", lang === "pl");
+  en.classList.toggle("active", lang === "en");
+  pl.classList.toggle("inactive", lang !== "pl");
+  en.classList.toggle("inactive", lang !== "en");
 }
 
 function applyLangToUI(){
@@ -248,6 +255,10 @@ function applyLangToUI(){
   if(ht) ht.title = t("stats");
   const he = el("btnHomeExit");
   if(he) he.title = t("exit");
+
+  // HOME images + flag visuals
+  updateHomeButtonsImages();
+  updateLangButtonsVisual();
 
   // Continue
   if(el("t_continue_title")) el("t_continue_title").textContent = t("contTitle");
@@ -323,28 +334,6 @@ function applyLangToUI(){
   if(el("modalClose")) el("modalClose").textContent = t("close");
 }
 
-applyHomeButtonImages();
-
-function applyHomeButtonImages(){
-  const lang = getLang();
-  const map = BTN_HOME[lang] || BTN_HOME.pl;
-
-  const r = document.querySelector("#btnHomeRooms img");
-  const s = document.querySelector("#btnHomeStats img");
-  const e = document.querySelector("#btnHomeExit img");
-
-  if(r){ r.src = map.rooms; r.alt = t("roomsTitle"); }
-  if(s){ s.src = map.stats; s.alt = t("stats"); }
-  if(e){ e.src = map.exit;  e.alt = t("exit"); }
-
-  const bPL = el("btnLangPL");
-  const bEN = el("btnLangEN");
-  if(bPL && bEN){
-    bPL.classList.toggle("active", lang === "pl");
-    bEN.classList.toggle("active", lang === "en");
-  }
-}
-
 // ===== Modal =====
 function modalOpen(title, bodyNode){
   const m = el("modal");
@@ -373,11 +362,16 @@ function openSettings(){
   head.textContent = t("settings");
   wrap.appendChild(head);
 
+  const infoLang = document.createElement("div");
+  infoLang.className = "sub";
+  infoLang.textContent = t("langOnHome");
+  wrap.appendChild(infoLang);
+
   const info = document.createElement("div");
   info.className = "sub";
   info.textContent = (getLang() === "pl")
-    ? "Zmiana języka jest na ekranie głównym (flagi w prawym górnym rogu)."
-    : "Language switch is on the Home screen (flags in the top-right corner).";
+    ? "Zmiana języka działa od razu na całej aplikacji."
+    : "Language changes apply immediately across the app.";
   wrap.appendChild(info);
 
   modalOpen(t("settings"), wrap);
@@ -575,22 +569,24 @@ function bindUI(){
   });
 
   // HOME: settings
-  if(el("btnHomeSettings")) el("btnHomeSettings").onclick = () => openSettings();
+  el("btnHomeSettings").onclick = () => openSettings();
 
-  // HOME: language flags
-  const bPL = el("btnLangPL");
-  const bEN = el("btnLangEN");
-  if(bPL) {
-    bPL.addEventListener("click", (e)=>{ e.preventDefault(); setLang("pl"); });
-    bPL.addEventListener("touchstart", (e)=>{ e.preventDefault(); setLang("pl"); }, {passive:false});
-  }
-  if(bEN) {
-    bEN.addEventListener("click", (e)=>{ e.preventDefault(); setLang("en"); });
-    bEN.addEventListener("touchstart", (e)=>{ e.preventDefault(); setLang("en"); }, {passive:false});
-  }
+
+  // HOME language flags
+  const langPL = el("btnLangPL");
+  const langEN = el("btnLangEN");
+  const bindLang = (node, langVal) => {
+    if(!node) return;
+    const go = (e) => { if(e) e.preventDefault(); setLang(langVal); updateHomeButtonsImages(); updateLangButtonsVisual(); };
+    node.addEventListener("click", go);
+    node.addEventListener("touchstart", go, {passive:false});
+  };
+  bindLang(langPL, "pl");
+  bindLang(langEN, "en");
+
 
   // HOME
-  if(el("btnHomeRooms")) el("btnHomeRooms").onclick = async ()=>{
+  el("btnHomeRooms").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
@@ -600,7 +596,7 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  if(el("btnHomeStats")) el("btnHomeStats").onclick = async ()=>{
+  el("btnHomeStats").onclick = async ()=>{
     if(!getNick()) await ensureNick();
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
@@ -611,7 +607,7 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  if(el("btnHomeExit")) el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
+  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
 
   // CONTINUE
   el("btnContYes").onclick = async ()=>{

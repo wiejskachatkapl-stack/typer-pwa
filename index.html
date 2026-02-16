@@ -183,7 +183,7 @@
     }
     .imgBtn img{
       display:block;
-      height:240px;
+      height: 240px;
       width:auto;
       border-radius:16px;
     }
@@ -491,21 +491,26 @@
       outline:2px solid rgba(43,255,136,.55);
       background:rgba(43,255,136,.14);
     }
-
-    /* ===== HOME LANG (FLAGS) ===== */
+  
+    /* ===== HOME language flags ===== */
     .homeLang{
       position:absolute;
-      top:18px;
-      right:18px;
+      right:22px;
+      top:22px;
       display:flex;
       gap:10px;
-      z-index:20;
+      z-index:5;
     }
     .homeLang .flagBtn{
-      width:72px;
-      height:50px;
-      font-size:30px;
+      width:76px;
+      height:52px;
       border-radius:16px;
+      font-size:28px;
+      line-height:1;
+    }
+    .flagBtn.inactive{
+      opacity:.35;
+      filter:grayscale(100%);
     }
 
   </style>
@@ -529,25 +534,24 @@
 
       <!-- HOME -->
       <section id="home" class="screen">
-        <!-- NOWE: flagi języka (góra-prawa) -->
+        <!-- Language flags (HOME) -->
         <div class="homeLang" aria-label="Language">
-          <button type="button" class="flagBtn" id="btnLangPL" title="Polski">🇵🇱</button>
-          <button type="button" class="flagBtn" id="btnLangEN" title="English">🇬🇧</button>
+          <button class="flagBtn" id="btnLangPL" type="button" title="Polski">🇵🇱</button>
+          <button class="flagBtn" id="btnLangEN" type="button" title="English">🇬🇧</button>
         </div>
-
-<!-- NOWE: zębatka ustawień -->
+        <!-- NOWE: zębatka ustawień -->
         <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
           <span>⚙️</span>
         </div>
 
         <div class="homeBtns" aria-label="Menu">
-          <button type="button" class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
+          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
             <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
           </button>
-          <button type="button" class="imgBtn" id="btnHomeStats" title="Statystyki">
+          <button class="imgBtn" id="btnHomeStats" title="Statystyki">
             <img src="btn_statystyki.png" alt="Statystyki">
           </button>
-          <button type="button" class="imgBtn" id="btnHomeExit" title="Wyjście">
+          <button class="imgBtn" id="btnHomeExit" title="Wyjście">
             <img src="btn_wyjscie.png" alt="Wyjście">
           </button>
         </div>
@@ -800,6 +804,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2005"></script>
+  <script type="module" src="./app.js?v=2006"></script>
 </body>
 </html>
