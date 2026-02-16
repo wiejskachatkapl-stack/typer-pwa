@@ -140,8 +140,14 @@ const I18N = {
     leagueHint: "Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).",
     playerCol: "Gracz",
     roundsCol: "Kolejki",
-    pointsCol: "Punkty"
-  },
+    pointsCol: "Punkty",
+    addProfileTitle: "DODAJ PROFIL GRACZA",
+    addProfileSub: "Ustaw swój nick, aby rozpocząć grę.",
+    nickLabel: "Nick (3–16 znaków):",
+    nickPlaceholder: "np. Mariusz",
+    nickInvalid: "Nick musi mieć 3–16 znaków.",
+    nickRequired: "Nick jest wymagany."
+},
   en: {
     settings: "Settings",
     clearProfile: "Clear profile",
@@ -207,8 +213,14 @@ const I18N = {
     leagueHint: "Click a player to view stats (rounds + picks preview).",
     playerCol: "Player",
     roundsCol: "Rounds",
-    pointsCol: "Points"
-  }
+    pointsCol: "Points",
+    addProfileTitle: "ADD PLAYER PROFILE",
+    addProfileSub: "Set your nick to start playing.",
+    nickLabel: "Nick (3–16 chars):",
+    nickPlaceholder: "e.g. Player",
+    nickInvalid: "Nick must be 3–16 characters.",
+    nickRequired: "Nick is required."
+}
 };
 function getLang(){
   const v = (localStorage.getItem(KEY_LANG) || "").toLowerCase();
@@ -429,18 +441,113 @@ function getNick(){
 }
 async function ensureNick(){
   let nick = getNick();
+  if(nick) return nick;
+
   while(!nick){
-    const promptText = (getLang() === "en")
-      ? "Enter nick (3–16 chars):"
-      : "Podaj nick (3–16 znaków):";
-    nick = prompt(promptText, "") || "";
-    nick = nick.trim();
-    if (nick.length < 3 || nick.length > 16) nick = "";
-    if (!nick) alert(getLang()==="en" ? "Nick must be 3–16 characters." : "Nick musi mieć 3–16 znaków.");
+    const res = await nickModalAsk();
+    if(res === null) return null; // cancelled
+    nick = (res || "").trim();
+    if (nick.length < 3 || nick.length > 16){
+      nick = "";
+      showToast(t("nickInvalid"));
+    }
   }
+
   localStorage.setItem(KEY_NICK, nick);
   refreshNickLabels();
   return nick;
+}
+
+function nickModalAsk(){
+  return new Promise((resolve)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "nickWrap";
+
+    const hero = document.createElement("div");
+    hero.className = "nickHero";
+
+    const icon = document.createElement("div");
+    icon.className = "nickIcon";
+    icon.textContent = "👤";
+
+    const tx = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "nickTitle";
+    title.textContent = t("addProfileTitle");
+    const sub = document.createElement("div");
+    sub.className = "nickSub";
+    sub.textContent = t("addProfileSub");
+    tx.appendChild(title);
+    tx.appendChild(sub);
+
+    hero.appendChild(icon);
+    hero.appendChild(tx);
+
+    const label = document.createElement("div");
+    label.style.fontWeight = "900";
+    label.style.opacity = ".85";
+    label.textContent = t("nickLabel");
+
+    const row = document.createElement("div");
+    row.className = "nickRow";
+
+    const input = document.createElement("input");
+    input.className = "nickInput";
+    input.type = "text";
+    input.maxLength = 16;
+    input.placeholder = t("nickPlaceholder");
+    input.value = getNick() || "";
+    input.autocomplete = "nickname";
+
+    row.appendChild(input);
+
+    const btns = document.createElement("div");
+    btns.className = "nickBtns";
+
+    const btnCancel = document.createElement("button");
+    btnCancel.className = "btn btnSmall btnDanger";
+    btnCancel.type = "button";
+    btnCancel.textContent = t("cancel");
+
+    const btnOk = document.createElement("button");
+    btnOk.className = "btn btnSmall";
+    btnOk.type = "button";
+    btnOk.textContent = t("ok");
+
+    btns.appendChild(btnCancel);
+    btns.appendChild(btnOk);
+
+    wrap.appendChild(hero);
+    wrap.appendChild(label);
+    wrap.appendChild(row);
+    wrap.appendChild(btns);
+
+    modalOpen("", wrap);
+    setTimeout(()=>{ try{ input.focus(); input.select(); }catch(e){} }, 50);
+
+    const closeAndResolve = (val)=>{
+      modalClose();
+      resolve(val);
+    };
+
+    btnCancel.onclick = ()=> closeAndResolve(null);
+
+    const submit = ()=>{
+      const v = (input.value || "").trim();
+      if(!v){
+        showToast(t("nickRequired"));
+        try{ input.focus(); }catch(e){}
+        return;
+      }
+      closeAndResolve(v);
+    };
+    btnOk.onclick = submit;
+
+    input.addEventListener("keydown",(e)=>{
+      if(e.key === "Enter"){ e.preventDefault(); submit(); }
+      if(e.key === "Escape"){ e.preventDefault(); closeAndResolve(null); }
+    });
+  });
 }
 function refreshNickLabels(){
   const nick = getNick() || "—";
@@ -635,7 +742,7 @@ function bindUI(){
 
   // HOME
   el("btnHomeRooms").onclick = async ()=>{
-    if(!getNick()) await ensureNick();
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
       await showContinueIfRoomExists(saved);
@@ -645,7 +752,7 @@ function bindUI(){
   };
 
   el("btnHomeStats").onclick = async ()=>{
-    if(!getNick()) await ensureNick();
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
       await openLeagueTable(saved);
@@ -674,17 +781,17 @@ function bindUI(){
   el("btnBackHomeFromRooms").onclick = ()=> showScreen("home");
   el("btnChangeNickRooms").onclick = async ()=>{
     localStorage.removeItem(KEY_NICK);
-    await ensureNick();
+  const n = await ensureNick(); if(!n) return;
     showToast(getLang()==="en" ? "Nick changed" : "Zmieniono nick");
   };
   el("btnCreateRoom").onclick = async ()=>{
-    if(!getNick()) await ensureNick();
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const name = (el("inpRoomName").value || "").trim();
     if(name.length < 2){ showToast(getLang()==="en" ? "Enter room name" : "Podaj nazwę pokoju"); return; }
     await createRoom(name);
   };
   el("btnJoinRoom").onclick = async ()=>{
-    if(!getNick()) await ensureNick();
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
     if(code.length !== 6){ showToast(getLang()==="en" ? "Code must be 6 chars" : "Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
