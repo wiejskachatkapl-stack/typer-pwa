@@ -85,7 +85,7 @@ const I18N = {
     clearProfile: "Wyczyść profil",
     clearProfileSub: "Usuwa wszystkie dane z tej aplikacji na tym urządzeniu.",
     clearProfileConfirm: "Na pewno wyczyścić profil?\n\nTo usunie nick, zapisany pokój, historię, ustawienia języka i cache offline.",
-    cleared: "Wyczyszczono profil."
+    cleared: "Wyczyszczono profil.",
 
     contTitle: "Kontynuować?",
     contSub: "Wykryto wcześniejszą rozgrywkę",
