@@ -237,6 +237,19 @@ function setLang(lang){
   localStorage.setItem(KEY_LANG, v);
   applyLangToUI();
 }
+
+// ===== Buttons (grafiki) =====
+function getBtnDir(){
+  return (getLang() === "en") ? "buttons/en/" : "buttons/pl/";
+}
+function refreshAllButtonImages(){
+  const dir = getBtnDir();
+  document.querySelectorAll('img[data-btn]').forEach(img=>{
+    const name = img.dataset.btn;
+    if(!name) return;
+    img.src = dir + name;
+  });
+}
 function t(key){
   const lang = getLang();
   return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.pl[key] || key);
@@ -244,18 +257,7 @@ function t(key){
 
 
 function updateHomeButtonsImages(){
-  const lang = getLang();
-  const map = (lang === "en")
-    ? { rooms:"btn_typers_rooms.png", stats:"btn_statistics.png", exit:"btn_exit.png" }
-    : { rooms:"btn_pokoje_typerow.png", stats:"btn_statystyki.png", exit:"btn_wyjscie.png" };
-
-  const imgRooms = el("btnHomeRooms") ? el("btnHomeRooms").querySelector("img") : null;
-  const imgStats = el("btnHomeStats") ? el("btnHomeStats").querySelector("img") : null;
-  const imgExit  = el("btnHomeExit") ? el("btnHomeExit").querySelector("img") : null;
-
-  if(imgRooms) { imgRooms.src = map.rooms; imgRooms.alt = t("roomsTitle"); }
-  if(imgStats) { imgStats.src = map.stats; imgStats.alt = t("stats"); }
-  if(imgExit)  { imgExit.src  = map.exit;  imgExit.alt  = t("exit"); }
+  refreshAllButtonImages();
 }
 
 function updateLangButtonsVisual(){
@@ -283,6 +285,7 @@ function applyLangToUI(){
 
   // HOME images + flag visuals
   updateHomeButtonsImages();
+  refreshAllButtonImages();
   updateLangButtonsVisual();
 
   // Continue
@@ -588,14 +591,24 @@ function openSettings(){
 
 
 const btnClear = document.createElement("button");
-btnClear.className = "btn";
+btnClear.className = "imgBtn sysBtn";
 btnClear.type = "button";
-btnClear.textContent = t("clearProfile");
-btnClear.style.background = "rgba(220, 60, 60, .18)";
-btnClear.style.borderColor = "rgba(220, 60, 60, .55)";
-btnClear.style.color = "rgba(255,255,255,.95)";
+btnClear.title = t("clearProfile");
+btnClear.setAttribute("aria-label", t("clearProfile"));
+btnClear.style.alignSelf = "flex-start";
+const img = document.createElement("img");
+img.dataset.btn = "btn_reset_profilu.png";
+img.alt = t("clearProfile");
+img.src = getBtnDir() + "btn_reset_profilu.png";
+btnClear.appendChild(img);
 btnClear.onclick = () => clearProfile();
 wrap.appendChild(btnClear);
+
+const warn = document.createElement("div");
+warn.className = "sub";
+warn.style.opacity = ".8";
+warn.textContent = (getLang()==="pl") ? "Usuwa nick, pokój i całą lokalną pamięć tej gry na tym urządzeniu." : "Removes nickname, room and all local data of this game on this device.";
+wrap.appendChild(warn);
 
   modalOpen(t("settings"), wrap);
 }
@@ -927,7 +940,7 @@ function bindUI(){
   const langEN = el("btnLangEN");
   const bindLang = (node, langVal) => {
     if(!node) return;
-    const go = (e) => { if(e) e.preventDefault(); setLang(langVal); updateHomeButtonsImages(); updateLangButtonsVisual(); };
+    const go = (e) => { if(e) e.preventDefault(); setLang(langVal); refreshAllButtonImages(); updateHomeButtonsImages(); updateLangButtonsVisual(); };
     node.addEventListener("click", go);
     node.addEventListener("touchstart", go, {passive:false});
   };

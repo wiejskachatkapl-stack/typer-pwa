@@ -225,11 +225,11 @@
     }
 
     /* ===== ROOMS ===== */
-    #rooms{padding:16px;gap:14px}
+    #rooms{padding:22px;gap:14px}
     .roomsBox{
       width:min(980px,100%);
       margin:auto;
-      padding:16px;
+      padding:22px;
       display:flex;
       flex-direction:column;
       gap:14px
@@ -240,17 +240,17 @@
 
     /* ===== CONTINUE ===== */
     #continue{
-      padding:16px;
+      padding:22px;
       align-items:center;
       justify-content:center;
     }
     .continueBox{
       width:min(980px,100%);
       margin:auto;
-      padding:16px;
+      padding:22px;
     }
     .continueCard{
-      padding:16px;
+      padding:22px;
       border-radius:22px;
       border:1px solid var(--stroke2);
       background:rgba(8,22,52,.62);
@@ -296,7 +296,7 @@
     }
 
     /* ===== ROOM ===== */
-    #room{padding:16px;gap:14px;align-items:stretch}
+    #room{padding:22px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
@@ -368,7 +368,7 @@
 
     /* ===== RESULTS SCREEN ===== */
     #results{
-      padding:16px;
+      padding:22px;
       align-items:center;
       justify-content:center;
     }
@@ -395,7 +395,7 @@
 
     /* ===== LEAGUE ===== */
     #league{
-      padding:16px;
+      padding:22px;
       align-items:center;
       justify-content:center;
     }
@@ -441,8 +441,9 @@
     .modal.active{display:flex}
     @keyframes modalFade{from{opacity:0}to{opacity:1}}
     .modalCard{
-      width:min(1100px,94%);
-      max-height:min(760px,90%);
+      width:min(860px,94%);
+      min-height:360px;
+      max-height:min(820px,92%);
       overflow:hidden;
       border-radius:24px;
       position:relative;
@@ -479,7 +480,7 @@
       background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,0));
     }
     .modalBody{
-      padding:16px;
+      padding:22px;
       overflow:auto;
       display:flex;
       flex-direction:column;
@@ -624,6 +625,87 @@
     }
     .btnPrimary:hover{background:rgba(55,170,255,.24)}
 
+  
+
+/* ROOMS choice modals (ładniejsze) */
+.roomsChoice{display:flex;flex-direction:column;gap:14px}
+.roomsChoice .muted{
+  opacity:.92;
+  font-size:14px;
+  font-weight:900;
+  margin:0;
+}
+.roomsChoiceBtns{
+  display:flex;
+  gap:14px;
+  margin-top:2px;
+}
+.roomsChoiceBtns .btn{
+  flex:1;
+  padding:16px 18px;
+  border-radius:20px;
+  font-size:16px;
+  font-weight:1000;
+  letter-spacing:.2px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 10px 26px rgba(0,0,0,.28);
+}
+.roomsChoiceBtns .btn:hover{
+  background:rgba(255,255,255,.16);
+  box-shadow:0 14px 34px rgba(0,0,0,.34);
+}
+.roomsChoiceBtns .btn:active{
+  transform:translateY(1px);
+}
+.roomsChoiceBtns .btn.btnPrimary{
+  background:rgba(55,170,255,.22);
+  border:1px solid rgba(55,170,255,.40);
+}
+.roomsChoiceBtns .btn.btnPrimary:hover{background:rgba(55,170,255,.30)}
+.btnGhost{
+  background:rgba(0,0,0,.16)!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+}
+.rowRight{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; align-items:center; }
+.input{
+  width:100%;
+  padding:13px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.22);
+  color:#fff;
+  outline:none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+}
+.input:focus{
+  border-color: rgba(96,165,250,.75);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.18);
+}
+.muted{ opacity:.85; font-size:13px; margin-bottom:8px; }
+
+
+    /* Systemowe przyciski jako grafiki (buttons/pl|en) */
+    .sysBtn{
+      padding:0;
+      background:transparent;
+      border:none;
+      box-shadow:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .sysBtn img{
+      height:76px;
+      width:auto;
+      display:block;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+    }
+    .sysBtn.small img{ height:52px; }
+    .sysBtn:active img{ transform: translateY(1px) scale(.98); filter: drop-shadow(0 6px 10px rgba(0,0,0,.28)); }
+    .sysBtn:disabled img{ opacity:.45; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+
   </style>
 </head>
 
@@ -656,14 +738,14 @@
         </div>
 
         <div class="homeBtns" aria-label="Menu">
-          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów">
-            <img src="btn_pokoje_typerow.png" alt="Pokoje typerów">
+          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów" data-btn="btn_pokoj_typerow.png">
+            <img src="buttons/pl/btn_pokoj_typerow.png" alt="Pokoje typerów" data-btn="btn_pokoj_typerow.png">
           </button>
-          <button class="imgBtn" id="btnHomeStats" title="Statystyki">
-            <img src="btn_statystyki.png" alt="Statystyki">
+          <button class="imgBtn" id="btnHomeStats" title="Statystyki" data-btn="btn_statystyki.png">
+            <img src="buttons/pl/btn_statystyki.png" alt="Statystyki" data-btn="btn_statystyki.png">
           </button>
-          <button class="imgBtn" id="btnHomeExit" title="Wyjście">
-            <img src="btn_wyjscie.png" alt="Wyjście">
+          <button class="imgBtn" id="btnHomeExit" title="Wyjście" data-btn="btn_wyjscie.png">
+            <img src="buttons/pl/btn_wyjscie.png" alt="Wyjście" data-btn="btn_wyjscie.png">
           </button>
         </div>
       </section>
@@ -694,10 +776,10 @@
             <div class="bigQ" id="t_continue_q">Czy chcesz kontynuować grę w tym pokoju?</div>
 
             <div class="continueBtns">
-              <button class="btn" id="btnContYes">Tak</button>
-              <button class="btn" id="btnContNo">Nie</button>
+              <button class="imgBtn sysBtn" id="btnContYes" type="button" data-btn="btn_tak.png"><img data-btn="btn_tak.png" src="buttons/pl/btn_tak.png" alt="btnContYes"></button>
+              <button class="imgBtn sysBtn" id="btnContNo" type="button" data-btn="btn_nie.png"><img data-btn="btn_nie.png" src="buttons/pl/btn_nie.png" alt="btnContNo"></button>
               <div class="spacer"></div>
-              <button class="btn btnSmall" id="btnContForget">Zapomnij pokój</button>
+              <button class="imgBtn sysBtn small" id="btnContForget" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="buttons/pl/btn_zamknij_pokoj.png" alt="btnContForget"></button>
             </div>
           </div>
         </div>
@@ -710,15 +792,15 @@
             <div class="chip" id="t_rooms_title">Pokoje typerów</div>
             <div class="spacer"></div>
             <div class="chip"><span id="t_nick">Nick</span>: <span id="nickLabelRooms">—</span></div>
-            <button class="btn btnSmall" id="btnChangeNickRooms">Zmień nick</button>
-            <button class="btn btnSmall" id="btnBackHomeFromRooms">Wróć</button>
+            <button class="imgBtn sysBtn small" id="btnChangeNickRooms" type="button" data-btn="btn_dodaj_profil.png"><img data-btn="btn_dodaj_profil.png" src="buttons/pl/btn_dodaj_profil.png" alt="btnChangeNickRooms"></button>
+            <button class="imgBtn sysBtn small" id="btnBackHomeFromRooms" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="buttons/pl/btn_cofnij.png" alt="btnBackHomeFromRooms"></button>
           </div>
 
           <div class="panel block">
             <h2 id="t_join_title">Dołącz do pokoju</h2>
             <div class="row" style="margin-top:10px">
               <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
-              <button class="btn" id="btnJoinRoom">Dołącz</button>
+              <button class="imgBtn sysBtn" id="btnJoinRoom" type="button" data-btn="btn_wejdz_pokoj.png"><img data-btn="btn_wejdz_pokoj.png" src="buttons/pl/btn_wejdz_pokoj.png" alt="btnJoinRoom"></button>
             </div>
             <div class="help" style="margin-top:8px" id="t_join_help">Wpisz kod od admina.</div>
           </div>
@@ -727,7 +809,7 @@
             <h2 id="t_create_title">Utwórz nowy pokój</h2>
             <div class="row" style="margin-top:10px">
               <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
-              <button class="btn" id="btnCreateRoom">Utwórz</button>
+              <button class="imgBtn sysBtn" id="btnCreateRoom" type="button" data-btn="btn_zaloz.png"><img data-btn="btn_zaloz.png" src="buttons/pl/btn_zaloz.png" alt="btnCreateRoom"></button>
             </div>
             <div class="help" style="margin-top:8px" id="t_create_help">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
           </div>
@@ -757,11 +839,11 @@
                 <div class="chip" style="flex:1;justify-content:space-between;">
                   <span id="t_code">Kod</span>: <span id="roomCode">—</span>
                 </div>
-                <button class="btn btnSmall" id="btnCopyCode">Kopiuj</button>
+                <button class="imgBtn sysBtn small" id="btnCopyCode" type="button" data-btn="btn_opcje.png"><img data-btn="btn_opcje.png" src="buttons/pl/btn_opcje.png" alt="btnCopyCode"></button>
               </div>
               <div class="row" style="margin-top:10px">
-                <button class="btn btnSmall" id="btnLeave">Opuść</button>
-                <button class="btn btnSmall" id="btnRefresh">Odśwież</button>
+                <button class="imgBtn sysBtn small" id="btnLeave" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="buttons/pl/btn_zamknij_pokoj.png" alt="btnLeave"></button>
+                <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="buttons/pl/btn_odswiez.png" alt="btnRefresh"></button>
               </div>
             </div>
 
@@ -769,19 +851,19 @@
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
-                <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
+                <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_wyniki.png"><img data-btn="btn_zapisz_wyniki.png" src="buttons/pl/btn_zapisz_wyniki.png" alt="btnSaveAll"></button>
 
                 <!-- ADMIN -->
-                <button class="btn" id="btnEnterResults" style="display:none">Wpisz wyniki</button>
-                <button class="btn" id="btnEndRound" style="display:none" disabled>Zakończ kolejkę</button>
+                <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="buttons/pl/btn_dodaj_wyniki.png" alt="btnEnterResults"></button>
+                <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
 
-                <button class="btn" id="btnMyQueue" style="display:none">Własna kolejka</button>
-                <button class="btn" id="btnAddQueue" style="display:none">Dodaj kolejkę (test)</button>
+                <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
+                <button class="imgBtn sysBtn" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="buttons/pl/btn_dodaj_kolejke.png" alt="btnAddQueue"></button>
               </div>
             </div>
 
             <div class="spacer"></div>
-            <button class="btn" id="btnBackFromRoom">Wróć</button>
+            <button class="imgBtn sysBtn small" id="btnBackFromRoom" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="buttons/pl/btn_cofnij.png" alt="btnBackFromRoom"></button>
           </div>
 
           <!-- MIDDLE -->
@@ -811,7 +893,7 @@
             <div class="playersList" id="playersList"></div>
 
             <div class="rightFooterBtn">
-              <button class="btn" id="btnLeagueFromRoom">Tabela ligi typerów</button>
+              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
             </div>
           </div>
 
@@ -828,8 +910,8 @@
               <div class="chip"><span id="t_round2">KOLEJKA</span>: <span id="resRound">—</span></div>
             </div>
             <div class="row">
-              <button class="btn btnSmall" id="btnResBack">Wróć</button>
-              <button class="btn btnSmall" id="btnResSave">Zapisz wyniki</button>
+              <button class="imgBtn sysBtn" id="btnResBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="buttons/pl/btn_cofnij.png" alt="btnResBack"></button>
+              <button class="imgBtn sysBtn" id="btnResSave" type="button" data-btn="btn_zapisz_wyniki.png"><img data-btn="btn_zapisz_wyniki.png" src="buttons/pl/btn_zapisz_wyniki.png" alt="btnResSave"></button>
             </div>
           </div>
 
@@ -851,8 +933,8 @@
               <div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
             </div>
             <div class="row">
-              <button class="btn btnSmall" id="btnLeagueRefresh">Odśwież</button>
-              <button class="btn btnSmall" id="btnLeagueBack">Wróć</button>
+              <button class="imgBtn sysBtn small" id="btnLeagueRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="buttons/pl/btn_odswiez.png" alt="btnLeagueRefresh"></button>
+              <button class="imgBtn sysBtn small" id="btnLeagueBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="buttons/pl/btn_cofnij.png" alt="btnLeagueBack"></button>
             </div>
           </div>
 
@@ -888,7 +970,7 @@
           <div class="modalHead">
             <div class="chip" id="modalTitle">—</div>
             <div class="spacer"></div>
-            <button class="btn btnSmall" id="modalClose">Zamknij</button>
+            <button class="imgBtn sysBtn small" id="modalClose" type="button" data-btn="btn_zamknij.png"><img data-btn="btn_zamknij.png" src="buttons/pl/btn_zamknij.png" alt="modalClose"></button>
           </div>
           <div class="modalBody" id="modalBody"></div>
         </div>
@@ -915,6 +997,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2009"></script>
+  <script type="module" src="./app.js?v=2010"></script>
 </body>
 </html>
