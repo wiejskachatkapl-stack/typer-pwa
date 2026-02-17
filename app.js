@@ -591,7 +591,7 @@ function openSettings(){
 
 
 const btnClear = document.createElement("button");
-btnClear.className = "imgBtn sysBtn";
+btnClear.className = "imgBtn sysBtn sysBtnBig";
 btnClear.type = "button";
 btnClear.title = t("clearProfile");
 btnClear.setAttribute("aria-label", t("clearProfile"));
