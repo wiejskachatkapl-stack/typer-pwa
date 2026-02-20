@@ -1,4 +1,4 @@
-const BUILD = 4004;
+const BUILD = 4005;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -409,6 +409,25 @@ function modalClose(){
 }
 
 /** ROOMS MENU MODALS **/
+
+function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=null} = {}){
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = `imgBtn ${cls}`.trim();
+  if(title) b.title = title;
+
+  const img = document.createElement("img");
+  img.dataset.btn = btnName;
+  img.alt = alt;
+
+  // Ustaw src od razu (żeby nie było pustki przed refresh)
+  img.src = getBtnDir() + mapBtnName(btnName);
+
+  b.appendChild(img);
+  if(onClick) b.onclick = onClick;
+  return b;
+}
+
 function openRoomsChoiceModal(){
   const wrap = document.createElement("div");
   wrap.className = "roomsChoice";
@@ -423,31 +442,40 @@ function openRoomsChoiceModal(){
   const row = document.createElement("div");
   row.className = "roomsChoiceBtns";
 
-  const btnJoin = document.createElement("button");
-  btnJoin.className = "btn btnPrimary";
-  btnJoin.type = "button";
-  btnJoin.textContent = (getLang()==="en") ? "Join a room" : "Dołącz do pokoju";
-  btnJoin.onclick = ()=>{ modalClose(); handleJoinFlow(); };
+  const btnJoin = makeSysImgButton("btn_join.png", {
+    cls:"sysBtn sysBtnBig",
+    alt:"join",
+    title:(getLang()==="en") ? "Join a room" : "Dołącz do pokoju",
+    onClick: ()=>{ modalClose(); handleJoinFlow(); }
+  });
 
-  const btnCreate = document.createElement("button");
-  btnCreate.className = "btn";
-  btnCreate.type = "button";
-  btnCreate.textContent = (getLang()==="en") ? "Create room" : "Stwórz pokój";
-  btnCreate.onclick = ()=>{ modalClose(); openCreateRoomModal(); };
+  const btnCreate = makeSysImgButton("btn_create.png", {
+    cls:"sysBtn sysBtnBig",
+    alt:"create",
+    title:(getLang()==="en") ? "Create room" : "Stwórz pokój",
+    onClick: ()=>{ modalClose(); openCreateRoomModal(); }
+  });
 
   row.appendChild(btnJoin);
   row.appendChild(btnCreate);
   wrap.appendChild(row);
 
-  const btnBack = document.createElement("button");
-  btnBack.className = "btn btnSmall btnGhost";
-  btnBack.type = "button";
-  btnBack.style.marginTop = "10px";
-  btnBack.textContent = (getLang()==="en") ? "Menu" : "Menu";
-  btnBack.onclick = ()=>{ modalClose(); showScreen("home"); };
-  wrap.appendChild(btnBack);
+  const actions = document.createElement("div");
+  actions.className = "roomsChoiceActions";
+
+  const btnMenu = makeSysImgButton("btn_menu.png", {
+    cls:"sysBtn",
+    alt:"menu",
+    title:"Menu",
+    onClick: ()=>{ modalClose(); showScreen("home"); }
+  });
+
+  actions.appendChild(btnMenu);
+  wrap.appendChild(actions);
 
   modalOpen((getLang()==="en") ? "TYPERS ROOMS" : "POKOJE TYPERÓW", wrap);
+  // upewnij się, że obrazki przełączą się przy aktualnym języku
+  refreshAllButtonImages();
 }
 
 async function handleJoinFlow(){
