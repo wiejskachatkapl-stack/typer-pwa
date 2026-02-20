@@ -1,4 +1,5 @@
-const BUILD = 2012;
+const BUILD = 3001;
+console.log("APP BUILD", BUILD);
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
