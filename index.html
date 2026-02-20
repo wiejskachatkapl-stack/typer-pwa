@@ -762,6 +762,23 @@
   .sysBtn.actionSmall img{ height:58px !important; }
 }
 
+
+/* ACTIONS: make buttons smaller and equal width */
+#roomActionsCol .sysBtn{
+  width: 100%;
+  max-width: 260px;
+  margin: 8px auto 0;
+}
+#roomActionsCol .sysBtn:first-child{ margin-top: 10px; }
+#roomActionsCol .sysBtn img{
+  height: 58px;
+  width: auto;
+  max-width: 100%;
+}
+@media (max-width: 520px){
+  #roomActionsCol .sysBtn{ max-width: 220px; }
+  #roomActionsCol .sysBtn img{ height: 54px; }
+}
 </style>
 </head>
 
@@ -906,7 +923,7 @@
             <div class="panel" style="padding:14px">
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
-              <div class="col" style="margin-top:10px">
+              <div class="col" id="roomActionsCol" style="margin-top:10px">
                 <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
 
                 <!-- ADMIN -->
