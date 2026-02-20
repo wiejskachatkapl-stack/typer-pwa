@@ -1,4 +1,4 @@
-const BUILD = 4009;
+const BUILD = 4011;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -267,8 +267,8 @@ const BTN_NAME_MAP = {
   "btn_zakoncz_kolejke.png": "btn_end_queue.png",
   "btn_cofnij.png": "btn_back.png",
   "btn_odswiez.png": "btn_refresh.png",
-    "btn_opusc.png": "btn_leave_room.png",
-"btn_tabela_typerow.png": "btn_tipster_table.png",
+  "btn_opusc.png": "btn_leave_room.png",
+  "btn_tabela_typerow.png": "btn_tipster_table.png",
   "btn_dodaj_profil.png": "btn_add_profile.png",
   "btn_reset_profilu.png": "btn_reset_profile.png",
   "btn_tak.png": "btn_yes.png",
@@ -292,13 +292,18 @@ function mapBtnName(raw){
 
 function refreshAllButtonImages(){
   const dir = getBtnDir();
-  document.querySelectorAll('img[data-btn]').forEach(img=>{
-    const raw = (img.dataset.btn || '').trim();
-    if(!raw) return;
+  const lang = getLang();
 
-    // Ujednolicenie nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
-    // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
-    const name = mapBtnName(raw);
+  document.querySelectorAll('img[data-btn]').forEach(img=>{
+    const raw0 = (img.dataset.btn || '').trim();
+    if(!raw0) return;
+
+    // Normalizacja nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
+    const raw = raw0.replace(/(\d+)\.png$/i, '.png');
+
+    // W PL bierzemy dokładnie polską nazwę pliku.
+    // W EN mapujemy polskie nazwy na angielskie odpowiedniki.
+    const name = (lang === "en") ? (BTN_NAME_MAP[raw] || raw) : raw;
 
     img.src = dir + name;
   });
@@ -368,6 +373,7 @@ function applyLangToUI(){
   if(el("t_nick2")) el("t_nick2").textContent = t("nick");
   if(el("t_admin")) el("t_admin").textContent = t("admin");
   if(el("t_code")) el("t_code").textContent = t("code");
+  setBtnLabelSafe("btnCopyCode", t("copy"));
   setBtnLabelSafe("btnLeave", t("leave"));
   setBtnLabelSafe("btnRefresh", t("refresh"));
   if(el("t_actions")) el("t_actions").textContent = t("actions");
@@ -1090,6 +1096,14 @@ function bindUI(){
 
   // ROOM
   el("btnBackFromRoom").onclick = ()=> showScreen("home");
+
+  el("btnCopyCode").onclick = async ()=>{
+    if(!currentRoomCode) return;
+    try{
+      await navigator.clipboard.writeText(currentRoomCode);
+      showToast(getLang()==="en" ? "Code copied" : "Skopiowano kod");
+    }catch{ showToast(getLang()==="en" ? "Copy failed" : "Nie udało się skopiować"); }
+  };
 
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
