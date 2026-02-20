@@ -1,4 +1,4 @@
-const BUILD = 4002;
+const BUILD = 4003;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -390,9 +390,6 @@ function applyLangToUI(){
   if(el("t_player_col")) el("t_player_col").textContent = t("playerCol");
   if(el("t_rounds_col")) el("t_rounds_col").textContent = t("roundsCol");
   if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
-
-  // Modal close
-  if(el("modalClose")) el("modalClose").textContent = t("close");
 }
 
 // ===== Modal =====
@@ -632,7 +629,7 @@ btnClear.style.alignSelf = "flex-start";
 const img = document.createElement("img");
 img.dataset.btn = "btn_reset_profilu.png";
 img.alt = t("clearProfile");
-img.src = getBtnDir() + "btn_reset_profilu.png";
+img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
 btnClear.appendChild(img);
 btnClear.onclick = () => clearProfile();
 wrap.appendChild(btnClear);
