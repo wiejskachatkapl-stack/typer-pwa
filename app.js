@@ -1,4 +1,4 @@
-const BUILD = 4009;
+const BUILD = 4012;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -253,12 +253,7 @@ function setLang(lang){
 
 // ===== Buttons (grafiki) =====
 function getBtnDir(){
-  // Primary location (new UI pack)
   return (getLang() === "en") ? "ui/buttons/en/" : "ui/buttons/pl/";
-}
-function getBtnDirFallback(){
-  // Fallback location (older structure)
-  return (getLang() === "en") ? "buttons/en/" : "buttons/pl/";
 }
 
 const BTN_NAME_MAP = {
@@ -278,7 +273,7 @@ const BTN_NAME_MAP = {
   "btn_tak.png": "btn_yes.png",
   "btn_nie.png": "btn_no.png",
   "btn_zamknij.png": "btn_close.png",
-  "btn_zamknij_pokoj.png": "btn_close.png",
+  "btn_leave_room.png": "btn_close.png",
   "btn_ustawienia.png": "btn_settings.png",
   "btn_zapisz_wyniki.png": "btn_save_results.png",
   "btn_dodaj_wyniki.png": "btn_enter_results.png",
@@ -295,25 +290,16 @@ function mapBtnName(raw){
 }
 
 function refreshAllButtonImages(){
-  const primary = getBtnDir();
-  const fallback = getBtnDirFallback();
+  const dir = getBtnDir();
   document.querySelectorAll('img[data-btn]').forEach(img=>{
     const raw = (img.dataset.btn || '').trim();
     if(!raw) return;
 
+    // Ujednolicenie nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
+    // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
     const name = mapBtnName(raw);
-    const p1 = primary + name;
-    const p2 = fallback + name;
 
-    // reset previous handler to avoid loops
-    img.onerror = null;
-    img.src = p1;
-
-    // if primary missing (404), fallback to old folder
-    img.onerror = () => {
-      img.onerror = null;
-      img.src = p2;
-    };
+    img.src = dir + name;
   });
 }
 function t(key){

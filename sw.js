@@ -1,67 +1,66 @@
-const BUILD = 2005;
-const CACHE = `typer-cache-v${BUILD}`;
+// Typer PWA Service Worker (BUILD 4012)
+// Network-first for HTML/JS to avoid being stuck on old builds.
 
-const ASSETS = [
-  "./",
-  "./index.html?v=2005",
-  "./app.js?v=2005",
-  "./manifest.json?v=2005",
-
-  // backgrounds / UI
-  "./img_starter.png?v=2005",
-  "./img_menu.png?v=2005",
-  "./img_menu_pc.png?v=2005",
-  "./img_tlo.png?v=2005",
-
-  // HOME buttons (PL)
-  "./btn_pokoje_typerow.png?v=2005",
-  "./btn_statystyki.png?v=2005",
-  "./btn_wyjscie.png?v=2005",
-
-  // HOME buttons (EN)
-  "./btn_typers_rooms.png?v=2005",
-  "./btn_statistics.png?v=2005",
-  "./btn_exit.png?v=2005",
+const CACHE_VERSION = 'typer-cache-4012';
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './app.js',
+  './manifest.json'
 ];
 
-self.addEventListener("install", (event) => {
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_VERSION).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
   );
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : Promise.resolve())));
-    await self.clients.claim();
+    await Promise.all(keys.map((k) => (k !== CACHE_VERSION ? caches.delete(k) : Promise.resolve())));
+    if (self.clients && self.clients.claim) await self.clients.claim();
   })());
 });
 
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
+const isHtmlOrJs = (req) => {
   const url = new URL(req.url);
+  return req.destination === 'document' ||
+         req.destination === 'script' ||
+         url.pathname.endsWith('.html') ||
+         url.pathname.endsWith('.js');
+};
 
-  if (req.method !== "GET") return;
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
 
-  if (url.origin === location.origin) {
+  // Always network-first for app shell files (prevents "stuck on build 4009")
+  if (isHtmlOrJs(req)) {
     event.respondWith((async () => {
-      const cached = await caches.match(req, { ignoreSearch: false });
-      if (cached) return cached;
-      const res = await fetch(req);
-      const cache = await caches.open(CACHE);
-      cache.put(req, res.clone());
-      return res;
+      try {
+        const fresh = await fetch(req, { cache: 'no-store' });
+        const cache = await caches.open(CACHE_VERSION);
+        cache.put(req, fresh.clone());
+        return fresh;
+      } catch (e) {
+        const cached = await caches.match(req);
+        return cached || Response.error();
+      }
     })());
     return;
   }
 
+  // For images/fonts/etc: cache-first with SWR
   event.respondWith((async () => {
-    try {
-      return await fetch(req);
-    } catch {
-      const cached = await caches.match(req);
-      return cached || new Response("offline", { status: 503 });
-    }
+    const cached = await caches.match(req);
+    const fetchPromise = fetch(req).then(async (fresh) => {
+      const cache = await caches.open(CACHE_VERSION);
+      cache.put(req, fresh.clone());
+      return fresh;
+    }).catch(() => null);
+
+    return cached || (await fetchPromise) || Response.error();
   })());
 });

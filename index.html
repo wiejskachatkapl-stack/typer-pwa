@@ -720,40 +720,29 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* === SYSTEM UI BUTTONS (no images) === */
-.uiBtn{
-  appearance:none; -webkit-appearance:none;
-  border:2px solid rgba(255,255,255,.28);
-  border-radius:14px;
-  padding:12px 18px;
-  color:#fff;
-  font-weight:800;
-  letter-spacing:.3px;
-  text-shadow:0 2px 0 rgba(0,0,0,.35);
-  background:linear-gradient(180deg, rgba(110,220,255,.95) 0%, rgba(30,160,220,.95) 45%, rgba(8,110,170,.95) 100%);
-  box-shadow:0 10px 18px rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.35);
-  cursor:pointer;
-  user-select:none;
+/* --- BUILD 4012 UI FIT tweaks --- */
+.roomHeaderActionsRow{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
 }
-.uiBtn:active{ transform:translateY(1px); box-shadow:0 6px 12px rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.28); }
-.uiBtn[disabled]{ opacity:.45; filter:grayscale(.35); cursor:not-allowed; }
-
-.uiBtnSmall{
-  padding:10px 14px;
-  border-radius:14px;
-  font-size:18px;
-  min-width:120px;
+.roomHeaderActionsRow .imgBtn img{
+  height:56px;
 }
-.uiBtnSmall span{ display:inline-block; transform:translateY(1px); }
-
-.roomTopRow{
-  display:flex; align-items:center; gap:12px; flex-wrap:nowrap;
+.actionsButtonsFit{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  align-items:center;
 }
-
-/* Actions: shrink to fit nicely */
-#roomActions .imgBtn.sysBtn.big img{ height:110px; }
+.actionsButtonsFit .imgBtn img{
+  height:78px; /* smaller to fit */
+  max-width: 100%;
+}
 @media (max-width: 900px){
-  #roomActions .imgBtn.sysBtn.big img{ height:96px; }
+  .roomHeaderActionsRow .imgBtn img{ height:52px; }
+  .actionsButtonsFit .imgBtn img{ height:72px; }
 }
 
 </style>
@@ -889,10 +878,11 @@
                 <div class="chip" style="flex:1;justify-content:space-between;">
                   <span id="t_code">Kod</span>: <span id="roomCode">—</span>
                 </div>
-</div>
-              <div class="row roomTopRow" style="margin-top:10px">
-                <button id="btnLeave" type="button" class="uiBtn uiBtnSmall" data-ui="leave"><span id="t_btnLeave">Opuść</span></button>
-                <button id="btnRefresh" type="button" class="uiBtn uiBtnSmall" data-ui="refresh"><span id="t_btnRefresh">Odśwież</span></button>
+                <button class="imgBtn sysBtn small" id="btnCopyCode" type="button" data-btn="btn_opcje.png"><img data-btn="btn_opcje.png" src="ui/buttons/pl/btn_opcje.png" alt="btnCopyCode"></button>
+              </div>
+              <div class="row" style="margin-top:10px">
+                <button class="imgBtn sysBtn small" id="btnLeave" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_zamknij_pokoj.png" alt="btnLeave"></button>
+                <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnRefresh"></button>
               </div>
             </div>
 
@@ -1046,6 +1036,15 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4009"></script>
+  <script type="module" src="./app.js?v=4012"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js?v=4012').catch(() => {});
+    });
+  }
+</script>
+
 </body>
 </html>
