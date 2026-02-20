@@ -1,4 +1,4 @@
-const BUILD = 4007;
+const BUILD = 4008;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -257,7 +257,7 @@ function getBtnDir(){
 }
 
 const BTN_NAME_MAP = {
-  "btn_pokoj_typerow.png": "btn_tipster_room.png",
+"btn_pokoj_typerow.png": "btn_tipster_room.png",
   "btn_statystyki.png": "btn_statistics.png",
   "btn_wyjscie.png": "btn_exit.png",
   "btn_wejdz_pokoj.png": "btn_enter_room.png",
@@ -275,6 +275,12 @@ const BTN_NAME_MAP = {
   "btn_zamknij.png": "btn_close.png",
   "btn_zamknij_pokoj.png": "btn_close.png",
   "btn_ustawienia.png": "btn_settings.png"
+  "btn_zapisz_wyniki.png": "btn_save_results.png",
+  "btn_dodaj_wyniki.png": "btn_enter_results.png",
+  "btn_dodaj_kolejke.png": "btn_add_queue.png",
+  "btn_zapisz_kolejke.png": "btn_save_queue.png",
+  "btn_zapisz_typy.png": "btn_save_picks.png",
+  "btn_dodaj_wyniki1.png": "btn_enter_results.png"
 };
 
 function mapBtnName(raw){
