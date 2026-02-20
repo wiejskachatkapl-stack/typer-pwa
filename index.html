@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 4014)</title>
+  <title>Typer (BUILD 4016)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -369,8 +369,12 @@
       left:14px;
       right:14px;
       bottom:14px;
+      display:flex;
+      gap:14px;
+      justify-content:space-between;
+      align-items:center;
     }
-    .rightFooterBtn .btn{width:100%}
+    .rightFooterBtn .btn{width:auto}
 
     /* ===== RESULTS SCREEN ===== */
     #results{
@@ -739,8 +743,15 @@
   gap:14px;
   align-items:center;
 }
+/* wyśrodkuj same przyciski (elementy button), niezależnie od ich szerokości */
+.actionsButtonsFit .imgBtn{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
 .actionsButtonsFit .imgBtn img{
   height:78px; /* smaller to fit */
+  width:auto;
   max-width: 100%;
 }
 @media (max-width: 900px){
@@ -966,7 +977,8 @@
             <div class="playersList" id="playersList"></div>
 
             <div class="rightFooterBtn">
-              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
+	              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
+	              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="ui/buttons/pl/btn_wyjscie.png" alt="btnExitFromRoomRight"></button>
             </div>
           </div>
 
@@ -1070,7 +1082,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4012"></script>
+  <script type="module" src="./app.js?v=4016"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
