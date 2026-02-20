@@ -890,12 +890,16 @@
             <div class="panel" style="padding:14px">
               <div class="title" id="roomName">—</div>
               <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
-              <div class="row roomCodeRow" style="margin-top:10px">
-                <div class="chip" style="flex:1;justify-content:space-between;">
-                  <span id="t_code">Kod</span>: <span id="roomCode">—</span>
+              <div class="roomCodeBlock" style="margin-top:10px">
+                <div class="row roomCodeRow">
+                  <div class="chip" style="flex:1;justify-content:space-between;">
+                    <span id="t_code">Kod</span>: <span id="roomCode">—</span>
+                  </div>
                 </div>
-                <button class="imgBtn sysBtn small" id="btnLeave" type="button" aria-label="Opuść" title="Opuść"><img data-btn="btn_leave_room.png" src="ui/buttons/pl/btn_close.png" alt="Opuść"></button>
-                <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="Odśwież"></button>
+                <div class="row roomCodeActions" style="margin-top:10px; gap:12px; justify-content:center;">
+                  <button class="imgBtn sysBtn small" id="btnLeave" type="button" aria-label="Opuść" title="Opuść" data-btn="btn_opusc.png"><img data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png" alt="Opuść"></button>
+                  <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="Odśwież"></button>
+                </div>
               </div>
             </div>
 

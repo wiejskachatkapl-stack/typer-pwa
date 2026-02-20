@@ -273,7 +273,7 @@ const BTN_NAME_MAP = {
   "btn_tak.png": "btn_yes.png",
   "btn_nie.png": "btn_no.png",
   "btn_zamknij.png": "btn_close.png",
-  "btn_leave_room.png": "btn_close.png",
+  "btn_leave_room.png": "btn_opusc.png",
   "btn_ustawienia.png": "btn_settings.png",
   "btn_zapisz_wyniki.png": "btn_save_results.png",
   "btn_dodaj_wyniki.png": "btn_enter_results.png",
