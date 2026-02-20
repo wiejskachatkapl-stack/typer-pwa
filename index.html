@@ -183,10 +183,15 @@
     }
     .imgBtn img{
       display:block;
-      height: 240px;
+      height: var(--btnH, 140px);
       width:auto;
-      border-radius:16px;
     }
+/* Rozmiary przycisków w zależności od miejsca */
+#home .homeBtns .imgBtn{ --btnH: clamp(170px, 18vw, 240px); }
+#modal .imgBtn{ --btnH: clamp(95px, 10vw, 140px); }
+.sysBtnSmall{ --btnH: 72px; }
+.sysBtnBig{ --btnH: clamp(130px, 14vw, 170px); }
+
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
@@ -972,7 +977,7 @@
           <div class="modalHead">
             <div class="chip" id="modalTitle">—</div>
             <div class="spacer"></div>
-            <button class="imgBtn sysBtn small" id="modalClose" type="button" class="imgBtn sysBtn small" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="buttons/pl/btn_wyjscie.png" alt="modalClose"></button>
+            <button class="imgBtn sysBtn small" id="modalClose" type="button" class="imgBtn sysBtn small imgBtn sysBtnSmall" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="buttons/pl/btn_wyjscie.png" alt="modalClose"></button>
           </div>
           <div class="modalBody" id="modalBody"></div>
         </div>
