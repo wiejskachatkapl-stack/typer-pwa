@@ -8,7 +8,10 @@
   <link rel="manifest" href="manifest.json" />
 
   <style>
-    :root{
+.roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
+.roomCodeRow .imgBtn{flex:0 0 auto;}
+
+:root{
       --bg:#071229;
       --glass: rgba(8, 22, 52, .58);
       --glass2: rgba(8, 22, 52, .42);
@@ -851,8 +854,7 @@
 
           <div class="panel block">
             <h2 id="t_join_title">Dołącz do pokoju</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
+            <div class="row" style="margin-top:10px"><input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
               <button class="imgBtn sysBtn" id="btnJoinRoom" type="button" data-btn="btn_wejdz_pokoj.png"><img data-btn="btn_wejdz_pokoj.png" src="ui/buttons/pl/btn_wejdz_pokoj.png" alt="btnJoinRoom"></button>
             </div>
             <div class="help" style="margin-top:8px" id="t_join_help">Wpisz kod od admina.</div>
@@ -888,15 +890,12 @@
             <div class="panel" style="padding:14px">
               <div class="title" id="roomName">—</div>
               <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
-              <div class="row" style="margin-top:10px">
+              <div class="row roomCodeRow" style="margin-top:10px">
                 <div class="chip" style="flex:1;justify-content:space-between;">
                   <span id="t_code">Kod</span>: <span id="roomCode">—</span>
                 </div>
-                <button class="imgBtn sysBtn small" id="btnCopyCode" type="button" data-btn="btn_opcje.png"><img data-btn="btn_opcje.png" src="ui/buttons/pl/btn_opcje.png" alt="btnCopyCode"></button>
-              </div>
-              <div class="row" style="margin-top:10px">
-                <button class="imgBtn sysBtn small" id="btnLeave" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_opusc.png" alt="btnLeave"></button>
-                <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnRefresh"></button>
+                <button class="imgBtn sysBtn small" id="btnLeave" type="button" aria-label="Opuść" title="Opuść"><img data-btn="btn_leave_room.png" src="ui/buttons/pl/btn_close.png" alt="Opuść"></button>
+                <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="Odśwież"></button>
               </div>
             </div>
 
