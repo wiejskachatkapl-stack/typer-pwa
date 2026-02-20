@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 4003)</title>
+  <title>Typer (BUILD 4004)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -716,7 +716,12 @@
       .homeBtns{top:55%;}
       .imgBtn img{width: min(86vw, 420px); max-height: none;}
     }
-  </style>
+  
+/* Nick modal image buttons */
+.nickBtns{display:flex;gap:14px;justify-content:flex-end;align-items:center;}
+.nickImgBtn img{height:64px;width:auto;display:block;}
+@media (max-width:700px){.nickImgBtn img{height:56px;}}
+</style>
 </head>
 
 <body>
@@ -1007,6 +1012,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4003"></script>
+  <script type="module" src="./app.js?v=4004"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const BUILD = 4003;
+const BUILD = 4004;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -727,15 +727,21 @@ function nickModalAsk(){
     const btns = document.createElement("div");
     btns.className = "nickBtns";
 
-    const btnCancel = document.createElement("button");
-    btnCancel.className = "btn btnSmall btnDanger";
-    btnCancel.type = "button";
-    btnCancel.textContent = t("cancel");
+    const mkImgBtn = (dataBtn, title) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "imgBtn nickImgBtn";
+      b.title = title || "";
+      const img = document.createElement("img");
+      img.alt = title || "";
+      img.dataset.btn = dataBtn;
+      // src will be set by refreshAllButtonImages()
+      b.appendChild(img);
+      return b;
+    };
 
-    const btnOk = document.createElement("button");
-    btnOk.className = "btn btnSmall btnPrimary";
-    btnOk.type = "button";
-    btnOk.textContent = t("ok");
+    const btnCancel = mkImgBtn("btn_cancel.png", t("cancel"));
+    const btnOk = mkImgBtn("btn_ok.png", t("ok"));
 
     btns.appendChild(btnCancel);
     btns.appendChild(btnOk);
@@ -747,16 +753,15 @@ function nickModalAsk(){
     wrap.appendChild(btns);
 
     modalOpen(t("addProfileTitle"), wrap);
+    refreshAllButtonImages();
 
     const closeBtn = el("modalClose");
-    const prevCloseText = closeBtn ? closeBtn.textContent : null;
     const prevCloseOnClick = closeBtn ? closeBtn.onclick : null;
 
     setTimeout(()=>{ try{ input.focus(); input.select(); }catch(e){} }, 50);
 
     const closeAndResolve = (val)=>{
       if(closeBtn){
-        if(prevCloseText !== null) closeBtn.textContent = prevCloseText;
         closeBtn.onclick = prevCloseOnClick || (()=> modalClose());
       }
       modalClose();
@@ -764,7 +769,7 @@ function nickModalAsk(){
     };
 
     if(closeBtn){
-      closeBtn.textContent = t("cancel");
+      // Keep the close button as an image; only override action to cancel for this modal
       closeBtn.onclick = () => closeAndResolve(null);
     }
 
