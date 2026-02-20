@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 4013)</title>
+  <title>Typer (BUILD 4014)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -720,7 +720,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 4013 UI FIT tweaks --- */
+/* --- BUILD 4014 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -737,14 +737,26 @@
   align-items:center;
 }
 .actionsButtonsFit .imgBtn img{
-  height:64px; /* smaller to fit */
+  height:78px; /* smaller to fit */
   max-width: 100%;
 }
 @media (max-width: 900px){
   .roomHeaderActionsRow .imgBtn img{ height:52px; }
-  /* Akcje: mniejsze, żeby ładnie się wpasowały */
-  .actionsButtonsFit .imgBtn img{ height:58px; }
-  .roomActionBtn img{ height:58px; }
+  .actionsButtonsFit .imgBtn img{ height:72px; }
+}
+
+
+/* --- BUILD 4014 tweaks --- */
+.roomTopBtns{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.sysBtn.actionSmall img{
+  height:64px !important;
+}
+@media (max-width: 520px){
+  .sysBtn.actionSmall img{ height:58px !important; }
 }
 
 </style>
@@ -820,7 +832,7 @@
               <button class="imgBtn sysBtn" id="btnContYes" type="button" data-btn="btn_tak.png"><img data-btn="btn_tak.png" src="ui/buttons/pl/btn_tak.png" alt="btnContYes"></button>
               <button class="imgBtn sysBtn" id="btnContNo" type="button" data-btn="btn_nie.png"><img data-btn="btn_nie.png" src="ui/buttons/pl/btn_nie.png" alt="btnContNo"></button>
               <div class="spacer"></div>
-              <button class="imgBtn sysBtn small" id="btnContForget" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_zamknij_pokoj.png" alt="btnContForget"></button>
+              <button class="imgBtn sysBtn small" id="btnContForget" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_opusc.png" alt="btnContForget"></button>
             </div>
           </div>
         </div>
@@ -880,10 +892,10 @@
                 <div class="chip" style="flex:1;justify-content:space-between;">
                   <span id="t_code">Kod</span>: <span id="roomCode">—</span>
                 </div>
+                <button class="imgBtn sysBtn small" id="btnCopyCode" type="button" data-btn="btn_opcje.png"><img data-btn="btn_opcje.png" src="ui/buttons/pl/btn_opcje.png" alt="btnCopyCode"></button>
               </div>
               <div class="row" style="margin-top:10px">
-                <!-- OPUŚĆ + ODŚWIEŻ w jednej linii -->
-                <button class="imgBtn sysBtn small" id="btnLeave" type="button" data-btn="btn_opusc.png"><img data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png" alt="btnLeave"></button>
+                <button class="imgBtn sysBtn small" id="btnLeave" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_opusc.png" alt="btnLeave"></button>
                 <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnRefresh"></button>
               </div>
             </div>
@@ -892,14 +904,14 @@
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" style="margin-top:10px">
-                <button class="imgBtn sysBtn roomActionBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_zapisz_typy.png" alt="btnSaveAll"></button>
+                <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
 
                 <!-- ADMIN -->
-                <button class="imgBtn sysBtn roomActionBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_dodaj_wyniki.png" alt="btnEnterResults"></button>
-                <button class="imgBtn sysBtn roomActionBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
+                <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults"></button>
+                <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
 
-                <button class="imgBtn sysBtn roomActionBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
-                <button class="imgBtn sysBtn roomActionBtn" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_dodaj_kolejke.png" alt="btnAddQueue"></button>
+                <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
+                <button class="imgBtn sysBtn" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
               </div>
             </div>
 
@@ -1038,12 +1050,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4013"></script>
+  <script type="module" src="./app.js?v=4012"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=4013').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=4012').catch(() => {});
     });
   }
 </script>
