@@ -1,5 +1,4 @@
-const BUILD = 3001;
-console.log("APP BUILD", BUILD);
+const BUILD = 2012;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -241,8 +240,36 @@ function setLang(lang){
 
 // ===== Buttons (grafiki) =====
 function getBtnDir(){
-  return (getLang() === "en") ? "buttons/en/" : "buttons/pl/";
+  return (getLang() === "en") ? "ui/buttons/en/" : "ui/buttons/pl/";
 }
+
+const BTN_NAME_MAP = {
+  "btn_pokoj_typerow.png": "btn_tipster_room.png",
+  "btn_statystyki.png": "btn_statistics.png",
+  "btn_wyjscie.png": "btn_exit.png",
+  "btn_wejdz_pokoj.png": "btn_enter_room.png",
+  "btn_zaloz.png": "btn_create_room.png",
+  "btn_opcje.png": "btn_options.png",
+  "btn_nowa_kolejka.png": "btn_new_queue.png",
+  "btn_zakoncz_kolejke.png": "btn_end_queue.png",
+  "btn_cofnij.png": "btn_back.png",
+  "btn_odswiez.png": "btn_refresh.png",
+  "btn_tabela_typerow.png": "btn_tipster_table.png",
+  "btn_dodaj_profil.png": "btn_add_profile.png",
+  "btn_reset_profilu.png": "btn_reset_profile.png",
+  "btn_tak.png": "btn_yes.png",
+  "btn_nie.png": "btn_no.png",
+  "btn_zamknij.png": "btn_close.png",
+  "btn_zamknij_pokoj.png": "btn_close.png",
+  "btn_ustawienia.png": "btn_settings.png"
+};
+
+function mapBtnName(raw){
+  if(!raw) return raw;
+  const base = raw.replace(/(\d+)\.png$/i, '.png');
+  return BTN_NAME_MAP[base] || base;
+}
+
 function refreshAllButtonImages(){
   const dir = getBtnDir();
   document.querySelectorAll('img[data-btn]').forEach(img=>{
@@ -251,28 +278,11 @@ function refreshAllButtonImages(){
 
     // Ujednolicenie nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
     // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
-    const name = raw.replace(/(\d+)\.png$/i, '.png');
+    const name = mapBtnName(raw);
 
     img.src = dir + name;
   });
 }
-
-function makeSysImgButton(file, opts){
-  const o = opts || {};
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "imgBtn sysBtn " + (o.className || "");
-  if(o.title) btn.title = o.title;
-  if(o.aria) btn.setAttribute("aria-label", o.aria);
-  if(o.onClick) btn.onclick = o.onClick;
-
-  const img = document.createElement("img");
-  img.dataset.btn = file;
-  img.alt = o.alt || o.title || "";
-  btn.appendChild(img);
-  return btn;
-}
-
 function t(key){
   const lang = getLang();
   return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : (I18N.pl[key] || key);
@@ -327,11 +337,11 @@ function applyLangToUI(){
   if(el("btnChangeNickRooms")) el("btnChangeNickRooms").textContent = t("changeNick");
   if(el("btnBackHomeFromRooms")) el("btnBackHomeFromRooms").textContent = t("back");
   if(el("t_join_title")) el("t_join_title").textContent = t("joinTitle");
-  if(el("btnJoinRoom")) el("btnJoinRoom").title = t("joinBtn");
-if(el("t_join_help")) el("t_join_help").textContent = t("joinHelp");
+  if(el("btnJoinRoom")) el("btnJoinRoom").textContent = t("joinBtn");
+  if(el("t_join_help")) el("t_join_help").textContent = t("joinHelp");
   if(el("t_create_title")) el("t_create_title").textContent = t("createTitle");
-  if(el("btnCreateRoom")) el("btnCreateRoom").title = t("createBtn");
-if(el("t_create_help")) el("t_create_help").textContent = t("createHelp");
+  if(el("btnCreateRoom")) el("btnCreateRoom").textContent = t("createBtn");
+  if(el("t_create_help")) el("t_create_help").textContent = t("createHelp");
 
   // Room
   if(el("t_room_room")) el("t_room_room").textContent = t("room");
@@ -416,33 +426,31 @@ function openRoomsChoiceModal(){
   const row = document.createElement("div");
   row.className = "roomsChoiceBtns";
 
-  const btnJoin = makeSysImgButton("btn_wejdz_pokoj.png", {
-    className: "sysBtnBig",
-    title: (getLang()==="en") ? "Join a room" : "Dołącz do pokoju",
-    aria: (getLang()==="en") ? "Join a room" : "Dołącz do pokoju",
-    onClick: ()=>{ modalClose(); handleJoinFlow(); }
-  });
+  const btnJoin = document.createElement("button");
+  btnJoin.className = "btn btnPrimary";
+  btnJoin.type = "button";
+  btnJoin.textContent = (getLang()==="en") ? "Join a room" : "Dołącz do pokoju";
+  btnJoin.onclick = ()=>{ modalClose(); handleJoinFlow(); };
 
-  const btnCreate = makeSysImgButton("btn_zaloz.png", {
-    className: "sysBtnBig",
-    title: (getLang()==="en") ? "Create room" : "Stwórz pokój",
-    aria: (getLang()==="en") ? "Create room" : "Stwórz pokój",
-    onClick: ()=>{ modalClose(); openCreateRoomModal(); }
-  });
+  const btnCreate = document.createElement("button");
+  btnCreate.className = "btn";
+  btnCreate.type = "button";
+  btnCreate.textContent = (getLang()==="en") ? "Create room" : "Stwórz pokój";
+  btnCreate.onclick = ()=>{ modalClose(); openCreateRoomModal(); };
 
   row.appendChild(btnJoin);
   row.appendChild(btnCreate);
   wrap.appendChild(row);
 
-  const btnBack = makeSysImgButton("btn_menu.png", {
-    className: "sysBtnSmall",
-    title: (getLang()==="en") ? "Menu" : "Menu",
-    aria: (getLang()==="en") ? "Menu" : "Menu",
-    onClick: ()=>{ modalClose(); showScreen("home"); }
-  });
-  btnBack.style.marginTop = "12px";
+  const btnBack = document.createElement("button");
+  btnBack.className = "btn btnSmall btnGhost";
+  btnBack.type = "button";
+  btnBack.style.marginTop = "10px";
+  btnBack.textContent = (getLang()==="en") ? "Menu" : "Menu";
+  btnBack.onclick = ()=>{ modalClose(); showScreen("home"); };
   wrap.appendChild(btnBack);
-modalOpen((getLang()==="en") ? "TYPERS ROOMS" : "POKOJE TYPERÓW", wrap);
+
+  modalOpen((getLang()==="en") ? "TYPERS ROOMS" : "POKOJE TYPERÓW", wrap);
 }
 
 async function handleJoinFlow(){
@@ -483,27 +491,25 @@ function openJoinRoomModal(){
   const row = document.createElement("div");
   row.className = "rowRight";
 
-  const btnCancel = makeSysImgButton("btn_menu.png", {
-    className: "sysBtnSmall",
-    title: (getLang()==="en") ? "Menu" : "Menu",
-    aria: (getLang()==="en") ? "Menu" : "Menu",
-    onClick: ()=>{ modalClose(); openRoomsChoiceModal(); }
-  });
+  const btnCancel = document.createElement("button");
+  btnCancel.className = "btn btnSmall btnGhost";
+  btnCancel.type = "button";
+  btnCancel.textContent = (getLang()==="en") ? "Menu" : "Menu";
+  btnCancel.onclick = ()=>{ modalClose(); openRoomsChoiceModal(); };
 
-  const btnOk = makeSysImgButton("btn_wejdz_pokoj.png", {
-    className: "sysBtnBig",
-    title: (getLang()==="en") ? "Join" : "Dołącz",
-    aria: (getLang()==="en") ? "Join" : "Dołącz",
-    onClick: async ()=>{
-      const code = (inp.value||"").trim().toUpperCase();
-      if(code.length!==6){
-        showToast(getLang()==="en" ? "Enter 6-character code" : "Wpisz kod 6-znakowy");
-        return;
-      }
-      modalClose();
-      await joinRoom(code);
+  const btnOk = document.createElement("button");
+  btnOk.className = "btn btnPrimary";
+  btnOk.type = "button";
+  btnOk.textContent = (getLang()==="en") ? "Join" : "Dołącz";
+  btnOk.onclick = async ()=>{
+    const code = (inp.value||"").trim().toUpperCase();
+    if(code.length!==6){
+      showToast(getLang()==="en" ? "Enter 6-character code" : "Wpisz kod 6-znakowy");
+      return;
     }
-  });
+    modalClose();
+    await joinRoom(code);
+  };
 
   row.appendChild(btnCancel);
   row.appendChild(btnOk);
@@ -535,27 +541,25 @@ function openCreateRoomModal(){
   const row = document.createElement("div");
   row.className = "rowRight";
 
-  const btnCancel = makeSysImgButton("btn_menu.png", {
-    className: "sysBtnSmall",
-    title: (getLang()==="en") ? "Menu" : "Menu",
-    aria: (getLang()==="en") ? "Menu" : "Menu",
-    onClick: ()=>{ modalClose(); openRoomsChoiceModal(); }
-  });
+  const btnCancel = document.createElement("button");
+  btnCancel.className = "btn btnSmall btnGhost";
+  btnCancel.type = "button";
+  btnCancel.textContent = (getLang()==="en") ? "Menu" : "Menu";
+  btnCancel.onclick = ()=>{ modalClose(); openRoomsChoiceModal(); };
 
-  const btnOk = makeSysImgButton("btn_zaloz.png", {
-    className: "sysBtnBig",
-    title: (getLang()==="en") ? "Create" : "Stwórz",
-    aria: (getLang()==="en") ? "Create" : "Stwórz",
-    onClick: async ()=>{
-      const name = (inp.value||"").trim();
-      if(name.length<2){
-        showToast(getLang()==="en" ? "Enter room name" : "Wpisz nazwę pokoju");
-        return;
-      }
-      modalClose();
-      await createRoom(name);
+  const btnOk = document.createElement("button");
+  btnOk.className = "btn btnPrimary";
+  btnOk.type = "button";
+  btnOk.textContent = (getLang()==="en") ? "Create" : "Stwórz";
+  btnOk.onclick = async ()=>{
+    const name = (inp.value||"").trim();
+    if(name.length<2){
+      showToast(getLang()==="en" ? "Enter room name" : "Wpisz nazwę pokoju");
+      return;
     }
-  });
+    modalClose();
+    await createRoom(name);
+  };
 
   row.appendChild(btnCancel);
   row.appendChild(btnOk);
@@ -726,27 +730,15 @@ function nickModalAsk(){
     const btns = document.createElement("div");
     btns.className = "nickBtns";
 
-    const btnCancel = makeSysImgButton("btn_nie.png", {
-      className: "sysBtnBig",
-      title: t("cancel"),
-      aria: t("cancel"),
-      onClick: ()=>{ modalClose(); resolve(null); }
-    });
+    const btnCancel = document.createElement("button");
+    btnCancel.className = "btn btnSmall btnDanger";
+    btnCancel.type = "button";
+    btnCancel.textContent = t("cancel");
 
-    const btnOk = makeSysImgButton("btn_tak.png", {
-      className: "sysBtnBig",
-      title: t("ok"),
-      aria: t("ok"),
-      onClick: ()=>{
-        const v = (inp.value||"").trim();
-        if(v.length < 3 || v.length > 16){
-          showToast(t("nickLen"));
-          return;
-        }
-        modalClose();
-        resolve(v);
-      }
-    });
+    const btnOk = document.createElement("button");
+    btnOk.className = "btn btnSmall btnPrimary";
+    btnOk.type = "button";
+    btnOk.textContent = t("ok");
 
     btns.appendChild(btnCancel);
     btns.appendChild(btnOk);
