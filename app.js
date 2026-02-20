@@ -1,4 +1,4 @@
-const BUILD = 4011;
+const BUILD = 4009;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -253,7 +253,12 @@ function setLang(lang){
 
 // ===== Buttons (grafiki) =====
 function getBtnDir(){
+  // Primary location (new UI pack)
   return (getLang() === "en") ? "ui/buttons/en/" : "ui/buttons/pl/";
+}
+function getBtnDirFallback(){
+  // Fallback location (older structure)
+  return (getLang() === "en") ? "buttons/en/" : "buttons/pl/";
 }
 
 const BTN_NAME_MAP = {
@@ -267,7 +272,6 @@ const BTN_NAME_MAP = {
   "btn_zakoncz_kolejke.png": "btn_end_queue.png",
   "btn_cofnij.png": "btn_back.png",
   "btn_odswiez.png": "btn_refresh.png",
-  "btn_opusc.png": "btn_leave_room.png",
   "btn_tabela_typerow.png": "btn_tipster_table.png",
   "btn_dodaj_profil.png": "btn_add_profile.png",
   "btn_reset_profilu.png": "btn_reset_profile.png",
@@ -291,21 +295,25 @@ function mapBtnName(raw){
 }
 
 function refreshAllButtonImages(){
-  const dir = getBtnDir();
-  const lang = getLang();
-
+  const primary = getBtnDir();
+  const fallback = getBtnDirFallback();
   document.querySelectorAll('img[data-btn]').forEach(img=>{
-    const raw0 = (img.dataset.btn || '').trim();
-    if(!raw0) return;
+    const raw = (img.dataset.btn || '').trim();
+    if(!raw) return;
 
-    // Normalizacja nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
-    const raw = raw0.replace(/(\d+)\.png$/i, '.png');
+    const name = mapBtnName(raw);
+    const p1 = primary + name;
+    const p2 = fallback + name;
 
-    // W PL bierzemy dokładnie polską nazwę pliku.
-    // W EN mapujemy polskie nazwy na angielskie odpowiedniki.
-    const name = (lang === "en") ? (BTN_NAME_MAP[raw] || raw) : raw;
+    // reset previous handler to avoid loops
+    img.onerror = null;
+    img.src = p1;
 
-    img.src = dir + name;
+    // if primary missing (404), fallback to old folder
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = p2;
+    };
   });
 }
 function t(key){
@@ -1097,8 +1105,7 @@ function bindUI(){
   // ROOM
   el("btnBackFromRoom").onclick = ()=> showScreen("home");
 
-  const _btnCopyCode = el("btnCopyCode");
-  if(_btnCopyCode) _btnCopyCode.onclick = async ()=>{
+  el("btnCopyCode").onclick = async ()=>{
     if(!currentRoomCode) return;
     try{
       await navigator.clipboard.writeText(currentRoomCode);
