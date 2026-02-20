@@ -775,6 +775,8 @@
 
 
 /* ACTIONS: make buttons smaller and equal width */
+/* Actions column: keep all action buttons perfectly centered */
+#roomActionsCol{ display:flex; flex-direction:column; align-items:center; }
 #roomActionsCol .sysBtn{
   width: 100%;
   max-width: 260px;
@@ -947,7 +949,7 @@
             </div>
 
             <div class="spacer"></div>
-            <button class="imgBtn sysBtn small" id="btnBackFromRoom" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnBackFromRoom"></button>
+            <!-- back button removed (back is now on the right as "Wyjście") -->
           </div>
 
           <!-- MIDDLE -->

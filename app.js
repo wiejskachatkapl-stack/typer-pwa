@@ -1,4 +1,4 @@
-const BUILD = 4012;
+const BUILD = 4016;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1089,7 +1089,11 @@ function bindUI(){
   };
 
   // ROOM
-  el("btnBackFromRoom").onclick = ()=> showScreen("home");
+  // Back-from-room action is now attached to the right-bottom "Wyjście" button.
+  // (Leaving the room is handled by the "Opuść" button under the room code.)
+  const __goHomeFromRoom = ()=> showScreen("home");
+  const __btnBackFromRoom = el("btnBackFromRoom");
+  if(__btnBackFromRoom) __btnBackFromRoom.onclick = __goHomeFromRoom;
 
   const __btnCopyCode = el("btnCopyCode");
   if(__btnCopyCode) __btnCopyCode.onclick = async ()=>{
@@ -1102,6 +1106,10 @@ function bindUI(){
 
   const __btnLeave = el("btnLeave");
   if(__btnLeave) __btnLeave.onclick = async ()=>{ await leaveRoom(); };
+
+  // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
+  const __btnExitFromRoomRight = el("btnExitFromRoomRight");
+  if(__btnExitFromRoomRight) __btnExitFromRoomRight.onclick = __goHomeFromRoom;
   const __btnRefresh = el("btnRefresh");
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
