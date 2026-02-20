@@ -1,4 +1,4 @@
-const BUILD = 2010;
+const BUILD = 2012;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -245,8 +245,13 @@ function getBtnDir(){
 function refreshAllButtonImages(){
   const dir = getBtnDir();
   document.querySelectorAll('img[data-btn]').forEach(img=>{
-    const name = img.dataset.btn;
-    if(!name) return;
+    const raw = (img.dataset.btn || '').trim();
+    if(!raw) return;
+
+    // Ujednolicenie nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
+    // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
+    const name = raw.replace(/(\d+)\.png$/i, '.png');
+
     img.src = dir + name;
   });
 }
