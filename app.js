@@ -1,4 +1,4 @@
-const BUILD = 4005;
+const BUILD = 4006;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -514,30 +514,33 @@ function openJoinRoomModal(){
   wrap.appendChild(inp);
 
   const row = document.createElement("div");
-  row.className = "rowRight";
+row.className = "rowRight";
 
-  const btnCancel = document.createElement("button");
-  btnCancel.className = "btn btnSmall btnGhost";
-  btnCancel.type = "button";
-  btnCancel.textContent = (getLang()==="en") ? "Menu" : "Menu";
-  btnCancel.onclick = ()=>{ modalClose(); openRoomsChoiceModal(); };
+const btnMenu = makeSysImgButton("btn_menu.png", {
+  cls: "sysBtn small",
+  alt: "menu",
+  title: (getLang()==="en") ? "Menu" : "Menu",
+  onClick: ()=>{ modalClose(); openRoomsChoiceModal(); }
+});
 
-  const btnOk = document.createElement("button");
-  btnOk.className = "btn btnPrimary";
-  btnOk.type = "button";
-  btnOk.textContent = (getLang()==="en") ? "Join" : "Dołącz";
-  btnOk.onclick = async ()=>{
+const btnEnter = makeSysImgButton("btn_wejdz_pokoj.png", {
+  cls: "sysBtn",
+  alt: "enter",
+  title: (getLang()==="en") ? "Join" : "Dołącz",
+  onClick: async ()=>{
     const code = (inp.value||"").trim().toUpperCase();
     if(code.length!==6){
-      showToast(getLang()==="en" ? "Enter 6-character code" : "Wpisz kod 6-znakowy");
+      showToast(getLang()==="en" ? "Enter 6-character code" : "Wpisz kod (6 znaków)");
       return;
     }
     modalClose();
     await joinRoom(code);
-  };
+  }
+});
 
-  row.appendChild(btnCancel);
-  row.appendChild(btnOk);
+row.appendChild(btnMenu);
+row.appendChild(btnEnter);
+
   wrap.appendChild(row);
 
   modalOpen((getLang()==="en") ? "JOIN ROOM" : "DOŁĄCZ DO POKOJU", wrap);
@@ -566,17 +569,18 @@ function openCreateRoomModal(){
   const row = document.createElement("div");
   row.className = "rowRight";
 
-  const btnCancel = document.createElement("button");
-  btnCancel.className = "btn btnSmall btnGhost";
-  btnCancel.type = "button";
-  btnCancel.textContent = (getLang()==="en") ? "Menu" : "Menu";
-  btnCancel.onclick = ()=>{ modalClose(); openRoomsChoiceModal(); };
+const btnMenu = makeSysImgButton("btn_menu.png", {
+  cls: "sysBtn small",
+  alt: "menu",
+  title: (getLang()==="en") ? "Menu" : "Menu",
+  onClick: ()=>{ modalClose(); openRoomsChoiceModal(); }
+});
 
-  const btnOk = document.createElement("button");
-  btnOk.className = "btn btnPrimary";
-  btnOk.type = "button";
-  btnOk.textContent = (getLang()==="en") ? "Create" : "Stwórz";
-  btnOk.onclick = async ()=>{
+const btnCreate = makeSysImgButton("btn_zaloz.png", {
+  cls: "sysBtn",
+  alt: "create",
+  title: (getLang()==="en") ? "Create" : "Stwórz",
+  onClick: async ()=>{
     const name = (inp.value||"").trim();
     if(name.length<2){
       showToast(getLang()==="en" ? "Enter room name" : "Wpisz nazwę pokoju");
@@ -584,10 +588,12 @@ function openCreateRoomModal(){
     }
     modalClose();
     await createRoom(name);
-  };
+  }
+});
 
-  row.appendChild(btnCancel);
-  row.appendChild(btnOk);
+row.appendChild(btnMenu);
+row.appendChild(btnCreate);
+
   wrap.appendChild(row);
 
   modalOpen((getLang()==="en") ? "CREATE ROOM" : "STWÓRZ POKÓJ", wrap);
