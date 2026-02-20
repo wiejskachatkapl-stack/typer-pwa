@@ -1,4 +1,4 @@
-const BUILD = 4012;
+const BUILD = 4013;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -367,7 +367,7 @@ function applyLangToUI(){
   if(el("t_nick2")) el("t_nick2").textContent = t("nick");
   if(el("t_admin")) el("t_admin").textContent = t("admin");
   if(el("t_code")) el("t_code").textContent = t("code");
-  setBtnLabelSafe("btnCopyCode", t("copy"));
+  // btnCopyCode usunięty
   setBtnLabelSafe("btnLeave", t("leave"));
   setBtnLabelSafe("btnRefresh", t("refresh"));
   if(el("t_actions")) el("t_actions").textContent = t("actions");
@@ -1012,128 +1012,58 @@ async function initFirebase(){
 
 // ===== UI =====
 function bindUI(){
-  // Modal
-  if(el("modalClose")) el("modalClose").onclick = modalClose;
-  if(el("modal")) el("modal").addEventListener("click",(e)=>{
-    if(e.target && e.target.id === "modal") modalClose();
-  });
-
-  // HOME: settings
-  const btnSet = el("btnHomeSettings");
-  if(btnSet) btnSet.onclick = () => openSettings();
-
-
-  // HOME language flags
-  const langPL = el("btnLangPL");
-  const langEN = el("btnLangEN");
-  const bindLang = (node, langVal) => {
-    if(!node) return;
-    const go = (e) => { if(e) e.preventDefault(); setLang(langVal); refreshAllButtonImages(); updateHomeButtonsImages(); updateLangButtonsVisual(); };
-    node.addEventListener("click", go);
-    node.addEventListener("touchstart", go, {passive:false});
+  // Safe binder (prevents crash if some elements are not in DOM yet)
+  const on = (id, fn) => {
+    const node = document.getElementById(id);
+    if(node) node.onclick = fn;
   };
-  bindLang(langPL, "pl");
-  bindLang(langEN, "en");
 
+  // Modal
+  const modalClose = el("modalClose");
+  if(modalClose) modalClose.onclick = closeModal;
+  const modalBackdrop = el("modalBackdrop");
+  if(modalBackdrop) modalBackdrop.onclick = (e)=>{ if(e.target===modalBackdrop) closeModal(); };
 
   // HOME
-  el("btnHomeRooms").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
-    openRoomsChoiceModal();
-  };
+  on("btnHomeRooms", ()=> showScreen("rooms"));
+  on("btnHomeStats", ()=> showScreen("stats"));
+  on("btnHomeExit", ()=> confirmExit());
+  on("btnHomeSettings", ()=> showScreen("settings"));
 
-  el("btnHomeStats").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
-    const saved = getSavedRoom();
-    if(saved && saved.length === 6){
-      await openLeagueTable(saved);
-      return;
-    }
-    showToast(getLang()==="en" ? "Join a room first" : "Najpierw wybierz / dołącz do pokoju");
-    showScreen("rooms");
-  };
+  // SETTINGS
+  on("btnSettingsClose", ()=> showScreen("home"));
+  on("btnResetProfile", ()=> confirmResetProfile());
 
-  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
+  // ROOMS flow
+  on("btnRoomsClose", ()=> showScreen("home"));
+  on("btnRoomsMenu", ()=> showScreen("home"));
+  on("btnRoomsJoin", ()=> showRoomJoin());
+  on("btnRoomsCreate", ()=> showRoomCreate());
 
-  // CONTINUE
-  el("btnContYes").onclick = async ()=>{
-    const code = getSavedRoom();
-    if(!code) { showScreen("rooms"); return; }
-    await openRoom(code, { force:true });
-  };
-  el("btnContNo").onclick = ()=> showScreen("rooms");
-  el("btnContForget").onclick = ()=>{
-    clearSavedRoom();
-    showToast(getLang()==="en" ? "Room forgotten" : "Zapomniano pokój");
-    showScreen("rooms");
-  };
+  // Join / Create screens
+  on("btnJoinBack", ()=> showScreen("rooms"));
+  on("btnJoinGo", ()=> joinRoomFlow());
+  on("btnCreateBack", ()=> showScreen("rooms"));
+  on("btnCreateGo", ()=> createRoomFlow());
 
-  // ROOMS
-  el("btnBackHomeFromRooms").onclick = ()=> showScreen("home");
-  el("btnChangeNickRooms").onclick = async ()=>{
-    localStorage.removeItem(KEY_NICK);
-  const n = await ensureNick(); if(!n) return;
-    showToast(getLang()==="en" ? "Nick changed" : "Zmieniono nick");
-  };
-  el("btnCreateRoom").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
-    const name = (el("inpRoomName").value || "").trim();
-    if(name.length < 2){ showToast(getLang()==="en" ? "Enter room name" : "Podaj nazwę pokoju"); return; }
-    await createRoom(name);
-  };
-  el("btnJoinRoom").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
-    const code = (el("inpJoinCode").value || "").trim().toUpperCase();
-    if(code.length !== 6){ showToast(getLang()==="en" ? "Code must be 6 chars" : "Kod musi mieć 6 znaków"); return; }
-    await joinRoom(code);
-  };
+  // ROOM view controls
+  on("btnRefresh", ()=> refreshRoom());
+  on("btnLeave", ()=> leaveRoom());
 
-  // ROOM
-  el("btnBackFromRoom").onclick = ()=> showScreen("home");
+  // Actions
+  on("btnSaveAll", ()=> saveMyTips());
+  on("btnEnterResults", ()=> openResultsEntry());
+  on("btnEndRound", ()=> endQueueConfirm());
+  on("btnMyQueue", ()=> newQueueFlow());
+  on("btnAddQueue", ()=> addQueueFlow());
 
-  el("btnCopyCode").onclick = async ()=>{
-    if(!currentRoomCode) return;
-    try{
-      await navigator.clipboard.writeText(currentRoomCode);
-      showToast(getLang()==="en" ? "Code copied" : "Skopiowano kod");
-    }catch{ showToast(getLang()==="en" ? "Copy failed" : "Nie udało się skopiować"); }
-  };
+  // Navigation from room
+  on("btnBackFromRoom", ()=> showScreen("rooms"));
+  on("btnLeagueFromRoom", ()=> openTipsterTable());
 
-  el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
-  el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
-
-  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
-
-  // ADMIN
-  el("btnEnterResults").onclick = async ()=>{
-    if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
-    if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
-    openResultsScreen();
-  };
-
-  el("btnEndRound").onclick = async ()=>{
-    await endRoundConfirmAndArchive();
-  };
-
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
-
-  // RESULTS
-  el("btnResBack").onclick = ()=> showScreen("room");
-  el("btnResSave").onclick = async ()=>{ await saveResults(); };
-
-  // League from room
-  el("btnLeagueFromRoom").onclick = async ()=>{
-    if(!currentRoomCode) return;
-    await openLeagueTable(currentRoomCode);
-  };
-
-  // League
-  el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
-  el("btnLeagueRefresh").onclick = async ()=>{
-    if(!leagueState.roomCode) return;
-    await openLeagueTable(leagueState.roomCode, {silent:true});
-  };
+  // Language flags
+  on("langPL", ()=> setLang("pl"));
+  on("langEN", ()=> setLang("en"));
 }
 
 function isAdmin(){
