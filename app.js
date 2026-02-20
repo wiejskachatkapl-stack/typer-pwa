@@ -1,4 +1,4 @@
-const BUILD = 4006;
+const BUILD = 4007;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -21,6 +21,19 @@ const firebaseConfig = {
 };
 
 const el = (id) => document.getElementById(id);
+
+// Set text for normal <button>, but for image-buttons (having data-btn or <img>) only set title/aria-label.
+const setBtnLabelSafe = (id, label) => {
+  const b = el(id);
+  if (!b) return;
+  const isImgBtn = b.classList?.contains("imgBtn") || b.dataset?.btn || b.querySelector?.("img");
+  if (isImgBtn) {
+    b.title = label;
+    b.setAttribute("aria-label", label);
+  } else {
+    b.textContent = label;
+  }
+};
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
@@ -327,20 +340,20 @@ function applyLangToUI(){
   if(el("t_continue_hello")) el("t_continue_hello").textContent = t("contHello");
   if(el("t_continue_room")) el("t_continue_room").textContent = t("contRoom");
   if(el("t_continue_q")) el("t_continue_q").textContent = t("contQ");
-  if(el("btnContYes")) el("btnContYes").textContent = t("yes");
-  if(el("btnContNo")) el("btnContNo").textContent = t("no");
-  if(el("btnContForget")) el("btnContForget").textContent = t("forget");
+  setBtnLabelSafe("btnContYes", t("yes"));
+  setBtnLabelSafe("btnContNo", t("no"));
+  setBtnLabelSafe("btnContForget", t("forget"));
 
   // Rooms
   if(el("t_rooms_title")) el("t_rooms_title").textContent = t("roomsTitle");
   if(el("t_nick")) el("t_nick").textContent = t("nick");
-  if(el("btnChangeNickRooms")) el("btnChangeNickRooms").textContent = t("changeNick");
-  if(el("btnBackHomeFromRooms")) el("btnBackHomeFromRooms").textContent = t("back");
+  setBtnLabelSafe("btnChangeNickRooms", t("changeNick"));
+  setBtnLabelSafe("btnBackHomeFromRooms", t("back"));
   if(el("t_join_title")) el("t_join_title").textContent = t("joinTitle");
-  if(el("btnJoinRoom")) el("btnJoinRoom").textContent = t("joinBtn");
+  setBtnLabelSafe("btnJoinRoom", t("joinBtn"));
   if(el("t_join_help")) el("t_join_help").textContent = t("joinHelp");
   if(el("t_create_title")) el("t_create_title").textContent = t("createTitle");
-  if(el("btnCreateRoom")) el("btnCreateRoom").textContent = t("createBtn");
+  setBtnLabelSafe("btnCreateRoom", t("createBtn"));
   if(el("t_create_help")) el("t_create_help").textContent = t("createHelp");
 
   // Room
@@ -348,17 +361,17 @@ function applyLangToUI(){
   if(el("t_nick2")) el("t_nick2").textContent = t("nick");
   if(el("t_admin")) el("t_admin").textContent = t("admin");
   if(el("t_code")) el("t_code").textContent = t("code");
-  if(el("btnCopyCode")) el("btnCopyCode").textContent = t("copy");
-  if(el("btnLeave")) el("btnLeave").textContent = t("leave");
-  if(el("btnRefresh")) el("btnRefresh").textContent = t("refresh");
+  setBtnLabelSafe("btnCopyCode", t("copy"));
+  setBtnLabelSafe("btnLeave", t("leave"));
+  setBtnLabelSafe("btnRefresh", t("refresh"));
   if(el("t_actions")) el("t_actions").textContent = t("actions");
   if(el("t_actions_sub")) el("t_actions_sub").textContent = t("actionsSub");
-  if(el("btnSaveAll")) el("btnSaveAll").textContent = t("savePicks");
-  if(el("btnEnterResults")) el("btnEnterResults").textContent = t("enterResults");
-  if(el("btnEndRound")) el("btnEndRound").textContent = t("endRound");
-  if(el("btnMyQueue")) el("btnMyQueue").textContent = t("myQueue");
-  if(el("btnAddQueue")) el("btnAddQueue").textContent = t("addQueue");
-  if(el("btnBackFromRoom")) el("btnBackFromRoom").textContent = t("back");
+  setBtnLabelSafe("btnSaveAll", t("savePicks"));
+  setBtnLabelSafe("btnEnterResults", t("enterResults"));
+  setBtnLabelSafe("btnEndRound", t("endRound"));
+  setBtnLabelSafe("btnMyQueue", t("myQueue"));
+  setBtnLabelSafe("btnAddQueue", t("addQueue"));
+  setBtnLabelSafe("btnBackFromRoom", t("back"));
 
   if(el("t_matches")) el("t_matches").textContent = t("matches");
   if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
@@ -368,14 +381,14 @@ function applyLangToUI(){
 
   if(el("t_players")) el("t_players").textContent = t("players");
   if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
-  if(el("btnLeagueFromRoom")) el("btnLeagueFromRoom").textContent = t("leagueBtn");
+  setBtnLabelSafe("btnLeagueFromRoom", t("leagueBtn"));
 
   // Results
   if(el("t_results")) el("t_results").textContent = t("results");
   if(el("t_room")) el("t_room").textContent = t("room");
   if(el("t_round2")) el("t_round2").textContent = t("round");
-  if(el("btnResBack")) el("btnResBack").textContent = t("back");
-  if(el("btnResSave")) el("btnResSave").textContent = t("saveResults");
+  setBtnLabelSafe("btnResBack", t("back"));
+  setBtnLabelSafe("btnResSave", t("saveResults"));
   if(el("t_results_hint")) el("t_results_hint").textContent = t("hintResults");
 
   // League
@@ -384,7 +397,7 @@ function applyLangToUI(){
   if(el("t_nick3")) el("t_nick3").textContent = t("nick");
   if(el("t_after_round")) el("t_after_round").textContent = t("afterRound");
   if(el("btnLeagueRefresh")) el("btnLeagueRefresh").textContent = t("refresh");
-  if(el("btnLeagueBack")) el("btnLeagueBack").textContent = t("back");
+  setBtnLabelSafe("btnLeagueBack", t("back"));
   if(el("t_ranking")) el("t_ranking").textContent = t("ranking");
   if(el("leagueHint")) el("leagueHint").textContent = t("leagueHint");
   if(el("t_player_col")) el("t_player_col").textContent = t("playerCol");
