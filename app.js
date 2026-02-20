@@ -1097,7 +1097,8 @@ function bindUI(){
   // ROOM
   el("btnBackFromRoom").onclick = ()=> showScreen("home");
 
-  el("btnCopyCode").onclick = async ()=>{
+  const _btnCopyCode = el("btnCopyCode");
+  if(_btnCopyCode) _btnCopyCode.onclick = async ()=>{
     if(!currentRoomCode) return;
     try{
       await navigator.clipboard.writeText(currentRoomCode);
