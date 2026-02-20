@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 4009)</title>
+  <title>Typer (BUILD 4010)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -697,6 +697,11 @@
       justify-content:center;
     }
     .sysBtnBig img{height:120px;width:auto;display:block;}
+.roomActions .sysBtnBig img{height:92px;}
+.roomActions .sysBtn img{height:60px;}
+.roomActions .imgBtn{margin:10px auto;}
+.roomHead .sysBtn.small img{height:48px;}
+
 
     .sysBtn img{
       height:76px;
@@ -851,11 +856,9 @@
               <div class="row" style="margin-top:10px">
                 <div class="chip" style="flex:1;justify-content:space-between;">
                   <span id="t_code">Kod</span>: <span id="roomCode">—</span>
-                </div>
-                <button class="imgBtn sysBtn small" id="btnCopyCode" type="button" data-btn="btn_opcje.png"><img data-btn="btn_opcje.png" src="ui/buttons/pl/btn_opcje.png" alt="btnCopyCode"></button>
-              </div>
+                </div></div>
               <div class="row" style="margin-top:10px">
-                <button class="imgBtn sysBtn small" id="btnLeave" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_zamknij_pokoj.png" alt="btnLeave"></button>
+                <button class="imgBtn sysBtn small" id="btnLeave" type="button" data-btn="btn_opusc.png"><img data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png" alt="btnLeave"></button>
                 <button class="imgBtn sysBtn small" id="btnRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnRefresh"></button>
               </div>
             </div>
@@ -1010,6 +1013,6 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4009"></script>
+  <script type="module" src="./app.js?v=4010"></script>
 </body>
 </html>

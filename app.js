@@ -267,7 +267,8 @@ const BTN_NAME_MAP = {
   "btn_zakoncz_kolejke.png": "btn_end_queue.png",
   "btn_cofnij.png": "btn_back.png",
   "btn_odswiez.png": "btn_refresh.png",
-  "btn_tabela_typerow.png": "btn_tipster_table.png",
+    "btn_opusc.png": "btn_leave_room.png",
+"btn_tabela_typerow.png": "btn_tipster_table.png",
   "btn_dodaj_profil.png": "btn_add_profile.png",
   "btn_reset_profilu.png": "btn_reset_profile.png",
   "btn_tak.png": "btn_yes.png",
@@ -367,7 +368,6 @@ function applyLangToUI(){
   if(el("t_nick2")) el("t_nick2").textContent = t("nick");
   if(el("t_admin")) el("t_admin").textContent = t("admin");
   if(el("t_code")) el("t_code").textContent = t("code");
-  setBtnLabelSafe("btnCopyCode", t("copy"));
   setBtnLabelSafe("btnLeave", t("leave"));
   setBtnLabelSafe("btnRefresh", t("refresh"));
   if(el("t_actions")) el("t_actions").textContent = t("actions");
@@ -1090,14 +1090,6 @@ function bindUI(){
 
   // ROOM
   el("btnBackFromRoom").onclick = ()=> showScreen("home");
-
-  el("btnCopyCode").onclick = async ()=>{
-    if(!currentRoomCode) return;
-    try{
-      await navigator.clipboard.writeText(currentRoomCode);
-      showToast(getLang()==="en" ? "Code copied" : "Skopiowano kod");
-    }catch{ showToast(getLang()==="en" ? "Copy failed" : "Nie udało się skopiować"); }
-  };
 
   el("btnLeave").onclick = async ()=>{ await leaveRoom(); };
   el("btnRefresh").onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
