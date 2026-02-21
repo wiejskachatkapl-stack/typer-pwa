@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1001)</title>
+  <title>Typer (BUILD 1002)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -740,7 +740,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 1001 UI FIT tweaks --- */
+/* --- BUILD 1002 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -773,7 +773,7 @@
 }
 
 
-/* --- BUILD 1001 tweaks --- */
+/* --- BUILD 1002 tweaks --- */
 .roomTopBtns{
   display:flex;
   gap:10px;
@@ -1096,7 +1096,7 @@
           <div class="modalBody" id="modalBody"></div>
         </div>
       </div>
-      <!-- ADD QUEUE MODAL (BUILD 1001) -->
+      <!-- ADD QUEUE MODAL (BUILD 1002) -->
       <div id="queueModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <!-- STEP 1 -->
@@ -1150,12 +1150,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1001"></script>
+  <script type="module" src="./app.js?v=1002"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1001').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1002').catch(() => {});
     });
   }
 </script>

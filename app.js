@@ -2179,19 +2179,6 @@ function collectManualPairs(){
 }
 
 
-function collectManualPairs(){
-  const wrap = el("manualMatches");
-  if(!wrap) return buildRandomPairs();
-  const rows = Array.from(wrap.querySelectorAll("div.row"));
-  const pairs = [];
-  rows.forEach(r=>{
-    const selH = r.querySelector('select[data-kind="home"]');
-    const selA = r.querySelector('select[data-kind="away"]');
-    pairs.push([selH?.value||"", selA?.value||""]);
-  });
-  return pairs.slice(0,10);
-}
-
 // ===== TEST QUEUE =====
 async function addTestQueue(){
   if(!currentRoomCode) return;
