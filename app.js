@@ -320,6 +320,10 @@ function refreshAllButtonImages(){
     // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
     const name = mapBtnName(raw);
 
+    const btn = img.closest && img.closest("button");
+    // if the image file is missing, fall back to text label with glossy CSS
+    img.onerror = () => { if(btn) btn.classList.add("imgMissing"); };
+    img.onload = () => { if(btn) btn.classList.remove("imgMissing"); };
     img.src = dir + name;
   });
 }
@@ -331,6 +335,11 @@ function t(key){
 
 function updateHomeButtonsImages(){
   refreshAllButtonImages();
+  // update fallback text labels for image-buttons (when graphics missing)
+  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
+    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
+    if(k) sp.textContent = t(k);
+  });
 }
 
 function updateLangButtonsVisual(){
@@ -359,6 +368,11 @@ function applyLangToUI(){
   // HOME images + flag visuals
   updateHomeButtonsImages();
   refreshAllButtonImages();
+  // update fallback text labels for image-buttons (when graphics missing)
+  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
+    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
+    if(k) sp.textContent = t(k);
+  });
   updateLangButtonsVisual();
 
   // Continue
@@ -423,7 +437,7 @@ function applyLangToUI(){
   if(el("t_room3")) el("t_room3").textContent = t("room");
   if(el("t_nick3")) el("t_nick3").textContent = t("nick");
   if(el("t_after_round")) el("t_after_round").textContent = t("afterRound");
-  if(el("btnLeagueRefresh")) el("btnLeagueRefresh").textContent = t("refresh");
+  setBtnLabelSafe("btnLeagueRefresh", t("refresh"));
   setBtnLabelSafe("btnLeagueBack", t("back"));
   if(el("t_ranking")) el("t_ranking").textContent = t("ranking");
   if(el("leagueHint")) el("leagueHint").textContent = t("leagueHint");
@@ -516,6 +530,11 @@ function openRoomsChoiceModal(){
   modalOpen((getLang()==="en") ? "TYPERS ROOMS" : "POKOJE TYPERÓW", wrap);
   // upewnij się, że obrazki przełączą się przy aktualnym języku
   refreshAllButtonImages();
+  // update fallback text labels for image-buttons (when graphics missing)
+  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
+    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
+    if(k) sp.textContent = t(k);
+  });
 }
 
 async function handleJoinFlow(){
@@ -828,6 +847,11 @@ function nickModalAsk(){
 
     modalOpen(t("addProfileTitle"), wrap);
     refreshAllButtonImages();
+  // update fallback text labels for image-buttons (when graphics missing)
+  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
+    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
+    if(k) sp.textContent = t(k);
+  });
 
     const closeBtn = el("modalClose");
     const prevCloseOnClick = closeBtn ? closeBtn.onclick : null;
