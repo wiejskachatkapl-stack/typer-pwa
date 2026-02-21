@@ -1,11 +1,8 @@
-// Spójna wersja cache względem BUILD
-const BUILD = "4016";
-const CACHE_NAME = `typer-pwa-cache-v${BUILD}`;
+const CACHE_NAME = 'typer-pwa-cache-v1000';
 const ASSETS = [
   "./",
   "./index.html",
-  `./app.js?v=${BUILD}`,
-  `./manifest.json?v=${BUILD}`,
+  "./app.js?v=1000",
   "./manifest.json",
   "./img_menu.png",
   "./img_menu_pc.png",

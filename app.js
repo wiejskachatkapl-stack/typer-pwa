@@ -1,4 +1,7 @@
-const BUILD = 4016;
+const BUILD = 1000;
+
+// ===== ADD QUEUE MODAL STATE (v1000) =====
+const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false };
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1126,46 +1129,8 @@ function bindUI(){
     await endRoundConfirmAndArchive();
   };
 
-  el("btnAddQueue").onclick = ()=>{ openAddQueueModal(); };
-
-  // ADD QUEUE MODAL buttons
-  const __qBack = el("btnQueueBack");
-  if(__qBack) __qBack.onclick = ()=>{ closeAddQueueModal({restoreAddBtn:true}); };
-
-  const __qAuto = el("btnQueueAuto");
-  if(__qAuto) __qAuto.onclick = async ()=>{
-    try{
-      await addQueuePairs(buildRandomPairs());
-      closeAddQueueModal({restoreAddBtn:false});
-    }catch(e){ console.error(e); showToast(getLang()==="en"?"Cannot add":"Nie udało się dodać"); closeAddQueueModal({restoreAddBtn:true}); }
-  };
-
-  const __qManual = el("btnQueueManual");
-  if(__qManual) __qManual.onclick = ()=>{
-    el("queueModalStep1").style.display = "none";
-    el("queueModalManual").style.display = "block";
-    renderManualBuilder(buildRandomPairs());
-  };
-
-  const __manCancel = el("btnManualCancel");
-  if(__manCancel) __manCancel.onclick = ()=>{ closeAddQueueModal({restoreAddBtn:true}); };
-
-  const __manSave = el("btnManualSave");
-  if(__manSave) __manSave.onclick = async ()=>{
-    try{
-      const pairs = collectManualPairs();
-      for(const [h,a] of pairs){
-        if(h===a){
-          showToast(getLang()==="en"?"Home and away must differ":"Gospodarz i gość muszą się różnić");
-          return;
-        }
-      }
-      await addQueuePairs(pairs);
-      closeAddQueueModal({restoreAddBtn:false});
-    }catch(e){ console.error(e); showToast(getLang()==="en"?"Cannot add":"Nie udało się dodać"); closeAddQueueModal({restoreAddBtn:true}); }
-  };
-  const _bMyQueue = el("btnMyQueue");
-  if (_bMyQueue) _bMyQueue.onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1347,7 +1312,7 @@ async function openRoom(code, opts={}){
 
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";
-  { const _b = el("btnMyQueue"); if (_b) _b.style.display = adm ? "block" : "none"; }
+  el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
@@ -1362,7 +1327,7 @@ async function openRoom(code, opts={}){
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
-    { const _b = el("btnMyQueue"); if (_b) _b.style.display = adm2 ? "block" : "none"; }
+    el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
@@ -1394,13 +1359,6 @@ async function openRoom(code, opts={}){
       arr.push({ id: docu.id, ...docu.data() });
     });
     matchesCache = arr;
-
-    // Add queue button enabled only when there are no matches in the current round
-    const _bAddQ = el("btnAddQueue");
-    if(_bAddQ){
-      if(addQueueModalState?.modalOpen) { /* leave as-is while modal is open */ }
-      else _bAddQ.disabled = !!matchesCache.length;
-    }
 
     recomputeSubmittedMap();
     recomputePoints();
@@ -2002,6 +1960,165 @@ async function archiveCurrentRound(){
   await b.commit();
 
   showToast(getLang()==="en" ? `ROUND ${roundNo} ended ✅` : `Zakończono KOLEJKĘ ${roundNo} ✅`);
+}
+
+// ===== ADD QUEUE (v1000) =====
+const TEAMS_V1000 = [
+  "Jagiellonia","Piast","Lechia","Legia","Wisla Plock","Radomiak","GKS Katowice","Gornik",
+  "Arka","Cracovia","Lech","Pogon","Motor","Rakow","Korona","Widzew","Slask","Zaglebie",
+  "Stal Mielec","Puszcza"
+];
+
+function showQueueModal(){
+  const m = el("queueModal");
+  if(!m) return;
+  m.style.display = "flex";
+  m.setAttribute("aria-hidden","false");
+}
+function hideQueueModal(){
+  const m = el("queueModal");
+  if(!m) return;
+  m.style.display = "none";
+  m.setAttribute("aria-hidden","true");
+}
+
+function openAddQueueModal(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){ showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+  if(matchesCache.length){ showToast(getLang()==="en" ? "Round already has matches" : "Ta kolejka ma już mecze"); return; }
+
+  const b = el("btnAddQueue");
+  addQueueModalState.addBtnWasDisabled = !!(b && b.disabled);
+  if(b) b.disabled = true;
+
+  const s1 = el("queueModalStep1");
+  const man = el("queueModalManual");
+  if(s1) s1.style.display = "flex";
+  if(man) man.style.display = "none";
+
+  addQueueModalState.modalOpen = true;
+  showQueueModal();
+}
+
+function closeAddQueueModal({restoreAddBtn}={}){
+  hideQueueModal();
+  addQueueModalState.modalOpen = false;
+
+  const b = el("btnAddQueue");
+  if(b && restoreAddBtn){
+    b.disabled = addQueueModalState.addBtnWasDisabled || !!matchesCache.length;
+  }
+}
+
+function shuffleInPlace(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function buildRandomPairs(){
+  const teams = shuffleInPlace([...TEAMS_V1000]);
+  const pairs = [];
+  for(let i=0;i<teams.length;i+=2){
+    const home = teams[i];
+    const away = teams[i+1];
+    if(!home || !away) break;
+    pairs.push([home, away]);
+  }
+  return pairs.slice(0,10);
+}
+
+async function addQueuePairs(pairs){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){ showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+  if(!Array.isArray(pairs) || pairs.length!==10){
+    throw new Error("pairs must have length 10");
+  }
+  const b = boot.writeBatch(db);
+  pairs.forEach((pair, idx)=>{
+    const id = `m_${Date.now()}_${idx}_${Math.floor(Math.random()*1e6)}`;
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+    b.set(ref, {
+      idx,
+      home: pair[0],
+      away: pair[1],
+      createdAt: boot.serverTimestamp()
+    });
+  });
+  await b.commit();
+  showToast(getLang()==="en" ? "Fixture added ✅" : "Dodano kolejkę ✅");
+}
+
+function renderManualBuilder(defaultPairs){
+  const wrap = el("manualMatches");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+
+  const pairs = (Array.isArray(defaultPairs) && defaultPairs.length===10) ? defaultPairs : buildRandomPairs();
+
+  const mkSelect = (kind,i)=>{
+    const s = document.createElement("select");
+    s.className = "scoreInput";
+    s.style.width = "220px";
+    s.style.padding = "10px 12px";
+    s.style.borderRadius = "14px";
+    s.style.border = "1px solid rgba(255,255,255,.15)";
+    s.style.background = "rgba(0,0,0,.22)";
+    s.style.color = "rgba(255,255,255,.92)";
+    s.dataset.kind = kind;
+    s.dataset.i = String(i);
+    TEAMS_V1000.forEach(tn=>{
+      const o = document.createElement("option");
+      o.value = tn;
+      o.textContent = tn;
+      s.appendChild(o);
+    });
+    return s;
+  };
+
+  for(let i=0;i<10;i++){
+    const row = document.createElement("div");
+    row.className = "row";
+    row.style.gap = "10px";
+    row.style.alignItems = "center";
+
+    const idxBadge = document.createElement("div");
+    idxBadge.className = "chip";
+    idxBadge.style.padding = "8px 10px";
+    idxBadge.textContent = String(i+1);
+
+    const selH = mkSelect("home", i);
+    const selA = mkSelect("away", i);
+
+    const sep = document.createElement("div");
+    sep.className = "chip";
+    sep.style.padding = "8px 10px";
+    sep.textContent = "vs";
+
+    selH.value = pairs[i]?.[0] || TEAMS_V1000[0];
+    selA.value = pairs[i]?.[1] || TEAMS_V1000[1];
+
+    row.appendChild(idxBadge);
+    row.appendChild(selH);
+    row.appendChild(sep);
+    row.appendChild(selA);
+    wrap.appendChild(row);
+  }
+}
+
+function collectManualPairs(){
+  const wrap = el("manualMatches");
+  if(!wrap) return buildRandomPairs();
+  const rows = Array.from(wrap.querySelectorAll("div.row"));
+  const pairs = [];
+  rows.forEach(r=>{
+    const selH = r.querySelector('select[data-kind="home"]');
+    const selA = r.querySelector('select[data-kind="away"]');
+    pairs.push([selH?.value||"", selA?.value||""]);
+  });
+  return pairs.slice(0,10);
 }
 
 // ===== TEST QUEUE =====
