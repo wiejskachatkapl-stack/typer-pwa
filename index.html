@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 4016)</title>
+  <title>Typer (BUILD 4014)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -369,12 +369,8 @@
       left:14px;
       right:14px;
       bottom:14px;
-      display:flex;
-      gap:14px;
-      justify-content:space-between;
-      align-items:center;
     }
-    .rightFooterBtn .btn{width:auto}
+    .rightFooterBtn .btn{width:100%}
 
     /* ===== RESULTS SCREEN ===== */
     #results{
@@ -727,7 +723,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 4014 UI FIT tweaks --- */
+/* --- BUILD 4017 CENTER ACTIONS tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -743,15 +739,8 @@
   gap:14px;
   align-items:center;
 }
-/* wyśrodkuj same przyciski (elementy button), niezależnie od ich szerokości */
-.actionsButtonsFit .imgBtn{
-  width:100%;
-  display:flex;
-  justify-content:center;
-}
 .actionsButtonsFit .imgBtn img{
   height:78px; /* smaller to fit */
-  width:auto;
   max-width: 100%;
 }
 @media (max-width: 900px){
@@ -774,39 +763,8 @@
 }
 
 
-/* ACTIONS: unify size + center (only inside the left "Akcje" box) */
-#roomActionsCol{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:14px;
-  padding-top:6px;
-}
-#roomActionsCol .sysBtn{
-  width:100%;
-  max-width:260px;         /* equal width for ALL action buttons */
-  height:64px;             /* equal height for ALL action buttons */
-  padding:0;
-  border:0;
-  background:transparent;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-#roomActionsCol .sysBtn img{
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:contain;      /* keeps each label readable, same box size */
-}
-#roomActionsCol .sysBtn.isDisabled{
-  opacity:.45;
-  filter: grayscale(.25);
-  pointer-events:none;
-}
-@media (max-width: 520px){
-  #roomActionsCol .sysBtn{ max-width: 230px; height: 60px; }
-}
+.actionsButtonsFit .imgBtn{width:250px;margin-left:auto;margin-right:auto;}
+.actionsButtonsFit .imgBtn img{width:100%;height:auto;display:block;}
 </style>
 </head>
 
@@ -951,7 +909,7 @@
             <div class="panel" style="padding:14px">
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
-              <div class="col" id="roomActionsCol" style="margin-top:10px">
+              <div class="col" style="margin-top:10px">
                 <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
 
                 <!-- ADMIN -->
@@ -964,7 +922,7 @@
             </div>
 
             <div class="spacer"></div>
-            <!-- back button removed (back is now on the right as "Wyjście") -->
+            <button class="imgBtn sysBtn small" id="btnBackFromRoom" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnBackFromRoom"></button>
           </div>
 
           <!-- MIDDLE -->
@@ -994,8 +952,7 @@
             <div class="playersList" id="playersList"></div>
 
             <div class="rightFooterBtn">
-	              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
-	              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="ui/buttons/pl/btn_wyjscie.png" alt="btnExitFromRoomRight"></button>
+              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
             </div>
           </div>
 
@@ -1099,7 +1056,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4016"></script>
+  <script type="module" src="./app.js?v=4012"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
