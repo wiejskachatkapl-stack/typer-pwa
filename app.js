@@ -1,4 +1,4 @@
-const BUILD = 1025;
+const BUILD = 1016;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -23,38 +23,9 @@ const firebaseConfig = {
   measurementId: "G-5FBDH5G15N"
 };
 
-const __NULL_EL = (()=>{
-  const noop = ()=>{};
-  const cls = { add:noop, remove:noop, toggle:noop, contains:()=>false };
-  const handler = {
-    get(_t,p){
-      if(p==='style') return new Proxy({}, {get:()=>'', set:()=>true});
-      if(p==='classList') return cls;
-      if(p==='dataset') return {};
-      if(p==='querySelector') return ()=>null;
-      if(p==='querySelectorAll') return ()=>[];
-      if(p==='addEventListener'||p==='removeEventListener'||p==='setAttribute') return noop;
-      if(p==='getBoundingClientRect') return ()=>({left:0,top:0,width:0,height:0,right:0,bottom:0});
-      if(p==='focus'||p==='blur'||p==='click') return noop;
-      if(p==='textContent') return '';
-      if(p==='value') return '';
-      if(p===Symbol.toStringTag) return 'NullEl';
-      return __proxy;
-    },
-    set(){ return true; }
-  };
-  const __proxy = new Proxy({}, handler);
-  return __proxy;
-})();
-
-const el = (id) => document.getElementById(id) || __NULL_EL;
+const el = (id) => document.getElementById(id);
 
 // Set text for normal <button>, but for image-buttons (having data-btn or <img>) only set title/aria-label.
-const setTextSafe = (id, text) => {
-  const n = el(id);
-  if (n) n.textContent = text;
-};
-
 const setBtnLabelSafe = (id, label) => {
   const b = el(id);
   if (!b) return;
@@ -213,11 +184,7 @@ const I18N = {
     ok: "OK",
     cancel: "Anuluj",
     langOnHome: "Język ustawiasz na stronie głównej."
-
-    avatar: "Avatar",
-    chooseAvatar: "Wybierz avatar",
-    close: "Zamknij"
-  },
+},
   en: {
     settings: "Settings",
     clearProfile: "Clear profile",
@@ -293,10 +260,7 @@ const I18N = {
     ok: "OK",
     cancel: "Cancel",
     langOnHome: "Language is set on the home screen."
-    avatar: "Avatar",
-    chooseAvatar: "Choose avatar",
-    close: "Close"
-  }
+}
 };
 function getLang(){
   const v = (localStorage.getItem(KEY_LANG) || "").toLowerCase();
@@ -412,37 +376,37 @@ function applyLangToUI(){
   updateLangButtonsVisual();
 
   // Continue
-  if(el("t_continue_title")) setTextSafe("t_continue_title", t("contTitle"));
-  if(el("t_continue_sub")) setTextSafe("t_continue_sub", t("contSub"));
-  if(el("t_continue_hello")) setTextSafe("t_continue_hello", t("contHello"));
-  if(el("t_continue_room")) setTextSafe("t_continue_room", t("contRoom"));
-  if(el("t_continue_q")) setTextSafe("t_continue_q", t("contQ"));
+  if(el("t_continue_title")) el("t_continue_title").textContent = t("contTitle");
+  if(el("t_continue_sub")) el("t_continue_sub").textContent = t("contSub");
+  if(el("t_continue_hello")) el("t_continue_hello").textContent = t("contHello");
+  if(el("t_continue_room")) el("t_continue_room").textContent = t("contRoom");
+  if(el("t_continue_q")) el("t_continue_q").textContent = t("contQ");
   setBtnLabelSafe("btnContYes", t("yes"));
   setBtnLabelSafe("btnContNo", t("no"));
   setBtnLabelSafe("btnContForget", t("forget"));
 
   // Rooms
-  if(el("t_rooms_title")) setTextSafe("t_rooms_title", t("roomsTitle"));
-  if(el("t_nick")) setTextSafe("t_nick", t("nick"));
+  if(el("t_rooms_title")) el("t_rooms_title").textContent = t("roomsTitle");
+  if(el("t_nick")) el("t_nick").textContent = t("nick");
   setBtnLabelSafe("btnChangeNickRooms", t("changeNick"));
   setBtnLabelSafe("btnBackHomeFromRooms", t("back"));
-  if(el("t_join_title")) setTextSafe("t_join_title", t("joinTitle"));
+  if(el("t_join_title")) el("t_join_title").textContent = t("joinTitle");
   setBtnLabelSafe("btnJoinRoom", t("joinBtn"));
-  if(el("t_join_help")) setTextSafe("t_join_help", t("joinHelp"));
-  if(el("t_create_title")) setTextSafe("t_create_title", t("createTitle"));
+  if(el("t_join_help")) el("t_join_help").textContent = t("joinHelp");
+  if(el("t_create_title")) el("t_create_title").textContent = t("createTitle");
   setBtnLabelSafe("btnCreateRoom", t("createBtn"));
-  if(el("t_create_help")) setTextSafe("t_create_help", t("createHelp"));
+  if(el("t_create_help")) el("t_create_help").textContent = t("createHelp");
 
   // Room
-  if(el("t_room_room")) setTextSafe("t_room_room", t("room"));
-  if(el("t_nick2")) setTextSafe("t_nick2", t("nick"));
-  if(el("t_admin")) setTextSafe("t_admin", t("admin"));
-  if(el("t_code")) setTextSafe("t_code", t("code"));
+  if(el("t_room_room")) el("t_room_room").textContent = t("room");
+  if(el("t_nick2")) el("t_nick2").textContent = t("nick");
+  if(el("t_admin")) el("t_admin").textContent = t("admin");
+  if(el("t_code")) el("t_code").textContent = t("code");
   setBtnLabelSafe("btnCopyCode", t("copy"));
   setBtnLabelSafe("btnLeave", t("leave"));
   setBtnLabelSafe("btnRefresh", t("refresh"));
-  if(el("t_actions")) setTextSafe("t_actions", t("actions"));
-  if(el("t_actions_sub")) setTextSafe("t_actions_sub", t("actionsSub"));
+  if(el("t_actions")) el("t_actions").textContent = t("actions");
+  if(el("t_actions_sub")) el("t_actions_sub").textContent = t("actionsSub");
   setBtnLabelSafe("btnModalSavePicks", t("savePicks"));
   setBtnLabelSafe("btnEnterResults", t("enterResults"));
   setBtnLabelSafe("btnEndRound", t("endRound"));
@@ -450,36 +414,36 @@ function applyLangToUI(){
   setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
-  if(el("t_matches")) setTextSafe("t_matches", t("matches"));
-  if(el("t_matches_sub")) setTextSafe("t_matches_sub", t("matchesSub"));
-  if(el("t_round")) setTextSafe("t_round", t("round"));
-  if(el("t_games")) setTextSafe("t_games", t("games"));
-  if(el("t_points_round")) setTextSafe("t_points_round", t("pointsRound"));
+  if(el("t_matches")) el("t_matches").textContent = t("matches");
+  if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
+  if(el("t_round")) el("t_round").textContent = t("round");
+  if(el("t_games")) el("t_games").textContent = t("games");
+  if(el("t_points_round")) el("t_points_round").textContent = t("pointsRound");
 
-  if(el("t_players")) setTextSafe("t_players", t("players"));
-  if(el("t_players_sub")) setTextSafe("t_players_sub", t("playersSub"));
+  if(el("t_players")) el("t_players").textContent = t("players");
+  if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
   setBtnLabelSafe("btnLeagueFromRoom", t("leagueBtn"));
 
   // Results
-  if(el("t_results")) setTextSafe("t_results", t("results"));
-  if(el("t_room")) setTextSafe("t_room", t("room"));
-  if(el("t_round2")) setTextSafe("t_round2", t("round"));
+  if(el("t_results")) el("t_results").textContent = t("results");
+  if(el("t_room")) el("t_room").textContent = t("room");
+  if(el("t_round2")) el("t_round2").textContent = t("round");
   setBtnLabelSafe("btnResBack", t("back"));
   setBtnLabelSafe("btnResSave", t("saveResults"));
-  if(el("t_results_hint")) setTextSafe("t_results_hint", t("hintResults"));
+  if(el("t_results_hint")) el("t_results_hint").textContent = t("hintResults");
 
   // League
-  if(el("t_league")) setTextSafe("t_league", t("league"));
-  if(el("t_room3")) setTextSafe("t_room3", t("room"));
-  if(el("t_nick3")) setTextSafe("t_nick3", t("nick"));
-  if(el("t_after_round")) setTextSafe("t_after_round", t("afterRound"));
+  if(el("t_league")) el("t_league").textContent = t("league");
+  if(el("t_room3")) el("t_room3").textContent = t("room");
+  if(el("t_nick3")) el("t_nick3").textContent = t("nick");
+  if(el("t_after_round")) el("t_after_round").textContent = t("afterRound");
   setBtnLabelSafe("btnLeagueRefresh", t("refresh"));
   setBtnLabelSafe("btnLeagueBack", t("back"));
-  if(el("t_ranking")) setTextSafe("t_ranking", t("ranking"));
-  if(el("leagueHint")) setTextSafe("leagueHint", t("leagueHint"));
-  if(el("t_player_col")) setTextSafe("t_player_col", t("playerCol"));
-  if(el("t_rounds_col")) setTextSafe("t_rounds_col", t("roundsCol"));
-  if(el("t_points_col")) setTextSafe("t_points_col", t("pointsCol"));
+  if(el("t_ranking")) el("t_ranking").textContent = t("ranking");
+  if(el("leagueHint")) el("leagueHint").textContent = t("leagueHint");
+  if(el("t_player_col")) el("t_player_col").textContent = t("playerCol");
+  if(el("t_rounds_col")) el("t_rounds_col").textContent = t("roundsCol");
+  if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
 }
 
 // ===== Modal =====
@@ -727,108 +691,49 @@ async function clearProfile(){
 // ===== Settings modal =====
 function openSettings(){
   const wrap = document.createElement("div");
-  wrap.className = "settingsWrap";
-
-  const left = document.createElement("div");
-  left.className = "settingsLeft";
-
-  const right = document.createElement("div");
-  right.className = "settingsRight";
-
-  // Avatar preview
-  const avatarBox = document.createElement("div");
-  avatarBox.className = "avatarBox";
-  const avatarPreview = document.createElement("div");
-  avatarPreview.className = "avatarPreview";
-  avatarBox.appendChild(avatarPreview);
-  right.appendChild(avatarBox);
-
-  // Avatar button
-  const btnAvatar = document.createElement("button");
-  btnAvatar.className = "glossBtn";
-  btnAvatar.type = "button";
-  btnAvatar.textContent = t("avatar");
-  btnAvatar.onclick = () => openAvatarPicker(() => renderAvatarPreview(avatarPreview));
-  left.appendChild(btnAvatar);
-
-  // Reset profile
-  const btnClear = document.createElement("button");
-  btnClear.className = "imgBtn sysBtn sysBtnBig";
-  btnClear.type = "button";
-  btnClear.title = t("clearProfile");
-  btnClear.setAttribute("aria-label", t("clearProfile"));
-  btnClear.style.alignSelf = "flex-start";
-  const img = document.createElement("img");
-  img.dataset.btn = "btn_reset_profilu.png";
-  img.alt = t("clearProfile");
-  img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
-  btnClear.appendChild(img);
-  btnClear.onclick = () => clearProfile();
-  left.appendChild(btnClear);
-
-  const warn = document.createElement("div");
-  warn.className = "sub";
-  warn.style.opacity = ".8";
-  warn.textContent = (getLang()==="pl")
-    ? "Usuwa nick, pokój i całą lokalną pamięć tej gry na tym urządzeniu."
-    : "Removes nickname, room and all local data of this game on this device.";
-  left.appendChild(warn);
-
-  wrap.appendChild(left);
-  wrap.appendChild(right);
-
-  renderAvatarPreview(avatarPreview);
-  modalOpen(t("settings"), wrap);
-}
-
-function getAvatar(){
-  return (localStorage.getItem(KEY_AVATAR) || "").trim();
-}
-function setAvatar(val){
-  localStorage.setItem(KEY_AVATAR, val);
-}
-function renderAvatarPreview(el){
-  if(!el) return;
-  const v = getAvatar() || "👤";
-  el.textContent = v;
-}
-
-function openAvatarPicker(onPick){
-  const wrap = document.createElement("div");
   wrap.style.display = "flex";
   wrap.style.flexDirection = "column";
   wrap.style.gap = "12px";
 
-  const grid = document.createElement("div");
-  grid.className = "avatarGrid";
+  const head = document.createElement("div");
+  head.className = "chip";
+  head.textContent = t("settings");
+  wrap.appendChild(head);
 
-  const options = ["👤","⚽","👑","🐺","🤖","🧟","🐯","🔥","⭐","🎯","🦅","🐉"];
-  const current = getAvatar() || "👤";
+  const infoLang = document.createElement("div");
+  infoLang.className = "sub";
+  infoLang.textContent = t("langOnHome");
+  wrap.appendChild(infoLang);
 
-  options.forEach((ico) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "avatarPick";
-    b.textContent = ico;
-    if(ico === current) b.classList.add("active");
-    b.onclick = () => {
-      setAvatar(ico);
-      closeModal();
-      if(typeof onPick === "function") onPick();
-    };
-    grid.appendChild(b);
-  });
+  const info = document.createElement("div");
+  info.className = "sub";
+  info.textContent = (getLang() === "pl")
+    ? "Zmiana języka działa od razu na całej aplikacji."
+    : "Language changes apply immediately across the app.";
+  wrap.appendChild(info);
 
-  wrap.appendChild(grid);
 
-  const btnClose = document.createElement("button");
-  btnClose.type = "button";
-  btnClose.className = "glossBtn";
-  btnClose.textContent = t("close");
-  btnClose.onclick = () => closeModal();
-  wrap.appendChild(btnClose);
+const btnClear = document.createElement("button");
+btnClear.className = "imgBtn sysBtn sysBtnBig";
+btnClear.type = "button";
+btnClear.title = t("clearProfile");
+btnClear.setAttribute("aria-label", t("clearProfile"));
+btnClear.style.alignSelf = "flex-start";
+const img = document.createElement("img");
+img.dataset.btn = "btn_reset_profilu.png";
+img.alt = t("clearProfile");
+img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
+btnClear.appendChild(img);
+btnClear.onclick = () => clearProfile();
+wrap.appendChild(btnClear);
 
-  modalOpen(t("chooseAvatar"), wrap);
+const warn = document.createElement("div");
+warn.className = "sub";
+warn.style.opacity = ".8";
+warn.textContent = (getLang()==="pl") ? "Usuwa nick, pokój i całą lokalną pamięć tej gry na tym urządzeniu." : "Removes nickname, room and all local data of this game on this device.";
+wrap.appendChild(warn);
+
+  modalOpen(t("settings"), wrap);
 }
 
 
@@ -987,9 +892,9 @@ function nickModalAsk(){
 }
 function refreshNickLabels(){
   const nick = getNick() || "—";
-  if (el("nickLabelRooms")) setTextSafe("nickLabelRooms", nick);
-  if (el("nickLabelRoom")) setTextSafe("nickLabelRoom", nick);
-  if (el("leagueNick")) setTextSafe("leagueNick", nick);
+  if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
+  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
+  if (el("leagueNick")) el("leagueNick").textContent = nick;
 }
 
 function getSavedRoom(){
@@ -1099,7 +1004,7 @@ function recomputePoints(){
   myPoints = null;
 
   if(!allResultsComplete()){
-    if(el("myPointsLabel")) setTextSafe("myPointsLabel", "—");
+    if(el("myPointsLabel")) el("myPointsLabel").textContent = "—";
     return;
   }
 
@@ -1115,7 +1020,7 @@ function recomputePoints(){
   }
 
   myPoints = pointsByUid[userUid] ?? 0;
-  if(el("myPointsLabel")) setTextSafe("myPointsLabel", String(myPoints));
+  if(el("myPointsLabel")) el("myPointsLabel").textContent = String(myPoints);
 }
 
 async function initFirebase(){
@@ -1371,8 +1276,8 @@ async function showContinueIfRoomExists(code){
       return;
     }
     const room = snap.data();
-    setTextSafe("contNick", getNick() || "—");
-    setTextSafe("contRoomName", room?.name || "—");
+    el("contNick").textContent = getNick() || "—";
+    el("contRoomName").textContent = room?.name || "—";
     showScreen("continue");
   }catch{
     showToast(getLang()==="en" ? "Cannot check room" : "Nie udało się sprawdzić pokoju");
@@ -1383,7 +1288,7 @@ async function showContinueIfRoomExists(code){
 // ===== ROOMS LOGIC =====
 async function createRoom(roomName){
   const nick = getNick();
-  setTextSafe("debugRooms", (getLang()==="en") ? "Creating room…" : "Tworzę pokój…");
+  el("debugRooms").textContent = (getLang()==="en") ? "Creating room…" : "Tworzę pokój…";
 
   for(let tries=0; tries<12; tries++){
     const code = genCode6();
@@ -1406,23 +1311,23 @@ async function createRoom(roomName){
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
     pushRoomHistory(code);
 
-    setTextSafe("debugRooms", (getLang()==="en") ? `Room created ${code}` : `Utworzono pokój ${code}`);
+    el("debugRooms").textContent = (getLang()==="en") ? `Room created ${code}` : `Utworzono pokój ${code}`;
     await openRoom(code);
     return;
   }
-  setTextSafe("debugRooms", (getLang()==="en")
+  el("debugRooms").textContent = (getLang()==="en")
     ? "Could not generate a free code (try again)."
-    : "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).");
+    : "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
 }
 
 async function joinRoom(code){
   const nick = getNick();
-  setTextSafe("debugRooms", (getLang()==="en") ? "Joining…" : "Dołączam…");
+  el("debugRooms").textContent = (getLang()==="en") ? "Joining…" : "Dołączam…";
 
   const ref = roomRef(code);
   const snap = await boot.getDoc(ref);
   if(!snap.exists()){
-    setTextSafe("debugRooms", (getLang()==="en") ? "Room not found." : "Nie ma takiego pokoju.");
+    el("debugRooms").textContent = (getLang()==="en") ? "Room not found." : "Nie ma takiego pokoju.";
     showToast(getLang()==="en" ? "Room not found" : "Nie ma takiego pokoju");
     return;
   }
@@ -1434,7 +1339,7 @@ async function joinRoom(code){
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
   pushRoomHistory(code);
 
-  setTextSafe("debugRooms", (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`);
+  el("debugRooms").textContent = (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`;
   await openRoom(code);
 }
 
@@ -1497,7 +1402,7 @@ async function openRoom(code, opts={}){
 
   renderMatches();
   renderPlayers([]);
-  if(el("myPointsLabel")) setTextSafe("myPointsLabel", "—");
+  if(el("myPointsLabel")) el("myPointsLabel").textContent = "—";
 
   const ref = roomRef(code);
   const snap = await boot.getDoc(ref);
@@ -1505,11 +1410,11 @@ async function openRoom(code, opts={}){
   currentRoom = snap.data();
 
   currentRoundNo = currentRoom?.currentRoundNo || 1;
-  setTextSafe("roundLabel", `${t("round")} ${currentRoundNo}`);
+  el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
-  setTextSafe("roomName", currentRoom.name || "—");
-  setTextSafe("roomAdmin", currentRoom.adminNick || "—");
-  setTextSafe("roomCode", code);
+  el("roomName").textContent = currentRoom.name || "—";
+  el("roomAdmin").textContent = currentRoom.adminNick || "—";
+  el("roomCode").textContent = code;
 
   refreshNickLabels();
 
@@ -1523,10 +1428,10 @@ async function openRoom(code, opts={}){
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
     currentRoom = d.data();
-    setTextSafe("roomName", currentRoom.name || "—");
-    setTextSafe("roomAdmin", currentRoom.adminNick || "—");
+    el("roomName").textContent = currentRoom.name || "—";
+    el("roomAdmin").textContent = currentRoom.adminNick || "—";
     currentRoundNo = currentRoom?.currentRoundNo || 1;
-    setTextSafe("roundLabel", `${t("round")} ${currentRoundNo}`);
+    el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
     updateAddQueueButtonUI();
@@ -1740,13 +1645,13 @@ function renderMatches(){
   if(!list) return;
   list.innerHTML = "";
 
-  setTextSafe("matchesCount", String(matchesCache.length || 0));
+  el("matchesCount").textContent = String(matchesCache.length || 0);
 
   if(el("myPointsLabel")){
     if(allResultsComplete() && isCompletePicksObject(picksDocByUid[userUid])){
-      setTextSafe("myPointsLabel", String(pointsByUid[userUid] ?? 0));
+      el("myPointsLabel").textContent = String(pointsByUid[userUid] ?? 0);
     }else{
-      setTextSafe("myPointsLabel", "—");
+      el("myPointsLabel").textContent = "—";
     }
   }
 
@@ -2070,8 +1975,8 @@ function openResultsScreen(){
   if(!currentRoomCode) return;
   if(!isAdmin()) return;
 
-  setTextSafe("resRoomName", currentRoom?.name || "—");
-  setTextSafe("resRound", `${t("round")} ${currentRoundNo}`);
+  el("resRoomName").textContent = currentRoom?.name || "—";
+  el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
 
   for(const m of matchesCache){
     resultsDraft[m.id] = {
@@ -2500,10 +2405,6 @@ const leagueState = {
   roomCode: null,
   roomName: null,
   afterRound: 0,
-  selectedRound: 0,
-  players: [],
-  archives: [],
-  finishedRounds: [],
   rows: []
 };
 
@@ -2525,15 +2426,9 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
-    leagueState.selectedRound = leagueState.afterRound;
 
-    setTextSafe("leagueRoomName", leagueState.roomName);
-    // (legacy span kept hidden in HTML for compatibility)
-    setTextSafe("leagueAfterRound", String(leagueState.selectedRound));
-
-    // load finished rounds (archive)
-    await loadLeagueArchives(roomCode);
-    setupLeagueRoundSelect();
+    el("leagueRoomName").textContent = leagueState.roomName;
+    el("leagueAfterRound").textContent = String(leagueState.afterRound);
 
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
@@ -2549,11 +2444,7 @@ async function openLeagueTable(roomCode, opts={}) {
       });
     });
 
-    // keep base player list (nicks) from league collection
-    leagueState.players = arr;
-
-    // compute table for selected finished round (or fallback to current totals if no archives)
-    recomputeLeagueRowsForSelectedRound();
+    leagueState.rows = arr;
     renderLeagueTable();
     showScreen("league");
     if(!silent) showToast(getLang()==="en" ? "League table" : "Tabela ligi");
@@ -2561,110 +2452,6 @@ async function openLeagueTable(roomCode, opts={}) {
     console.error(e);
     showToast(getLang()==="en" ? "Cannot open league table" : "Nie udało się otworzyć tabeli");
   }
-}
-
-
-async function loadLeagueArchives(code){
-  try{
-    const q = boot.query(roundsCol(code), boot.orderBy("roundNo","asc"));
-    const qs = await boot.getDocs(q);
-    const archives = [];
-    qs.forEach(d=>{
-      const data = d.data() || {};
-      const rn = Number(data.roundNo ?? 0);
-      if(rn > 0){
-        archives.push({
-          roundNo: rn,
-          pointsByUid: data.pointsByUid || {}
-        });
-      }
-    });
-    archives.sort((a,b)=>a.roundNo-b.roundNo);
-    leagueState.archives = archives;
-    leagueState.finishedRounds = archives.map(a=>a.roundNo);
-  }catch(e){
-    console.error(e);
-    leagueState.archives = [];
-    leagueState.finishedRounds = [];
-  }
-}
-
-function setupLeagueRoundSelect(){
-  const sel = el("leagueRoundSelect");
-  if(!sel) return;
-
-  sel.innerHTML = "";
-
-  if(!leagueState.finishedRounds.length){
-    const opt = document.createElement("option");
-    opt.value = "0";
-    opt.textContent = "—";
-    sel.appendChild(opt);
-    sel.disabled = true;
-    // still show legacy text
-    setTextSafe("leagueAfterRound", "0");
-    return;
-  }
-
-  // default: last finished round (usually currentRoundNo-1)
-  const maxFinished = Math.max(...leagueState.finishedRounds);
-  if(!leagueState.finishedRounds.includes(leagueState.selectedRound)){
-    leagueState.selectedRound = maxFinished;
-  }
-
-  // show newest first
-  const roundsDesc = [...leagueState.finishedRounds].sort((a,b)=>b-a);
-  for(const rn of roundsDesc){
-    const opt = document.createElement("option");
-    opt.value = String(rn);
-    opt.textContent = String(rn);
-    sel.appendChild(opt);
-  }
-  sel.value = String(leagueState.selectedRound);
-  sel.disabled = false;
-
-  sel.onchange = ()=>{
-    const rn = parseInt(sel.value, 10);
-    leagueState.selectedRound = Number.isFinite(rn) ? rn : maxFinished;
-    setTextSafe("leagueAfterRound", String(leagueState.selectedRound));
-    recomputeLeagueRowsForSelectedRound();
-    renderLeagueTable();
-  };
-
-  setTextSafe("leagueAfterRound", String(leagueState.selectedRound));
-}
-
-function recomputeLeagueRowsForSelectedRound(){
-  // if no archives, fallback to current totals from leagueState.players (already sorted later)
-  if(!leagueState.finishedRounds.length){
-    leagueState.rows = (leagueState.players || []).map(p=>({
-      uid: p.uid, nick: p.nick, rounds: p.rounds, points: p.points
-    }));
-    return;
-  }
-
-  const target = leagueState.selectedRound;
-  const base = new Map();
-
-  // seed with known players (nicks)
-  (leagueState.players || []).forEach(p=>{
-    base.set(p.uid, { uid: p.uid, nick: p.nick, rounds: 0, points: 0 });
-  });
-
-  for(const arc of (leagueState.archives || [])){
-    if(arc.roundNo > target) break;
-    const pbu = arc.pointsByUid || {};
-    for(const [uid, pts] of Object.entries(pbu)){
-      if(!base.has(uid)){
-        base.set(uid, { uid, nick: uid, rounds: 0, points: 0 });
-      }
-      const row = base.get(uid);
-      row.rounds += 1;
-      row.points += Number(pts ?? 0);
-    }
-  }
-
-  leagueState.rows = Array.from(base.values());
 }
 
 function renderLeagueTable(){
