@@ -283,7 +283,11 @@ const BTN_NAME_MAP = {
   "btn_dodaj_kolejke.png": "btn_add_queue.png",
   "btn_zapisz_kolejke.png": "btn_save_queue.png",
   "btn_zapisz_typy.png": "btn_save_picks.png",
-  "btn_dodaj_wyniki1.png": "btn_enter_results.png"
+  "btn_dodaj_wyniki1.png": "btn_enter_results.png",
+
+  // custom profile buttons
+  "btn_profil.png": "btn_profile.png",
+  "btn_zapisz.png": "btn_save.png"
 };
 
 function mapBtnName(raw){
@@ -675,7 +679,7 @@ function openSettings(){
     : "Language changes apply immediately across the app.";
   wrap.appendChild(info);
 
-  // Przyciski: Profil / Avatar (obsługa avatara w kolejnym kroku)
+  // Przycisk: Profil
   const btnRow = document.createElement("div");
   btnRow.style.display = "flex";
   btnRow.style.gap = "14px";
@@ -693,19 +697,6 @@ function openSettings(){
   btnProfil.appendChild(imgProfil);
   btnProfil.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnProfil);
-
-  const btnAvatar = document.createElement("button");
-  btnAvatar.className = "imgBtn sysBtn sysBtnBig";
-  btnAvatar.type = "button";
-  btnAvatar.title = (getLang()==="pl") ? "Avatar" : "Avatar";
-  btnAvatar.setAttribute("aria-label", btnAvatar.title);
-  const imgAvatar = document.createElement("img");
-  imgAvatar.dataset.btn = "btn_avatar.png";
-  imgAvatar.alt = btnAvatar.title;
-  imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
-  btnAvatar.appendChild(imgAvatar);
-  btnAvatar.onclick = ()=> showToast(getLang()==="pl" ? "Wkrótce..." : "Coming soon...");
-  btnRow.appendChild(btnAvatar);
 
   wrap.appendChild(btnRow);
 
@@ -782,8 +773,8 @@ function isProfileComplete(p){
 function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
-    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back", pl:"Poland", gb:"UK"}
-    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
+    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Save", cancelBtn:"Back", pl:"Poland", gb:"UK"}
+    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zapisz", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
@@ -835,7 +826,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   });
 
   const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
+  const btnSave = makeSysImgButton("btn_zapisz.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
   const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
   btnRow.appendChild(btnSave);
   btnRow.appendChild(btnBack);
