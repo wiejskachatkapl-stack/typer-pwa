@@ -183,8 +183,7 @@ const I18N = {
     nickRequired: "Nick jest wymagany.",
     ok: "OK",
     cancel: "Anuluj",
-    langOnHome: "Język ustawiasz na stronie głównej."
-
+    langOnHome: "Język ustawiasz na stronie głównej.",
     avatar: "Avatar",
     chooseAvatar: "Wybierz avatar",
     close: "Zamknij"
@@ -263,7 +262,7 @@ const I18N = {
     nickRequired: "Nick is required.",
     ok: "OK",
     cancel: "Cancel",
-    langOnHome: "Language is set on the home screen."
+    langOnHome: "Language is set on the home screen.",
     avatar: "Avatar",
     chooseAvatar: "Choose avatar",
     close: "Close"
