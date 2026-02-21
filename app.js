@@ -1,4 +1,4 @@
-const BUILD = 1007;
+const BUILD = 1008;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };

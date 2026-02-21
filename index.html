@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1007)</title>
+  <title>Typer (BUILD 1008)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -1031,6 +1031,22 @@
             <div class="panel matchesWrap" id="matchesList"></div>
 
           </div>
+
+          <!-- RIGHT -->
+          <div class="rightBar panel">
+            <div>
+              <div class="title" id="t_players">Gracze</div>
+              <div class="sub" id="t_players_sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
+            </div>
+            <div class="playersList" id="playersList"></div>
+
+            <div class="rightFooterBtn">
+              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
+              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="ui/buttons/pl/btn_wyjscie.png" alt="btnExitFromRoomRight"></button>
+            </div>
+          </div>
+
+        </div>
       </section>
 
       <!-- RESULTS (ADMIN) -->
@@ -1162,12 +1178,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1007"></script>
+  <script type="module" src="./app.js?v=1008"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1007').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1008').catch(() => {});
     });
   }
 </script>
