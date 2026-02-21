@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1019)</title>
+  <title>Typer (BUILD 1020)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -795,7 +795,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 1019 UI FIT tweaks --- */
+/* --- BUILD 1020 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -896,7 +896,7 @@
 }
 
 
-/* --- BUILD 1019 tweaks --- */
+/* --- BUILD 1020 tweaks --- */
 .roomTopBtns{
   display:flex;
   gap:10px;
@@ -1232,7 +1232,7 @@
           <div class="modalBody" id="modalBody"></div>
         </div>
       </div>
-      <!-- ADD QUEUE MODAL (BUILD 1019) -->
+      <!-- ADD QUEUE MODAL (BUILD 1020) -->
       <div id="queueModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <!-- STEP 1 -->
@@ -1265,7 +1265,7 @@
       </div>
 
 
-      <!-- PICKS COMPLETE MODAL (BUILD 1019) -->
+      <!-- PICKS COMPLETE MODAL (BUILD 1020) -->
       <div id="picksCompleteModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <div class="title" style="margin:0">Typer</div>
@@ -1277,7 +1277,7 @@
         </div>
       </div>
 
-      <!-- END ROUND CONFIRM MODAL (BUILD 1019) -->
+      <!-- END ROUND CONFIRM MODAL (BUILD 1020) -->
       <div id="endRoundModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <div class="title" style="margin:0">Typer</div>
@@ -1310,12 +1310,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1019"></script>
+  <script type="module" src="./app.js?v=1020"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1019').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1020').catch(() => {});
     });
   }
 </script>

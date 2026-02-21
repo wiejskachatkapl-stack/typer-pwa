@@ -1458,6 +1458,10 @@ async function openRoom(code, opts={}){
     recomputeSubmittedMap();
     recomputePoints();
     renderPlayers(lastPlayers);
+
+    // Admin can enter results only after saving own picks (requested behavior)
+    const er = el("btnEnterResults");
+    if(er) er.disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
   });
 
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
@@ -1478,7 +1482,8 @@ async function openRoom(code, opts={}){
     await loadMyPicks();
     renderMatches();
 
-    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length;
+    // Admin can enter results only after saving own picks (requested behavior)
+    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
     if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
   });
 
@@ -1529,6 +1534,11 @@ async function saveAllPicks(){
   picksDirty = false;
   picksCompleteSuppressed = true;
   hidePicksCompleteModal(false);
+
+  // Make UI react instantly (before Firestore snapshot arrives)
+  submittedByUid[userUid] = true;
+  const er = el("btnEnterResults");
+  if(er) er.disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
 
   recomputeSubmittedMap();
   recomputePoints();
