@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pl">
 <head>
+  <meta name="app-build" content="1022">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
@@ -792,6 +793,11 @@
   #roomActionsCol .sysBtn{ max-width: 220px; }
   #roomActionsCol .sysBtn img{ height: 54px; }
 }
+
+/* v1022 flags */
+.flagBtn{ display:inline-flex; align-items:center; justify-content:center; }
+.flagImg{ width:34px; height:22px; border-radius:4px; box-shadow:0 0 0 1px rgba(255,255,255,.25) inset; }
+
 </style>
 </head>
 
@@ -815,8 +821,8 @@
       <section id="home" class="screen">
         <!-- Language flags (HOME) -->
         <div class="homeLang" aria-label="Language">
-          <button class="flagBtn" id="btnLangPL" type="button" title="Polski">🇵🇱</button>
-          <button class="flagBtn" id="btnLangEN" type="button" title="English">🇬🇧</button>
+          <button class="flagBtn" id="btnLangPL" type="button" title="Polski"><img src="ui/flags/pl.png" alt="PL" class="flagImg"></img></button>
+          <button class="flagBtn" id="btnLangEN" type="button" title="English"><img src="ui/flags/gb.png" alt="EN" class="flagImg"></img></button>
         </div>
         <!-- NOWE: zębatka ustawień -->
         <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
@@ -943,8 +949,6 @@
                 <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults"></button>
                 <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
 
-                <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
-                <button class="imgBtn sysBtn" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
               </div>
             </div>
 
@@ -958,7 +962,10 @@
               <div class="row">
                 <div>
                   <div class="title" id="t_matches">Spotkania</div>
-                  <div class="sub" id="t_matches_sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                  <div class="row" style="gap:12px;align-items:center;margin-top:4px">
+                    <div class="sub" id="t_matches_sub" style="display:none">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                    <button class="imgBtn sysBtn actionSmall" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
+                  </div>
                 </div>
                 <div class="spacer"></div>
                 <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
@@ -1084,12 +1091,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4016"></script>
+  <script type="module" src="./app.js?v=1022"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=4012').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1022').catch(() => {});
     });
   }
 </script>
