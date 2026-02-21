@@ -1,4 +1,4 @@
-const BUILD = 1016;
+const BUILD = 1021;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -2405,6 +2405,10 @@ const leagueState = {
   roomCode: null,
   roomName: null,
   afterRound: 0,
+  selectedRound: 0,
+  players: [],
+  archives: [],
+  finishedRounds: [],
   rows: []
 };
 
@@ -2426,9 +2430,15 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
+    leagueState.selectedRound = leagueState.afterRound;
 
     el("leagueRoomName").textContent = leagueState.roomName;
-    el("leagueAfterRound").textContent = String(leagueState.afterRound);
+    // (legacy span kept hidden in HTML for compatibility)
+    el("leagueAfterRound").textContent = String(leagueState.selectedRound);
+
+    // load finished rounds (archive)
+    await loadLeagueArchives(roomCode);
+    setupLeagueRoundSelect();
 
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
@@ -2444,7 +2454,11 @@ async function openLeagueTable(roomCode, opts={}) {
       });
     });
 
-    leagueState.rows = arr;
+    // keep base player list (nicks) from league collection
+    leagueState.players = arr;
+
+    // compute table for selected finished round (or fallback to current totals if no archives)
+    recomputeLeagueRowsForSelectedRound();
     renderLeagueTable();
     showScreen("league");
     if(!silent) showToast(getLang()==="en" ? "League table" : "Tabela ligi");
@@ -2452,6 +2466,110 @@ async function openLeagueTable(roomCode, opts={}) {
     console.error(e);
     showToast(getLang()==="en" ? "Cannot open league table" : "Nie udało się otworzyć tabeli");
   }
+}
+
+
+async function loadLeagueArchives(code){
+  try{
+    const q = boot.query(roundsCol(code), boot.orderBy("roundNo","asc"));
+    const qs = await boot.getDocs(q);
+    const archives = [];
+    qs.forEach(d=>{
+      const data = d.data() || {};
+      const rn = Number(data.roundNo ?? 0);
+      if(rn > 0){
+        archives.push({
+          roundNo: rn,
+          pointsByUid: data.pointsByUid || {}
+        });
+      }
+    });
+    archives.sort((a,b)=>a.roundNo-b.roundNo);
+    leagueState.archives = archives;
+    leagueState.finishedRounds = archives.map(a=>a.roundNo);
+  }catch(e){
+    console.error(e);
+    leagueState.archives = [];
+    leagueState.finishedRounds = [];
+  }
+}
+
+function setupLeagueRoundSelect(){
+  const sel = el("leagueRoundSelect");
+  if(!sel) return;
+
+  sel.innerHTML = "";
+
+  if(!leagueState.finishedRounds.length){
+    const opt = document.createElement("option");
+    opt.value = "0";
+    opt.textContent = "—";
+    sel.appendChild(opt);
+    sel.disabled = true;
+    // still show legacy text
+    el("leagueAfterRound").textContent = "0";
+    return;
+  }
+
+  // default: last finished round (usually currentRoundNo-1)
+  const maxFinished = Math.max(...leagueState.finishedRounds);
+  if(!leagueState.finishedRounds.includes(leagueState.selectedRound)){
+    leagueState.selectedRound = maxFinished;
+  }
+
+  // show newest first
+  const roundsDesc = [...leagueState.finishedRounds].sort((a,b)=>b-a);
+  for(const rn of roundsDesc){
+    const opt = document.createElement("option");
+    opt.value = String(rn);
+    opt.textContent = String(rn);
+    sel.appendChild(opt);
+  }
+  sel.value = String(leagueState.selectedRound);
+  sel.disabled = false;
+
+  sel.onchange = ()=>{
+    const rn = parseInt(sel.value, 10);
+    leagueState.selectedRound = Number.isFinite(rn) ? rn : maxFinished;
+    el("leagueAfterRound").textContent = String(leagueState.selectedRound);
+    recomputeLeagueRowsForSelectedRound();
+    renderLeagueTable();
+  };
+
+  el("leagueAfterRound").textContent = String(leagueState.selectedRound);
+}
+
+function recomputeLeagueRowsForSelectedRound(){
+  // if no archives, fallback to current totals from leagueState.players (already sorted later)
+  if(!leagueState.finishedRounds.length){
+    leagueState.rows = (leagueState.players || []).map(p=>({
+      uid: p.uid, nick: p.nick, rounds: p.rounds, points: p.points
+    }));
+    return;
+  }
+
+  const target = leagueState.selectedRound;
+  const base = new Map();
+
+  // seed with known players (nicks)
+  (leagueState.players || []).forEach(p=>{
+    base.set(p.uid, { uid: p.uid, nick: p.nick, rounds: 0, points: 0 });
+  });
+
+  for(const arc of (leagueState.archives || [])){
+    if(arc.roundNo > target) break;
+    const pbu = arc.pointsByUid || {};
+    for(const [uid, pts] of Object.entries(pbu)){
+      if(!base.has(uid)){
+        base.set(uid, { uid, nick: uid, rounds: 0, points: 0 });
+      }
+      const row = base.get(uid);
+      row.rounds += 1;
+      row.points += Number(pts ?? 0);
+    }
+  }
+
+  leagueState.rows = Array.from(base.values());
 }
 
 function renderLeagueTable(){
