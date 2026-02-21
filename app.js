@@ -378,7 +378,6 @@ function applyLangToUI(){
   setBtnLabelSafe("btnMyQueue", t("myQueue"));
   setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
-  setBtnLabelSafe("btnBackSaveMode", t("back"));
 
   if(el("t_matches")) el("t_matches").textContent = t("matches");
   if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
@@ -888,7 +887,6 @@ let currentRoundNo = 1;
 let matchesCache = [];
 let picksCache = {};
 let picksDocByUid = {};
-let savePromptDismissed = false; // hides save-mode UI when user presses Cofnij
 let submittedByUid = {};
 let lastPlayers = [];
 
@@ -1117,11 +1115,6 @@ function bindUI(){
 
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
 
-  const __btnBackSaveMode = el("btnBackSaveMode");
-  if(__btnBackSaveMode){
-    __btnBackSaveMode.onclick = ()=>{ savePromptDismissed = true; updateSaveButtonState(); };
-  }
-
   // ADMIN
   el("btnEnterResults").onclick = async ()=>{
     if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
@@ -1134,7 +1127,8 @@ function bindUI(){
   };
 
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  const _bMyQueue = el("btnMyQueue");
+  if (_bMyQueue) _bMyQueue.onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1316,7 +1310,7 @@ async function openRoom(code, opts={}){
 
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";
-  el("btnMyQueue").style.display = adm ? "block" : "none";
+  { const _b = el("btnMyQueue"); if (_b) _b.style.display = adm ? "block" : "none"; }
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
@@ -1331,7 +1325,7 @@ async function openRoom(code, opts={}){
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
-    el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    { const _b = el("btnMyQueue"); if (_b) _b.style.display = adm2 ? "block" : "none"; }
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
@@ -1584,7 +1578,6 @@ function renderMatches(){
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
-      savePromptDismissed = false;
       updateSaveButtonState();
     };
 
@@ -1601,7 +1594,6 @@ function renderMatches(){
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
-      savePromptDismissed = false;
       updateSaveButtonState();
     };
 
@@ -1628,37 +1620,9 @@ function renderMatches(){
 }
 
 function updateSaveButtonState(){
-  const btnSave = el("btnSaveAll");
-  const btnBack = el("btnBackSaveMode");
-  const btnMyQ = el("btnMyQueue");
-  const btnAddQ = el("btnAddQueue");
-
-  const hasMatches = !!(matchesCache && matchesCache.length);
-  const ready = hasMatches && allMyPicksFilled();
-
-  // When not ready -> normal mode; reset dismiss flag.
-  if(!ready){
-    savePromptDismissed = false;
-  }
-
-  const showSaveMode = ready && !savePromptDismissed;
-
-  // SAVE MODE: show Save + Cofnij, hide queue buttons
-  if(btnSave){
-    btnSave.disabled = !ready;
-    btnSave.style.display = showSaveMode ? "block" : "none";
-  }
-  if(btnBack){
-    btnBack.style.display = showSaveMode ? "block" : "none";
-  }
-
-  const adm = isAdmin();
-  if(btnMyQ){
-    btnMyQ.style.display = showSaveMode ? "none" : (adm ? "block" : "none");
-  }
-  if(btnAddQ){
-    btnAddQ.style.display = showSaveMode ? "none" : (adm ? "block" : "none");
-  }
+  const btn = el("btnSaveAll");
+  if(!btn) return;
+  btn.disabled = !allMyPicksFilled();
 }
 
 // ===== PODGLĄD TYPOW (MODAL) =====

@@ -304,11 +304,11 @@
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
-    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;position:relative;}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     .midHead{padding:14px}
-    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px; padding-bottom:120px;overflow:auto}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
     .matchCard{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
@@ -375,19 +375,6 @@
       align-items:center;
     }
     .rightFooterBtn .btn{width:auto}
-    .midFooterBtn{
-      position:absolute;
-      left:14px;
-      bottom:14px;
-      display:flex;
-      gap:14px;
-      align-items:center;
-      justify-content:space-between;
-      width:min(480px, calc(100% - 28px));
-      pointer-events:auto;
-      z-index:5;
-    }
-
 
     /* ===== RESULTS SCREEN ===== */
     #results{
@@ -805,32 +792,6 @@
   #roomActionsCol .sysBtn{ max-width: 220px; }
   #roomActionsCol .sysBtn img{ height: 54px; }
 }
-
-/* === MID FOOTER BAR (queue/save/back) === */
-.midFooterBar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-  margin-top:10px;
-  padding:0 6px 2px 6px;
-}
-.midFooterLeft, .midFooterRight{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-.midFooterLeft{
-  justify-content:flex-start;
-}
-.midFooterRight{
-  justify-content:flex-end;
-}
-/* keep buttons aligned like bottom-right panel buttons */
-.midFooterBar .imgBtn.sysBtn{
-  transform: translateY(0px);
-}
-
 </style>
 </head>
 
@@ -976,9 +937,12 @@
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" id="roomActionsCol" style="margin-top:10px">
-<!-- ADMIN -->
+                <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
+
+                <!-- ADMIN -->
                 <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults"></button>
                 <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
+
               </div>
             </div>
 
@@ -992,7 +956,10 @@
               <div class="row">
                 <div>
                   <div class="title" id="t_matches">Spotkania</div>
-                  <div class="sub" id="t_matches_sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                  <div class="row" style="gap:12px;align-items:center;margin-top:4px">
+                    <div class="sub" id="t_matches_sub" style="display:none">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                    <button class="imgBtn sysBtn actionSmall" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
+                  </div>
                 </div>
                 <div class="spacer"></div>
                 <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
@@ -1002,18 +969,6 @@
             </div>
 
             <div class="panel matchesWrap" id="matchesList"></div>
-            <div class="midFooterBar">
-              <div class="midFooterLeft">
-                <button class="imgBtn sysBtn small" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
-                <button class="imgBtn sysBtn small" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
-              </div>
-
-              <div class="midFooterRight">
-                <button class="imgBtn sysBtn" id="btnSaveAll" style="display:none" type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
-                <button class="imgBtn sysBtn small" id="btnBackSaveMode" style="display:none" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnBackSaveMode"></button>
-              </div>
-            </div>
-
           </div>
 
           <!-- RIGHT -->
