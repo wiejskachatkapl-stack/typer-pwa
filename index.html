@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1018)</title>
+  <title>Typer (BUILD 1019)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -215,6 +215,23 @@
       max-height: clamp(120px, 20vh, 220px);
       border-radius: 0;
     }
+    /* Fallback label for image buttons (hidden unless image missing) */
+    .imgBtn .btnFallbackLabel{
+      display:none;
+      position:relative;
+      font-weight:800;
+      font-size:22px;
+      color:#eaf6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      padding:18px 34px;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
+      line-height:1;
+    }
+    .imgBtn.imgMissing img{display:none;}
+    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
@@ -754,6 +771,23 @@
     @media (max-width: 720px){
       .homeBtns{top:55%;}
       .imgBtn img{width: min(86vw, 420px); max-height: none;}
+    /* Fallback label for image buttons (hidden unless image missing) */
+    .imgBtn .btnFallbackLabel{
+      display:none;
+      position:relative;
+      font-weight:800;
+      font-size:22px;
+      color:#eaf6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      padding:18px 34px;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
+      line-height:1;
+    }
+    .imgBtn.imgMissing img{display:none;}
+    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
     }
   
 /* Nick modal image buttons */
@@ -761,7 +795,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 1018 UI FIT tweaks --- */
+/* --- BUILD 1019 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -771,6 +805,23 @@
 .roomHeaderActionsRow .imgBtn img{
   height:56px;
 }
+    /* Fallback label for image buttons (hidden unless image missing) */
+    .imgBtn .btnFallbackLabel{
+      display:none;
+      position:relative;
+      font-weight:800;
+      font-size:22px;
+      color:#eaf6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      padding:18px 34px;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
+      line-height:1;
+    }
+    .imgBtn.imgMissing img{display:none;}
+    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
 .actionsButtonsFit{
   display:flex;
   flex-direction:column;
@@ -788,13 +839,64 @@
   width:auto;
   max-width: 100%;
 }
+    /* Fallback label for image buttons (hidden unless image missing) */
+    .imgBtn .btnFallbackLabel{
+      display:none;
+      position:relative;
+      font-weight:800;
+      font-size:22px;
+      color:#eaf6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      padding:18px 34px;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
+      line-height:1;
+    }
+    .imgBtn.imgMissing img{display:none;}
+    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
 @media (max-width: 900px){
   .roomHeaderActionsRow .imgBtn img{ height:52px; }
+    /* Fallback label for image buttons (hidden unless image missing) */
+    .imgBtn .btnFallbackLabel{
+      display:none;
+      position:relative;
+      font-weight:800;
+      font-size:22px;
+      color:#eaf6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      padding:18px 34px;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
+      line-height:1;
+    }
+    .imgBtn.imgMissing img{display:none;}
+    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
   .actionsButtonsFit .imgBtn img{ height:72px; }
+    /* Fallback label for image buttons (hidden unless image missing) */
+    .imgBtn .btnFallbackLabel{
+      display:none;
+      position:relative;
+      font-weight:800;
+      font-size:22px;
+      color:#eaf6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      padding:18px 34px;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
+      line-height:1;
+    }
+    .imgBtn.imgMissing img{display:none;}
+    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
 }
 
 
-/* --- BUILD 1018 tweaks --- */
+/* --- BUILD 1019 tweaks --- */
 .roomTopBtns{
   display:flex;
   gap:10px;
@@ -1130,7 +1232,7 @@
           <div class="modalBody" id="modalBody"></div>
         </div>
       </div>
-      <!-- ADD QUEUE MODAL (BUILD 1018) -->
+      <!-- ADD QUEUE MODAL (BUILD 1019) -->
       <div id="queueModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <!-- STEP 1 -->
@@ -1163,7 +1265,7 @@
       </div>
 
 
-      <!-- PICKS COMPLETE MODAL (BUILD 1018) -->
+      <!-- PICKS COMPLETE MODAL (BUILD 1019) -->
       <div id="picksCompleteModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <div class="title" style="margin:0">Typer</div>
@@ -1175,7 +1277,7 @@
         </div>
       </div>
 
-      <!-- END ROUND CONFIRM MODAL (BUILD 1018) -->
+      <!-- END ROUND CONFIRM MODAL (BUILD 1019) -->
       <div id="endRoundModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <div class="title" style="margin:0">Typer</div>
@@ -1208,12 +1310,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1018"></script>
+  <script type="module" src="./app.js?v=1019"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1018').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1019').catch(() => {});
     });
   }
 </script>
