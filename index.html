@@ -107,6 +107,10 @@
     .btn:hover{background:rgba(255,255,255,.14)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
 
+    /* ROOM -> Akcje: wszystkie przyciski równe i wyśrodkowane */
+    .actionsBtns{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+    .actionsBtns .btn{ width:220px; max-width:100%; text-align:center; justify-content:center; }
+
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
 
     .chip{
@@ -187,20 +191,6 @@
       width:auto;
       border-radius:16px;
     }
-
-  /* --- Akcje: równe i wycentrowane przyciski --- */
-  .actionsBtns{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:16px;
-    margin-top:10px;
-  }
-  .actionsBtns .btn{
-    width:240px;         /* jeden standard dla wszystkich */
-    max-width:100%;
-    text-align:center;
-  }
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
@@ -644,7 +634,7 @@
             <div class="panel" style="padding:14px">
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
-              <div class="actionsBtns">
+              <div class="col actionsBtns" style="margin-top:10px">
                 <button class="btn" id="btnSaveAll" disabled>Zapisz typy</button>
 
                 <!-- ADMIN -->
