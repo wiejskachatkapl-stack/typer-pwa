@@ -393,7 +393,7 @@ function applyLangToUI(){
   setBtnLabelSafe("btnRefresh", t("refresh"));
   if(el("t_actions")) el("t_actions").textContent = t("actions");
   if(el("t_actions_sub")) el("t_actions_sub").textContent = t("actionsSub");
-  setBtnLabelSafe("btnSaveAll", t("savePicks"));
+  setBtnLabelSafe("btnModalSavePicks", t("savePicks"));
   setBtnLabelSafe("btnEnterResults", t("enterResults"));
   setBtnLabelSafe("btnEndRound", t("endRound"));
   // v1001: btnMyQueue removed
@@ -907,7 +907,7 @@ let currentRoundNo = 1;
 
 let matchesCache = [];
 let picksCache = {};
-let saveBarSuppressed = false; // gdy klikniesz Cofnij, chowamy pasek zapisu do czasu kolejnej zmiany typu
+let picksCompleteSuppressed = false; // gdy klikniesz Cofnij, chowamy pasek zapisu do czasu kolejnej zmiany typu
 
 let picksDocByUid = {};
 let submittedByUid = {};
@@ -1136,12 +1136,11 @@ function bindUI(){
   const __btnRefresh = el("btnRefresh");
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
-  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
-  const backBtn = el("btnBackToPicks");
+  el("btnModalSavePicks").onclick = async ()=>{ await saveAllPicks(); hidePicksCompleteModal(true); };
+  const backBtn = el("btnModalBackPicks");
   if(backBtn){
     backBtn.onclick = ()=>{
-      saveBarSuppressed = true;
-      updateSaveButtonState();
+      suppressPicksCompleteModal();
       // zostajemy w edycji typów
     };
   }
@@ -1614,7 +1613,7 @@ function renderMatches(){
       ? "No active round. Admin can add a fixture."
       : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
-    saveBarSuppressed = false;
+    picksCompleteSuppressed = false;
       updateSaveButtonState();
     return;
   }
@@ -1655,7 +1654,7 @@ function renderMatches(){
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
-      saveBarSuppressed = false;
+      picksCompleteSuppressed = false;
       updateSaveButtonState();
     };
 
@@ -1672,7 +1671,7 @@ function renderMatches(){
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
-      saveBarSuppressed = false;
+      picksCompleteSuppressed = false;
       updateSaveButtonState();
     };
 
@@ -1695,20 +1694,68 @@ function renderMatches(){
     list.appendChild(card);
   }
 
-  saveBarSuppressed = false;
+  picksCompleteSuppressed = false;
       updateSaveButtonState();
 }
 
+
+let picksCompleteSuppressed = false;
+let picksWasFilled = false;
+let picksModalTimer = null;
+
+function schedulePicksCompleteModal(){
+  if(picksModalTimer) clearTimeout(picksModalTimer);
+  picksModalTimer = setTimeout(()=>{
+    const filledNow = allMyPicksFilled();
+    const modal = el("picksCompleteModal");
+    const visible = modal && modal.style.display === "flex";
+    if(filledNow && !picksCompleteSuppressed && !visible){
+      showPicksCompleteModal();
+    }
+  }, 350);
+}
+
+function showPicksCompleteModal(){
+  const modal = el("picksCompleteModal");
+  if(!modal) return;
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden","false");
+}
+function hidePicksCompleteModal(persistSuppress=false){
+  const modal = el("picksCompleteModal");
+  if(!modal) return;
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden","true");
+  if(persistSuppress) picksCompleteSuppressed = true;
+}
+function suppressPicksCompleteModal(){
+  // user wants to continue editing without saving
+  picksCompleteSuppressed = true;
+  hidePicksCompleteModal(false);
+}
+
 function updateSaveButtonState(){
-  const btn = el("btnSaveAll");
-  const bar = el("midSaveBar");
   const filled = allMyPicksFilled();
 
-  if(btn){
-    btn.disabled = !filled;
+  if(!filled){
+    picksWasFilled = false;
+    picksCompleteSuppressed = false;
+    hidePicksCompleteModal(false);
+    return;
   }
-  if(bar){
-    bar.style.display = (filled && !saveBarSuppressed) ? "flex" : "none";
+
+  // filled
+  if(!picksWasFilled){
+    picksWasFilled = true;
+    if(!picksCompleteSuppressed){
+      showPicksCompleteModal();
+    }
+    return;
+  }
+
+  // już było wypełnione — po edycji pokaż ponownie (z krótkim opóźnieniem)
+  if(!picksCompleteSuppressed){
+    schedulePicksCompleteModal();
   }
 }
 // ===== PODGLĄD TYPOW (MODAL) =====
