@@ -1,4 +1,4 @@
-const BUILD = 1023;
+const BUILD = 1025;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -23,7 +23,31 @@ const firebaseConfig = {
   measurementId: "G-5FBDH5G15N"
 };
 
-const el = (id) => document.getElementById(id);
+const __NULL_EL = (()=>{
+  const noop = ()=>{};
+  const cls = { add:noop, remove:noop, toggle:noop, contains:()=>false };
+  const handler = {
+    get(_t,p){
+      if(p==='style') return new Proxy({}, {get:()=>'', set:()=>true});
+      if(p==='classList') return cls;
+      if(p==='dataset') return {};
+      if(p==='querySelector') return ()=>null;
+      if(p==='querySelectorAll') return ()=>[];
+      if(p==='addEventListener'||p==='removeEventListener'||p==='setAttribute') return noop;
+      if(p==='getBoundingClientRect') return ()=>({left:0,top:0,width:0,height:0,right:0,bottom:0});
+      if(p==='focus'||p==='blur'||p==='click') return noop;
+      if(p==='textContent') return '';
+      if(p==='value') return '';
+      if(p===Symbol.toStringTag) return 'NullEl';
+      return __proxy;
+    },
+    set(){ return true; }
+  };
+  const __proxy = new Proxy({}, handler);
+  return __proxy;
+})();
+
+const el = (id) => document.getElementById(id) || __NULL_EL;
 
 // Set text for normal <button>, but for image-buttons (having data-btn or <img>) only set title/aria-label.
 const setTextSafe = (id, text) => {
