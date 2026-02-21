@@ -908,6 +908,7 @@ let currentRoundNo = 1;
 let matchesCache = [];
 let picksCache = {};
 let picksCompleteSuppressed = false; // gdy klikniesz Cofnij, chowamy pasek zapisu do czasu kolejnej zmiany typu
+let picksDirty = false; // true gdy użytkownik zmienił typy od ostatniego wczytania/zapisu
 
 let picksDocByUid = {};
 let submittedByUid = {};
@@ -1491,6 +1492,10 @@ async function saveAllPicks(){
 
   showToast(getLang()==="en" ? "Picks saved ✅" : "Zapisano typy ✅");
 
+  picksDirty = false;
+  picksCompleteSuppressed = true;
+  hidePicksCompleteModal(false);
+
   recomputeSubmittedMap();
   recomputePoints();
   renderPlayers(lastPlayers);
@@ -1615,8 +1620,13 @@ function renderMatches(){
       ? "No active round. Admin can add a fixture."
       : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
-    picksCompleteSuppressed = false;
-      updateSaveButtonState();
+    // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
+  picksDirty = false;
+  picksCompleteSuppressed = false;
+  picksWasFilled = allMyPicksFilled();
+  hidePicksCompleteModal(false);
+  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
+
     return;
   }
 
@@ -1656,8 +1666,13 @@ function renderMatches(){
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
-      picksCompleteSuppressed = false;
-      updateSaveButtonState();
+      // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
+  picksDirty = false;
+  picksCompleteSuppressed = false;
+  picksWasFilled = allMyPicksFilled();
+  hidePicksCompleteModal(false);
+  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
+
     };
 
     const sep = document.createElement("div");
@@ -1673,8 +1688,13 @@ function renderMatches(){
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
-      picksCompleteSuppressed = false;
-      updateSaveButtonState();
+      // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
+  picksDirty = false;
+  picksCompleteSuppressed = false;
+  picksWasFilled = allMyPicksFilled();
+  hidePicksCompleteModal(false);
+  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
+
     };
 
     score.appendChild(inpH);
@@ -1696,8 +1716,13 @@ function renderMatches(){
     list.appendChild(card);
   }
 
+  // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
+  picksDirty = false;
   picksCompleteSuppressed = false;
-      updateSaveButtonState();
+  picksWasFilled = allMyPicksFilled();
+  hidePicksCompleteModal(false);
+  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
+
 }
 
 
@@ -1707,6 +1732,7 @@ let picksModalTimer = null;
 function schedulePicksCompleteModal(){
   if(picksModalTimer) clearTimeout(picksModalTimer);
   picksModalTimer = setTimeout(()=>{
+    if(!picksDirty) return;
     const filledNow = allMyPicksFilled();
     const modal = el("picksCompleteModal");
     const visible = modal && modal.style.display === "flex";
@@ -1737,6 +1763,13 @@ function suppressPicksCompleteModal(){
 
 function updateSaveButtonState(){
   const filled = allMyPicksFilled();
+
+  // jeśli nie ma niezapisanych zmian, nie pokazujemy modala
+  if(!picksDirty){
+    hidePicksCompleteModal(false);
+    picksWasFilled = filled;
+    return;
+  }
 
   if(!filled){
     picksWasFilled = false;
