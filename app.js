@@ -1126,7 +1126,44 @@ function bindUI(){
     await endRoundConfirmAndArchive();
   };
 
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+  el("btnAddQueue").onclick = ()=>{ openAddQueueModal(); };
+
+  // ADD QUEUE MODAL buttons
+  const __qBack = el("btnQueueBack");
+  if(__qBack) __qBack.onclick = ()=>{ closeAddQueueModal({restoreAddBtn:true}); };
+
+  const __qAuto = el("btnQueueAuto");
+  if(__qAuto) __qAuto.onclick = async ()=>{
+    try{
+      await addQueuePairs(buildRandomPairs());
+      closeAddQueueModal({restoreAddBtn:false});
+    }catch(e){ console.error(e); showToast(getLang()==="en"?"Cannot add":"Nie udało się dodać"); closeAddQueueModal({restoreAddBtn:true}); }
+  };
+
+  const __qManual = el("btnQueueManual");
+  if(__qManual) __qManual.onclick = ()=>{
+    el("queueModalStep1").style.display = "none";
+    el("queueModalManual").style.display = "block";
+    renderManualBuilder(buildRandomPairs());
+  };
+
+  const __manCancel = el("btnManualCancel");
+  if(__manCancel) __manCancel.onclick = ()=>{ closeAddQueueModal({restoreAddBtn:true}); };
+
+  const __manSave = el("btnManualSave");
+  if(__manSave) __manSave.onclick = async ()=>{
+    try{
+      const pairs = collectManualPairs();
+      for(const [h,a] of pairs){
+        if(h===a){
+          showToast(getLang()==="en"?"Home and away must differ":"Gospodarz i gość muszą się różnić");
+          return;
+        }
+      }
+      await addQueuePairs(pairs);
+      closeAddQueueModal({restoreAddBtn:false});
+    }catch(e){ console.error(e); showToast(getLang()==="en"?"Cannot add":"Nie udało się dodać"); closeAddQueueModal({restoreAddBtn:true}); }
+  };
   const _bMyQueue = el("btnMyQueue");
   if (_bMyQueue) _bMyQueue.onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
@@ -1357,6 +1394,13 @@ async function openRoom(code, opts={}){
       arr.push({ id: docu.id, ...docu.data() });
     });
     matchesCache = arr;
+
+    // Add queue button enabled only when there are no matches in the current round
+    const _bAddQ = el("btnAddQueue");
+    if(_bAddQ){
+      if(addQueueModalState?.modalOpen) { /* leave as-is while modal is open */ }
+      else _bAddQ.disabled = !!matchesCache.length;
+    }
 
     recomputeSubmittedMap();
     recomputePoints();
