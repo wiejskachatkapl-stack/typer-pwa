@@ -293,6 +293,10 @@ const BTN_NAME_MAP = {
 function mapBtnName(raw){
   if(!raw) return raw;
   const base = raw.replace(/(\d+)\.png$/i, '.png');
+  // Mapujemy nazwy tylko wtedy, gdy jesteśmy w EN. W PL pliki mają polskie nazwy.
+  // To rozwiązuje problem z "btn_profil.png" / "btn_zapisz.png" znikającymi w PL,
+  // bo wcześniej były mapowane na angielskie nazwy w katalogu /pl/.
+  if(getLang() !== 'en') return base;
   return BTN_NAME_MAP[base] || base;
 }
 
