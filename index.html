@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1002)</title>
+  <title>Typer (BUILD 1003)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -111,6 +111,25 @@
     .btn:disabled{opacity:.45;cursor:not-allowed}
 
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
+
+    /* ===== GAME-LIKE BUTTON (modal choices) ===== */
+    .glossBtn{
+      width:100%;
+      padding:14px 18px;
+      border-radius:18px;
+      font-weight:1000;
+      letter-spacing:.2px;
+      color:#fff;
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.28);
+      background:linear-gradient(180deg, rgba(120,220,255,.92), rgba(0,150,220,.88));
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.25), 0 12px 28px rgba(0,0,0,.35);
+      text-shadow:0 2px 4px rgba(0,0,0,.45);
+      user-select:none;
+    }
+    .glossBtn:hover{filter:brightness(1.06)}
+    .glossBtn:active{transform:translateY(1px)}
+    .glossBtn:disabled{opacity:.45;cursor:not-allowed;filter:none;transform:none}
 
     .chip{
       display:inline-flex;
@@ -1096,7 +1115,7 @@
           <div class="modalBody" id="modalBody"></div>
         </div>
       </div>
-      <!-- ADD QUEUE MODAL (BUILD 1002) -->
+      <!-- ADD QUEUE MODAL (BUILD 1003) -->
       <div id="queueModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <!-- STEP 1 -->
@@ -1104,9 +1123,9 @@
             <div class="title" style="margin:0">Dodaj kolejkę</div>
             <div class="sub">Wybierz tryb tworzenia kolejki.</div>
             <div class="col" style="gap:10px;margin-top:6px">
-              <button class="btn" id="btnQueueManual" type="button">Ręczne</button>
-              <button class="btn" id="btnQueueAuto" type="button">Automatyczne</button>
-              <button class="btn" id="btnQueueBack" type="button">Cofnij</button>
+              <button class="glossBtn" id="btnQueueManual" type="button">Ręczne</button>
+              <button class="glossBtn" id="btnQueueAuto" type="button">Automatyczne</button>
+              <button class="glossBtn" id="btnQueueBack" type="button">Cofnij</button>
             </div>
           </div>
 
@@ -1118,11 +1137,11 @@
                 <div class="sub">Ustaw 10 pojedynków (gospodarz – gość).</div>
               </div>
               <div class="spacer"></div>
-              <button class="btnSmall btn" id="btnQueueManualBack" type="button">Cofnij</button>
+              <button class="glossBtn" id="btnQueueManualBack" type="button" style="width:auto; padding:10px 14px; border-radius:16px">Cofnij</button>
             </div>
             <div id="manualMatches" class="col" style="gap:10px; max-height:52vh; overflow:auto; padding-right:6px"></div>
             <div class="row" style="gap:10px">
-              <button class="btn" id="btnQueueSaveManual" type="button" style="flex:1">Zapisz kolejkę</button>
+              <button class="glossBtn" id="btnQueueSaveManual" type="button" style="flex:1">Zapisz kolejkę</button>
             </div>
           </div>
         </div>
@@ -1150,12 +1169,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1002"></script>
+  <script type="module" src="./app.js?v=1003"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1002').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1003').catch(() => {});
     });
   }
 </script>

@@ -1,7 +1,7 @@
-const BUILD = 1000;
+const BUILD = 1003;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
-const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false };
+const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -37,6 +37,24 @@ const setBtnLabelSafe = (id, label) => {
     b.textContent = label;
   }
 };
+
+// ===== ADD QUEUE BUTTON VISIBILITY/LOCK (v1003) =====
+function updateAddQueueButtonUI(){
+  const b = el("btnAddQueue");
+  if(!b) return;
+  const adm = isAdmin();
+  if(!adm){ b.style.display = "none"; return; }
+
+  // hide when locked (after click) or when this round already has matches
+  const hide = !!addQueueModalState.locked || !!matchesCache.length;
+  b.style.display = hide ? "none" : "block";
+  b.disabled = hide;
+}
+function setAddQueueLocked(locked){
+  addQueueModalState.locked = !!locked;
+  updateAddQueueButtonUI();
+}
+
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
@@ -1357,7 +1375,7 @@ async function openRoom(code, opts={}){
   refreshNickLabels();
 
   const adm = isAdmin();
-  const __bAdd1 = el("btnAddQueue"); if(__bAdd1){ __bAdd1.style.display = adm ? "block" : "none"; __bAdd1.disabled = !!matchesCache.length; }
+  updateAddQueueButtonUI();
   const __myQ1 = el("btnMyQueue"); if(__myQ1) __myQ1.style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
@@ -1372,7 +1390,7 @@ async function openRoom(code, opts={}){
     el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
-    const __bAdd2 = el("btnAddQueue"); if(__bAdd2){ __bAdd2.style.display = adm2 ? "block" : "none"; __bAdd2.disabled = !!matchesCache.length; }
+    updateAddQueueButtonUI();
     const __myQ2 = el("btnMyQueue"); if(__myQ2) __myQ2.style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
@@ -2005,6 +2023,9 @@ async function archiveCurrentRound(){
 
   await b.commit();
 
+  // New round unlocked -> allow adding next queue
+  setAddQueueLocked(false);
+
   showToast(getLang()==="en" ? `ROUND ${roundNo} ended ✅` : `Zakończono KOLEJKĘ ${roundNo} ✅`);
 }
 
@@ -2033,9 +2054,8 @@ function openAddQueueModal(){
   if(!isAdmin()){ showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(matchesCache.length){ showToast(getLang()==="en" ? "Round already has matches" : "Ta kolejka ma już mecze"); return; }
 
-  const b = el("btnAddQueue");
-  addQueueModalState.addBtnWasDisabled = !!(b && b.disabled);
-  if(b) b.disabled = true;
+  // Lock/hide the add button right away; it will come back only on "Cofnij" or after ending the round.
+  setAddQueueLocked(true);
 
   const s1 = el("queueModalStep1");
   const man = el("queueModalManual");
@@ -2050,9 +2070,8 @@ function closeAddQueueModal({restoreAddBtn}={}){
   hideQueueModal();
   addQueueModalState.modalOpen = false;
 
-  const b = el("btnAddQueue");
-  if(b && restoreAddBtn){
-    b.disabled = addQueueModalState.addBtnWasDisabled || !!matchesCache.length;
+  if(restoreAddBtn){
+    setAddQueueLocked(false);
   }
 }
 
