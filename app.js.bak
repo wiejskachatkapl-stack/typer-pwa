@@ -1699,6 +1699,7 @@ function renderMatches(){
 }
 
 
+let picksCompleteSuppressed = false;
 let picksWasFilled = false;
 let picksModalTimer = null;
 
