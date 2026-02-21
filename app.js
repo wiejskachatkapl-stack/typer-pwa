@@ -1127,8 +1127,7 @@ function bindUI(){
   };
 
   el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  const _bMyQueue = el("btnMyQueue");
-  if (_bMyQueue) _bMyQueue.onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1310,7 +1309,7 @@ async function openRoom(code, opts={}){
 
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";
-  { const _b = el("btnMyQueue"); if (_b) _b.style.display = adm ? "block" : "none"; }
+  el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
@@ -1325,7 +1324,7 @@ async function openRoom(code, opts={}){
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
-    { const _b = el("btnMyQueue"); if (_b) _b.style.display = adm2 ? "block" : "none"; }
+    el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
