@@ -378,6 +378,7 @@ function applyLangToUI(){
   setBtnLabelSafe("btnMyQueue", t("myQueue"));
   setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
+  setBtnLabelSafe("btnBackSaveMode", t("back"));
 
   if(el("t_matches")) el("t_matches").textContent = t("matches");
   if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
@@ -887,6 +888,7 @@ let currentRoundNo = 1;
 let matchesCache = [];
 let picksCache = {};
 let picksDocByUid = {};
+let savePromptDismissed = false; // hides save-mode UI when user presses Cofnij
 let submittedByUid = {};
 let lastPlayers = [];
 
@@ -1114,6 +1116,11 @@ function bindUI(){
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
+
+  const __btnBackSaveMode = el("btnBackSaveMode");
+  if(__btnBackSaveMode){
+    __btnBackSaveMode.onclick = ()=>{ savePromptDismissed = true; updateSaveButtonState(); };
+  }
 
   // ADMIN
   el("btnEnterResults").onclick = async ()=>{
@@ -1577,6 +1584,7 @@ function renderMatches(){
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
+      savePromptDismissed = false;
       updateSaveButtonState();
     };
 
@@ -1593,6 +1601,7 @@ function renderMatches(){
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
+      savePromptDismissed = false;
       updateSaveButtonState();
     };
 
@@ -1619,9 +1628,37 @@ function renderMatches(){
 }
 
 function updateSaveButtonState(){
-  const btn = el("btnSaveAll");
-  if(!btn) return;
-  btn.disabled = !allMyPicksFilled();
+  const btnSave = el("btnSaveAll");
+  const btnBack = el("btnBackSaveMode");
+  const btnMyQ = el("btnMyQueue");
+  const btnAddQ = el("btnAddQueue");
+
+  const hasMatches = !!(matchesCache && matchesCache.length);
+  const ready = hasMatches && allMyPicksFilled();
+
+  // When not ready -> normal mode; reset dismiss flag.
+  if(!ready){
+    savePromptDismissed = false;
+  }
+
+  const showSaveMode = ready && !savePromptDismissed;
+
+  // SAVE MODE: show Save + Cofnij, hide queue buttons
+  if(btnSave){
+    btnSave.disabled = !ready;
+    btnSave.style.display = showSaveMode ? "block" : "none";
+  }
+  if(btnBack){
+    btnBack.style.display = showSaveMode ? "block" : "none";
+  }
+
+  const adm = isAdmin();
+  if(btnMyQ){
+    btnMyQ.style.display = showSaveMode ? "none" : (adm ? "block" : "none");
+  }
+  if(btnAddQ){
+    btnAddQ.style.display = showSaveMode ? "none" : (adm ? "block" : "none");
+  }
 }
 
 // ===== PODGLĄD TYPOW (MODAL) =====
