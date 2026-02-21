@@ -907,6 +907,8 @@ let currentRoundNo = 1;
 
 let matchesCache = [];
 let picksCache = {};
+let saveBarSuppressed = false; // gdy klikniesz Cofnij, chowamy pasek zapisu do czasu kolejnej zmiany typu
+
 let picksDocByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
@@ -1135,6 +1137,14 @@ function bindUI(){
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
+  const backBtn = el("btnBackToPicks");
+  if(backBtn){
+    backBtn.onclick = ()=>{
+      saveBarSuppressed = true;
+      updateSaveButtonState();
+      // zostajemy w edycji typów
+    };
+  }
 
   // ADMIN
   el("btnEnterResults").onclick = async ()=>{
@@ -1604,7 +1614,8 @@ function renderMatches(){
       ? "No active round. Admin can add a fixture."
       : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
-    updateSaveButtonState();
+    saveBarSuppressed = false;
+      updateSaveButtonState();
     return;
   }
 
@@ -1644,6 +1655,7 @@ function renderMatches(){
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
+      saveBarSuppressed = false;
       updateSaveButtonState();
     };
 
@@ -1660,6 +1672,7 @@ function renderMatches(){
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
+      saveBarSuppressed = false;
       updateSaveButtonState();
     };
 
@@ -1682,15 +1695,22 @@ function renderMatches(){
     list.appendChild(card);
   }
 
-  updateSaveButtonState();
+  saveBarSuppressed = false;
+      updateSaveButtonState();
 }
 
 function updateSaveButtonState(){
   const btn = el("btnSaveAll");
-  if(!btn) return;
-  btn.disabled = !allMyPicksFilled();
-}
+  const bar = el("midSaveBar");
+  const filled = allMyPicksFilled();
 
+  if(btn){
+    btn.disabled = !filled;
+  }
+  if(bar){
+    bar.style.display = (filled && !saveBarSuppressed) ? "flex" : "none";
+  }
+}
 // ===== PODGLĄD TYPOW (MODAL) =====
 function openPicksPreview(uid, nick){
   if(!currentRoomCode) return;
