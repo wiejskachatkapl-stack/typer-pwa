@@ -378,7 +378,7 @@ function applyLangToUI(){
   setBtnLabelSafe("btnSaveAll", t("savePicks"));
   setBtnLabelSafe("btnEnterResults", t("enterResults"));
   setBtnLabelSafe("btnEndRound", t("endRound"));
-  setBtnLabelSafe("btnMyQueue", t("myQueue"));
+  // v1001: btnMyQueue removed
   setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
@@ -1129,8 +1129,54 @@ function bindUI(){
     await endRoundConfirmAndArchive();
   };
 
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  el("btnAddQueue").onclick = ()=>{ openAddQueueModal(); };
+  // ADD QUEUE MODAL (v1001)
+  const __btnQM = el("btnQueueManual");
+  const __btnQA = el("btnQueueAuto");
+  const __btnQB = el("btnQueueBack");
+  const __btnQMB = el("btnQueueManualBack");
+  const __btnQSave = el("btnQueueSaveManual");
+
+  if(__btnQB) __btnQB.onclick = ()=> closeAddQueueModal({restoreAddBtn:true});
+  if(__btnQM) __btnQM.onclick = ()=>{
+    const s1 = el("queueModalStep1");
+    const man = el("queueModalManual");
+    if(s1) s1.style.display = "none";
+    if(man) man.style.display = "flex";
+    renderManualBuilder();
+  };
+  if(__btnQMB) __btnQMB.onclick = ()=>{
+    const s1 = el("queueModalStep1");
+    const man = el("queueModalManual");
+    if(man) man.style.display = "none";
+    if(s1) s1.style.display = "flex";
+  };
+  if(__btnQA) __btnQA.onclick = async ()=>{
+    try{
+      const pairs = buildRandomPairs();
+      await addQueuePairs(pairs);
+      closeAddQueueModal({restoreAddBtn:false});
+      if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true});
+    }catch(e){
+      console.error(e);
+      showToast(getLang()==="en" ? "Auto add failed" : "Nie udało się dodać (auto)");
+      // allow retry
+      closeAddQueueModal({restoreAddBtn:true});
+    }
+  };
+  if(__btnQSave) __btnQSave.onclick = async ()=>{
+    try{
+      const pairs = collectManualPairs();
+      await addQueuePairs(pairs);
+      closeAddQueueModal({restoreAddBtn:false});
+      if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true});
+    }catch(e){
+      console.error(e);
+      showToast(getLang()==="en" ? "Fix manual matches" : "Popraw mecze ręczne");
+    }
+  };
+
+  const __btnMyQueue = el("btnMyQueue"); if(__btnMyQueue) __btnMyQueue.onclick = ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1311,8 +1357,8 @@ async function openRoom(code, opts={}){
   refreshNickLabels();
 
   const adm = isAdmin();
-  el("btnAddQueue").style.display = adm ? "block" : "none";
-  el("btnMyQueue").style.display = adm ? "block" : "none";
+  const __bAdd1 = el("btnAddQueue"); if(__bAdd1){ __bAdd1.style.display = adm ? "block" : "none"; __bAdd1.disabled = !!matchesCache.length; }
+  const __myQ1 = el("btnMyQueue"); if(__myQ1) __myQ1.style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
@@ -1326,8 +1372,8 @@ async function openRoom(code, opts={}){
     el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
-    el("btnAddQueue").style.display = adm2 ? "block" : "none";
-    el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    const __bAdd2 = el("btnAddQueue"); if(__bAdd2){ __bAdd2.style.display = adm2 ? "block" : "none"; __bAdd2.disabled = !!matchesCache.length; }
+    const __myQ2 = el("btnMyQueue"); if(__myQ2) __myQ2.style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
@@ -2107,6 +2153,31 @@ function renderManualBuilder(defaultPairs){
     wrap.appendChild(row);
   }
 }
+
+
+function collectManualPairs(){
+  const wrap = el("manualMatches");
+  if(!wrap) throw new Error("manualMatches missing");
+  const selects = Array.from(wrap.querySelectorAll("select"));
+  if(selects.length < 20) throw new Error("need 20 selects");
+  const pairs = [];
+  const used = new Set();
+  for(let i=0;i<10;i++){
+    const homeSel = wrap.querySelector(`select[data-kind="home"][data-i="${i}"]`);
+    const awaySel = wrap.querySelector(`select[data-kind="away"][data-i="${i}"]`);
+    const home = homeSel ? homeSel.value : "";
+    const away = awaySel ? awaySel.value : "";
+    if(!home || !away) throw new Error("empty");
+    if(home === away) throw new Error("same team");
+    // enforce uniqueness across the whole round (20 teams max)
+    if(used.has(home) || used.has(away)) throw new Error("duplicate team");
+    used.add(home); used.add(away);
+    pairs.push([home, away]);
+  }
+  if(pairs.length !== 10) throw new Error("pairs != 10");
+  return pairs;
+}
+
 
 function collectManualPairs(){
   const wrap = el("manualMatches");
