@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1020)</title>
+  <title>Typer (BUILD 4016)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -112,25 +112,6 @@
 
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
 
-    /* ===== GAME-LIKE BUTTON (modal choices) ===== */
-    .glossBtn{
-      width:100%;
-      padding:14px 18px;
-      border-radius:18px;
-      font-weight:1000;
-      letter-spacing:.2px;
-      color:#fff;
-      cursor:pointer;
-      border:1px solid rgba(255,255,255,.28);
-      background:linear-gradient(180deg, rgba(120,220,255,.92), rgba(0,150,220,.88));
-      box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.25), 0 12px 28px rgba(0,0,0,.35);
-      text-shadow:0 2px 4px rgba(0,0,0,.45);
-      user-select:none;
-    }
-    .glossBtn:hover{filter:brightness(1.06)}
-    .glossBtn:active{transform:translateY(1px)}
-    .glossBtn:disabled{opacity:.45;cursor:not-allowed;filter:none;transform:none}
-
     .chip{
       display:inline-flex;
       gap:10px;
@@ -141,20 +122,6 @@
       border:1px solid rgba(255,255,255,.12);
       font-weight:900;
     }
-
-    .chipSelect{
-      border:0;
-      outline:none;
-      background:rgba(0,0,0,.18);
-      color:var(--text);
-      font-weight:1000;
-      border-radius:12px;
-      padding:6px 10px;
-      cursor:pointer;
-      appearance:auto;
-    }
-    .chipSelect:disabled{opacity:.55;cursor:not-allowed}
-
 
     .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
     .sub{color:var(--muted);font-weight:700;font-size:13px}
@@ -190,9 +157,6 @@
       z-index:10;
     }
 
-
-    .mid{flex:1;display:flex;flex-direction:column;gap:14px;position:relative;}
-    
     /* ===== HOME (MENU PNG) ===== */
     #home{
       align-items:center;
@@ -229,23 +193,6 @@
       max-height: clamp(120px, 20vh, 220px);
       border-radius: 0;
     }
-    /* Fallback label for image buttons (hidden unless image missing) */
-    .imgBtn .btnFallbackLabel{
-      display:none;
-      position:relative;
-      font-weight:800;
-      font-size:22px;
-      color:#eaf6ff;
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
-      padding:18px 34px;
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
-      border:1px solid rgba(255,255,255,.35);
-      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
-      line-height:1;
-    }
-    .imgBtn.imgMissing img{display:none;}
-    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
@@ -357,34 +304,35 @@
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
-    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;position:relative;}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     .midHead{padding:14px}
-    /* denser list so 10 matches fit in the visible area */
-    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:4px;padding:8px;padding-bottom:8px;overflow:auto}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
     .matchCard{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
-      border-radius:16px;
-      padding:6px 8px;
-      display:flex;align-items:center;gap:6px;
-      min-height:44px;
+      border-radius:18px;
+      padding:12px 12px;
+      display:flex;align-items:center;gap:12px;
     }
-    .team{display:flex;align-items:center;gap:6px;min-width:0;flex:1;font-weight:1000;font-size:13px;}
+    .team{
+      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      font-weight:1000;
+    }
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .logo{
-      width:18px;height:18px;flex:0 0 18px;border-radius:6px;
+      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
       background:rgba(255,255,255,.10);
       object-fit:contain;
     }
-    .scoreBox{display:flex;align-items:center;gap:6px}
-    .scoreInput{width:38px;text-align:center;padding:6px 0;font-size:13px}
+    .scoreBox{display:flex;align-items:center;gap:8px}
+    .scoreInput{width:48px;text-align:center}
     .sep{font-weight:1000;opacity:.85}
     .resultPill{
-      margin-left:6px;
-      padding:6px 8px;
-      border-radius:12px;
+      margin-left:8px;
+      padding:8px 10px;
+      border-radius:14px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(0,0,0,.18);
       font-weight:1000;
@@ -427,19 +375,6 @@
       align-items:center;
     }
     .rightFooterBtn .btn{width:auto}
-    .midFooterBtn{
-      position:absolute;
-      left:14px;
-      bottom:14px;
-      display:flex;
-      gap:14px;
-      align-items:center;
-      justify-content:space-between;
-      width:min(480px, calc(100% - 28px));
-      pointer-events:auto;
-      z-index:5;
-    }
-
 
     /* ===== RESULTS SCREEN ===== */
     #results{
@@ -785,23 +720,6 @@
     @media (max-width: 720px){
       .homeBtns{top:55%;}
       .imgBtn img{width: min(86vw, 420px); max-height: none;}
-    /* Fallback label for image buttons (hidden unless image missing) */
-    .imgBtn .btnFallbackLabel{
-      display:none;
-      position:relative;
-      font-weight:800;
-      font-size:22px;
-      color:#eaf6ff;
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
-      padding:18px 34px;
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
-      border:1px solid rgba(255,255,255,.35);
-      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
-      line-height:1;
-    }
-    .imgBtn.imgMissing img{display:none;}
-    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
     }
   
 /* Nick modal image buttons */
@@ -809,7 +727,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 1020 UI FIT tweaks --- */
+/* --- BUILD 4014 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -819,23 +737,6 @@
 .roomHeaderActionsRow .imgBtn img{
   height:56px;
 }
-    /* Fallback label for image buttons (hidden unless image missing) */
-    .imgBtn .btnFallbackLabel{
-      display:none;
-      position:relative;
-      font-weight:800;
-      font-size:22px;
-      color:#eaf6ff;
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
-      padding:18px 34px;
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
-      border:1px solid rgba(255,255,255,.35);
-      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
-      line-height:1;
-    }
-    .imgBtn.imgMissing img{display:none;}
-    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
 .actionsButtonsFit{
   display:flex;
   flex-direction:column;
@@ -853,64 +754,13 @@
   width:auto;
   max-width: 100%;
 }
-    /* Fallback label for image buttons (hidden unless image missing) */
-    .imgBtn .btnFallbackLabel{
-      display:none;
-      position:relative;
-      font-weight:800;
-      font-size:22px;
-      color:#eaf6ff;
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
-      padding:18px 34px;
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
-      border:1px solid rgba(255,255,255,.35);
-      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
-      line-height:1;
-    }
-    .imgBtn.imgMissing img{display:none;}
-    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
 @media (max-width: 900px){
   .roomHeaderActionsRow .imgBtn img{ height:52px; }
-    /* Fallback label for image buttons (hidden unless image missing) */
-    .imgBtn .btnFallbackLabel{
-      display:none;
-      position:relative;
-      font-weight:800;
-      font-size:22px;
-      color:#eaf6ff;
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
-      padding:18px 34px;
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
-      border:1px solid rgba(255,255,255,.35);
-      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
-      line-height:1;
-    }
-    .imgBtn.imgMissing img{display:none;}
-    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
   .actionsButtonsFit .imgBtn img{ height:72px; }
-    /* Fallback label for image buttons (hidden unless image missing) */
-    .imgBtn .btnFallbackLabel{
-      display:none;
-      position:relative;
-      font-weight:800;
-      font-size:22px;
-      color:#eaf6ff;
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
-      padding:18px 34px;
-      border-radius:18px;
-      background:linear-gradient(180deg, rgba(64,193,255,.95), rgba(0,120,200,.95));
-      border:1px solid rgba(255,255,255,.35);
-      box-shadow:0 10px 22px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35);
-      line-height:1;
-    }
-    .imgBtn.imgMissing img{display:none;}
-    .imgBtn.imgMissing .btnFallbackLabel{display:inline-block;}
 }
 
 
-/* --- BUILD 1020 tweaks --- */
+/* --- BUILD 4014 tweaks --- */
 .roomTopBtns{
   display:flex;
   gap:10px;
@@ -942,41 +792,7 @@
   #roomActionsCol .sysBtn{ max-width: 220px; }
   #roomActionsCol .sysBtn img{ height: 54px; }
 }
-
-/* ===== ADD QUEUE MODAL OVERLAY ===== */
-.modalOverlay{
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-  background: rgba(0,0,0,.55);
-  z-index: 80;
-}
-#queueModal .modalCard{
-  width:min(560px, 92vw);
-  border-radius:22px;
-  padding:18px;
-}
-#queueModal .btn{width:100%;}
-
-/* ===== PICKS COMPLETE MODAL ===== */
-#picksCompleteModal .modalCard{
-  width:min(560px, 92vw);
-  border-radius:22px;
-  padding:18px;
-}
-
-/* ===== END ROUND CONFIRM MODAL ===== */
-#endRoundModal .modalCard{
-  width:min(640px, 94vw);
-  border-radius:22px;
-  padding:18px;
-}
-
 </style>
-
 </head>
 
 <body>
@@ -1121,9 +937,14 @@
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" id="roomActionsCol" style="margin-top:10px">
-<!-- ADMIN -->
+                <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
+
+                <!-- ADMIN -->
                 <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults"></button>
                 <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
+
+                <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
+                <button class="imgBtn sysBtn" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
               </div>
             </div>
 
@@ -1137,12 +958,8 @@
               <div class="row">
                 <div>
                   <div class="title" id="t_matches">Spotkania</div>
-                  <div class="row" style="margin-top:6px; gap:10px; align-items:center;">
-                  <button class="imgBtn sysBtn small" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png">
-                    <img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue">
-                  </button>
+                  <div class="sub" id="t_matches_sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
                 </div>
-</div>
                 <div class="spacer"></div>
                 <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
                 <div class="chip"><span id="t_games">Mecze</span>: <span id="matchesCount">0</span></div>
@@ -1151,7 +968,6 @@
             </div>
 
             <div class="panel matchesWrap" id="matchesList"></div>
-
           </div>
 
           <!-- RIGHT -->
@@ -1163,8 +979,8 @@
             <div class="playersList" id="playersList"></div>
 
             <div class="rightFooterBtn">
-              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
-              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="ui/buttons/pl/btn_wyjscie.png" alt="btnExitFromRoomRight"></button>
+	              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
+	              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="ui/buttons/pl/btn_wyjscie.png" alt="btnExitFromRoomRight"></button>
             </div>
           </div>
 
@@ -1201,11 +1017,11 @@
               <div class="chip" id="t_league">Tabela ligi typerów</div>
               <div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
               <div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
-              <div class="chip"><span id="t_after_round">Po kolejce</span>: <select id="leagueRoundSelect" class="chipSelect" aria-label="after round"></select><span id="leagueAfterRound" style="display:none">—</span></div>
+              <div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
             </div>
-            <div class="row" style="gap:12px">
-              <button class="imgBtn sysBtn" id="btnLeagueRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnLeagueRefresh"><span class="btnFallbackLabel" data-i18n="refresh">Odśwież</span></button>
-              <button class="imgBtn sysBtn" id="btnLeagueBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnLeagueBack"></button>
+            <div class="row">
+              <button class="imgBtn sysBtn small" id="btnLeagueRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnLeagueRefresh"></button>
+              <button class="imgBtn sysBtn small" id="btnLeagueBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnLeagueBack"></button>
             </div>
           </div>
 
@@ -1246,62 +1062,6 @@
           <div class="modalBody" id="modalBody"></div>
         </div>
       </div>
-      <!-- ADD QUEUE MODAL (BUILD 1020) -->
-      <div id="queueModal" class="modalOverlay" style="display:none" aria-hidden="true">
-        <div class="panel modalCard">
-          <!-- STEP 1 -->
-          <div id="queueModalStep1" class="col" style="gap:12px">
-            <div class="title" style="margin:0">Dodaj kolejkę</div>
-            <div class="sub">Wybierz tryb tworzenia kolejki.</div>
-            <div class="col" style="gap:10px;margin-top:6px">
-              <button class="glossBtn" id="btnQueueManual" type="button">Ręczne</button>
-              <button class="glossBtn" id="btnQueueAuto" type="button">Automatyczne</button>
-              <button class="glossBtn" id="btnQueueBack" type="button">Cofnij</button>
-            </div>
-          </div>
-
-          <!-- STEP 2 (MANUAL) -->
-          <div id="queueModalManual" class="col" style="gap:12px; display:none">
-            <div class="row" style="align-items:center;gap:10px">
-              <div>
-                <div class="title" style="margin:0">Ręczne</div>
-                <div class="sub">Ustaw 10 pojedynków (gospodarz – gość).</div>
-              </div>
-              <div class="spacer"></div>
-              <button class="glossBtn" id="btnQueueManualBack" type="button" style="width:auto; padding:10px 14px; border-radius:16px">Cofnij</button>
-            </div>
-            <div id="manualMatches" class="col" style="gap:10px; max-height:52vh; overflow:auto; padding-right:6px"></div>
-            <div class="row" style="gap:10px">
-              <button class="glossBtn" id="btnQueueSaveManual" type="button" style="flex:1">Zapisz kolejkę</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      <!-- PICKS COMPLETE MODAL (BUILD 1020) -->
-      <div id="picksCompleteModal" class="modalOverlay" style="display:none" aria-hidden="true">
-        <div class="panel modalCard">
-          <div class="title" style="margin:0">Typer</div>
-          <div class="sub" style="margin-top:6px">Wszystkie typy uzupełnione.</div>
-          <div class="row" style="gap:12px; margin-top:14px; justify-content:center; flex-wrap:wrap">
-            <button class="imgBtn sysBtn" id="btnModalSavePicks" type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_zapisz_typy.png" alt="btnModalSavePicks"></button>
-            <button class="imgBtn sysBtn" id="btnModalBackPicks" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnModalBackPicks"></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- END ROUND CONFIRM MODAL (BUILD 1020) -->
-      <div id="endRoundModal" class="modalOverlay" style="display:none" aria-hidden="true">
-        <div class="panel modalCard">
-          <div class="title" style="margin:0">Typer</div>
-          <div class="sub" id="endRoundModalText" style="margin-top:6px; white-space:pre-line"></div>
-          <div class="row" style="gap:12px; margin-top:14px; justify-content:center; flex-wrap:wrap">
-            <button class="imgBtn sysBtn" id="btnEndRoundOk" type="button" data-btn="btn_ok.png"><img data-btn="btn_ok.png" src="ui/buttons/pl/btn_ok.png" alt="btnEndRoundOk"></button>
-            <button class="imgBtn sysBtn" id="btnEndRoundCancel" type="button" data-btn="btn_cancel.png"><img data-btn="btn_cancel.png" src="ui/buttons/pl/btn_cancel.png" alt="btnEndRoundCancel"></button>
-          </div>
-        </div>
-      </div>
 
       <div class="toast" id="toast"></div>
       <div class="footerRight" id="footerRight">—</div>
@@ -1324,12 +1084,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1020"></script>
+  <script type="module" src="./app.js?v=4016"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1020').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=4012').catch(() => {});
     });
   }
 </script>
