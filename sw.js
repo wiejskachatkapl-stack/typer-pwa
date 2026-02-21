@@ -1,66 +1,54 @@
-// Typer PWA Service Worker (BUILD 4012)
-// Network-first for HTML/JS to avoid being stuck on old builds.
-
-const CACHE_VERSION = 'typer-cache-4012';
-const CORE_ASSETS = [
-  './',
-  './index.html',
-  './app.js',
-  './manifest.json'
+// Spójna wersja cache względem BUILD
+const BUILD = "4016";
+const CACHE_NAME = `typer-pwa-cache-v${BUILD}`;
+const ASSETS = [
+  "./",
+  "./index.html",
+  `./app.js?v=${BUILD}`,
+  `./manifest.json?v=${BUILD}`,
+  "./manifest.json",
+  "./img_menu.png",
+  "./img_menu_pc.png",
+  "./img_tlo.png",
 ];
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k !== CACHE_VERSION ? caches.delete(k) : Promise.resolve())));
-    if (self.clients && self.clients.claim) await self.clients.claim();
-  })());
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null))))
+      .then(() => self.clients.claim())
+  );
 });
 
-const isHtmlOrJs = (req) => {
-  const url = new URL(req.url);
-  return req.destination === 'document' ||
-         req.destination === 'script' ||
-         url.pathname.endsWith('.html') ||
-         url.pathname.endsWith('.js');
-};
-
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
 
-  // Always network-first for app shell files (prevents "stuck on build 4009")
-  if (isHtmlOrJs(req)) {
-    event.respondWith((async () => {
-      try {
-        const fresh = await fetch(req, { cache: 'no-store' });
-        const cache = await caches.open(CACHE_VERSION);
-        cache.put(req, fresh.clone());
-        return fresh;
-      } catch (e) {
-        const cached = await caches.match(req);
-        return cached || Response.error();
-      }
-    })());
+  const isHTML = req.mode === "navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
+  const isJS = url.pathname.endsWith("/app.js") || url.search.includes("v=");
+
+  if (isHTML || isJS) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
+    );
     return;
   }
 
-  // For images/fonts/etc: cache-first with SWR
-  event.respondWith((async () => {
-    const cached = await caches.match(req);
-    const fetchPromise = fetch(req).then(async (fresh) => {
-      const cache = await caches.open(CACHE_VERSION);
-      cache.put(req, fresh.clone());
-      return fresh;
-    }).catch(() => null);
-
-    return cached || (await fetchPromise) || Response.error();
-  })());
+  event.respondWith(
+    caches.match(req).then((cached) => cached || fetch(req))
+  );
 });

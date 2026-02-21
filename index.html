@@ -4,8 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
+  <!-- Jedno źródło prawdy dla wersji (cache-busting pod PWA/WebView) -->
+  <meta name="app-build" content="4016" />
   <title>Typer (BUILD 4016)</title>
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="manifest.json?v=4016" />
 
   <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1086,13 +1088,17 @@
 
   <script type="module" src="./app.js?v=4016"></script>
 
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=4012').catch(() => {});
-    });
-  }
-</script>
+  <script>
+    // Spójne wersjonowanie SW/assetów (szczególnie ważne w Android WebView)
+    const BUILD = (document.querySelector('meta[name="app-build"]')?.content || '4016');
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register(`./sw.js?v=${BUILD}`)
+          .catch((err) => console.warn('[SW] register error:', err));
+      });
+    }
+  </script>
 
 </body>
 </html>
