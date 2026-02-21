@@ -794,8 +794,11 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   wrap.className = "profileModal";
   wrap.innerHTML = `
     <div class="profileRow">
-      <div class="profileAvatarBox" aria-label="Avatar">
-        <div class="profileAvatarPlaceholder">🙂</div>
+      <div class="profileLeftCol" aria-label="Avatar">
+        <div class="profileAvatarBox">
+          <div class="profileAvatarPlaceholder">🙂</div>
+        </div>
+        <div id="profileAvatarBtnSlot"></div>
       </div>
       <div class="profileFields">
         <div class="profileDesc">${escapeHtml(L.desc)}</div>
@@ -817,6 +820,14 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   `;
 
   modalOpen(L.title, wrap);
+
+  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
+  const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
+  if(avatarSlot){
+    const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
+    btnAvatar.onclick = ()=>{ showToast(lang==='en' ? 'Avatar selection soon.' : 'Wybór avatara wkrótce.'); };
+    avatarSlot.appendChild(btnAvatar);
+  }
 
   requestAnimationFrame(()=>{
     const sel = document.getElementById("profileCountry");
