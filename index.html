@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1014)</title>
+  <title>Typer (BUILD 1016)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -761,7 +761,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 1002 UI FIT tweaks --- */
+/* --- BUILD 1016 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -794,7 +794,7 @@
 }
 
 
-/* --- BUILD 1002 tweaks --- */
+/* --- BUILD 1016 tweaks --- */
 .roomTopBtns{
   display:flex;
   gap:10px;
@@ -1087,9 +1087,9 @@
               <div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
               <div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
             </div>
-            <div class="row">
-              <button class="imgBtn sysBtn small" id="btnLeagueRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnLeagueRefresh"></button>
-              <button class="imgBtn sysBtn small" id="btnLeagueBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnLeagueBack"></button>
+            <div class="row" style="gap:12px">
+              <button class="imgBtn sysBtn" id="btnLeagueRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnLeagueRefresh"></button>
+              <button class="imgBtn sysBtn" id="btnLeagueBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnLeagueBack"></button>
             </div>
           </div>
 
@@ -1130,7 +1130,7 @@
           <div class="modalBody" id="modalBody"></div>
         </div>
       </div>
-      <!-- ADD QUEUE MODAL (BUILD 1004) -->
+      <!-- ADD QUEUE MODAL (BUILD 1016) -->
       <div id="queueModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <!-- STEP 1 -->
@@ -1163,7 +1163,7 @@
       </div>
 
 
-      <!-- PICKS COMPLETE MODAL (BUILD 1011) -->
+      <!-- PICKS COMPLETE MODAL (BUILD 1016) -->
       <div id="picksCompleteModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <div class="title" style="margin:0">Typer</div>
@@ -1175,7 +1175,7 @@
         </div>
       </div>
 
-      <!-- END ROUND CONFIRM MODAL (BUILD 1015) -->
+      <!-- END ROUND CONFIRM MODAL (BUILD 1016) -->
       <div id="endRoundModal" class="modalOverlay" style="display:none" aria-hidden="true">
         <div class="panel modalCard">
           <div class="title" style="margin:0">Typer</div>
@@ -1208,12 +1208,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1015"></script>
+  <script type="module" src="./app.js?v=1016"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1014').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1016').catch(() => {});
     });
   }
 </script>
