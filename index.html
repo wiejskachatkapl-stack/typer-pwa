@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1008)</title>
+  <title>Typer (BUILD 1009)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -330,31 +330,33 @@
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     .midHead{padding:14px}
-    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px; padding-bottom:18px;overflow:auto}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:10px;padding-bottom:12px;overflow:auto}
     .matchCard{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
-      border-radius:18px;
-      padding:12px 12px;
-      display:flex;align-items:center;gap:12px;
+      border-radius:16px;
+      padding:8px 10px;
+      display:flex;align-items:center;gap:8px;
+      min-height:54px;
     }
     .team{
-      display:flex;align-items:center;gap:10px;min-width:0;flex:1;
+      display:flex;align-items:center;gap:8px;min-width:0;flex:1;
       font-weight:1000;
+      font-size:14px;
     }
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .logo{
-      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      width:20px;height:20px;flex:0 0 20px;border-radius:6px;
       background:rgba(255,255,255,.10);
       object-fit:contain;
     }
     .scoreBox{display:flex;align-items:center;gap:8px}
-    .scoreInput{width:48px;text-align:center}
+    .scoreInput{width:42px;text-align:center;padding:8px 0;font-size:14px}
     .sep{font-weight:1000;opacity:.85}
     .resultPill{
-      margin-left:8px;
-      padding:8px 10px;
-      border-radius:14px;
+      margin-left:6px;
+      padding:6px 8px;
+      border-radius:12px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(0,0,0,.18);
       font-weight:1000;
@@ -1178,12 +1180,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1008"></script>
+  <script type="module" src="./app.js?v=1009"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1008').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1009').catch(() => {});
     });
   }
 </script>
