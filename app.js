@@ -1,4 +1,4 @@
-const BUILD = 1022;
+const BUILD = 1023;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -26,6 +26,11 @@ const firebaseConfig = {
 const el = (id) => document.getElementById(id);
 
 // Set text for normal <button>, but for image-buttons (having data-btn or <img>) only set title/aria-label.
+const setTextSafe = (id, text) => {
+  const n = el(id);
+  if (n) n.textContent = text;
+};
+
 const setBtnLabelSafe = (id, label) => {
   const b = el(id);
   if (!b) return;
@@ -383,37 +388,37 @@ function applyLangToUI(){
   updateLangButtonsVisual();
 
   // Continue
-  if(el("t_continue_title")) el("t_continue_title").textContent = t("contTitle");
-  if(el("t_continue_sub")) el("t_continue_sub").textContent = t("contSub");
-  if(el("t_continue_hello")) el("t_continue_hello").textContent = t("contHello");
-  if(el("t_continue_room")) el("t_continue_room").textContent = t("contRoom");
-  if(el("t_continue_q")) el("t_continue_q").textContent = t("contQ");
+  if(el("t_continue_title")) setTextSafe("t_continue_title", t("contTitle"));
+  if(el("t_continue_sub")) setTextSafe("t_continue_sub", t("contSub"));
+  if(el("t_continue_hello")) setTextSafe("t_continue_hello", t("contHello"));
+  if(el("t_continue_room")) setTextSafe("t_continue_room", t("contRoom"));
+  if(el("t_continue_q")) setTextSafe("t_continue_q", t("contQ"));
   setBtnLabelSafe("btnContYes", t("yes"));
   setBtnLabelSafe("btnContNo", t("no"));
   setBtnLabelSafe("btnContForget", t("forget"));
 
   // Rooms
-  if(el("t_rooms_title")) el("t_rooms_title").textContent = t("roomsTitle");
-  if(el("t_nick")) el("t_nick").textContent = t("nick");
+  if(el("t_rooms_title")) setTextSafe("t_rooms_title", t("roomsTitle"));
+  if(el("t_nick")) setTextSafe("t_nick", t("nick"));
   setBtnLabelSafe("btnChangeNickRooms", t("changeNick"));
   setBtnLabelSafe("btnBackHomeFromRooms", t("back"));
-  if(el("t_join_title")) el("t_join_title").textContent = t("joinTitle");
+  if(el("t_join_title")) setTextSafe("t_join_title", t("joinTitle"));
   setBtnLabelSafe("btnJoinRoom", t("joinBtn"));
-  if(el("t_join_help")) el("t_join_help").textContent = t("joinHelp");
-  if(el("t_create_title")) el("t_create_title").textContent = t("createTitle");
+  if(el("t_join_help")) setTextSafe("t_join_help", t("joinHelp"));
+  if(el("t_create_title")) setTextSafe("t_create_title", t("createTitle"));
   setBtnLabelSafe("btnCreateRoom", t("createBtn"));
-  if(el("t_create_help")) el("t_create_help").textContent = t("createHelp");
+  if(el("t_create_help")) setTextSafe("t_create_help", t("createHelp"));
 
   // Room
-  if(el("t_room_room")) el("t_room_room").textContent = t("room");
-  if(el("t_nick2")) el("t_nick2").textContent = t("nick");
-  if(el("t_admin")) el("t_admin").textContent = t("admin");
-  if(el("t_code")) el("t_code").textContent = t("code");
+  if(el("t_room_room")) setTextSafe("t_room_room", t("room"));
+  if(el("t_nick2")) setTextSafe("t_nick2", t("nick"));
+  if(el("t_admin")) setTextSafe("t_admin", t("admin"));
+  if(el("t_code")) setTextSafe("t_code", t("code"));
   setBtnLabelSafe("btnCopyCode", t("copy"));
   setBtnLabelSafe("btnLeave", t("leave"));
   setBtnLabelSafe("btnRefresh", t("refresh"));
-  if(el("t_actions")) el("t_actions").textContent = t("actions");
-  if(el("t_actions_sub")) el("t_actions_sub").textContent = t("actionsSub");
+  if(el("t_actions")) setTextSafe("t_actions", t("actions"));
+  if(el("t_actions_sub")) setTextSafe("t_actions_sub", t("actionsSub"));
   setBtnLabelSafe("btnModalSavePicks", t("savePicks"));
   setBtnLabelSafe("btnEnterResults", t("enterResults"));
   setBtnLabelSafe("btnEndRound", t("endRound"));
@@ -421,36 +426,36 @@ function applyLangToUI(){
   setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
-  if(el("t_matches")) el("t_matches").textContent = t("matches");
-  if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
-  if(el("t_round")) el("t_round").textContent = t("round");
-  if(el("t_games")) el("t_games").textContent = t("games");
-  if(el("t_points_round")) el("t_points_round").textContent = t("pointsRound");
+  if(el("t_matches")) setTextSafe("t_matches", t("matches"));
+  if(el("t_matches_sub")) setTextSafe("t_matches_sub", t("matchesSub"));
+  if(el("t_round")) setTextSafe("t_round", t("round"));
+  if(el("t_games")) setTextSafe("t_games", t("games"));
+  if(el("t_points_round")) setTextSafe("t_points_round", t("pointsRound"));
 
-  if(el("t_players")) el("t_players").textContent = t("players");
-  if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
+  if(el("t_players")) setTextSafe("t_players", t("players"));
+  if(el("t_players_sub")) setTextSafe("t_players_sub", t("playersSub"));
   setBtnLabelSafe("btnLeagueFromRoom", t("leagueBtn"));
 
   // Results
-  if(el("t_results")) el("t_results").textContent = t("results");
-  if(el("t_room")) el("t_room").textContent = t("room");
-  if(el("t_round2")) el("t_round2").textContent = t("round");
+  if(el("t_results")) setTextSafe("t_results", t("results"));
+  if(el("t_room")) setTextSafe("t_room", t("room"));
+  if(el("t_round2")) setTextSafe("t_round2", t("round"));
   setBtnLabelSafe("btnResBack", t("back"));
   setBtnLabelSafe("btnResSave", t("saveResults"));
-  if(el("t_results_hint")) el("t_results_hint").textContent = t("hintResults");
+  if(el("t_results_hint")) setTextSafe("t_results_hint", t("hintResults"));
 
   // League
-  if(el("t_league")) el("t_league").textContent = t("league");
-  if(el("t_room3")) el("t_room3").textContent = t("room");
-  if(el("t_nick3")) el("t_nick3").textContent = t("nick");
-  if(el("t_after_round")) el("t_after_round").textContent = t("afterRound");
+  if(el("t_league")) setTextSafe("t_league", t("league"));
+  if(el("t_room3")) setTextSafe("t_room3", t("room"));
+  if(el("t_nick3")) setTextSafe("t_nick3", t("nick"));
+  if(el("t_after_round")) setTextSafe("t_after_round", t("afterRound"));
   setBtnLabelSafe("btnLeagueRefresh", t("refresh"));
   setBtnLabelSafe("btnLeagueBack", t("back"));
-  if(el("t_ranking")) el("t_ranking").textContent = t("ranking");
-  if(el("leagueHint")) el("leagueHint").textContent = t("leagueHint");
-  if(el("t_player_col")) el("t_player_col").textContent = t("playerCol");
-  if(el("t_rounds_col")) el("t_rounds_col").textContent = t("roundsCol");
-  if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
+  if(el("t_ranking")) setTextSafe("t_ranking", t("ranking"));
+  if(el("leagueHint")) setTextSafe("leagueHint", t("leagueHint"));
+  if(el("t_player_col")) setTextSafe("t_player_col", t("playerCol"));
+  if(el("t_rounds_col")) setTextSafe("t_rounds_col", t("roundsCol"));
+  if(el("t_points_col")) setTextSafe("t_points_col", t("pointsCol"));
 }
 
 // ===== Modal =====
@@ -958,9 +963,9 @@ function nickModalAsk(){
 }
 function refreshNickLabels(){
   const nick = getNick() || "—";
-  if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
-  if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
-  if (el("leagueNick")) el("leagueNick").textContent = nick;
+  if (el("nickLabelRooms")) setTextSafe("nickLabelRooms", nick);
+  if (el("nickLabelRoom")) setTextSafe("nickLabelRoom", nick);
+  if (el("leagueNick")) setTextSafe("leagueNick", nick);
 }
 
 function getSavedRoom(){
@@ -1070,7 +1075,7 @@ function recomputePoints(){
   myPoints = null;
 
   if(!allResultsComplete()){
-    if(el("myPointsLabel")) el("myPointsLabel").textContent = "—";
+    if(el("myPointsLabel")) setTextSafe("myPointsLabel", "—");
     return;
   }
 
@@ -1086,7 +1091,7 @@ function recomputePoints(){
   }
 
   myPoints = pointsByUid[userUid] ?? 0;
-  if(el("myPointsLabel")) el("myPointsLabel").textContent = String(myPoints);
+  if(el("myPointsLabel")) setTextSafe("myPointsLabel", String(myPoints));
 }
 
 async function initFirebase(){
@@ -1342,8 +1347,8 @@ async function showContinueIfRoomExists(code){
       return;
     }
     const room = snap.data();
-    el("contNick").textContent = getNick() || "—";
-    el("contRoomName").textContent = room?.name || "—";
+    setTextSafe("contNick", getNick() || "—");
+    setTextSafe("contRoomName", room?.name || "—");
     showScreen("continue");
   }catch{
     showToast(getLang()==="en" ? "Cannot check room" : "Nie udało się sprawdzić pokoju");
@@ -1354,7 +1359,7 @@ async function showContinueIfRoomExists(code){
 // ===== ROOMS LOGIC =====
 async function createRoom(roomName){
   const nick = getNick();
-  el("debugRooms").textContent = (getLang()==="en") ? "Creating room…" : "Tworzę pokój…";
+  setTextSafe("debugRooms", (getLang()==="en") ? "Creating room…" : "Tworzę pokój…");
 
   for(let tries=0; tries<12; tries++){
     const code = genCode6();
@@ -1377,23 +1382,23 @@ async function createRoom(roomName){
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
     pushRoomHistory(code);
 
-    el("debugRooms").textContent = (getLang()==="en") ? `Room created ${code}` : `Utworzono pokój ${code}`;
+    setTextSafe("debugRooms", (getLang()==="en") ? `Room created ${code}` : `Utworzono pokój ${code}`);
     await openRoom(code);
     return;
   }
-  el("debugRooms").textContent = (getLang()==="en")
+  setTextSafe("debugRooms", (getLang()==="en")
     ? "Could not generate a free code (try again)."
-    : "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
+    : "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).");
 }
 
 async function joinRoom(code){
   const nick = getNick();
-  el("debugRooms").textContent = (getLang()==="en") ? "Joining…" : "Dołączam…";
+  setTextSafe("debugRooms", (getLang()==="en") ? "Joining…" : "Dołączam…");
 
   const ref = roomRef(code);
   const snap = await boot.getDoc(ref);
   if(!snap.exists()){
-    el("debugRooms").textContent = (getLang()==="en") ? "Room not found." : "Nie ma takiego pokoju.";
+    setTextSafe("debugRooms", (getLang()==="en") ? "Room not found." : "Nie ma takiego pokoju.");
     showToast(getLang()==="en" ? "Room not found" : "Nie ma takiego pokoju");
     return;
   }
@@ -1405,7 +1410,7 @@ async function joinRoom(code){
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
   pushRoomHistory(code);
 
-  el("debugRooms").textContent = (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`;
+  setTextSafe("debugRooms", (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`);
   await openRoom(code);
 }
 
@@ -1468,7 +1473,7 @@ async function openRoom(code, opts={}){
 
   renderMatches();
   renderPlayers([]);
-  if(el("myPointsLabel")) el("myPointsLabel").textContent = "—";
+  if(el("myPointsLabel")) setTextSafe("myPointsLabel", "—");
 
   const ref = roomRef(code);
   const snap = await boot.getDoc(ref);
@@ -1476,11 +1481,11 @@ async function openRoom(code, opts={}){
   currentRoom = snap.data();
 
   currentRoundNo = currentRoom?.currentRoundNo || 1;
-  el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
+  setTextSafe("roundLabel", `${t("round")} ${currentRoundNo}`);
 
-  el("roomName").textContent = currentRoom.name || "—";
-  el("roomAdmin").textContent = currentRoom.adminNick || "—";
-  el("roomCode").textContent = code;
+  setTextSafe("roomName", currentRoom.name || "—");
+  setTextSafe("roomAdmin", currentRoom.adminNick || "—");
+  setTextSafe("roomCode", code);
 
   refreshNickLabels();
 
@@ -1494,10 +1499,10 @@ async function openRoom(code, opts={}){
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
     currentRoom = d.data();
-    el("roomName").textContent = currentRoom.name || "—";
-    el("roomAdmin").textContent = currentRoom.adminNick || "—";
+    setTextSafe("roomName", currentRoom.name || "—");
+    setTextSafe("roomAdmin", currentRoom.adminNick || "—");
     currentRoundNo = currentRoom?.currentRoundNo || 1;
-    el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
+    setTextSafe("roundLabel", `${t("round")} ${currentRoundNo}`);
 
     const adm2 = isAdmin();
     updateAddQueueButtonUI();
@@ -1711,13 +1716,13 @@ function renderMatches(){
   if(!list) return;
   list.innerHTML = "";
 
-  el("matchesCount").textContent = String(matchesCache.length || 0);
+  setTextSafe("matchesCount", String(matchesCache.length || 0));
 
   if(el("myPointsLabel")){
     if(allResultsComplete() && isCompletePicksObject(picksDocByUid[userUid])){
-      el("myPointsLabel").textContent = String(pointsByUid[userUid] ?? 0);
+      setTextSafe("myPointsLabel", String(pointsByUid[userUid] ?? 0));
     }else{
-      el("myPointsLabel").textContent = "—";
+      setTextSafe("myPointsLabel", "—");
     }
   }
 
@@ -2041,8 +2046,8 @@ function openResultsScreen(){
   if(!currentRoomCode) return;
   if(!isAdmin()) return;
 
-  el("resRoomName").textContent = currentRoom?.name || "—";
-  el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
+  setTextSafe("resRoomName", currentRoom?.name || "—");
+  setTextSafe("resRound", `${t("round")} ${currentRoundNo}`);
 
   for(const m of matchesCache){
     resultsDraft[m.id] = {
@@ -2498,9 +2503,9 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
     leagueState.selectedRound = leagueState.afterRound;
 
-    el("leagueRoomName").textContent = leagueState.roomName;
+    setTextSafe("leagueRoomName", leagueState.roomName);
     // (legacy span kept hidden in HTML for compatibility)
-    el("leagueAfterRound").textContent = String(leagueState.selectedRound);
+    setTextSafe("leagueAfterRound", String(leagueState.selectedRound));
 
     // load finished rounds (archive)
     await loadLeagueArchives(roomCode);
@@ -2573,7 +2578,7 @@ function setupLeagueRoundSelect(){
     sel.appendChild(opt);
     sel.disabled = true;
     // still show legacy text
-    el("leagueAfterRound").textContent = "0";
+    setTextSafe("leagueAfterRound", "0");
     return;
   }
 
@@ -2597,12 +2602,12 @@ function setupLeagueRoundSelect(){
   sel.onchange = ()=>{
     const rn = parseInt(sel.value, 10);
     leagueState.selectedRound = Number.isFinite(rn) ? rn : maxFinished;
-    el("leagueAfterRound").textContent = String(leagueState.selectedRound);
+    setTextSafe("leagueAfterRound", String(leagueState.selectedRound));
     recomputeLeagueRowsForSelectedRound();
     renderLeagueTable();
   };
 
-  el("leagueAfterRound").textContent = String(leagueState.selectedRound);
+  setTextSafe("leagueAfterRound", String(leagueState.selectedRound));
 }
 
 function recomputeLeagueRowsForSelectedRound(){
