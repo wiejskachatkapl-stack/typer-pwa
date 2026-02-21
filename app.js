@@ -1,4 +1,4 @@
-const BUILD = 1012;
+const BUILD = 1014;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -1666,14 +1666,10 @@ function renderMatches(){
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
-      // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
-  picksDirty = false;
-  picksCompleteSuppressed = false;
-  picksWasFilled = allMyPicksFilled();
-  hidePicksCompleteModal(false);
-  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
-
-    };
+      picksDirty = true;
+      picksCompleteSuppressed = false;
+      updateSaveButtonState();
+      };
 
     const sep = document.createElement("div");
     sep.className = "sep";
@@ -1688,14 +1684,10 @@ function renderMatches(){
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
-      // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
-  picksDirty = false;
-  picksCompleteSuppressed = false;
-  picksWasFilled = allMyPicksFilled();
-  hidePicksCompleteModal(false);
-  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
-
-    };
+      picksDirty = true;
+      picksCompleteSuppressed = false;
+      updateSaveButtonState();
+      };
 
     score.appendChild(inpH);
     score.appendChild(sep);
