@@ -852,6 +852,13 @@
   padding:18px;
 }
 
+/* ===== END ROUND CONFIRM MODAL ===== */
+#endRoundModal .modalCard{
+  width:min(640px, 94vw);
+  border-radius:22px;
+  padding:18px;
+}
+
 </style>
 
 </head>
@@ -1168,6 +1175,18 @@
         </div>
       </div>
 
+      <!-- END ROUND CONFIRM MODAL (BUILD 1015) -->
+      <div id="endRoundModal" class="modalOverlay" style="display:none" aria-hidden="true">
+        <div class="panel modalCard">
+          <div class="title" style="margin:0">Typer</div>
+          <div class="sub" id="endRoundModalText" style="margin-top:6px; white-space:pre-line"></div>
+          <div class="row" style="gap:12px; margin-top:14px; justify-content:center; flex-wrap:wrap">
+            <button class="imgBtn sysBtn" id="btnEndRoundOk" type="button" data-btn="btn_ok.png"><img data-btn="btn_ok.png" src="ui/buttons/pl/btn_ok.png" alt="btnEndRoundOk"></button>
+            <button class="imgBtn sysBtn" id="btnEndRoundCancel" type="button" data-btn="btn_cancel.png"><img data-btn="btn_cancel.png" src="ui/buttons/pl/btn_cancel.png" alt="btnEndRoundCancel"></button>
+          </div>
+        </div>
+      </div>
+
       <div class="toast" id="toast"></div>
       <div class="footerRight" id="footerRight">—</div>
     </div>
@@ -1189,7 +1208,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1014"></script>
+  <script type="module" src="./app.js?v=1015"></script>
 
 <script>
   if ('serviceWorker' in navigator) {

@@ -1146,6 +1146,16 @@ function bindUI(){
     };
   }
 
+  // END ROUND CONFIRM MODAL BUTTONS
+  const __endOk = el("btnEndRoundOk");
+  if(__endOk) __endOk.onclick = ()=> resolveEndRoundModal(true);
+  const __endCancel = el("btnEndRoundCancel");
+  if(__endCancel) __endCancel.onclick = ()=> resolveEndRoundModal(false);
+  const __endOverlay = el("endRoundModal");
+  if(__endOverlay) __endOverlay.addEventListener("click", (e)=>{
+    if(e && e.target && e.target.id === "endRoundModal") resolveEndRoundModal(false);
+  });
+
   // ADMIN
   const __b12 = el("btnEnterResults");
   if(__b12) __b12.onclick = async ()=>{    if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
@@ -1753,6 +1763,35 @@ function suppressPicksCompleteModal(){
   hidePicksCompleteModal(false);
 }
 
+// ===== END ROUND CONFIRM (custom modal instead of window.confirm) =====
+let endRoundModalResolver = null;
+function showEndRoundModal(message){
+  const modal = el("endRoundModal");
+  const textEl = el("endRoundModalText");
+  if(!modal || !textEl) return Promise.resolve(false);
+
+  // cancel previous pending modal
+  endRoundModalResolver = null;
+
+  textEl.textContent = String(message || "");
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden","false");
+
+  return new Promise((resolve)=>{ endRoundModalResolver = resolve; });
+}
+function hideEndRoundModal(){
+  const modal = el("endRoundModal");
+  if(!modal) return;
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden","true");
+}
+function resolveEndRoundModal(val){
+  hideEndRoundModal();
+  const r = endRoundModalResolver;
+  endRoundModalResolver = null;
+  if(typeof r === "function") r(!!val);
+}
+
 function updateSaveButtonState(){
   const filled = allMyPicksFilled();
 
@@ -2028,7 +2067,7 @@ async function endRoundConfirmAndArchive(){
     ? `End ROUND ${currentRoundNo} and save it to history?\n\nAfter ending: matches/picks will be archived and the app moves to ROUND ${currentRoundNo+1}.`
     : `Zakończyć KOLEJKĘ ${currentRoundNo} i zapisać do historii?\n\nPo zakończeniu: mecze/typy tej kolejki zostaną zarchiwizowane, a aplikacja przejdzie do KOLEJKI ${currentRoundNo+1}.`;
 
-  const ok = confirm(msg);
+  const ok = await showEndRoundModal(msg);
   if(!ok) return;
 
   await archiveCurrentRound();
