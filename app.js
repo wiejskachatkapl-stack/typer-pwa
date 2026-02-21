@@ -1,4 +1,4 @@
-const BUILD = 1021;
+const BUILD = 1022;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -184,7 +184,11 @@ const I18N = {
     ok: "OK",
     cancel: "Anuluj",
     langOnHome: "Język ustawiasz na stronie głównej."
-},
+
+    avatar: "Avatar",
+    chooseAvatar: "Wybierz avatar",
+    close: "Zamknij"
+  },
   en: {
     settings: "Settings",
     clearProfile: "Clear profile",
@@ -260,7 +264,10 @@ const I18N = {
     ok: "OK",
     cancel: "Cancel",
     langOnHome: "Language is set on the home screen."
-}
+    avatar: "Avatar",
+    chooseAvatar: "Choose avatar",
+    close: "Close"
+  }
 };
 function getLang(){
   const v = (localStorage.getItem(KEY_LANG) || "").toLowerCase();
@@ -691,49 +698,108 @@ async function clearProfile(){
 // ===== Settings modal =====
 function openSettings(){
   const wrap = document.createElement("div");
+  wrap.className = "settingsWrap";
+
+  const left = document.createElement("div");
+  left.className = "settingsLeft";
+
+  const right = document.createElement("div");
+  right.className = "settingsRight";
+
+  // Avatar preview
+  const avatarBox = document.createElement("div");
+  avatarBox.className = "avatarBox";
+  const avatarPreview = document.createElement("div");
+  avatarPreview.className = "avatarPreview";
+  avatarBox.appendChild(avatarPreview);
+  right.appendChild(avatarBox);
+
+  // Avatar button
+  const btnAvatar = document.createElement("button");
+  btnAvatar.className = "glossBtn";
+  btnAvatar.type = "button";
+  btnAvatar.textContent = t("avatar");
+  btnAvatar.onclick = () => openAvatarPicker(() => renderAvatarPreview(avatarPreview));
+  left.appendChild(btnAvatar);
+
+  // Reset profile
+  const btnClear = document.createElement("button");
+  btnClear.className = "imgBtn sysBtn sysBtnBig";
+  btnClear.type = "button";
+  btnClear.title = t("clearProfile");
+  btnClear.setAttribute("aria-label", t("clearProfile"));
+  btnClear.style.alignSelf = "flex-start";
+  const img = document.createElement("img");
+  img.dataset.btn = "btn_reset_profilu.png";
+  img.alt = t("clearProfile");
+  img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
+  btnClear.appendChild(img);
+  btnClear.onclick = () => clearProfile();
+  left.appendChild(btnClear);
+
+  const warn = document.createElement("div");
+  warn.className = "sub";
+  warn.style.opacity = ".8";
+  warn.textContent = (getLang()==="pl")
+    ? "Usuwa nick, pokój i całą lokalną pamięć tej gry na tym urządzeniu."
+    : "Removes nickname, room and all local data of this game on this device.";
+  left.appendChild(warn);
+
+  wrap.appendChild(left);
+  wrap.appendChild(right);
+
+  renderAvatarPreview(avatarPreview);
+  modalOpen(t("settings"), wrap);
+}
+
+function getAvatar(){
+  return (localStorage.getItem(KEY_AVATAR) || "").trim();
+}
+function setAvatar(val){
+  localStorage.setItem(KEY_AVATAR, val);
+}
+function renderAvatarPreview(el){
+  if(!el) return;
+  const v = getAvatar() || "👤";
+  el.textContent = v;
+}
+
+function openAvatarPicker(onPick){
+  const wrap = document.createElement("div");
   wrap.style.display = "flex";
   wrap.style.flexDirection = "column";
   wrap.style.gap = "12px";
 
-  const head = document.createElement("div");
-  head.className = "chip";
-  head.textContent = t("settings");
-  wrap.appendChild(head);
+  const grid = document.createElement("div");
+  grid.className = "avatarGrid";
 
-  const infoLang = document.createElement("div");
-  infoLang.className = "sub";
-  infoLang.textContent = t("langOnHome");
-  wrap.appendChild(infoLang);
+  const options = ["👤","⚽","👑","🐺","🤖","🧟","🐯","🔥","⭐","🎯","🦅","🐉"];
+  const current = getAvatar() || "👤";
 
-  const info = document.createElement("div");
-  info.className = "sub";
-  info.textContent = (getLang() === "pl")
-    ? "Zmiana języka działa od razu na całej aplikacji."
-    : "Language changes apply immediately across the app.";
-  wrap.appendChild(info);
+  options.forEach((ico) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "avatarPick";
+    b.textContent = ico;
+    if(ico === current) b.classList.add("active");
+    b.onclick = () => {
+      setAvatar(ico);
+      closeModal();
+      if(typeof onPick === "function") onPick();
+    };
+    grid.appendChild(b);
+  });
 
+  wrap.appendChild(grid);
 
-const btnClear = document.createElement("button");
-btnClear.className = "imgBtn sysBtn sysBtnBig";
-btnClear.type = "button";
-btnClear.title = t("clearProfile");
-btnClear.setAttribute("aria-label", t("clearProfile"));
-btnClear.style.alignSelf = "flex-start";
-const img = document.createElement("img");
-img.dataset.btn = "btn_reset_profilu.png";
-img.alt = t("clearProfile");
-img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
-btnClear.appendChild(img);
-btnClear.onclick = () => clearProfile();
-wrap.appendChild(btnClear);
+  const btnClose = document.createElement("button");
+  btnClose.type = "button";
+  btnClose.className = "glossBtn";
+  btnClose.textContent = t("close");
+  btnClose.onclick = () => closeModal();
+  wrap.appendChild(btnClose);
 
-const warn = document.createElement("div");
-warn.className = "sub";
-warn.style.opacity = ".8";
-warn.textContent = (getLang()==="pl") ? "Usuwa nick, pokój i całą lokalną pamięć tej gry na tym urządzeniu." : "Removes nickname, room and all local data of this game on this device.";
-wrap.appendChild(warn);
-
-  modalOpen(t("settings"), wrap);
+  modalOpen(t("chooseAvatar"), wrap);
 }
 
 
