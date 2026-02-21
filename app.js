@@ -1,4 +1,4 @@
-const BUILD = 1011;
+const BUILD = 1012;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -1432,6 +1432,8 @@ async function openRoom(code, opts={}){
       arr.push({ id: docu.id, ...docu.data() });
     });
     matchesCache = arr;
+
+    updateAddQueueButtonUI();
 
     recomputeSubmittedMap();
     recomputePoints();
