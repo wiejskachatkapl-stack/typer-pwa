@@ -1,4 +1,4 @@
-const BUILD = 1003;
+const BUILD = 1007;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -152,10 +152,10 @@ const I18N = {
     enterResults: "Wpisz wyniki",
     endRound: "Zakończ kolejkę",
     myQueue: "Własna kolejka",
-    addQueue: "Dodaj kolejkę (test)",
+    addQueue: "Dodaj kolejkę",
 
     matches: "Spotkania",
-    matchesSub: "Uzupełnij typy (0–20). Wyniki admin wpisze osobno.",
+    matchesSub: "",
     round: "KOLEJKA",
     games: "Mecze",
     pointsRound: "PUNKTY (kolejka)",
@@ -1060,13 +1060,13 @@ function bindUI(){
 
 
   // HOME
-  el("btnHomeRooms").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  const __b1 = el("btnHomeRooms");
+  if(__b1) __b1.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     openRoomsChoiceModal();
   };
 
-  el("btnHomeStats").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  const __b2 = el("btnHomeStats");
+  if(__b2) __b2.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
       await openLeagueTable(saved);
@@ -1076,36 +1076,36 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
-
+  const __b3 = el("btnHomeExit");
+  if(__b3) __b3.onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
   // CONTINUE
-  el("btnContYes").onclick = async ()=>{
-    const code = getSavedRoom();
+  const __b4 = el("btnContYes");
+  if(__b4) __b4.onclick = async ()=>{    const code = getSavedRoom();
     if(!code) { showScreen("rooms"); return; }
     await openRoom(code, { force:true });
   };
-  el("btnContNo").onclick = ()=> showScreen("rooms");
-  el("btnContForget").onclick = ()=>{
-    clearSavedRoom();
+  const __b5 = el("btnContNo");
+  if(__b5) __b5.onclick = ()=> showScreen("rooms");  const __b6 = el("btnContForget");
+  if(__b6) __b6.onclick = ()=>{    clearSavedRoom();
     showToast(getLang()==="en" ? "Room forgotten" : "Zapomniano pokój");
     showScreen("rooms");
   };
 
   // ROOMS
-  el("btnBackHomeFromRooms").onclick = ()=> showScreen("home");
-  el("btnChangeNickRooms").onclick = async ()=>{
-    localStorage.removeItem(KEY_NICK);
+  const __b7 = el("btnBackHomeFromRooms");
+  if(__b7) __b7.onclick = ()=> showScreen("home");  const __b8 = el("btnChangeNickRooms");
+  if(__b8) __b8.onclick = async ()=>{    localStorage.removeItem(KEY_NICK);
   const n = await ensureNick(); if(!n) return;
     showToast(getLang()==="en" ? "Nick changed" : "Zmieniono nick");
   };
-  el("btnCreateRoom").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  const __b9 = el("btnCreateRoom");
+  if(__b9) __b9.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const name = (el("inpRoomName").value || "").trim();
     if(name.length < 2){ showToast(getLang()==="en" ? "Enter room name" : "Podaj nazwę pokoju"); return; }
     await createRoom(name);
   };
-  el("btnJoinRoom").onclick = async ()=>{
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  const __b10 = el("btnJoinRoom");
+  if(__b10) __b10.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
     if(code.length !== 6){ showToast(getLang()==="en" ? "Code must be 6 chars" : "Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
@@ -1136,8 +1136,8 @@ function bindUI(){
   const __btnRefresh = el("btnRefresh");
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
-  el("btnModalSavePicks").onclick = async ()=>{ await saveAllPicks(); hidePicksCompleteModal(true); };
-  const backBtn = el("btnModalBackPicks");
+  const __b11 = el("btnModalSavePicks");
+  if(__b11) __b11.onclick = async ()=>{ await saveAllPicks(); hidePicksCompleteModal(true); };  const backBtn = el("btnModalBackPicks");
   if(backBtn){
     backBtn.onclick = ()=>{
       suppressPicksCompleteModal();
@@ -1146,18 +1146,18 @@ function bindUI(){
   }
 
   // ADMIN
-  el("btnEnterResults").onclick = async ()=>{
-    if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+  const __b12 = el("btnEnterResults");
+  if(__b12) __b12.onclick = async ()=>{    if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
     if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
     openResultsScreen();
   };
 
-  el("btnEndRound").onclick = async ()=>{
-    await endRoundConfirmAndArchive();
+  const __b13 = el("btnEndRound");
+  if(__b13) __b13.onclick = async ()=>{    await endRoundConfirmAndArchive();
   };
 
-  el("btnAddQueue").onclick = ()=>{ openAddQueueModal(); };
-  // ADD QUEUE MODAL (v1001)
+  const __b14 = el("btnAddQueue");
+  if(__b14) __b14.onclick = ()=>{ openAddQueueModal(); };  // ADD QUEUE MODAL (v1001)
   const __btnQM = el("btnQueueManual");
   const __btnQA = el("btnQueueAuto");
   const __btnQB = el("btnQueueBack");
@@ -1206,19 +1206,19 @@ function bindUI(){
   const __btnMyQueue = el("btnMyQueue"); if(__btnMyQueue) __btnMyQueue.onclick = ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
-  el("btnResBack").onclick = ()=> showScreen("room");
-  el("btnResSave").onclick = async ()=>{ await saveResults(); };
-
+  const __b15 = el("btnResBack");
+  if(__b15) __b15.onclick = ()=> showScreen("room");  const __b16 = el("btnResSave");
+  if(__b16) __b16.onclick = async ()=>{ await saveResults(); };
   // League from room
-  el("btnLeagueFromRoom").onclick = async ()=>{
-    if(!currentRoomCode) return;
+  const __b17 = el("btnLeagueFromRoom");
+  if(__b17) __b17.onclick = async ()=>{    if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
   };
 
   // League
-  el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
-  el("btnLeagueRefresh").onclick = async ()=>{
-    if(!leagueState.roomCode) return;
+  const __b18 = el("btnLeagueBack");
+  if(__b18) __b18.onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };  const __b19 = el("btnLeagueRefresh");
+  if(__b19) __b19.onclick = async ()=>{    if(!leagueState.roomCode) return;
     await openLeagueTable(leagueState.roomCode, {silent:true});
   };
 }
