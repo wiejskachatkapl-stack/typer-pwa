@@ -4,10 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <!-- Jedno źródło prawdy dla wersji (cache-busting pod PWA/WebView) -->
-  <meta name="app-build" content="4016" />
   <title>Typer (BUILD 4016)</title>
-  <link rel="manifest" href="manifest.json?v=4016" />
+  <link rel="manifest" href="manifest.json" />
 
   <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -306,11 +304,11 @@
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
     .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
-    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;position:relative;}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     .midHead{padding:14px}
-    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px; padding-bottom:120px;overflow:auto}
     .matchCard{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
@@ -377,6 +375,19 @@
       align-items:center;
     }
     .rightFooterBtn .btn{width:auto}
+    .midFooterBtn{
+      position:absolute;
+      left:14px;
+      bottom:14px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      width:min(480px, calc(100% - 28px));
+      pointer-events:auto;
+      z-index:5;
+    }
+
 
     /* ===== RESULTS SCREEN ===== */
     #results{
@@ -944,9 +955,6 @@
                 <!-- ADMIN -->
                 <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults"></button>
                 <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
-
-                <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
-                <button class="imgBtn sysBtn" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
               </div>
             </div>
 
@@ -970,6 +978,11 @@
             </div>
 
             <div class="panel matchesWrap" id="matchesList"></div>
+            <div class="midFooterBtn">
+              <button class="imgBtn sysBtn small" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
+              <button class="imgBtn sysBtn small" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
+            </div>
+
           </div>
 
           <!-- RIGHT -->
@@ -1088,17 +1101,13 @@
 
   <script type="module" src="./app.js?v=4016"></script>
 
-  <script>
-    // Spójne wersjonowanie SW/assetów (szczególnie ważne w Android WebView)
-    const BUILD = (document.querySelector('meta[name="app-build"]')?.content || '4016');
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register(`./sw.js?v=${BUILD}`)
-          .catch((err) => console.warn('[SW] register error:', err));
-      });
-    }
-  </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js?v=4012').catch(() => {});
+    });
+  }
+</script>
 
 </body>
 </html>
