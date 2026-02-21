@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1009)</title>
+  <title>Typer (BUILD 1010)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -330,28 +330,25 @@
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     .midHead{padding:14px}
-    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:10px;padding-bottom:12px;overflow:auto}
+    /* denser list so 10 matches fit in the visible area */
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:4px;padding:8px;padding-bottom:8px;overflow:auto}
     .matchCard{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
       border-radius:16px;
-      padding:8px 10px;
-      display:flex;align-items:center;gap:8px;
-      min-height:54px;
+      padding:6px 8px;
+      display:flex;align-items:center;gap:6px;
+      min-height:44px;
     }
-    .team{
-      display:flex;align-items:center;gap:8px;min-width:0;flex:1;
-      font-weight:1000;
-      font-size:14px;
-    }
+    .team{display:flex;align-items:center;gap:6px;min-width:0;flex:1;font-weight:1000;font-size:13px;}
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .logo{
-      width:20px;height:20px;flex:0 0 20px;border-radius:6px;
+      width:18px;height:18px;flex:0 0 18px;border-radius:6px;
       background:rgba(255,255,255,.10);
       object-fit:contain;
     }
-    .scoreBox{display:flex;align-items:center;gap:8px}
-    .scoreInput{width:42px;text-align:center;padding:8px 0;font-size:14px}
+    .scoreBox{display:flex;align-items:center;gap:6px}
+    .scoreInput{width:38px;text-align:center;padding:6px 0;font-size:13px}
     .sep{font-weight:1000;opacity:.85}
     .resultPill{
       margin-left:6px;
@@ -1180,12 +1177,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=1009"></script>
+  <script type="module" src="./app.js?v=1010"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1009').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1010').catch(() => {});
     });
   }
 </script>
