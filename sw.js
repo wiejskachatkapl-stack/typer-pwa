@@ -1,20 +1,12 @@
-const CACHE_NAME = "typer-pwa-cache-v2012";
+const CACHE_NAME = 'typer-pwa-cache-v1021';
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.js?v=2012",
+  "./app.js?v=1020",
   "./manifest.json",
-  "./ui/flags/pl.png",
-  "./ui/flags/gb.png",
   "./img_menu.png",
   "./img_menu_pc.png",
   "./img_tlo.png",
-  "./ui/buttons/pl/btn_recznie.png",
-  "./ui/buttons/pl/btn_losowo.png",
-  "./ui/buttons/pl/btn_cofnij.png",
-  "./ui/buttons/en/btn_manual.png",
-  "./ui/buttons/en/btn_random.png",
-  "./ui/buttons/en/btn_back.png",
 ];
 
 self.addEventListener("install", (event) => {
