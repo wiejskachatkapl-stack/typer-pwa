@@ -268,8 +268,6 @@ const BTN_NAME_MAP = {
   "btn_opcje.png": "btn_options.png",
   "btn_nowa_kolejka.png": "btn_new_queue.png",
   "btn_zakoncz_kolejke.png": "btn_end_queue.png",
-  "btn_recznie.png": "btn_manual.png",
-  "btn_losowo.png": "btn_random.png",
   "btn_cofnij.png": "btn_back.png",
   "btn_odswiez.png": "btn_refresh.png",
   "btn_tabela_typerow.png": "btn_tipster_table.png",
@@ -291,15 +289,7 @@ const BTN_NAME_MAP = {
 function mapBtnName(raw){
   if(!raw) return raw;
   const base = raw.replace(/(\d+)\.png$/i, '.png');
-
-  // Mapowanie nazw używamy TYLKO dla EN (PL ma swoje pliki w pl/)
-  if(getLang() === "en"){
-    return BTN_NAME_MAP[base] || base;
-  }
-
-  // PL: wymuszamy zielony wariant Cofnij
-  if(base === "btn_cofnij.png") return "btn_cofnij_z.png";
-  return base;
+  return BTN_NAME_MAP[base] || base;
 }
 
 function refreshAllButtonImages(){
@@ -439,6 +429,81 @@ function modalClose(){
   if(m) m.classList.remove("active");
 }
 
+function openNewQueueModal(){
+  const lang = getLang();
+  const files = (lang === "en")
+    ? { manual: "btn_manual.png", random: "btn_random.png", back: "btn_back.png" }
+    : { manual: "btn_recznie.png", random: "btn_losowo.png", back: "btn_cofnij.png" };
+
+  // Layout: 3 duże przyciski na dole w jednym rzędzie (lewy/prawy + cofnij na środku)
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.alignItems = "center";
+  wrap.style.justifyContent = "space-between";
+  wrap.style.gap = "28px";
+  wrap.style.width = "760px";
+  wrap.style.maxWidth = "90vw";
+  wrap.style.margin = "0 auto";
+  wrap.style.padding = "18px 10px 8px";
+
+  const mkBtn = (id, file, onClick) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "imgBtn sysBtn";
+    b.id = id;
+    b.style.padding = "0";
+    b.style.background = "transparent";
+    b.style.border = "0";
+    b.style.display = "inline-flex";
+    b.style.alignItems = "center";
+    b.style.justifyContent = "center";
+
+    const img = document.createElement("img");
+    img.alt = id;
+    img.dataset.btn = file;
+
+    const name = mapBtnName(file) || file;
+
+    // spróbuj w katalogu z przyciskami dla języka (ui/buttons/... lub buttons/...)
+    const primary = getBtnDir();
+    img.src = primary + name;
+
+    // większy rozmiar, żeby zielone przyciski nie były "mikre" (ich grafika ma duże marginesy przezroczystości)
+    img.style.height = "200px";
+    img.style.width = "auto";
+    img.style.display = "block";
+
+    img.onerror = () => {
+      if(img.dataset.fallbackDone) return;
+      img.dataset.fallbackDone = "1";
+      const altDir = primary.startsWith("ui/") ? primary.slice(3) : ("ui/" + primary);
+      img.src = altDir + name;
+    };
+
+    b.appendChild(img);
+    b.addEventListener("click", onClick);
+    return b;
+  };
+
+  const title = (lang === "en") ? "New fixture" : "Nowa kolejka";
+
+  // kolejność i pozycja: lewy = ręcznie/manual, środek = cofnij/back, prawy = losowo/random
+  wrap.appendChild(mkBtn("btnQManual", files.manual, () => {
+    modalClose();
+    showToast(lang === "en" ? "Manual – coming next" : "Ręcznie – dopinamy dalej");
+  }));
+
+  wrap.appendChild(mkBtn("btnQBack", files.back, () => modalClose()));
+
+  wrap.appendChild(mkBtn("btnQRandom", files.random, () => {
+    modalClose();
+    showToast(lang === "en" ? "Random – coming next" : "Losowo – dopinamy dalej");
+  }));
+
+  modalOpen(title, wrap);
+}
+
+
 /** ROOMS MENU MODALS **/
 
 function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=null} = {}){
@@ -466,59 +531,6 @@ b.appendChild(img);
   if(onClick) b.onclick = onClick;
   return b;
 }
-
-/** NEW QUEUE (Nowa kolejka) modal **/
-function ensureNewQueueModalStyles(){
-  if(document.getElementById("newQueueModalStyles")) return;
-  const st = document.createElement("style");
-  st.id = "newQueueModalStyles";
-  st.textContent = `
-    .newQueueWrap{ display:flex; flex-direction:column; gap:18px; align-items:center; }
-    .newQueueRow{ width:100%; display:flex; justify-content:space-between; gap:18px; align-items:center; }
-    .newQueueRow .imgBtn{ background:transparent; border:0; padding:0; }
-    .newQueueRow img{ width:260px; height:auto; display:block; }
-    @media (max-width: 900px){
-      .newQueueRow img{ width:210px; }
-    }
-  `;
-  document.head.appendChild(st);
-}
-
-function openNewQueueModal(){
-  ensureNewQueueModalStyles();
-  const wrap = document.createElement("div");
-  wrap.className = "newQueueWrap";
-
-  const row = document.createElement("div");
-  row.className = "newQueueRow";
-
-  const btnManual = makeSysImgButton("btn_recznie.png", {
-    cls:"newQueueBtn",
-    alt:"manual",
-    onClick: ()=>{ modalClose(); showToast(getLang()==="en" ? "Manual – coming next" : "Ręcznie – wkrótce"); }
-  });
-
-  const btnBack = makeSysImgButton("btn_cofnij.png", {
-    cls:"newQueueBtn",
-    alt:"back",
-    onClick: ()=>{ modalClose(); }
-  });
-
-  const btnRandom = makeSysImgButton("btn_losowo.png", {
-    cls:"newQueueBtn",
-    alt:"random",
-    onClick: ()=>{ modalClose(); showToast(getLang()==="en" ? "Random – coming next" : "Losowo – wkrótce"); }
-  });
-
-  row.appendChild(btnManual);
-  row.appendChild(btnBack);
-  row.appendChild(btnRandom);
-
-  wrap.appendChild(row);
-
-  modalOpen(getLang()==="en" ? "New round" : "Nowa kolejka", wrap);
-}
-
 
 
 // ===== Avatar picker (ui/avatars/avatar_1..12.png) =====
@@ -1509,7 +1521,7 @@ function bindUI(){
     await endRoundConfirmAndArchive();
   };
   if(el("btnAddQueue")) el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  if(el("btnMyQueue")) el("btnMyQueue").onclick = ()=>{ openNewQueueModal(); };
+  if(el("btnMyQueue")) el("btnMyQueue").onclick = () => openNewQueueModal();
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1691,7 +1703,7 @@ async function openRoom(code, opts={}){
 
   const adm = isAdmin();
   if(el("btnAddQueue")) el("btnAddQueue").style.display = adm ? "block" : "none";
-  el("btnMyQueue").style.display = adm ? "block" : "none";
+  if(el("btnMyQueue")) el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
@@ -1706,7 +1718,7 @@ async function openRoom(code, opts={}){
 
     const adm2 = isAdmin();
   if(el("btnAddQueue")) el("btnAddQueue").style.display = adm2 ? "block" : "none";
-    el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    if(el("btnMyQueue")) el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
