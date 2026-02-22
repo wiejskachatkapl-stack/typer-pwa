@@ -379,7 +379,6 @@ function applyLangToUI(){
   setBtnLabelSafe("btnEnterResults", t("enterResults"));
   setBtnLabelSafe("btnEndRound", t("endRound"));
   setBtnLabelSafe("btnMyQueue", t("myQueue"));
-  setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
   if(el("t_matches")) el("t_matches").textContent = t("matches");
@@ -1446,8 +1445,7 @@ function bindUI(){
   el("btnEndRound").onclick = async ()=>{
     await endRoundConfirmAndArchive();
   };
-
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+  if(el("btnAddQueue")) el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
   el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
@@ -1629,7 +1627,7 @@ async function openRoom(code, opts={}){
   refreshNickLabels();
 
   const adm = isAdmin();
-  el("btnAddQueue").style.display = adm ? "block" : "none";
+  if(el("btnAddQueue")) el("btnAddQueue").style.display = adm ? "block" : "none";
   el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
@@ -1644,7 +1642,7 @@ async function openRoom(code, opts={}){
     el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
-    el("btnAddQueue").style.display = adm2 ? "block" : "none";
+  if(el("btnAddQueue")) el("btnAddQueue").style.display = adm2 ? "block" : "none";
     el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
