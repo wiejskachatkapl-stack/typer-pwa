@@ -283,6 +283,8 @@ const BTN_NAME_MAP = {
   "btn_dodaj_kolejke.png": "btn_add_queue.png",
   "btn_zapisz_kolejke.png": "btn_save_queue.png",
   "btn_zapisz_typy.png": "btn_save_picks.png",
+  "btn_recznie.png": "btn_manual.png",
+  "btn_losowo.png": "btn_random.png",
   "btn_dodaj_wyniki1.png": "btn_enter_results.png"
 };
 
@@ -455,6 +457,63 @@ function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=n
 b.appendChild(img);
   if(onClick) b.onclick = onClick;
   return b;
+}
+
+
+// ===== Nowa kolejka: wybór trybu (Ręcznie / Losowo / Cofnij) =====
+function openNewQueueModeModal(){
+  const wrap = document.createElement("div");
+  wrap.className = "roomsChoice";
+
+  const muted = document.createElement("p");
+  muted.className = "muted";
+  muted.textContent = (getLang()==="en")
+    ? "Choose how to create a new round"
+    : "Wybierz sposób utworzenia nowej kolejki";
+  wrap.appendChild(muted);
+
+  const btns = document.createElement("div");
+  btns.className = "roomsChoiceBtns";
+
+  // Używamy polskich nazw jako 'raw' i mapujemy na angielskie w folderze EN
+  const bManual = makeSysImgButton("btn_recznie.png", {
+    cls: "sysBtn",
+    alt: "manual",
+    title: (getLang()==="en") ? "Manual" : "Ręcznie",
+    onClick: ()=>{
+      modalClose();
+      showToast(getLang()==="en" ? "Manual – coming next" : "Ręcznie – w kolejnym kroku");
+    }
+  });
+  const bRandom = makeSysImgButton("btn_losowo.png", {
+    cls: "sysBtn",
+    alt: "random",
+    title: (getLang()==="en") ? "Random" : "Losowo",
+    onClick: ()=>{
+      modalClose();
+      showToast(getLang()==="en" ? "Random – coming next" : "Losowo – w kolejnym kroku");
+    }
+  });
+  const bBack = makeSysImgButton("btn_cofnij.png", {
+    cls: "sysBtn small",
+    alt: "back",
+    title: (getLang()==="en") ? "Back" : "Cofnij",
+    onClick: ()=> modalClose()
+  });
+
+  btns.appendChild(bManual);
+  btns.appendChild(bRandom);
+  wrap.appendChild(btns);
+
+  const actions = document.createElement("div");
+  actions.className = "roomsChoiceActions";
+  actions.appendChild(bBack);
+  wrap.appendChild(actions);
+
+  modalOpen(wrap, {
+    title: (getLang()==="en") ? "New round" : "Nowa kolejka"
+  });
+  refreshAllButtonImages();
 }
 
 
@@ -1433,34 +1492,41 @@ function bindUI(){
   const __btnRefresh = el("btnRefresh");
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
-  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
+  const __btnSaveAll = el("btnSaveAll");
+  if(__btnSaveAll) __btnSaveAll.onclick = async ()=>{ await saveAllPicks(); };
 
   // ADMIN
-  el("btnEnterResults").onclick = async ()=>{
+  const __btnEnterResults = el("btnEnterResults");
+  if(__btnEnterResults) __btnEnterResults.onclick = async ()=>{
     if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
     if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
     openResultsScreen();
   };
 
-  el("btnEndRound").onclick = async ()=>{
-    await endRoundConfirmAndArchive();
-  };
+  const __btnEndRound = el("btnEndRound");
+  if(__btnEndRound) __btnEndRound.onclick = async ()=>{ await endRoundConfirmAndArchive(); };
   if(el("btnAddQueue")) el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  const __btnMyQueue = el("btnMyQueue");
+  if(__btnMyQueue) __btnMyQueue.onclick = ()=> openNewQueueModeModal();
 
   // RESULTS
-  el("btnResBack").onclick = ()=> showScreen("room");
-  el("btnResSave").onclick = async ()=>{ await saveResults(); };
+  const __btnResBack = el("btnResBack");
+  if(__btnResBack) __btnResBack.onclick = ()=> showScreen("room");
+  const __btnResSave = el("btnResSave");
+  if(__btnResSave) __btnResSave.onclick = async ()=>{ await saveResults(); };
 
   // League from room
-  el("btnLeagueFromRoom").onclick = async ()=>{
+  const __btnLeagueFromRoom = el("btnLeagueFromRoom");
+  if(__btnLeagueFromRoom) __btnLeagueFromRoom.onclick = async ()=>{
     if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
   };
 
   // League
-  el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
-  el("btnLeagueRefresh").onclick = async ()=>{
+  const __btnLeagueBack = el("btnLeagueBack");
+  if(__btnLeagueBack) __btnLeagueBack.onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
+  const __btnLeagueRefresh = el("btnLeagueRefresh");
+  if(__btnLeagueRefresh) __btnLeagueRefresh.onclick = async ()=>{
     if(!leagueState.roomCode) return;
     await openLeagueTable(leagueState.roomCode, {silent:true});
   };
