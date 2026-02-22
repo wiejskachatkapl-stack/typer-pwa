@@ -445,7 +445,15 @@ function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=n
   // Ustaw src od razu (żeby nie było pustki przed refresh)
   img.src = getBtnDir() + mapBtnName(btnName);
 
-  b.appendChild(img);
+  // Fallback: jeśli w projekcie przyciski są w innym katalogu (ui/buttons vs buttons)
+  img.onerror = () => {
+    if(img.dataset.fallbackDone) return;
+    img.dataset.fallbackDone = "1";
+    const primary = getBtnDir();
+    const altDir = primary.startsWith("ui/") ? primary.slice(3) : ("ui/" + primary);
+    img.src = altDir + mapBtnName(btnName);
+  };
+b.appendChild(img);
   if(onClick) b.onclick = onClick;
   return b;
 }
@@ -835,7 +843,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   });
 
   const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_save.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
+  const saveBtnFile = (getLang() === "en") ? "btn_save.png" : "btn_zapisz.png";
+  const btnSave = makeSysImgButton(saveBtnFile, {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
   const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
   btnRow.appendChild(btnSave);
   btnRow.appendChild(btnBack);
