@@ -268,7 +268,7 @@ const BTN_NAME_MAP = {
   "btn_opcje.png": "btn_options.png",
   "btn_nowa_kolejka.png": "btn_new_queue.png",
   "btn_zakoncz_kolejke.png": "btn_end_queue.png",
-  "btn_cofnij.png": "btn_back.png",
+  "btn_cofnij_z.png": "btn_back.png",
   "btn_odswiez.png": "btn_refresh.png",
   "btn_tabela_typerow.png": "btn_tipster_table.png",
   "btn_dodaj_profil.png": "btn_add_profile.png",
@@ -433,7 +433,7 @@ function openNewQueueModal(){
   const lang = getLang();
   const files = (lang === "en")
     ? { manual: "btn_manual.png", random: "btn_random.png", back: "btn_back.png" }
-    : { manual: "btn_recznie.png", random: "btn_losowo.png", back: "btn_cofnij.png" };
+    : { manual: "btn_recznie.png", random: "btn_losowo.png", back: "btn_cofnij_z.png" };
 
   // Layout: 3 duże przyciski na dole w jednym rzędzie (lewy/prawy + cofnij na środku)
   const wrap = document.createElement("div");
@@ -1077,7 +1077,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   const btnRow = wrap.querySelector("#profileBtns");
   const saveBtnFile = (getLang() === "en") ? "btn_save.png" : "btn_zapisz.png";
   const btnSave = makeSysImgButton(saveBtnFile, {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
-  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
+  const btnBack = makeSysImgButton("btn_cofnij_z.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
   btnRow.appendChild(btnSave);
   btnRow.appendChild(btnBack);
 
