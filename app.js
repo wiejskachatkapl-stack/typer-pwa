@@ -458,6 +458,140 @@ b.appendChild(img);
   return b;
 }
 
+
+// ===== Avatar picker (ui/avatars/avatar_1..12.png) =====
+function ensureAvatarPickerStyles(){
+  if(document.getElementById("avatarPickerStyles")) return;
+  const st = document.createElement("style");
+  st.id = "avatarPickerStyles";
+  st.textContent = `
+  .avatarPickerOverlay{
+    position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.55);
+    display:flex; align-items:center; justify-content:center;
+    padding:16px;
+  }
+  .avatarPickerPanel{
+    width:820px; max-width:94vw;
+    background:rgba(10,20,35,.92);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.55);
+    padding:14px 14px 16px;
+    backdrop-filter: blur(10px);
+  }
+  .avatarPickerHead{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; margin-bottom:10px;
+  }
+  .avatarPickerTitle{
+    font-weight:900; letter-spacing:.6px;
+    text-transform:uppercase; opacity:.95;
+  }
+  .avatarGrid{
+    display:grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap:12px;
+  }
+  @media (max-width: 720px){
+    .avatarGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .avatarPickItem{
+    border:none; background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;
+    padding:10px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: transform .08s ease, background .12s ease, border-color .12s ease;
+  }
+  .avatarPickItem:hover{ transform: translateY(-1px); background:rgba(255,255,255,.12); }
+  .avatarPickItem.selected{ outline:2px solid rgba(120,200,255,.85); }
+  .avatarPickItem img{
+    width:86px; height:86px; object-fit:contain;
+    image-rendering:auto;
+  }
+  .profileAvatarImg{
+    width:120px; height:120px; object-fit:contain; display:none;
+  }`;
+  document.head.appendChild(st);
+}
+
+function setAvatarImgWithFallback(img, avatarIndex){
+  const file = `avatar_${avatarIndex}.png`;
+  const dirs = ["ui/avatars/", "avatars/"];
+  let i = 0;
+  const tryNext = ()=>{
+    if(i >= dirs.length) return;
+    img.src = dirs[i] + file;
+    i++;
+  };
+  img.onerror = ()=>{ if(i < dirs.length) tryNext(); };
+  tryNext();
+}
+
+function openAvatarPickerOverlay({current=null, onPick} = {}){
+  ensureAvatarPickerStyles();
+
+  // Remove any previous overlay
+  const prev = document.getElementById("avatarPickerOverlay");
+  if(prev) prev.remove();
+
+  const lang = getLang();
+  const overlay = document.createElement("div");
+  overlay.id = "avatarPickerOverlay";
+  overlay.className = "avatarPickerOverlay";
+
+  const panel = document.createElement("div");
+  panel.className = "avatarPickerPanel";
+
+  const head = document.createElement("div");
+  head.className = "avatarPickerHead";
+
+  const title = document.createElement("div");
+  title.className = "avatarPickerTitle";
+  title.textContent = (lang==="en") ? "Choose avatar" : "Wybierz avatar";
+  head.appendChild(title);
+
+  const btnClose = makeSysImgButton("btn_zamknij.png", {
+    cls:"sysBtn",
+    alt:(lang==="en" ? "Close" : "Zamknij"),
+    title:(lang==="en" ? "Close" : "Zamknij")
+  });
+  btnClose.onclick = ()=> overlay.remove();
+  head.appendChild(btnClose);
+
+  panel.appendChild(head);
+
+  const grid = document.createElement("div");
+  grid.className = "avatarGrid";
+
+  for(let a=1; a<=12; a++){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "avatarPickItem" + (current===a ? " selected" : "");
+    const img = document.createElement("img");
+    img.alt = `avatar ${a}`;
+    setAvatarImgWithFallback(img, a);
+    b.appendChild(img);
+    b.onclick = ()=>{
+      if(typeof onPick === "function") onPick(a);
+      overlay.remove();
+    };
+    grid.appendChild(b);
+  }
+
+  panel.appendChild(grid);
+  overlay.appendChild(panel);
+
+  // close on click outside
+  overlay.addEventListener("click", (e)=>{
+    if(e.target === overlay) overlay.remove();
+  });
+
+  document.body.appendChild(overlay);
+}
+
 function openRoomsChoiceModal(){
   const wrap = document.createElement("div");
   wrap.className = "roomsChoice";
@@ -712,7 +846,7 @@ function openSettings(){
   imgAvatar.alt = btnAvatar.title;
   imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
   btnAvatar.appendChild(imgAvatar);
-  btnAvatar.onclick = ()=> showToast(getLang()==="pl" ? "Wkrótce..." : "Coming soon...");
+  btnAvatar.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnAvatar);
 
   wrap.appendChild(btnRow);
@@ -804,7 +938,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     <div class="profileRow">
       <div class="profileLeftCol" aria-label="Avatar">
         <div class="profileAvatarBox">
-          <div class="profileAvatarPlaceholder">🙂</div>
+          <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" />
+          <div id="profileAvatarPlaceholder" class="profileAvatarPlaceholder">🙂</div>
         </div>
         <div id="profileAvatarBtnSlot"></div>
       </div>
@@ -829,11 +964,34 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   modalOpen(L.title, wrap);
 
-  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
+  // Przycisk Avatar (otwiera picker avatarów)
   const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
+  let currentAvatar = (typeof existing.avatar === "number" && existing.avatar>=1 && existing.avatar<=12) ? existing.avatar : null;
+
+  const avatarImgEl = wrap.querySelector("#profileAvatarImg");
+  const avatarPhEl = wrap.querySelector("#profileAvatarPlaceholder");
+
+  const refreshAvatarPreview = ()=>{
+    if(!avatarImgEl) return;
+    if(currentAvatar){
+      setAvatarImgWithFallback(avatarImgEl, currentAvatar);
+      avatarImgEl.style.display = "block";
+      if(avatarPhEl) avatarPhEl.style.display = "none";
+    }else{
+      avatarImgEl.style.display = "none";
+      if(avatarPhEl) avatarPhEl.style.display = "block";
+    }
+  };
+  refreshAvatarPreview();
+
   if(avatarSlot){
     const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
-    btnAvatar.onclick = ()=>{ showToast(lang==='en' ? 'Avatar selection soon.' : 'Wybór avatara wkrótce.'); };
+    btnAvatar.onclick = ()=> {
+      openAvatarPickerOverlay({
+        current: currentAvatar,
+        onPick: (a)=>{ currentAvatar = a; refreshAvatarPreview(); }
+      });
+    };
     avatarSlot.appendChild(btnAvatar);
   }
 
@@ -853,7 +1011,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, updatedAt: Date.now()};
+    const profile = {...existing, nick, country, favClub, avatar: (currentAvatar||null), updatedAt: Date.now()};
     if(!isProfileComplete(profile)){
       showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
       return;
