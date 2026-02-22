@@ -21,8 +21,6 @@ const firebaseConfig = {
   messagingSenderId: "1032303131493",
   appId: "1:1032303131493:web:8cc41341f3e42415d6ff8c",
   measurementId: "G-5FBDH5G15N"
-  "btn_recznie.png": "btn_manual.png",
-  "btn_losowo.png": "btn_random.png",
 };
 
 const el = (id) => document.getElementById(id);
@@ -431,63 +429,52 @@ function modalClose(){
   if(m) m.classList.remove("active");
 }
 
-// ===== New Queue Modal =====
 function openNewQueueModal(){
-  // Title text depends on language via t()
-  const wrap = document.createElement("div");
-  wrap.className = "modalGrid"; // uses existing modalBody styling; safe even if not in CSS
+  const lang = getLang();
+  const files = (lang === "en")
+    ? { manual: "btn_manual.png", random: "btn_random.png", back: "btn_back.png" }
+    : { manual: "btn_recznie.png", random: "btn_losowo.png", back: "btn_cofnij.png" };
 
-  // simple vertical layout
-  wrap.style.display = "flex";
-  wrap.style.flexDirection = "column";
-  wrap.style.gap = "14px";
+  const wrap = document.createElement("div");
+  wrap.className = "col";
   wrap.style.alignItems = "center";
   wrap.style.justifyContent = "center";
-  wrap.style.padding = "6px 0";
+  wrap.style.gap = "14px";
+  wrap.style.padding = "10px 6px";
 
-  // Buttons use PL names; mapBtnName will translate to EN (manual/random/back) automatically
-  const btnManual = makeSysImgButton("btn_recznie.png", {
-    cls: "sysBtn",
-    alt: "manual",
-    onClick: ()=>{
-      modalClose();
-      showToast(getLang()==="en" ? "Manual – coming soon" : "Ręcznie – w przygotowaniu");
-    }
-  });
+  const mkBtn = (id, file, onClick) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "imgBtn sysBtn";
+    b.id = id;
 
-  const btnRandom = makeSysImgButton("btn_losowo.png", {
-    cls: "sysBtn",
-    alt: "random",
-    onClick: ()=>{
-      modalClose();
-      showToast(getLang()==="en" ? "Random – coming soon" : "Losowo – w przygotowaniu");
-    }
-  });
+    const img = document.createElement("img");
+    img.alt = id;
+    img.dataset.btn = file;
+    img.src = getBtnDir() + file;
+    img.style.height = "74px";
+    img.style.width = "auto";
 
-  const btnBack = makeSysImgButton("btn_cofnij.png", {
-    cls: "sysBtn",
-    alt: "back",
-    onClick: ()=>{ modalClose(); }
-  });
+    b.appendChild(img);
+    b.addEventListener("click", onClick);
+    return b;
+  };
 
-  // Make them consistent size
-  [btnManual, btnRandom, btnBack].forEach(b=>{
-    b.style.width = "340px";
-    b.style.maxWidth = "90%";
-  });
+  const title = (lang === "en") ? "New fixture" : "Nowa kolejka";
+  wrap.appendChild(mkBtn("btnQManual", files.manual, () => {
+    modalClose();
+    // TODO: tu będzie logika ręcznego tworzenia kolejki
+    showToast(lang === "en" ? "Manual – coming next" : "Ręcznie – dopinamy dalej");
+  }));
+  wrap.appendChild(mkBtn("btnQRandom", files.random, () => {
+    modalClose();
+    // TODO: tu będzie logika losowego tworzenia kolejki
+    showToast(lang === "en" ? "Random – coming next" : "Losowo – dopinamy dalej");
+  }));
+  wrap.appendChild(mkBtn("btnQBack", files.back, () => modalClose()));
 
-  wrap.appendChild(btnManual);
-  wrap.appendChild(btnRandom);
-  wrap.appendChild(btnBack);
-
-  modalOpen(getLang()==="en" ? "New queue" : "Nowa kolejka", wrap);
-  refreshAllButtonImages();
-
-  // Close button in header
-  const closeBtn = el("modalClose");
-  if(closeBtn) closeBtn.onclick = ()=> modalClose();
+  modalOpen(title, wrap);
 }
-
 
 /** ROOMS MENU MODALS **/
 
@@ -1506,7 +1493,7 @@ function bindUI(){
     await endRoundConfirmAndArchive();
   };
   if(el("btnAddQueue")) el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  if(el("btnMyQueue")) el("btnMyQueue").onclick = ()=>{ openNewQueueModal(); };
+  if(el("btnMyQueue")) el("btnMyQueue").onclick = () => openNewQueueModal();
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1688,7 +1675,7 @@ async function openRoom(code, opts={}){
 
   const adm = isAdmin();
   if(el("btnAddQueue")) el("btnAddQueue").style.display = adm ? "block" : "none";
-  el("btnMyQueue").style.display = adm ? "block" : "none";
+  if(el("btnMyQueue")) el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
@@ -1703,7 +1690,7 @@ async function openRoom(code, opts={}){
 
     const adm2 = isAdmin();
   if(el("btnAddQueue")) el("btnAddQueue").style.display = adm2 ? "block" : "none";
-    el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    if(el("btnMyQueue")) el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
