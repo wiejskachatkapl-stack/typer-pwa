@@ -451,9 +451,20 @@ function openNewQueueModal(){
     const img = document.createElement("img");
     img.alt = id;
     img.dataset.btn = file;
-    img.src = getBtnDir() + file;
+
+    const name = mapBtnName(file) || file;
+    const primary = getBtnDir();
+    img.src = primary + name;
     img.style.height = "74px";
     img.style.width = "auto";
+
+    // Fallback: jeśli w projekcie przyciski są w innym katalogu (ui/buttons vs buttons)
+    img.onerror = () => {
+      if(img.dataset.fallbackDone) return;
+      img.dataset.fallbackDone = "1";
+      const altDir = primary.startsWith("ui/") ? primary.slice(3) : ("ui/" + primary);
+      img.src = altDir + name;
+    };
 
     b.appendChild(img);
     b.addEventListener("click", onClick);
