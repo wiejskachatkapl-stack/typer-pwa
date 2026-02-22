@@ -25,6 +25,13 @@ const firebaseConfig = {
 
 const el = (id) => document.getElementById(id);
 
+// Safe click binder (avoids "Cannot set properties of null")
+const bindClick = (id, fn) => {
+  const node = el(id);
+  if (!node) return;
+  node.onclick = fn;
+};
+
 // Set text for normal <button>, but for image-buttons (having data-btn or <img>) only set title/aria-label.
 const setBtnLabelSafe = (id, label) => {
   const b = el(id);
@@ -1257,15 +1264,15 @@ function bindUI(){
 
 
   // HOME
-  el("btnHomeRooms").onclick = async ()=>{
+  bindClick("btnHomeRooms", async ()=>{
     // Profil uzupełniamy przy pierwszym wejściu do gry (nick + kraj)
     const okProfile = await ensureProfile();
     if(!okProfile) return;
     if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     openRoomsChoiceModal();
-  };
+  });
 
-  el("btnHomeStats").onclick = async ()=>{
+  bindClick("btnHomeStats", async ()=>{
     if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
@@ -1274,42 +1281,42 @@ function bindUI(){
     }
     showToast(getLang()==="en" ? "Join a room first" : "Najpierw wybierz / dołącz do pokoju");
     showScreen("rooms");
-  };
+  });
 
-  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
+  bindClick("btnHomeExit", ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki."));
 
   // CONTINUE
-  el("btnContYes").onclick = async ()=>{
+  bindClick("btnContYes", async ()=>{
     const code = getSavedRoom();
     if(!code) { showScreen("rooms"); return; }
     await openRoom(code, { force:true });
-  };
-  el("btnContNo").onclick = ()=> showScreen("rooms");
-  el("btnContForget").onclick = ()=>{
+  });
+  bindClick("btnContNo", ()=> showScreen("rooms"));
+  bindClick("btnContForget", ()=>{
     clearSavedRoom();
     showToast(getLang()==="en" ? "Room forgotten" : "Zapomniano pokój");
     showScreen("rooms");
-  };
+  });
 
   // ROOMS
-  el("btnBackHomeFromRooms").onclick = ()=> showScreen("home");
-  el("btnChangeNickRooms").onclick = async ()=>{
+  bindClick("btnBackHomeFromRooms", ()=> showScreen("home"));
+  bindClick("btnChangeNickRooms", async ()=>{
     localStorage.removeItem(KEY_NICK);
   const n = await ensureNick(); if(!n) return;
     showToast(getLang()==="en" ? "Nick changed" : "Zmieniono nick");
-  };
-  el("btnCreateRoom").onclick = async ()=>{
+  });
+  bindClick("btnCreateRoom", async ()=>{
     if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const name = (el("inpRoomName").value || "").trim();
     if(name.length < 2){ showToast(getLang()==="en" ? "Enter room name" : "Podaj nazwę pokoju"); return; }
     await createRoom(name);
-  };
-  el("btnJoinRoom").onclick = async ()=>{
+  });
+  bindClick("btnJoinRoom", async ()=>{
     if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
     if(code.length !== 6){ showToast(getLang()==="en" ? "Code must be 6 chars" : "Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
-  };
+  });
 
   // ROOM
   // Back-from-room action is now attached to the right-bottom "Wyjście" button.
@@ -1336,38 +1343,38 @@ function bindUI(){
   const __btnRefresh = el("btnRefresh");
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
-  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
+  bindClick("btnSaveAll", async ()=>{ await saveAllPicks(); });
 
   // ADMIN
-  el("btnEnterResults").onclick = async ()=>{
+  bindClick("btnEnterResults", async ()=>{
     if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
     if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
     openResultsScreen();
-  };
+  });
 
-  el("btnEndRound").onclick = async ()=>{
+  bindClick("btnEndRound", async ()=>{
     await endRoundConfirmAndArchive();
-  };
+  });
 
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ openMyQueueModal(); };
+  bindClick("btnAddQueue", async ()=>{ await addTestQueue(); });
+  bindClick("btnMyQueue", async ()=>{ openMyQueueModal(); });
 
   // RESULTS
-  el("btnResBack").onclick = ()=> showScreen("room");
-  el("btnResSave").onclick = async ()=>{ await saveResults(); };
+  bindClick("btnResBack", ()=> showScreen("room"));
+  bindClick("btnResSave", async ()=>{ await saveResults(); });
 
   // League from room
-  el("btnLeagueFromRoom").onclick = async ()=>{
+  bindClick("btnLeagueFromRoom", async ()=>{
     if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
-  };
+  });
 
   // League
-  el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
-  el("btnLeagueRefresh").onclick = async ()=>{
+  bindClick("btnLeagueBack", ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); });
+  bindClick("btnLeagueRefresh", async ()=>{
     if(!leagueState.roomCode) return;
     await openLeagueTable(leagueState.roomCode, {silent:true});
-  };
+  });
 }
 
 function isAdmin(){
