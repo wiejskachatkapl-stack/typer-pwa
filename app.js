@@ -435,30 +435,44 @@ function openNewQueueModal(){
     ? { manual: "btn_manual.png", random: "btn_random.png", back: "btn_back.png" }
     : { manual: "btn_recznie.png", random: "btn_losowo.png", back: "btn_cofnij.png" };
 
+  // Layout: 3 duże przyciski na dole w jednym rzędzie (lewy/prawy + cofnij na środku)
   const wrap = document.createElement("div");
-  wrap.className = "col";
+  wrap.style.display = "flex";
   wrap.style.alignItems = "center";
-  wrap.style.justifyContent = "center";
-  wrap.style.gap = "14px";
-  wrap.style.padding = "10px 6px";
+  wrap.style.justifyContent = "space-between";
+  wrap.style.gap = "28px";
+  wrap.style.width = "760px";
+  wrap.style.maxWidth = "90vw";
+  wrap.style.margin = "0 auto";
+  wrap.style.padding = "18px 10px 8px";
 
   const mkBtn = (id, file, onClick) => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "imgBtn sysBtn";
     b.id = id;
+    b.style.padding = "0";
+    b.style.background = "transparent";
+    b.style.border = "0";
+    b.style.display = "inline-flex";
+    b.style.alignItems = "center";
+    b.style.justifyContent = "center";
 
     const img = document.createElement("img");
     img.alt = id;
     img.dataset.btn = file;
 
     const name = mapBtnName(file) || file;
+
+    // spróbuj w katalogu z przyciskami dla języka (ui/buttons/... lub buttons/...)
     const primary = getBtnDir();
     img.src = primary + name;
-    img.style.height = "74px";
-    img.style.width = "auto";
 
-    // Fallback: jeśli w projekcie przyciski są w innym katalogu (ui/buttons vs buttons)
+    // większy rozmiar, żeby zielone przyciski nie były "mikre" (ich grafika ma duże marginesy przezroczystości)
+    img.style.height = "200px";
+    img.style.width = "auto";
+    img.style.display = "block";
+
     img.onerror = () => {
       if(img.dataset.fallbackDone) return;
       img.dataset.fallbackDone = "1";
@@ -472,20 +486,23 @@ function openNewQueueModal(){
   };
 
   const title = (lang === "en") ? "New fixture" : "Nowa kolejka";
+
+  // kolejność i pozycja: lewy = ręcznie/manual, środek = cofnij/back, prawy = losowo/random
   wrap.appendChild(mkBtn("btnQManual", files.manual, () => {
     modalClose();
-    // TODO: tu będzie logika ręcznego tworzenia kolejki
     showToast(lang === "en" ? "Manual – coming next" : "Ręcznie – dopinamy dalej");
   }));
+
+  wrap.appendChild(mkBtn("btnQBack", files.back, () => modalClose()));
+
   wrap.appendChild(mkBtn("btnQRandom", files.random, () => {
     modalClose();
-    // TODO: tu będzie logika losowego tworzenia kolejki
     showToast(lang === "en" ? "Random – coming next" : "Losowo – dopinamy dalej");
   }));
-  wrap.appendChild(mkBtn("btnQBack", files.back, () => modalClose()));
 
   modalOpen(title, wrap);
 }
+
 
 /** ROOMS MENU MODALS **/
 
