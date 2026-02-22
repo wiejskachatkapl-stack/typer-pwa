@@ -7,6 +7,9 @@ const KEY_NICK = "typer_nick_v3";
 const KEY_ACTIVE_ROOM = "typer_active_room_v3";
 const KEY_ROOMS_HISTORY = "typer_rooms_history_v3";
 
+// Profil (avatar / kraj / ulubiony klub)
+const KEY_PROFILE = "typer_profile_v1"; // JSON
+
 // NOWE: język
 const KEY_LANG = "typer_lang_v1"; // "pl" | "en"
 
@@ -280,7 +283,11 @@ const BTN_NAME_MAP = {
   "btn_dodaj_kolejke.png": "btn_add_queue.png",
   "btn_zapisz_kolejke.png": "btn_save_queue.png",
   "btn_zapisz_typy.png": "btn_save_picks.png",
-  "btn_dodaj_wyniki1.png": "btn_enter_results.png"
+  "btn_dodaj_wyniki1.png": "btn_enter_results.png",
+
+  // custom profile buttons
+  "btn_profil.png": "btn_profile.png",
+  "btn_zapisz.png": "btn_save.png"
 };
 
 function mapBtnName(raw){
@@ -672,6 +679,27 @@ function openSettings(){
     : "Language changes apply immediately across the app.";
   wrap.appendChild(info);
 
+  // Przycisk: Profil
+  const btnRow = document.createElement("div");
+  btnRow.style.display = "flex";
+  btnRow.style.gap = "14px";
+  btnRow.style.flexWrap = "wrap";
+
+  const btnProfil = document.createElement("button");
+  btnProfil.className = "imgBtn sysBtn sysBtnBig";
+  btnProfil.type = "button";
+  btnProfil.title = (getLang()==="pl") ? "Profil" : "Profile";
+  btnProfil.setAttribute("aria-label", btnProfil.title);
+  const imgProfil = document.createElement("img");
+  imgProfil.dataset.btn = "btn_profil.png";
+  imgProfil.alt = btnProfil.title;
+  imgProfil.src = getBtnDir() + mapBtnName("btn_profil.png");
+  btnProfil.appendChild(imgProfil);
+  btnProfil.onclick = ()=> openProfileModal({required:false});
+  btnRow.appendChild(btnProfil);
+
+  wrap.appendChild(btnRow);
+
 
 const btnClear = document.createElement("button");
 btnClear.className = "imgBtn sysBtn sysBtnBig";
@@ -717,6 +745,120 @@ async function ensureNick(){
   localStorage.setItem(KEY_NICK, nick);
   refreshNickLabels();
   return nick;
+}
+
+// =====================
+// PROFIL (v1)
+// =====================
+function getProfile(){
+  try{
+    const raw = localStorage.getItem(KEY_PROFILE);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
+    return null;
+  }
+}
+
+function setProfile(p){
+  localStorage.setItem(KEY_PROFILE, JSON.stringify(p || {}));
+}
+
+function isProfileComplete(p){
+  if(!p) return false;
+  const nickOk = typeof p.nick === "string" && p.nick.trim().length >= 3;
+  const countryOk = p.country === "pl" || p.country === "gb";
+  return nickOk && countryOk;
+}
+
+function openProfileModal({required=false, onDone, onCancel}={}){
+  const lang = getLang();
+  const L = (lang === "en")
+    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Save", cancelBtn:"Back", pl:"Poland", gb:"UK"}
+    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zapisz", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
+
+  const existing = getProfile() || {};
+  const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
+  const defaultCountry = existing.country || (lang === "pl" ? "pl" : "gb");
+  const defaultFav = (existing.favClub || "").trim();
+
+  const wrap = document.createElement("div");
+  wrap.className = "profileModal";
+  wrap.innerHTML = `
+    <div class="profileRow">
+      <div class="profileLeftCol" aria-label="Avatar">
+        <div class="profileAvatarBox">
+          <div class="profileAvatarPlaceholder">🙂</div>
+        </div>
+        <div id="profileAvatarBtnSlot"></div>
+      </div>
+      <div class="profileFields">
+        <div class="profileDesc">${escapeHtml(L.desc)}</div>
+        <label class="profileLabel">${escapeHtml(L.nick)}
+          <input id="profileNick" class="profileInput" type="text" maxlength="16" value="${escapeHtml(defaultNick)}" />
+        </label>
+        <label class="profileLabel">${escapeHtml(L.country)}
+          <select id="profileCountry" class="profileSelect">
+            <option value="pl">${escapeHtml(L.pl)}</option>
+            <option value="gb">${escapeHtml(L.gb)}</option>
+          </select>
+        </label>
+        <label class="profileLabel">${escapeHtml(L.fav)}
+          <input id="profileFav" class="profileInput" type="text" maxlength="26" value="${escapeHtml(defaultFav)}" />
+        </label>
+      </div>
+    </div>
+    <div class="profileBtns" id="profileBtns"></div>
+  `;
+
+  modalOpen(L.title, wrap);
+
+  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
+  const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
+  if(avatarSlot){
+    const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
+    btnAvatar.onclick = ()=>{ showToast(lang==='en' ? 'Avatar selection soon.' : 'Wybór avatara wkrótce.'); };
+    avatarSlot.appendChild(btnAvatar);
+  }
+
+  requestAnimationFrame(()=>{
+    const sel = document.getElementById("profileCountry");
+    if(sel) sel.value = defaultCountry;
+  });
+
+  const btnRow = wrap.querySelector("#profileBtns");
+  const btnSave = makeSysImgButton("btn_zapisz.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
+  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
+  btnRow.appendChild(btnSave);
+  btnRow.appendChild(btnBack);
+
+  btnSave.onclick = ()=>{
+    const nick = (document.getElementById("profileNick")?.value || "").trim();
+    const country = (document.getElementById("profileCountry")?.value || "").trim();
+    const favClub = (document.getElementById("profileFav")?.value || "").trim();
+    const profile = {...existing, nick, country, favClub, updatedAt: Date.now()};
+    if(!isProfileComplete(profile)){
+      showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
+      return;
+    }
+    localStorage.setItem(KEY_NICK, nick);
+    setProfile(profile);
+    refreshNickLabels();
+    modalClose();
+    if(typeof onDone === "function") onDone(profile);
+  };
+
+  btnBack.onclick = ()=>{
+    modalClose();
+    if(typeof onCancel === "function") onCancel();
+  };
+}
+
+async function ensureProfile(){
+  const p = getProfile();
+  if(isProfileComplete(p)) return true;
+  return await new Promise((resolve)=>{
+    openProfileModal({required:true, onDone: ()=>resolve(true), onCancel: ()=>resolve(false)});
+  });
 }
 
 function nickModalAsk(){
@@ -1038,6 +1180,9 @@ function bindUI(){
 
   // HOME
   el("btnHomeRooms").onclick = async ()=>{
+    // Profil uzupełniamy przy pierwszym wejściu do gry (nick + kraj)
+    const okProfile = await ensureProfile();
+    if(!okProfile) return;
     if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     openRoomsChoiceModal();
   };
