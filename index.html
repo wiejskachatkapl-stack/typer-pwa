@@ -521,6 +521,8 @@
       font-weight:1000;
       user-select:none;
     }
+.flagImg{width:32px;height:22px;display:block;object-fit:cover;border-radius:4px;}
+
     .flagBtn:hover{background:rgba(0,0,0,.28)}
     .flagBtn.active{
       outline:2px solid rgba(43,255,136,.55);
@@ -828,8 +830,8 @@
       <section id="home" class="screen">
         <!-- Language flags (HOME) -->
         <div class="homeLang" aria-label="Language">
-          <button class="flagBtn" id="btnLangPL" type="button" title="Polski">🇵🇱</button>
-          <button class="flagBtn" id="btnLangEN" type="button" title="English">🇬🇧</button>
+          <button class="flagBtn" id="btnLangPL" type="button" title="Polski"><img class="flagImg" src="ui/flags/pl.png" alt="PL"></button>
+          <button class="flagBtn" id="btnLangEN" type="button" title="English"><img class="flagImg" src="ui/flags/gb.png" alt="EN"></button>
         </div>
         <!-- NOWE: zębatka ustawień -->
         <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
@@ -1097,12 +1099,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=4016"></script>
+  <script type="module" src="./app.js?v=2000"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=4012').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=2000').catch(() => {});
     });
   }
 </script>
