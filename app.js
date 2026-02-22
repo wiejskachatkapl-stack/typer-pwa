@@ -255,8 +255,30 @@ function setLang(lang){
 }
 
 // ===== Buttons (grafiki) =====
-function getBtnDir(){
-  return (getLang() === "en") ? "ui/buttons/en/" : "ui/buttons/pl/";
+function getBtnDirs(){
+  // W projekcie występują dwa możliwe położenia: ui/buttons/... oraz buttons/...
+  // Zwracamy listę kandydatów w kolejności prób.
+  const lang = getLang();
+  const a = (lang === "en") ? "ui/buttons/en/" : "ui/buttons/pl/";
+  const b = (lang === "en") ? "buttons/en/" : "buttons/pl/";
+  return [a, b];
+}
+
+function setImgWithFallback(imgEl, fileName){
+  if(!imgEl) return;
+  const name = mapBtnName(fileName);
+  const dirs = getBtnDirs();
+  let i = 0;
+
+  const trySet = () => {
+    imgEl.src = dirs[i] + name;
+  };
+
+  imgEl.onerror = () => {
+    i += 1;
+    if(i < dirs.length) trySet();
+  };
+  trySet();
 }
 
 const BTN_NAME_MAP = {
@@ -269,6 +291,8 @@ const BTN_NAME_MAP = {
   "btn_nowa_kolejka.png": "btn_new_queue.png",
   "btn_zakoncz_kolejke.png": "btn_end_queue.png",
   "btn_cofnij.png": "btn_back.png",
+  "btn_recznie.png": "btn_manual.png",
+  "btn_losowo.png": "btn_random.png",
   "btn_odswiez.png": "btn_refresh.png",
   "btn_tabela_typerow.png": "btn_tipster_table.png",
   "btn_dodaj_profil.png": "btn_add_profile.png",
@@ -293,16 +317,13 @@ function mapBtnName(raw){
 }
 
 function refreshAllButtonImages(){
-  const dir = getBtnDir();
   document.querySelectorAll('img[data-btn]').forEach(img=>{
     const raw = (img.dataset.btn || '').trim();
     if(!raw) return;
 
     // Ujednolicenie nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
     // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
-    const name = mapBtnName(raw);
-
-    img.src = dir + name;
+    setImgWithFallback(img, raw);
   });
 }
 function t(key){
@@ -379,6 +400,7 @@ function applyLangToUI(){
   setBtnLabelSafe("btnEnterResults", t("enterResults"));
   setBtnLabelSafe("btnEndRound", t("endRound"));
   setBtnLabelSafe("btnMyQueue", t("myQueue"));
+  setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
   if(el("t_matches")) el("t_matches").textContent = t("matches");
@@ -431,6 +453,54 @@ function modalClose(){
 
 /** ROOMS MENU MODALS **/
 
+
+function openMyQueueModal(){
+  const wrap = document.createElement("div");
+  wrap.className = "col";
+  wrap.style.gap = "14px";
+
+  const row = document.createElement("div");
+  row.className = "row";
+  row.style.gap = "14px";
+  row.style.flexWrap = "wrap";
+  row.style.justifyContent = "center";
+
+  const btnManual = makeSysImgButton("btn_recznie.png", {
+    cls: "sysBtn small",
+    alt: "manual",
+    title: getLang()==="en" ? "Manual" : "Ręcznie",
+    onClick: ()=>{
+      modalClose();
+      showToast(getLang()==="en" ? "Manual mode – coming next" : "Tryb ręczny – dopinamy dalej");
+    }
+  });
+
+  const btnRandom = makeSysImgButton("btn_losowo.png", {
+    cls: "sysBtn small",
+    alt: "random",
+    title: getLang()==="en" ? "Random" : "Losowo",
+    onClick: ()=>{
+      modalClose();
+      showToast(getLang()==="en" ? "Random mode – coming next" : "Tryb losowy – dopinamy dalej");
+    }
+  });
+
+  const btnBack = makeSysImgButton("btn_cofnij.png", {
+    cls: "sysBtn small",
+    alt: "back",
+    title: t("back"),
+    onClick: ()=> modalClose()
+  });
+
+  row.appendChild(btnManual);
+  row.appendChild(btnRandom);
+  row.appendChild(btnBack);
+  wrap.appendChild(row);
+
+  modalOpen(t("myQueue"), wrap);
+  refreshAllButtonImages();
+}
+
 function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=null} = {}){
   const b = document.createElement("button");
   b.type = "button";
@@ -442,153 +512,11 @@ function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=n
   img.alt = alt;
 
   // Ustaw src od razu (żeby nie było pustki przed refresh)
-  img.src = getBtnDir() + mapBtnName(btnName);
+  setImgWithFallback(img, btnName);
 
-  // Fallback: jeśli w projekcie przyciski są w innym katalogu (ui/buttons vs buttons)
-  img.onerror = () => {
-    if(img.dataset.fallbackDone) return;
-    img.dataset.fallbackDone = "1";
-    const primary = getBtnDir();
-    const altDir = primary.startsWith("ui/") ? primary.slice(3) : ("ui/" + primary);
-    img.src = altDir + mapBtnName(btnName);
-  };
-b.appendChild(img);
+  b.appendChild(img);
   if(onClick) b.onclick = onClick;
   return b;
-}
-
-
-// ===== Avatar picker (ui/avatars/avatar_1..12.png) =====
-function ensureAvatarPickerStyles(){
-  if(document.getElementById("avatarPickerStyles")) return;
-  const st = document.createElement("style");
-  st.id = "avatarPickerStyles";
-  st.textContent = `
-  .avatarPickerOverlay{
-    position:fixed; inset:0; z-index:9999;
-    background:rgba(0,0,0,.55);
-    display:flex; align-items:center; justify-content:center;
-    padding:16px;
-  }
-  .avatarPickerPanel{
-    width:820px; max-width:94vw;
-    background:rgba(10,20,35,.92);
-    border:1px solid rgba(255,255,255,.14);
-    border-radius:18px;
-    box-shadow:0 20px 60px rgba(0,0,0,.55);
-    padding:14px 14px 16px;
-    backdrop-filter: blur(10px);
-  }
-  .avatarPickerHead{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:12px; margin-bottom:10px;
-  }
-  .avatarPickerTitle{
-    font-weight:900; letter-spacing:.6px;
-    text-transform:uppercase; opacity:.95;
-  }
-  .avatarGrid{
-    display:grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap:12px;
-  }
-  @media (max-width: 720px){
-    .avatarGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  }
-  .avatarPickItem{
-    border:none; background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.14);
-    border-radius:14px;
-    padding:10px;
-    cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    transition: transform .08s ease, background .12s ease, border-color .12s ease;
-  }
-  .avatarPickItem:hover{ transform: translateY(-1px); background:rgba(255,255,255,.12); }
-  .avatarPickItem.selected{ outline:2px solid rgba(120,200,255,.85); }
-  .avatarPickItem img{
-    width:86px; height:86px; object-fit:contain;
-    image-rendering:auto;
-  }
-  .profileAvatarImg{
-    width:120px; height:120px; object-fit:contain; display:none;
-  }`;
-  document.head.appendChild(st);
-}
-
-function setAvatarImgWithFallback(img, avatarIndex){
-  const file = `avatar_${avatarIndex}.png`;
-  const dirs = ["ui/avatars/", "avatars/"];
-  let i = 0;
-  const tryNext = ()=>{
-    if(i >= dirs.length) return;
-    img.src = dirs[i] + file;
-    i++;
-  };
-  img.onerror = ()=>{ if(i < dirs.length) tryNext(); };
-  tryNext();
-}
-
-function openAvatarPickerOverlay({current=null, onPick} = {}){
-  ensureAvatarPickerStyles();
-
-  // Remove any previous overlay
-  const prev = document.getElementById("avatarPickerOverlay");
-  if(prev) prev.remove();
-
-  const lang = getLang();
-  const overlay = document.createElement("div");
-  overlay.id = "avatarPickerOverlay";
-  overlay.className = "avatarPickerOverlay";
-
-  const panel = document.createElement("div");
-  panel.className = "avatarPickerPanel";
-
-  const head = document.createElement("div");
-  head.className = "avatarPickerHead";
-
-  const title = document.createElement("div");
-  title.className = "avatarPickerTitle";
-  title.textContent = (lang==="en") ? "Choose avatar" : "Wybierz avatar";
-  head.appendChild(title);
-
-  const btnClose = makeSysImgButton("btn_zamknij.png", {
-    cls:"sysBtn",
-    alt:(lang==="en" ? "Close" : "Zamknij"),
-    title:(lang==="en" ? "Close" : "Zamknij")
-  });
-  btnClose.onclick = ()=> overlay.remove();
-  head.appendChild(btnClose);
-
-  panel.appendChild(head);
-
-  const grid = document.createElement("div");
-  grid.className = "avatarGrid";
-
-  for(let a=1; a<=12; a++){
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "avatarPickItem" + (current===a ? " selected" : "");
-    const img = document.createElement("img");
-    img.alt = `avatar ${a}`;
-    setAvatarImgWithFallback(img, a);
-    b.appendChild(img);
-    b.onclick = ()=>{
-      if(typeof onPick === "function") onPick(a);
-      overlay.remove();
-    };
-    grid.appendChild(b);
-  }
-
-  panel.appendChild(grid);
-  overlay.appendChild(panel);
-
-  // close on click outside
-  overlay.addEventListener("click", (e)=>{
-    if(e.target === overlay) overlay.remove();
-  });
-
-  document.body.appendChild(overlay);
 }
 
 function openRoomsChoiceModal(){
@@ -830,7 +758,7 @@ function openSettings(){
   const imgProfil = document.createElement("img");
   imgProfil.dataset.btn = "btn_profil.png";
   imgProfil.alt = btnProfil.title;
-  imgProfil.src = getBtnDir() + mapBtnName("btn_profil.png");
+  setImgWithFallback(imgProfil, "btn_profil.png");
   btnProfil.appendChild(imgProfil);
   btnProfil.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnProfil);
@@ -843,9 +771,9 @@ function openSettings(){
   const imgAvatar = document.createElement("img");
   imgAvatar.dataset.btn = "btn_avatar.png";
   imgAvatar.alt = btnAvatar.title;
-  imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
+  setImgWithFallback(imgAvatar, "btn_avatar.png");
   btnAvatar.appendChild(imgAvatar);
-  btnAvatar.onclick = ()=> openProfileModal({required:false});
+  btnAvatar.onclick = ()=> showToast(getLang()==="pl" ? "Wkrótce..." : "Coming soon...");
   btnRow.appendChild(btnAvatar);
 
   wrap.appendChild(btnRow);
@@ -860,7 +788,7 @@ btnClear.style.alignSelf = "flex-start";
 const img = document.createElement("img");
 img.dataset.btn = "btn_reset_profilu.png";
 img.alt = t("clearProfile");
-img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
+setImgWithFallback(img, "btn_reset_profilu.png");
 btnClear.appendChild(img);
 btnClear.onclick = () => clearProfile();
 wrap.appendChild(btnClear);
@@ -923,8 +851,8 @@ function isProfileComplete(p){
 function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
-    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Save", cancelBtn:"Back", pl:"Poland", gb:"UK"}
-    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zapisz", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
+    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back", pl:"Poland", gb:"UK"}
+    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
@@ -937,8 +865,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     <div class="profileRow">
       <div class="profileLeftCol" aria-label="Avatar">
         <div class="profileAvatarBox">
-          <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" />
-          <div id="profileAvatarPlaceholder" class="profileAvatarPlaceholder">🙂</div>
+          <div class="profileAvatarPlaceholder">🙂</div>
         </div>
         <div id="profileAvatarBtnSlot"></div>
       </div>
@@ -963,34 +890,11 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   modalOpen(L.title, wrap);
 
-  // Przycisk Avatar (otwiera picker avatarów)
+  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
   const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
-  let currentAvatar = (typeof existing.avatar === "number" && existing.avatar>=1 && existing.avatar<=12) ? existing.avatar : null;
-
-  const avatarImgEl = wrap.querySelector("#profileAvatarImg");
-  const avatarPhEl = wrap.querySelector("#profileAvatarPlaceholder");
-
-  const refreshAvatarPreview = ()=>{
-    if(!avatarImgEl) return;
-    if(currentAvatar){
-      setAvatarImgWithFallback(avatarImgEl, currentAvatar);
-      avatarImgEl.style.display = "block";
-      if(avatarPhEl) avatarPhEl.style.display = "none";
-    }else{
-      avatarImgEl.style.display = "none";
-      if(avatarPhEl) avatarPhEl.style.display = "block";
-    }
-  };
-  refreshAvatarPreview();
-
   if(avatarSlot){
     const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
-    btnAvatar.onclick = ()=> {
-      openAvatarPickerOverlay({
-        current: currentAvatar,
-        onPick: (a)=>{ currentAvatar = a; refreshAvatarPreview(); }
-      });
-    };
+    btnAvatar.onclick = ()=>{ showToast(lang==='en' ? 'Avatar selection soon.' : 'Wybór avatara wkrótce.'); };
     avatarSlot.appendChild(btnAvatar);
   }
 
@@ -1000,8 +904,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   });
 
   const btnRow = wrap.querySelector("#profileBtns");
-  const saveBtnFile = (getLang() === "en") ? "btn_save.png" : "btn_zapisz.png";
-  const btnSave = makeSysImgButton(saveBtnFile, {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
+  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
   const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
   btnRow.appendChild(btnSave);
   btnRow.appendChild(btnBack);
@@ -1010,7 +913,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, avatar: (currentAvatar||null), updatedAt: Date.now()};
+    const profile = {...existing, nick, country, favClub, updatedAt: Date.now()};
     if(!isProfileComplete(profile)){
       showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
       return;
@@ -1445,8 +1348,9 @@ function bindUI(){
   el("btnEndRound").onclick = async ()=>{
     await endRoundConfirmAndArchive();
   };
-  if(el("btnAddQueue")) el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+
+  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+  el("btnMyQueue").onclick = async ()=>{ openMyQueueModal(); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1627,7 +1531,7 @@ async function openRoom(code, opts={}){
   refreshNickLabels();
 
   const adm = isAdmin();
-  if(el("btnAddQueue")) el("btnAddQueue").style.display = adm ? "block" : "none";
+  el("btnAddQueue").style.display = adm ? "block" : "none";
   el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
@@ -1642,7 +1546,7 @@ async function openRoom(code, opts={}){
     el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
-  if(el("btnAddQueue")) el("btnAddQueue").style.display = adm2 ? "block" : "none";
+    el("btnAddQueue").style.display = adm2 ? "block" : "none";
     el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
