@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 3008)</title>
+  <title>Typer (BUILD 3009)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -196,39 +196,8 @@
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
-    /* ===== NOWE: ZĘBATKA USTAWIEŃ ===== */
-    .homeGear{
-      position:absolute;
-      left:26px;
-      top:50%;
-      transform:translateY(-50%);
-      width:98px;
-      height:98px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(8,22,52,.55);
-      box-shadow:0 18px 60px rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .12s ease, background .12s ease;
-    }
-    .homeGear:hover{
-      background:rgba(8,22,52,.65);
-      transform:translateY(-50%) scale(1.03);
-    }
-    .homeGear:active{
-      transform:translateY(-50%) scale(0.99);
-    }
-    .homeGear span{
-      font-size:44px;
-      line-height:1;
-      filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
-    }
+    
+
 
     /* ===== ROOMS ===== */
     #rooms{padding:22px;gap:14px}
@@ -807,6 +776,85 @@
   #roomActionsCol .sysBtn{ max-width: 220px; }
   #roomActionsCol .sysBtn img{ height: 54px; }
 }
+
+    /* language flags (top-right) */
+    .homeLang{position:absolute; right:26px; top:18px; display:flex; gap:14px; z-index:50;}
+    #btnLangPL, #btnLangEN{
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
+      background:transparent !important;
+      padding:0 !important;
+      margin:0 !important;
+      cursor:pointer;
+    }
+    .flagBtn img, .flagImg{
+      width: 58px;
+      height: 40px;
+      border-radius:6px;
+      display:block;
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
+    }
+
+
+    /* HOME settings button (bottom-left) */
+    .homeGear{
+      position:absolute;
+      left:26px;
+      bottom:26px;
+      top:auto;
+      transform:none;
+      width:auto;
+      height:auto;
+      border:none;
+      background:transparent;
+      box-shadow:none;
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      z-index:50;
+    }
+    .homeGearImg{
+      width: 110px;
+      height:auto;
+      display:block;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
+    }
+
+
+    /* BUILD corner (bottom-right): logo + version */
+    #buildCorner{
+      position:fixed;
+      right:18px;
+      bottom:14px;
+      display:flex !important;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:9999;
+      pointer-events:none;
+      user-select:none;
+    }
+    #buildCornerLogo{
+      width:150px;
+      height:auto;
+      display:block !important;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
+    }
+    #buildCornerText{
+      color:rgba(255,255,255,.9);
+      font-size:14px;
+      font-weight:900;
+      text-shadow:0 2px 6px rgba(0,0,0,.55);
+      letter-spacing:.5px;
+    }
+    .footerRight{display:none !important;}
+
 </style>
 </head>
 
@@ -835,7 +883,7 @@
         </div>
         <!-- NOWE: zębatka ustawień -->
         <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
-          <span>⚙️</span>
+          <img class="homeGearImg" src="ui/logo/btn_ustawienia.png" alt="Ustawienia">
         </div>
 
         <div class="homeBtns" aria-label="Menu">
@@ -1099,7 +1147,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=3008"></script>
+  <script type="module" src="./app.js?v=3009"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -1108,6 +1156,13 @@
     });
   }
 </script>
+
+
+  <!-- BUILD corner -->
+  <div id="buildCorner" aria-hidden="true">
+    <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
+    <div id="buildCornerText">BUILD 3009</div>
+  </div>
 
 </body>
 </html>
