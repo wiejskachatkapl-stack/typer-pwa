@@ -193,6 +193,19 @@
       max-height: clamp(120px, 20vh, 220px);
       border-radius: 0;
     }
+
+/* HOME: bigger main menu buttons */
+.homeBtns .imgBtn img{
+  width: clamp(340px, 36vw, 600px);
+  max-height: clamp(150px, 22vh, 280px);
+}
+
+@media (max-width: 900px){
+  .homeBtns .imgBtn img{
+    width: clamp(260px, 70vw, 520px);
+    max-height: clamp(120px, 18vh, 220px);
+  }
+}
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
