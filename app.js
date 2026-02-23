@@ -1,4 +1,4 @@
-const BUILD = 3010;
+const BUILD = 3011;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -656,26 +656,19 @@ function openSettings(){
   const wrap = document.createElement("div");
   wrap.style.display = "flex";
   wrap.style.flexDirection = "column";
-  wrap.style.gap = "12px";
+  wrap.style.gap = "14px";
 
+  // Tytuł w treści (większy, czytelny) – bez dodatkowych opisów
   const head = document.createElement("div");
   head.className = "chip";
   head.textContent = t("settings");
+  head.style.fontSize = "20px";
+  head.style.fontWeight = "900";
+  head.style.padding = "10px 18px";
+  head.style.alignSelf = "flex-start";
   wrap.appendChild(head);
 
-  const infoLang = document.createElement("div");
-  infoLang.className = "sub";
-  infoLang.textContent = t("langOnHome");
-  wrap.appendChild(infoLang);
-
-  const info = document.createElement("div");
-  info.className = "sub";
-  info.textContent = (getLang() === "pl")
-    ? "Zmiana języka działa od razu na całej aplikacji."
-    : "Language changes apply immediately across the app.";
-  wrap.appendChild(info);
-
-  // Przyciski: Profil / Avatar (obsługa avatara w kolejnym kroku)
+  // Przyciski: Profil + Reset profilu (w miejscu dawnego Avatara)
   const btnRow = document.createElement("div");
   btnRow.style.display = "flex";
   btnRow.style.gap = "14px";
@@ -694,44 +687,25 @@ function openSettings(){
   btnProfil.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnProfil);
 
-  const btnAvatar = document.createElement("button");
-  btnAvatar.className = "imgBtn sysBtn sysBtnBig";
-  btnAvatar.type = "button";
-  btnAvatar.title = (getLang()==="pl") ? "Avatar" : "Avatar";
-  btnAvatar.setAttribute("aria-label", btnAvatar.title);
-  const imgAvatar = document.createElement("img");
-  imgAvatar.dataset.btn = "btn_avatar.png";
-  imgAvatar.alt = btnAvatar.title;
-  imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
-  btnAvatar.appendChild(imgAvatar);
-  btnAvatar.onclick = ()=> showToast(getLang()==="pl" ? "Wkrótce..." : "Coming soon...");
-  btnRow.appendChild(btnAvatar);
+  const btnClear = document.createElement("button");
+  btnClear.className = "imgBtn sysBtn sysBtnBig";
+  btnClear.type = "button";
+  btnClear.title = t("clearProfile");
+  btnClear.setAttribute("aria-label", t("clearProfile"));
+  const imgClear = document.createElement("img");
+  imgClear.dataset.btn = "btn_reset_profilu.png";
+  imgClear.alt = t("clearProfile");
+  imgClear.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
+  btnClear.appendChild(imgClear);
+  btnClear.onclick = () => clearProfile();
+  btnRow.appendChild(btnClear);
 
   wrap.appendChild(btnRow);
 
-
-const btnClear = document.createElement("button");
-btnClear.className = "imgBtn sysBtn sysBtnBig";
-btnClear.type = "button";
-btnClear.title = t("clearProfile");
-btnClear.setAttribute("aria-label", t("clearProfile"));
-btnClear.style.alignSelf = "flex-start";
-const img = document.createElement("img");
-img.dataset.btn = "btn_reset_profilu.png";
-img.alt = t("clearProfile");
-img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
-btnClear.appendChild(img);
-btnClear.onclick = () => clearProfile();
-wrap.appendChild(btnClear);
-
-const warn = document.createElement("div");
-warn.className = "sub";
-warn.style.opacity = ".8";
-warn.textContent = (getLang()==="pl") ? "Usuwa nick, pokój i całą lokalną pamięć tej gry na tym urządzeniu." : "Removes nickname, room and all local data of this game on this device.";
-wrap.appendChild(warn);
-
   modalOpen(t("settings"), wrap);
 }
+
+
 
 
 function getNick(){
