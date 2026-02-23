@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 3016)</title>
+  <title>Typer (BUILD 3017)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -890,13 +890,9 @@
     }
 
 
-    /* Profile modal add-profile placement */
-    .modal.profileMode .profileModal .profileBtns{
-      display:flex;
-      justify-content:flex-start;
-      gap: 14px;
-      margin-top: 12px;
-    }
+/* Profile modal - place Add Profile button under Avatar */
+.modal.profileMode .profileBtns{ display:none; }
+.modal.profileMode .profileAddBtn{ margin-top: 12px; }
 
 </style>
 </head>
@@ -1190,7 +1186,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=3016"></script>
+  <script type="module" src="./app.js?v=3017"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -1204,7 +1200,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">BUILD 3016</div>
+    <div id="buildCornerText">BUILD 3017</div>
   </div>
 
 </body>

@@ -1,4 +1,4 @@
-const BUILD = 3016;
+const BUILD = 3017;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -703,8 +703,9 @@ function openSettings(){
   btnClear.onclick = () => clearProfile();
   btnRow.appendChild(btnClear);
 
-  leftCol.appendChild(btnRow);
-modalOpen(t("settings"), wrap);
+  wrap.appendChild(btnRow);
+
+  modalOpen(t("settings"), wrap);
 }
 
 
@@ -814,8 +815,14 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   });
 
   const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_add_profile.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
-  btnRow.appendChild(btnSave);
+  const btnSave = makeSysImgButton("btn_add_profile.png", {cls:"sysBtn sysBtnBig profileAddBtn", alt:L.saveBtn, title:L.saveBtn});
+  // Place Add Profile button under Avatar (requested)
+  const avatarSlot2 = wrap.querySelector("#profileAvatarBtnSlot");
+  if(avatarSlot2){
+    avatarSlot2.appendChild(btnSave);
+  } else {
+    btnRow.appendChild(btnSave);
+  }
 btnSave.onclick = ()=>{
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
