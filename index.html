@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 3011)</title>
+  <title>Typer (BUILD 3012)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -855,6 +855,34 @@
     }
     .footerRight{display:none !important;}
 
+
+    /* Profile modal layout tweaks */
+    .modal.profileMode .modalHead{
+      position: relative;
+      justify-content: center;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+    .modal.profileMode #modalTitle{
+      margin: 0 auto;
+      font-size: 48px; /* ~3x */
+      font-weight: 900;
+      padding: 10px 22px;
+    }
+    .modal.profileMode #modalClose{
+      position: absolute;
+      right: 18px;
+      top: 92px; /* moved down as requested */
+    }
+    .modal.profileMode .modalBody{
+      padding-top: 18px;
+    }
+    .profileModal .profileBtns{
+      display:flex;
+      justify-content:flex-end; /* move add profile to the right */
+      gap: 14px;
+    }
+
 </style>
 </head>
 
@@ -1147,7 +1175,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=3011"></script>
+  <script type="module" src="./app.js?v=3012"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -1161,7 +1189,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">BUILD 3011</div>
+    <div id="buildCornerText">BUILD 3012</div>
   </div>
 
 </body>

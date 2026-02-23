@@ -1,4 +1,4 @@
-const BUILD = 3011;
+const BUILD = 3012;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -427,7 +427,10 @@ function modalOpen(title, bodyNode){
 }
 function modalClose(){
   const m = el("modal");
-  if(m) m.classList.remove("active");
+  if(m){
+    m.classList.remove("active");
+    m.classList.remove("profileMode");
+  }
 }
 
 /** ROOMS MENU MODALS **/
@@ -795,7 +798,10 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   modalOpen(L.title, wrap);
 
-  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
+  
+  const mm = el("modal");
+  if(mm) mm.classList.add("profileMode");
+// Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
   const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
   if(avatarSlot){
     const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
@@ -810,11 +816,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   const btnRow = wrap.querySelector("#profileBtns");
   const btnSave = makeSysImgButton("btn_add_profile.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
-  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
   btnRow.appendChild(btnSave);
-  btnRow.appendChild(btnBack);
-
-  btnSave.onclick = ()=>{
+btnSave.onclick = ()=>{
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
@@ -828,11 +831,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     refreshNickLabels();
     modalClose();
     if(typeof onDone === "function") onDone(profile);
-  };
-
-  btnBack.onclick = ()=>{
-    modalClose();
-    if(typeof onCancel === "function") onCancel();
   };
 }
 
