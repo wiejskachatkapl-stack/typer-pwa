@@ -1,7 +1,7 @@
 {
   "name": "Typer",
   "short_name": "Typer",
-  "start_url": "./?v=3003",
+  "start_url": "./?v=3004",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0b1a3a",
@@ -18,5 +18,5 @@
       "type": "image/png"
     }
   ],
-  "id": "./?v=3003"
+  "id": "./?v=3004"
 }

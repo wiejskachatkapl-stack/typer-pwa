@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 3003)</title>
+  <title>Typer (BUILD 3004)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -188,7 +188,6 @@
       color:rgba(255,255,255,.55);
       font-size:12px;font-weight:900;
       z-index:10;
-      display:none !important;
     }
 
 
@@ -991,7 +990,7 @@
       user-select:none;
     }
     #buildCorner img{
-      width:120px;
+      width:150px;
       height:auto;
       display:block;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,.45));
@@ -1028,7 +1027,7 @@
       <section id="home" class="screen">
         <!-- Language flags (HOME) -->
         <div class="homeLang" aria-label="Language">
-          <button class="flagBtn" id="btnLangPL" type="button" title="Polski">🇵🇱</button>
+          <button class="flagBtn" id="btnLangPL" type="button" title="Polski"><img src="ui/flags/pl.png" alt="PL"></button>
           <button class="flagBtn" id="btnLangEN" type="button" title="English">🇬🇧</button>
         </div>
         <!-- NOWE: zębatka ustawień -->
@@ -1353,7 +1352,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=3003"></script>
+  <script type="module" src="./app.js?v=3004"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -1362,13 +1361,6 @@
     });
   }
 </script>
-
-
-  <!-- BUILD corner (logo + version) -->
-  <div id="buildCorner" aria-hidden="true">
-    <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div class="buildText" id="buildCornerText">BUILD 3003</div>
-  </div>
 
 </body>
 </html>
