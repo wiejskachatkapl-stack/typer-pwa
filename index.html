@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 1020)</title>
+  <title>Typer (BUILD 3003)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -188,6 +188,7 @@
       color:rgba(255,255,255,.55);
       font-size:12px;font-weight:900;
       z-index:10;
+      display:none !important;
     }
 
 
@@ -572,7 +573,6 @@
     .dot.gray{background:rgba(255,255,255,.35)}
 
     /* ===== SETTINGS (modal) ===== */
-    .flagBtn img{width:34px;height:24px;display:block;}
     .flagBtn{
       width:64px;
       height:44px;
@@ -602,8 +602,7 @@
       gap:10px;
       z-index:5;
     }
-    .homeLang .flagBtn img{width:34px;height:24px;display:block;}
-    .flagBtn{
+    .homeLang .flagBtn{
       width:76px;
       height:52px;
       border-radius:16px;
@@ -977,7 +976,35 @@
   padding:18px;
 }
 
-</style>
+
+    /* BUILD corner: logo + version (bottom-right) */
+    #buildCorner{
+      position:fixed;
+      right:18px;
+      bottom:14px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:9999;
+      pointer-events:none;
+      user-select:none;
+    }
+    #buildCorner img{
+      width:120px;
+      height:auto;
+      display:block;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.45));
+    }
+    #buildCorner .buildText{
+      color:rgba(255,255,255,.85);
+      font-size:14px;
+      font-weight:900;
+      text-shadow: 0 2px 6px rgba(0,0,0,.55);
+      letter-spacing:.5px;
+    }
+
+  </style>
 
 </head>
 
@@ -1001,8 +1028,8 @@
       <section id="home" class="screen">
         <!-- Language flags (HOME) -->
         <div class="homeLang" aria-label="Language">
-          <button class="flagBtn" id="btnLangPL" type="button" title="Polski"><img src="ui/flags/pl.png" alt="PL"></button>
-          <button class="flagBtn" id="btnLangEN" type="button" title="English"><img src="ui/flags/gb.png" alt="EN"></button>
+          <button class="flagBtn" id="btnLangPL" type="button" title="Polski">🇵🇱</button>
+          <button class="flagBtn" id="btnLangEN" type="button" title="English">🇬🇧</button>
         </div>
         <!-- NOWE: zębatka ustawień -->
         <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
@@ -1326,15 +1353,22 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=3002"></script>
+  <script type="module" src="./app.js?v=3003"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3002').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1020').catch(() => {});
     });
   }
 </script>
+
+
+  <!-- BUILD corner (logo + version) -->
+  <div id="buildCorner" aria-hidden="true">
+    <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
+    <div class="buildText" id="buildCornerText">BUILD 3003</div>
+  </div>
 
 </body>
 </html>

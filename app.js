@@ -1,4 +1,4 @@
-const BUILD = 3002;
+const BUILD = 3003;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -56,7 +56,7 @@ function setAddQueueLocked(locked){
 }
 
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
-const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
+const setFooter = (txt) => { const f = el("buildCornerText"); if (f) f.textContent = txt; };
 
 function showToast(msg){
   const t = el("toast");
