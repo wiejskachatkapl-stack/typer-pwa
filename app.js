@@ -1,4 +1,4 @@
-const BUILD = 3001;
+const BUILD = 3002;
 
 // ===== ADD QUEUE MODAL STATE (v1000) =====
 const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
@@ -299,10 +299,6 @@ const BTN_NAME_MAP = {
   "btn_zapisz_wyniki.png": "btn_save_results.png",
   "btn_dodaj_wyniki.png": "btn_enter_results.png",
   "btn_dodaj_kolejke.png": "btn_add_queue.png",
-  "btn_recznie.png": "btn_manual.png",
-  "btn_losowo.png": "btn_random.png",
-  "btn_cofnij_z.png": "btn_back.png",
-  "btn_cofnij.png": "btn_back.png",
   "btn_zapisz_kolejke.png": "btn_save_queue.png",
   "btn_zapisz_typy.png": "btn_save_picks.png",
   "btn_dodaj_wyniki1.png": "btn_enter_results.png"
@@ -480,52 +476,10 @@ function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=n
 
   // Ustaw src od razu (żeby nie było pustki przed refresh)
   img.src = getBtnDir() + mapBtnName(btnName);
-  img.onerror = ()=>{
-    const name = mapBtnName(btnName);
-    const altDir = (getLang()==="en") ? "buttons/en/" : "buttons/pl/";
-    if(!img.dataset._fallback){ img.dataset._fallback="1"; img.src = altDir + name; }
-  };
 
   b.appendChild(img);
   if(onClick) b.onclick = onClick;
   return b;
-}
-
-
-function openNewQueueChoiceModal(){
-  const wrap = document.createElement("div");
-  wrap.className = "newQueueChoice";
-  const row = document.createElement("div");
-  row.className = "newQueueChoiceRow";
-
-  const btnManual = makeSysImgButton("btn_recznie.png", {
-    cls:"sysBtn sysBtnBig",
-    alt:"manual",
-    title:(getLang()==="en") ? "Manual" : "Ręcznie",
-    onClick: async ()=>{ modalClose(); showToast(getLang()==="en" ? "Manual: coming next" : "Ręcznie: dopinamy dalej"); }
-  });
-
-  const btnBack = makeSysImgButton("btn_cofnij_z.png", {
-    cls:"sysBtn sysBtnBig",
-    alt:"back",
-    title:(getLang()==="en") ? "Back" : "Cofnij",
-    onClick: ()=>{ modalClose(); }
-  });
-
-  const btnRandom = makeSysImgButton("btn_losowo.png", {
-    cls:"sysBtn sysBtnBig",
-    alt:"random",
-    title:(getLang()==="en") ? "Random" : "Losowo",
-    onClick: async ()=>{ modalClose(); showToast(getLang()==="en" ? "Random: coming next" : "Losowo: dopinamy dalej"); }
-  });
-
-  row.appendChild(btnManual);
-  row.appendChild(btnBack);
-  row.appendChild(btnRandom);
-  wrap.appendChild(row);
-
-  modalOpen((getLang()==="en") ? "NEW ROUND" : "NOWA KOLEJKA", wrap);
-  refreshAllButtonImages();
 }
 
 function openRoomsChoiceModal(){
@@ -1107,7 +1061,7 @@ async function initFirebase(){
 // ===== UI =====
 function bindUI(){
   // Modal
-  if(el("modalClose")) ((el("modalClose"))||{}).onclick = modalClose;
+  if(el("modalClose")) el("modalClose").onclick = modalClose;
   if(el("modal")) el("modal").addEventListener("click",(e)=>{
     if(e.target && e.target.id === "modal") modalClose();
   });

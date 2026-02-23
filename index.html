@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 3001)</title>
+  <title>Typer (BUILD 1020)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -572,6 +572,7 @@
     .dot.gray{background:rgba(255,255,255,.35)}
 
     /* ===== SETTINGS (modal) ===== */
+    .flagBtn img{width:34px;height:24px;display:block;}
     .flagBtn{
       width:64px;
       height:44px;
@@ -601,7 +602,8 @@
       gap:10px;
       z-index:5;
     }
-    .homeLang .flagBtn{
+    .homeLang .flagBtn img{width:34px;height:24px;display:block;}
+    .flagBtn{
       width:76px;
       height:52px;
       border-radius:16px;
@@ -999,8 +1001,8 @@
       <section id="home" class="screen">
         <!-- Language flags (HOME) -->
         <div class="homeLang" aria-label="Language">
-          <button class="flagBtn" id="btnLangPL" type="button" title="Polski">🇵🇱</button>
-          <button class="flagBtn" id="btnLangEN" type="button" title="English">🇬🇧</button>
+          <button class="flagBtn" id="btnLangPL" type="button" title="Polski"><img src="ui/flags/pl.png" alt="PL"></button>
+          <button class="flagBtn" id="btnLangEN" type="button" title="English"><img src="ui/flags/gb.png" alt="EN"></button>
         </div>
         <!-- NOWE: zębatka ustawień -->
         <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
@@ -1324,12 +1326,12 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=3001"></script>
+  <script type="module" src="./app.js?v=3002"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1020').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3002').catch(() => {});
     });
   }
 </script>
