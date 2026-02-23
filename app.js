@@ -1,4 +1,4 @@
-const BUILD = 3009;
+const BUILD = 3010;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -835,7 +835,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   });
 
   const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
+  const btnSave = makeSysImgButton("btn_add_profile.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
   const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
   btnRow.appendChild(btnSave);
   btnRow.appendChild(btnBack);
