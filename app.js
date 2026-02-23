@@ -260,9 +260,9 @@ function getBtnDir(){
 }
 
 const BTN_NAME_MAP = {
-"btn_pokoj_typerow.png": "btn_tipster_room.png",
-  "btn_statystyki.png": "btn_statistics.png",
-  "btn_wyjscie.png": "btn_exit.png",
+"btn_tipster_room.png": "btn_tipster_room.png",
+  "btn_statistics.png": "btn_statistics.png",
+  "btn_exit.png": "btn_exit.png",
   "btn_wejdz_pokoj.png": "btn_enter_room.png",
   "btn_zaloz.png": "btn_create_room.png",
   "btn_opcje.png": "btn_options.png",
@@ -298,7 +298,7 @@ function refreshAllButtonImages(){
     const raw = (img.dataset.btn || '').trim();
     if(!raw) return;
 
-    // Ujednolicenie nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statystyki.png
+    // Ujednolicenie nazw: jeśli ktoś ma np. btn_statystyki1.png, to wymuszamy btn_statistics.png
     // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
     const name = mapBtnName(raw);
 
