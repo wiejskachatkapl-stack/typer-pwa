@@ -1,4 +1,4 @@
-const BUILD = 3015;
+const BUILD = 3016;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -703,9 +703,8 @@ function openSettings(){
   btnClear.onclick = () => clearProfile();
   btnRow.appendChild(btnClear);
 
-  wrap.appendChild(btnRow);
-
-  modalOpen(t("settings"), wrap);
+  leftCol.appendChild(btnRow);
+modalOpen(t("settings"), wrap);
 }
 
 
@@ -801,17 +800,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   
   const mm = el("modal");
   if(mm) mm.classList.add("profileMode");
-  // Place "Dodaj profil" button in header next to "Wyjście"
-  try{
-    const m = el("modal");
-    if(m){
-      const head = m.querySelector(".modalHead");
-      if(head && btnSave){
-        btnSave.classList.add("profileTopBtn");
-        head.appendChild(btnSave);
-      }
-    }
-  }catch(e){}
 // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
   const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
   if(avatarSlot){
