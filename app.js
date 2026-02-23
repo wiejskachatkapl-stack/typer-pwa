@@ -1,4 +1,4 @@
-const BUILD = 3019;
+const BUILD = 3020;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -272,7 +272,7 @@ const BTN_NAME_MAP = {
   "btn_odswiez.png": "btn_refresh.png",
   "btn_tabela_typerow.png": "btn_tipster_table.png",
   "btn_dodaj_profil.png": "btn_add_profile.png",
-  "btn_reset_profilu.png": "btn_reset_profile.png",
+  "btn_reset_profilu.png": "btn_reset_profil.png",
   "btn_tak.png": "btn_yes.png",
   "btn_nie.png": "btn_no.png",
   "btn_zamknij.png": "btn_close.png",
