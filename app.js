@@ -1,4 +1,4 @@
-const BUILD = 3024;
+const BUILD = 3025;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -302,7 +302,7 @@ function refreshAllButtonImages(){
     // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
     const name = mapBtnName(raw);
 
-    img.src = dir + name;
+    img.src = dir + name + "?v=" + BUILD;
   });
 }
 function t(key){
