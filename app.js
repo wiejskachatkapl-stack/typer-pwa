@@ -1,4 +1,4 @@
-const BUILD = 3007;
+const BUILD = 3008;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -38,7 +38,7 @@ const setBtnLabelSafe = (id, label) => {
   }
 };
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
-const setFooter = (txt) => { const f = el("buildCornerText"); if (f) f.textContent = txt; };
+const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
 function showToast(msg){
   const t = el("toast");

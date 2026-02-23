@@ -2,7 +2,7 @@ const CACHE_NAME = "typer-pwa-cache-v2000";
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.js?v=3007",
+  "./app.js?v=3008",
   "./manifest.json",
   "./ui/flags/pl.png",
   "./ui/flags/gb.png",
