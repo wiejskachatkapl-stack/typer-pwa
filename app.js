@@ -1,4 +1,4 @@
-const BUILD = 3020;
+const BUILD = 3021;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -752,7 +752,7 @@ function setProfile(p){
 function isProfileComplete(p){
   if(!p) return false;
   const nickOk = typeof p.nick === "string" && p.nick.trim().length >= 3;
-  const countryOk = p.country === "pl" || p.country === "gb";
+  const countryOk = (typeof p.country === "string" && p.country.trim().length > 0);
   return nickOk && countryOk;
 }
 
