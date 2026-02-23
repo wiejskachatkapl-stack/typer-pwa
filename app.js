@@ -1,4 +1,4 @@
-const BUILD = 3018;
+const BUILD = 3019;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -764,7 +764,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
-  const defaultCountry = (existing.country || (lang === "pl" ? "PL" : "GB"));
+  const defaultCountry = (existing.country || "");
   const defaultFav = (existing.favClub || "").trim();
 
   const wrap = document.createElement("div");
