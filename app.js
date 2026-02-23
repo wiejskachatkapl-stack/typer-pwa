@@ -1,7 +1,4 @@
-const BUILD = 3001;
-
-// ===== ADD QUEUE MODAL STATE (v1000) =====
-const addQueueModalState = { modalOpen:false, addBtnWasDisabled:false, locked:false };
+const BUILD = 4016;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -9,6 +6,9 @@ const BG_ROOM = "img_tlo.png";
 const KEY_NICK = "typer_nick_v3";
 const KEY_ACTIVE_ROOM = "typer_active_room_v3";
 const KEY_ROOMS_HISTORY = "typer_rooms_history_v3";
+
+// Profil (avatar / kraj / ulubiony klub)
+const KEY_PROFILE = "typer_profile_v1"; // JSON
 
 // NOWE: język
 const KEY_LANG = "typer_lang_v1"; // "pl" | "en"
@@ -37,24 +37,6 @@ const setBtnLabelSafe = (id, label) => {
     b.textContent = label;
   }
 };
-
-// ===== ADD QUEUE BUTTON VISIBILITY/LOCK (v1003) =====
-function updateAddQueueButtonUI(){
-  const b = el("btnAddQueue");
-  if(!b) return;
-  const adm = isAdmin();
-  if(!adm){ b.style.display = "none"; return; }
-
-  // hide when locked (after click) or when this round already has matches
-  const hide = !!addQueueModalState.locked || !!matchesCache.length;
-  b.style.display = hide ? "none" : "block";
-  b.disabled = hide;
-}
-function setAddQueueLocked(locked){
-  addQueueModalState.locked = !!locked;
-  updateAddQueueButtonUI();
-}
-
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
@@ -152,10 +134,10 @@ const I18N = {
     enterResults: "Wpisz wyniki",
     endRound: "Zakończ kolejkę",
     myQueue: "Własna kolejka",
-    addQueue: "Dodaj kolejkę",
+    addQueue: "Dodaj kolejkę (test)",
 
     matches: "Spotkania",
-    matchesSub: "",
+    matchesSub: "Uzupełnij typy (0–20). Wyniki admin wpisze osobno.",
     round: "KOLEJKA",
     games: "Mecze",
     pointsRound: "PUNKTY (kolejka)",
@@ -299,10 +281,6 @@ const BTN_NAME_MAP = {
   "btn_zapisz_wyniki.png": "btn_save_results.png",
   "btn_dodaj_wyniki.png": "btn_enter_results.png",
   "btn_dodaj_kolejke.png": "btn_add_queue.png",
-  "btn_recznie.png": "btn_manual.png",
-  "btn_losowo.png": "btn_random.png",
-  "btn_cofnij_z.png": "btn_back.png",
-  "btn_cofnij.png": "btn_back.png",
   "btn_zapisz_kolejke.png": "btn_save_queue.png",
   "btn_zapisz_typy.png": "btn_save_picks.png",
   "btn_dodaj_wyniki1.png": "btn_enter_results.png"
@@ -324,10 +302,6 @@ function refreshAllButtonImages(){
     // (w obu folderach: buttons/pl/ i buttons/en/ powinny być te same nazwy plików).
     const name = mapBtnName(raw);
 
-    const btn = img.closest && img.closest("button");
-    // if the image file is missing, fall back to text label with glossy CSS
-    img.onerror = () => { if(btn) btn.classList.add("imgMissing"); };
-    img.onload = () => { if(btn) btn.classList.remove("imgMissing"); };
     img.src = dir + name;
   });
 }
@@ -339,11 +313,6 @@ function t(key){
 
 function updateHomeButtonsImages(){
   refreshAllButtonImages();
-  // update fallback text labels for image-buttons (when graphics missing)
-  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
-    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
-    if(k) sp.textContent = t(k);
-  });
 }
 
 function updateLangButtonsVisual(){
@@ -372,11 +341,6 @@ function applyLangToUI(){
   // HOME images + flag visuals
   updateHomeButtonsImages();
   refreshAllButtonImages();
-  // update fallback text labels for image-buttons (when graphics missing)
-  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
-    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
-    if(k) sp.textContent = t(k);
-  });
   updateLangButtonsVisual();
 
   // Continue
@@ -411,10 +375,10 @@ function applyLangToUI(){
   setBtnLabelSafe("btnRefresh", t("refresh"));
   if(el("t_actions")) el("t_actions").textContent = t("actions");
   if(el("t_actions_sub")) el("t_actions_sub").textContent = t("actionsSub");
-  setBtnLabelSafe("btnModalSavePicks", t("savePicks"));
+  setBtnLabelSafe("btnSaveAll", t("savePicks"));
   setBtnLabelSafe("btnEnterResults", t("enterResults"));
   setBtnLabelSafe("btnEndRound", t("endRound"));
-  // v1001: btnMyQueue removed
+  setBtnLabelSafe("btnMyQueue", t("myQueue"));
   setBtnLabelSafe("btnAddQueue", t("addQueue"));
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
@@ -441,7 +405,7 @@ function applyLangToUI(){
   if(el("t_room3")) el("t_room3").textContent = t("room");
   if(el("t_nick3")) el("t_nick3").textContent = t("nick");
   if(el("t_after_round")) el("t_after_round").textContent = t("afterRound");
-  setBtnLabelSafe("btnLeagueRefresh", t("refresh"));
+  if(el("btnLeagueRefresh")) el("btnLeagueRefresh").textContent = t("refresh");
   setBtnLabelSafe("btnLeagueBack", t("back"));
   if(el("t_ranking")) el("t_ranking").textContent = t("ranking");
   if(el("leagueHint")) el("leagueHint").textContent = t("leagueHint");
@@ -480,52 +444,10 @@ function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=n
 
   // Ustaw src od razu (żeby nie było pustki przed refresh)
   img.src = getBtnDir() + mapBtnName(btnName);
-  img.onerror = ()=>{
-    const name = mapBtnName(btnName);
-    const altDir = (getLang()==="en") ? "buttons/en/" : "buttons/pl/";
-    if(!img.dataset._fallback){ img.dataset._fallback="1"; img.src = altDir + name; }
-  };
 
   b.appendChild(img);
   if(onClick) b.onclick = onClick;
   return b;
-}
-
-
-function openNewQueueChoiceModal(){
-  const wrap = document.createElement("div");
-  wrap.className = "newQueueChoice";
-  const row = document.createElement("div");
-  row.className = "newQueueChoiceRow";
-
-  const btnManual = makeSysImgButton("btn_recznie.png", {
-    cls:"sysBtn sysBtnBig",
-    alt:"manual",
-    title:(getLang()==="en") ? "Manual" : "Ręcznie",
-    onClick: async ()=>{ modalClose(); showToast(getLang()==="en" ? "Manual: coming next" : "Ręcznie: dopinamy dalej"); }
-  });
-
-  const btnBack = makeSysImgButton("btn_cofnij_z.png", {
-    cls:"sysBtn sysBtnBig",
-    alt:"back",
-    title:(getLang()==="en") ? "Back" : "Cofnij",
-    onClick: ()=>{ modalClose(); }
-  });
-
-  const btnRandom = makeSysImgButton("btn_losowo.png", {
-    cls:"sysBtn sysBtnBig",
-    alt:"random",
-    title:(getLang()==="en") ? "Random" : "Losowo",
-    onClick: async ()=>{ modalClose(); showToast(getLang()==="en" ? "Random: coming next" : "Losowo: dopinamy dalej"); }
-  });
-
-  row.appendChild(btnManual);
-  row.appendChild(btnBack);
-  row.appendChild(btnRandom);
-  wrap.appendChild(row);
-
-  modalOpen((getLang()==="en") ? "NEW ROUND" : "NOWA KOLEJKA", wrap);
-  refreshAllButtonImages();
 }
 
 function openRoomsChoiceModal(){
@@ -576,11 +498,6 @@ function openRoomsChoiceModal(){
   modalOpen((getLang()==="en") ? "TYPERS ROOMS" : "POKOJE TYPERÓW", wrap);
   // upewnij się, że obrazki przełączą się przy aktualnym języku
   refreshAllButtonImages();
-  // update fallback text labels for image-buttons (when graphics missing)
-  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
-    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
-    if(k) sp.textContent = t(k);
-  });
 }
 
 async function handleJoinFlow(){
@@ -758,6 +675,40 @@ function openSettings(){
     : "Language changes apply immediately across the app.";
   wrap.appendChild(info);
 
+  // Przyciski: Profil / Avatar (obsługa avatara w kolejnym kroku)
+  const btnRow = document.createElement("div");
+  btnRow.style.display = "flex";
+  btnRow.style.gap = "14px";
+  btnRow.style.flexWrap = "wrap";
+
+  const btnProfil = document.createElement("button");
+  btnProfil.className = "imgBtn sysBtn sysBtnBig";
+  btnProfil.type = "button";
+  btnProfil.title = (getLang()==="pl") ? "Profil" : "Profile";
+  btnProfil.setAttribute("aria-label", btnProfil.title);
+  const imgProfil = document.createElement("img");
+  imgProfil.dataset.btn = "btn_profil.png";
+  imgProfil.alt = btnProfil.title;
+  imgProfil.src = getBtnDir() + mapBtnName("btn_profil.png");
+  btnProfil.appendChild(imgProfil);
+  btnProfil.onclick = ()=> openProfileModal({required:false});
+  btnRow.appendChild(btnProfil);
+
+  const btnAvatar = document.createElement("button");
+  btnAvatar.className = "imgBtn sysBtn sysBtnBig";
+  btnAvatar.type = "button";
+  btnAvatar.title = (getLang()==="pl") ? "Avatar" : "Avatar";
+  btnAvatar.setAttribute("aria-label", btnAvatar.title);
+  const imgAvatar = document.createElement("img");
+  imgAvatar.dataset.btn = "btn_avatar.png";
+  imgAvatar.alt = btnAvatar.title;
+  imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
+  btnAvatar.appendChild(imgAvatar);
+  btnAvatar.onclick = ()=> showToast(getLang()==="pl" ? "Wkrótce..." : "Coming soon...");
+  btnRow.appendChild(btnAvatar);
+
+  wrap.appendChild(btnRow);
+
 
 const btnClear = document.createElement("button");
 btnClear.className = "imgBtn sysBtn sysBtnBig";
@@ -803,6 +754,120 @@ async function ensureNick(){
   localStorage.setItem(KEY_NICK, nick);
   refreshNickLabels();
   return nick;
+}
+
+// =====================
+// PROFIL (v1)
+// =====================
+function getProfile(){
+  try{
+    const raw = localStorage.getItem(KEY_PROFILE);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){
+    return null;
+  }
+}
+
+function setProfile(p){
+  localStorage.setItem(KEY_PROFILE, JSON.stringify(p || {}));
+}
+
+function isProfileComplete(p){
+  if(!p) return false;
+  const nickOk = typeof p.nick === "string" && p.nick.trim().length >= 3;
+  const countryOk = p.country === "pl" || p.country === "gb";
+  return nickOk && countryOk;
+}
+
+function openProfileModal({required=false, onDone, onCancel}={}){
+  const lang = getLang();
+  const L = (lang === "en")
+    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back", pl:"Poland", gb:"UK"}
+    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
+
+  const existing = getProfile() || {};
+  const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
+  const defaultCountry = existing.country || (lang === "pl" ? "pl" : "gb");
+  const defaultFav = (existing.favClub || "").trim();
+
+  const wrap = document.createElement("div");
+  wrap.className = "profileModal";
+  wrap.innerHTML = `
+    <div class="profileRow">
+      <div class="profileLeftCol" aria-label="Avatar">
+        <div class="profileAvatarBox">
+          <div class="profileAvatarPlaceholder">🙂</div>
+        </div>
+        <div id="profileAvatarBtnSlot"></div>
+      </div>
+      <div class="profileFields">
+        <div class="profileDesc">${escapeHtml(L.desc)}</div>
+        <label class="profileLabel">${escapeHtml(L.nick)}
+          <input id="profileNick" class="profileInput" type="text" maxlength="16" value="${escapeHtml(defaultNick)}" />
+        </label>
+        <label class="profileLabel">${escapeHtml(L.country)}
+          <select id="profileCountry" class="profileSelect">
+            <option value="pl">${escapeHtml(L.pl)}</option>
+            <option value="gb">${escapeHtml(L.gb)}</option>
+          </select>
+        </label>
+        <label class="profileLabel">${escapeHtml(L.fav)}
+          <input id="profileFav" class="profileInput" type="text" maxlength="26" value="${escapeHtml(defaultFav)}" />
+        </label>
+      </div>
+    </div>
+    <div class="profileBtns" id="profileBtns"></div>
+  `;
+
+  modalOpen(L.title, wrap);
+
+  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
+  const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
+  if(avatarSlot){
+    const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
+    btnAvatar.onclick = ()=>{ showToast(lang==='en' ? 'Avatar selection soon.' : 'Wybór avatara wkrótce.'); };
+    avatarSlot.appendChild(btnAvatar);
+  }
+
+  requestAnimationFrame(()=>{
+    const sel = document.getElementById("profileCountry");
+    if(sel) sel.value = defaultCountry;
+  });
+
+  const btnRow = wrap.querySelector("#profileBtns");
+  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
+  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
+  btnRow.appendChild(btnSave);
+  btnRow.appendChild(btnBack);
+
+  btnSave.onclick = ()=>{
+    const nick = (document.getElementById("profileNick")?.value || "").trim();
+    const country = (document.getElementById("profileCountry")?.value || "").trim();
+    const favClub = (document.getElementById("profileFav")?.value || "").trim();
+    const profile = {...existing, nick, country, favClub, updatedAt: Date.now()};
+    if(!isProfileComplete(profile)){
+      showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
+      return;
+    }
+    localStorage.setItem(KEY_NICK, nick);
+    setProfile(profile);
+    refreshNickLabels();
+    modalClose();
+    if(typeof onDone === "function") onDone(profile);
+  };
+
+  btnBack.onclick = ()=>{
+    modalClose();
+    if(typeof onCancel === "function") onCancel();
+  };
+}
+
+async function ensureProfile(){
+  const p = getProfile();
+  if(isProfileComplete(p)) return true;
+  return await new Promise((resolve)=>{
+    openProfileModal({required:true, onDone: ()=>resolve(true), onCancel: ()=>resolve(false)});
+  });
 }
 
 function nickModalAsk(){
@@ -893,11 +958,6 @@ function nickModalAsk(){
 
     modalOpen(t("addProfileTitle"), wrap);
     refreshAllButtonImages();
-  // update fallback text labels for image-buttons (when graphics missing)
-  document.querySelectorAll(".btnFallbackLabel[data-i18n]").forEach(sp=>{
-    const k = (sp.dataset && sp.dataset.i18n) ? sp.dataset.i18n : "";
-    if(k) sp.textContent = t(k);
-  });
 
     const closeBtn = el("modalClose");
     const prevCloseOnClick = closeBtn ? closeBtn.onclick : null;
@@ -977,9 +1037,6 @@ let currentRoundNo = 1;
 
 let matchesCache = [];
 let picksCache = {};
-let picksCompleteSuppressed = false; // gdy klikniesz Cofnij, chowamy pasek zapisu do czasu kolejnej zmiany typu
-let picksDirty = false; // true gdy użytkownik zmienił typy od ostatniego wczytania/zapisu
-
 let picksDocByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
@@ -1107,7 +1164,7 @@ async function initFirebase(){
 // ===== UI =====
 function bindUI(){
   // Modal
-  if(el("modalClose")) ((el("modalClose"))||{}).onclick = modalClose;
+  if(el("modalClose")) el("modalClose").onclick = modalClose;
   if(el("modal")) el("modal").addEventListener("click",(e)=>{
     if(e.target && e.target.id === "modal") modalClose();
   });
@@ -1131,13 +1188,16 @@ function bindUI(){
 
 
   // HOME
-  const __b1 = el("btnHomeRooms");
-  if(__b1) __b1.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  el("btnHomeRooms").onclick = async ()=>{
+    // Profil uzupełniamy przy pierwszym wejściu do gry (nick + kraj)
+    const okProfile = await ensureProfile();
+    if(!okProfile) return;
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     openRoomsChoiceModal();
   };
 
-  const __b2 = el("btnHomeStats");
-  if(__b2) __b2.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  el("btnHomeStats").onclick = async ()=>{
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const saved = getSavedRoom();
     if(saved && saved.length === 6){
       await openLeagueTable(saved);
@@ -1147,36 +1207,36 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  const __b3 = el("btnHomeExit");
-  if(__b3) __b3.onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
+  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
+
   // CONTINUE
-  const __b4 = el("btnContYes");
-  if(__b4) __b4.onclick = async ()=>{    const code = getSavedRoom();
+  el("btnContYes").onclick = async ()=>{
+    const code = getSavedRoom();
     if(!code) { showScreen("rooms"); return; }
     await openRoom(code, { force:true });
   };
-  const __b5 = el("btnContNo");
-  if(__b5) __b5.onclick = ()=> showScreen("rooms");  const __b6 = el("btnContForget");
-  if(__b6) __b6.onclick = ()=>{    clearSavedRoom();
+  el("btnContNo").onclick = ()=> showScreen("rooms");
+  el("btnContForget").onclick = ()=>{
+    clearSavedRoom();
     showToast(getLang()==="en" ? "Room forgotten" : "Zapomniano pokój");
     showScreen("rooms");
   };
 
   // ROOMS
-  const __b7 = el("btnBackHomeFromRooms");
-  if(__b7) __b7.onclick = ()=> showScreen("home");  const __b8 = el("btnChangeNickRooms");
-  if(__b8) __b8.onclick = async ()=>{    localStorage.removeItem(KEY_NICK);
+  el("btnBackHomeFromRooms").onclick = ()=> showScreen("home");
+  el("btnChangeNickRooms").onclick = async ()=>{
+    localStorage.removeItem(KEY_NICK);
   const n = await ensureNick(); if(!n) return;
     showToast(getLang()==="en" ? "Nick changed" : "Zmieniono nick");
   };
-  const __b9 = el("btnCreateRoom");
-  if(__b9) __b9.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  el("btnCreateRoom").onclick = async ()=>{
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const name = (el("inpRoomName").value || "").trim();
     if(name.length < 2){ showToast(getLang()==="en" ? "Enter room name" : "Podaj nazwę pokoju"); return; }
     await createRoom(name);
   };
-  const __b10 = el("btnJoinRoom");
-  if(__b10) __b10.onclick = async ()=>{    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
+  el("btnJoinRoom").onclick = async ()=>{
+    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     const code = (el("inpJoinCode").value || "").trim().toUpperCase();
     if(code.length !== 6){ showToast(getLang()==="en" ? "Code must be 6 chars" : "Kod musi mieć 6 znaków"); return; }
     await joinRoom(code);
@@ -1207,99 +1267,36 @@ function bindUI(){
   const __btnRefresh = el("btnRefresh");
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
-  const __b11 = el("btnModalSavePicks");
-  if(__b11) __b11.onclick = async ()=>{ await saveAllPicks(); hidePicksCompleteModal(true); };  const backBtn = el("btnModalBackPicks");
-  if(backBtn){
-    backBtn.onclick = ()=>{
-      suppressPicksCompleteModal();
-      // zostajemy w edycji typów
-    };
-  }
-
-  // END ROUND CONFIRM MODAL BUTTONS
-  const __endOk = el("btnEndRoundOk");
-  if(__endOk) __endOk.onclick = ()=> resolveEndRoundModal(true);
-  const __endCancel = el("btnEndRoundCancel");
-  if(__endCancel) __endCancel.onclick = ()=> resolveEndRoundModal(false);
-  const __endOverlay = el("endRoundModal");
-  if(__endOverlay) __endOverlay.addEventListener("click", (e)=>{
-    if(e && e.target && e.target.id === "endRoundModal") resolveEndRoundModal(false);
-  });
+  el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
 
   // ADMIN
-  const __b12 = el("btnEnterResults");
-  if(__b12) __b12.onclick = async ()=>{    if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+  el("btnEnterResults").onclick = async ()=>{
+    if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
     if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
     openResultsScreen();
   };
 
-  const __b13 = el("btnEndRound");
-  if(__b13) __b13.onclick = async ()=>{    await endRoundConfirmAndArchive();
+  el("btnEndRound").onclick = async ()=>{
+    await endRoundConfirmAndArchive();
   };
 
-  const __b14 = el("btnAddQueue");
-  if(__b14) __b14.onclick = ()=>{ openAddQueueModal(); };  // ADD QUEUE MODAL (v1001)
-  const __btnQM = el("btnQueueManual");
-  const __btnQA = el("btnQueueAuto");
-  const __btnQB = el("btnQueueBack");
-  const __btnQMB = el("btnQueueManualBack");
-  const __btnQSave = el("btnQueueSaveManual");
-
-  if(__btnQB) __btnQB.onclick = ()=> closeAddQueueModal({restoreAddBtn:true});
-  if(__btnQM) __btnQM.onclick = ()=>{
-    const s1 = el("queueModalStep1");
-    const man = el("queueModalManual");
-    if(s1) s1.style.display = "none";
-    if(man) man.style.display = "flex";
-    renderManualBuilder();
-  };
-  if(__btnQMB) __btnQMB.onclick = ()=>{
-    const s1 = el("queueModalStep1");
-    const man = el("queueModalManual");
-    if(man) man.style.display = "none";
-    if(s1) s1.style.display = "flex";
-  };
-  if(__btnQA) __btnQA.onclick = async ()=>{
-    try{
-      const pairs = buildRandomPairs();
-      await addQueuePairs(pairs);
-      closeAddQueueModal({restoreAddBtn:false});
-      if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true});
-    }catch(e){
-      console.error(e);
-      showToast(getLang()==="en" ? "Auto add failed" : "Nie udało się dodać (auto)");
-      // allow retry
-      closeAddQueueModal({restoreAddBtn:true});
-    }
-  };
-  if(__btnQSave) __btnQSave.onclick = async ()=>{
-    try{
-      const pairs = collectManualPairs();
-      await addQueuePairs(pairs);
-      closeAddQueueModal({restoreAddBtn:false});
-      if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true});
-    }catch(e){
-      console.error(e);
-      showToast(getLang()==="en" ? "Fix manual matches" : "Popraw mecze ręczne");
-    }
-  };
-
-  const __btnMyQueue = el("btnMyQueue"); if(__btnMyQueue) __btnMyQueue.onclick = ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
 
   // RESULTS
-  const __b15 = el("btnResBack");
-  if(__b15) __b15.onclick = ()=> showScreen("room");  const __b16 = el("btnResSave");
-  if(__b16) __b16.onclick = async ()=>{ await saveResults(); };
+  el("btnResBack").onclick = ()=> showScreen("room");
+  el("btnResSave").onclick = async ()=>{ await saveResults(); };
+
   // League from room
-  const __b17 = el("btnLeagueFromRoom");
-  if(__b17) __b17.onclick = async ()=>{    if(!currentRoomCode) return;
+  el("btnLeagueFromRoom").onclick = async ()=>{
+    if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
   };
 
   // League
-  const __b18 = el("btnLeagueBack");
-  if(__b18) __b18.onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };  const __b19 = el("btnLeagueRefresh");
-  if(__b19) __b19.onclick = async ()=>{    if(!leagueState.roomCode) return;
+  el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
+  el("btnLeagueRefresh").onclick = async ()=>{
+    if(!leagueState.roomCode) return;
     await openLeagueTable(leagueState.roomCode, {silent:true});
   };
 }
@@ -1465,8 +1462,8 @@ async function openRoom(code, opts={}){
   refreshNickLabels();
 
   const adm = isAdmin();
-  updateAddQueueButtonUI();
-  const __myQ1 = el("btnMyQueue"); if(__myQ1) __myQ1.style.display = adm ? "block" : "none";
+  el("btnAddQueue").style.display = adm ? "block" : "none";
+  el("btnMyQueue").style.display = adm ? "block" : "none";
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
@@ -1480,8 +1477,8 @@ async function openRoom(code, opts={}){
     el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
-    updateAddQueueButtonUI();
-    const __myQ2 = el("btnMyQueue"); if(__myQ2) __myQ2.style.display = adm2 ? "block" : "none";
+    el("btnAddQueue").style.display = adm2 ? "block" : "none";
+    el("btnMyQueue").style.display = adm2 ? "block" : "none";
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
@@ -1504,10 +1501,6 @@ async function openRoom(code, opts={}){
     recomputeSubmittedMap();
     recomputePoints();
     renderPlayers(lastPlayers);
-
-    // Admin can enter results only after saving own picks (requested behavior)
-    const er = el("btnEnterResults");
-    if(er) er.disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
   });
 
   const mq = boot.query(matchesCol(code), boot.orderBy("idx","asc"));
@@ -1518,8 +1511,6 @@ async function openRoom(code, opts={}){
     });
     matchesCache = arr;
 
-    updateAddQueueButtonUI();
-
     recomputeSubmittedMap();
     recomputePoints();
 
@@ -1528,8 +1519,7 @@ async function openRoom(code, opts={}){
     await loadMyPicks();
     renderMatches();
 
-    // Admin can enter results only after saving own picks (requested behavior)
-    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
+    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length;
     if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
   });
 
@@ -1576,15 +1566,6 @@ async function saveAllPicks(){
   }, { merge:true });
 
   showToast(getLang()==="en" ? "Picks saved ✅" : "Zapisano typy ✅");
-
-  picksDirty = false;
-  picksCompleteSuppressed = true;
-  hidePicksCompleteModal(false);
-
-  // Make UI react instantly (before Firestore snapshot arrives)
-  submittedByUid[userUid] = true;
-  const er = el("btnEnterResults");
-  if(er) er.disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
 
   recomputeSubmittedMap();
   recomputePoints();
@@ -1710,13 +1691,7 @@ function renderMatches(){
       ? "No active round. Admin can add a fixture."
       : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
-    // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
-  picksDirty = false;
-  picksCompleteSuppressed = false;
-  picksWasFilled = allMyPicksFilled();
-  hidePicksCompleteModal(false);
-  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
-
+    updateSaveButtonState();
     return;
   }
 
@@ -1756,10 +1731,8 @@ function renderMatches(){
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].h = v;
-      picksDirty = true;
-      picksCompleteSuppressed = false;
       updateSaveButtonState();
-      };
+    };
 
     const sep = document.createElement("div");
     sep.className = "sep";
@@ -1774,10 +1747,8 @@ function renderMatches(){
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
       picksCache[m.id].a = v;
-      picksDirty = true;
-      picksCompleteSuppressed = false;
       updateSaveButtonState();
-      };
+    };
 
     score.appendChild(inpH);
     score.appendChild(sep);
@@ -1798,111 +1769,15 @@ function renderMatches(){
     list.appendChild(card);
   }
 
-  // po renderze traktujemy stan jako zsynchronizowany (brak niezapisanych zmian)
-  picksDirty = false;
-  picksCompleteSuppressed = false;
-  picksWasFilled = allMyPicksFilled();
-  hidePicksCompleteModal(false);
-  // nie pokazujemy modala tylko dlatego, że wartości są już wypełnione
-
-}
-
-
-let picksWasFilled = false;
-let picksModalTimer = null;
-
-function schedulePicksCompleteModal(){
-  if(picksModalTimer) clearTimeout(picksModalTimer);
-  picksModalTimer = setTimeout(()=>{
-    if(!picksDirty) return;
-    const filledNow = allMyPicksFilled();
-    const modal = el("picksCompleteModal");
-    const visible = modal && modal.style.display === "flex";
-    if(filledNow && !picksCompleteSuppressed && !visible){
-      showPicksCompleteModal();
-    }
-  }, 350);
-}
-
-function showPicksCompleteModal(){
-  const modal = el("picksCompleteModal");
-  if(!modal) return;
-  modal.style.display = "flex";
-  modal.setAttribute("aria-hidden","false");
-}
-function hidePicksCompleteModal(persistSuppress=false){
-  const modal = el("picksCompleteModal");
-  if(!modal) return;
-  modal.style.display = "none";
-  modal.setAttribute("aria-hidden","true");
-  if(persistSuppress) picksCompleteSuppressed = true;
-}
-function suppressPicksCompleteModal(){
-  // user wants to continue editing without saving
-  picksCompleteSuppressed = true;
-  hidePicksCompleteModal(false);
-}
-
-// ===== END ROUND CONFIRM (custom modal instead of window.confirm) =====
-let endRoundModalResolver = null;
-function showEndRoundModal(message){
-  const modal = el("endRoundModal");
-  const textEl = el("endRoundModalText");
-  if(!modal || !textEl) return Promise.resolve(false);
-
-  // cancel previous pending modal
-  endRoundModalResolver = null;
-
-  textEl.textContent = String(message || "");
-  modal.style.display = "flex";
-  modal.setAttribute("aria-hidden","false");
-
-  return new Promise((resolve)=>{ endRoundModalResolver = resolve; });
-}
-function hideEndRoundModal(){
-  const modal = el("endRoundModal");
-  if(!modal) return;
-  modal.style.display = "none";
-  modal.setAttribute("aria-hidden","true");
-}
-function resolveEndRoundModal(val){
-  hideEndRoundModal();
-  const r = endRoundModalResolver;
-  endRoundModalResolver = null;
-  if(typeof r === "function") r(!!val);
+  updateSaveButtonState();
 }
 
 function updateSaveButtonState(){
-  const filled = allMyPicksFilled();
-
-  // jeśli nie ma niezapisanych zmian, nie pokazujemy modala
-  if(!picksDirty){
-    hidePicksCompleteModal(false);
-    picksWasFilled = filled;
-    return;
-  }
-
-  if(!filled){
-    picksWasFilled = false;
-    picksCompleteSuppressed = false;
-    hidePicksCompleteModal(false);
-    return;
-  }
-
-  // filled
-  if(!picksWasFilled){
-    picksWasFilled = true;
-    if(!picksCompleteSuppressed){
-      showPicksCompleteModal();
-    }
-    return;
-  }
-
-  // już było wypełnione — po edycji pokaż ponownie (z krótkim opóźnieniem)
-  if(!picksCompleteSuppressed){
-    schedulePicksCompleteModal();
-  }
+  const btn = el("btnSaveAll");
+  if(!btn) return;
+  btn.disabled = !allMyPicksFilled();
 }
+
 // ===== PODGLĄD TYPOW (MODAL) =====
 function openPicksPreview(uid, nick){
   if(!currentRoomCode) return;
@@ -2147,7 +2022,7 @@ async function endRoundConfirmAndArchive(){
     ? `End ROUND ${currentRoundNo} and save it to history?\n\nAfter ending: matches/picks will be archived and the app moves to ROUND ${currentRoundNo+1}.`
     : `Zakończyć KOLEJKĘ ${currentRoundNo} i zapisać do historii?\n\nPo zakończeniu: mecze/typy tej kolejki zostaną zarchiwizowane, a aplikacja przejdzie do KOLEJKI ${currentRoundNo+1}.`;
 
-  const ok = await showEndRoundModal(msg);
+  const ok = confirm(msg);
   if(!ok) return;
 
   await archiveCurrentRound();
@@ -2235,180 +2110,8 @@ async function archiveCurrentRound(){
 
   await b.commit();
 
-  // New round unlocked -> allow adding next queue
-  setAddQueueLocked(false);
-
   showToast(getLang()==="en" ? `ROUND ${roundNo} ended ✅` : `Zakończono KOLEJKĘ ${roundNo} ✅`);
 }
-
-// ===== ADD QUEUE (v1000) =====
-const TEAMS_V1000 = [
-  "Jagiellonia","Piast","Lechia","Legia","Wisla Plock","Radomiak","GKS Katowice","Gornik",
-  "Arka","Cracovia","Lech","Pogon","Motor","Rakow","Korona","Widzew","Slask","Zaglebie",
-  "Stal Mielec","Puszcza"
-];
-
-function showQueueModal(){
-  const m = el("queueModal");
-  if(!m) return;
-  m.style.display = "flex";
-  m.setAttribute("aria-hidden","false");
-}
-function hideQueueModal(){
-  const m = el("queueModal");
-  if(!m) return;
-  m.style.display = "none";
-  m.setAttribute("aria-hidden","true");
-}
-
-function openAddQueueModal(){
-  if(!currentRoomCode) return;
-  if(!isAdmin()){ showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
-  if(matchesCache.length){ showToast(getLang()==="en" ? "Round already has matches" : "Ta kolejka ma już mecze"); return; }
-
-  // Lock/hide the add button right away; it will come back only on "Cofnij" or after ending the round.
-  setAddQueueLocked(true);
-
-  const s1 = el("queueModalStep1");
-  const man = el("queueModalManual");
-  if(s1) s1.style.display = "flex";
-  if(man) man.style.display = "none";
-
-  addQueueModalState.modalOpen = true;
-  showQueueModal();
-}
-
-function closeAddQueueModal({restoreAddBtn}={}){
-  hideQueueModal();
-  addQueueModalState.modalOpen = false;
-
-  if(restoreAddBtn){
-    setAddQueueLocked(false);
-  }
-}
-
-function shuffleInPlace(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]]=[arr[j],arr[i]];
-  }
-  return arr;
-}
-
-function buildRandomPairs(){
-  const teams = shuffleInPlace([...TEAMS_V1000]);
-  const pairs = [];
-  for(let i=0;i<teams.length;i+=2){
-    const home = teams[i];
-    const away = teams[i+1];
-    if(!home || !away) break;
-    pairs.push([home, away]);
-  }
-  return pairs.slice(0,10);
-}
-
-async function addQueuePairs(pairs){
-  if(!currentRoomCode) return;
-  if(!isAdmin()){ showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
-  if(!Array.isArray(pairs) || pairs.length!==10){
-    throw new Error("pairs must have length 10");
-  }
-  const b = boot.writeBatch(db);
-  pairs.forEach((pair, idx)=>{
-    const id = `m_${Date.now()}_${idx}_${Math.floor(Math.random()*1e6)}`;
-    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
-    b.set(ref, {
-      idx,
-      home: pair[0],
-      away: pair[1],
-      createdAt: boot.serverTimestamp()
-    });
-  });
-  await b.commit();
-  showToast(getLang()==="en" ? "Fixture added ✅" : "Dodano kolejkę ✅");
-}
-
-function renderManualBuilder(defaultPairs){
-  const wrap = el("manualMatches");
-  if(!wrap) return;
-  wrap.innerHTML = "";
-
-  const pairs = (Array.isArray(defaultPairs) && defaultPairs.length===10) ? defaultPairs : buildRandomPairs();
-
-  const mkSelect = (kind,i)=>{
-    const s = document.createElement("select");
-    s.className = "scoreInput";
-    s.style.width = "220px";
-    s.style.padding = "10px 12px";
-    s.style.borderRadius = "14px";
-    s.style.border = "1px solid rgba(255,255,255,.15)";
-    s.style.background = "rgba(0,0,0,.22)";
-    s.style.color = "rgba(255,255,255,.92)";
-    s.dataset.kind = kind;
-    s.dataset.i = String(i);
-    TEAMS_V1000.forEach(tn=>{
-      const o = document.createElement("option");
-      o.value = tn;
-      o.textContent = tn;
-      s.appendChild(o);
-    });
-    return s;
-  };
-
-  for(let i=0;i<10;i++){
-    const row = document.createElement("div");
-    row.className = "row";
-    row.style.gap = "10px";
-    row.style.alignItems = "center";
-
-    const idxBadge = document.createElement("div");
-    idxBadge.className = "chip";
-    idxBadge.style.padding = "8px 10px";
-    idxBadge.textContent = String(i+1);
-
-    const selH = mkSelect("home", i);
-    const selA = mkSelect("away", i);
-
-    const sep = document.createElement("div");
-    sep.className = "chip";
-    sep.style.padding = "8px 10px";
-    sep.textContent = "vs";
-
-    selH.value = pairs[i]?.[0] || TEAMS_V1000[0];
-    selA.value = pairs[i]?.[1] || TEAMS_V1000[1];
-
-    row.appendChild(idxBadge);
-    row.appendChild(selH);
-    row.appendChild(sep);
-    row.appendChild(selA);
-    wrap.appendChild(row);
-  }
-}
-
-
-function collectManualPairs(){
-  const wrap = el("manualMatches");
-  if(!wrap) throw new Error("manualMatches missing");
-  const selects = Array.from(wrap.querySelectorAll("select"));
-  if(selects.length < 20) throw new Error("need 20 selects");
-  const pairs = [];
-  const used = new Set();
-  for(let i=0;i<10;i++){
-    const homeSel = wrap.querySelector(`select[data-kind="home"][data-i="${i}"]`);
-    const awaySel = wrap.querySelector(`select[data-kind="away"][data-i="${i}"]`);
-    const home = homeSel ? homeSel.value : "";
-    const away = awaySel ? awaySel.value : "";
-    if(!home || !away) throw new Error("empty");
-    if(home === away) throw new Error("same team");
-    // enforce uniqueness across the whole round (20 teams max)
-    if(used.has(home) || used.has(away)) throw new Error("duplicate team");
-    used.add(home); used.add(away);
-    pairs.push([home, away]);
-  }
-  if(pairs.length !== 10) throw new Error("pairs != 10");
-  return pairs;
-}
-
 
 // ===== TEST QUEUE =====
 async function addTestQueue(){
@@ -2451,10 +2154,6 @@ const leagueState = {
   roomCode: null,
   roomName: null,
   afterRound: 0,
-  selectedRound: 0,
-  players: [],
-  archives: [],
-  finishedRounds: [],
   rows: []
 };
 
@@ -2476,15 +2175,9 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
-    leagueState.selectedRound = leagueState.afterRound;
 
     el("leagueRoomName").textContent = leagueState.roomName;
-    // (legacy span kept hidden in HTML for compatibility)
-    el("leagueAfterRound").textContent = String(leagueState.selectedRound);
-
-    // load finished rounds (archive)
-    await loadLeagueArchives(roomCode);
-    setupLeagueRoundSelect();
+    el("leagueAfterRound").textContent = String(leagueState.afterRound);
 
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
@@ -2500,11 +2193,7 @@ async function openLeagueTable(roomCode, opts={}) {
       });
     });
 
-    // keep base player list (nicks) from league collection
-    leagueState.players = arr;
-
-    // compute table for selected finished round (or fallback to current totals if no archives)
-    recomputeLeagueRowsForSelectedRound();
+    leagueState.rows = arr;
     renderLeagueTable();
     showScreen("league");
     if(!silent) showToast(getLang()==="en" ? "League table" : "Tabela ligi");
@@ -2512,110 +2201,6 @@ async function openLeagueTable(roomCode, opts={}) {
     console.error(e);
     showToast(getLang()==="en" ? "Cannot open league table" : "Nie udało się otworzyć tabeli");
   }
-}
-
-
-async function loadLeagueArchives(code){
-  try{
-    const q = boot.query(roundsCol(code), boot.orderBy("roundNo","asc"));
-    const qs = await boot.getDocs(q);
-    const archives = [];
-    qs.forEach(d=>{
-      const data = d.data() || {};
-      const rn = Number(data.roundNo ?? 0);
-      if(rn > 0){
-        archives.push({
-          roundNo: rn,
-          pointsByUid: data.pointsByUid || {}
-        });
-      }
-    });
-    archives.sort((a,b)=>a.roundNo-b.roundNo);
-    leagueState.archives = archives;
-    leagueState.finishedRounds = archives.map(a=>a.roundNo);
-  }catch(e){
-    console.error(e);
-    leagueState.archives = [];
-    leagueState.finishedRounds = [];
-  }
-}
-
-function setupLeagueRoundSelect(){
-  const sel = el("leagueRoundSelect");
-  if(!sel) return;
-
-  sel.innerHTML = "";
-
-  if(!leagueState.finishedRounds.length){
-    const opt = document.createElement("option");
-    opt.value = "0";
-    opt.textContent = "—";
-    sel.appendChild(opt);
-    sel.disabled = true;
-    // still show legacy text
-    el("leagueAfterRound").textContent = "0";
-    return;
-  }
-
-  // default: last finished round (usually currentRoundNo-1)
-  const maxFinished = Math.max(...leagueState.finishedRounds);
-  if(!leagueState.finishedRounds.includes(leagueState.selectedRound)){
-    leagueState.selectedRound = maxFinished;
-  }
-
-  // show newest first
-  const roundsDesc = [...leagueState.finishedRounds].sort((a,b)=>b-a);
-  for(const rn of roundsDesc){
-    const opt = document.createElement("option");
-    opt.value = String(rn);
-    opt.textContent = String(rn);
-    sel.appendChild(opt);
-  }
-  sel.value = String(leagueState.selectedRound);
-  sel.disabled = false;
-
-  sel.onchange = ()=>{
-    const rn = parseInt(sel.value, 10);
-    leagueState.selectedRound = Number.isFinite(rn) ? rn : maxFinished;
-    el("leagueAfterRound").textContent = String(leagueState.selectedRound);
-    recomputeLeagueRowsForSelectedRound();
-    renderLeagueTable();
-  };
-
-  el("leagueAfterRound").textContent = String(leagueState.selectedRound);
-}
-
-function recomputeLeagueRowsForSelectedRound(){
-  // if no archives, fallback to current totals from leagueState.players (already sorted later)
-  if(!leagueState.finishedRounds.length){
-    leagueState.rows = (leagueState.players || []).map(p=>({
-      uid: p.uid, nick: p.nick, rounds: p.rounds, points: p.points
-    }));
-    return;
-  }
-
-  const target = leagueState.selectedRound;
-  const base = new Map();
-
-  // seed with known players (nicks)
-  (leagueState.players || []).forEach(p=>{
-    base.set(p.uid, { uid: p.uid, nick: p.nick, rounds: 0, points: 0 });
-  });
-
-  for(const arc of (leagueState.archives || [])){
-    if(arc.roundNo > target) break;
-    const pbu = arc.pointsByUid || {};
-    for(const [uid, pts] of Object.entries(pbu)){
-      if(!base.has(uid)){
-        base.set(uid, { uid, nick: uid, rounds: 0, points: 0 });
-      }
-      const row = base.get(uid);
-      row.rounds += 1;
-      row.points += Number(pts ?? 0);
-    }
-  }
-
-  leagueState.rows = Array.from(base.values());
 }
 
 function renderLeagueTable(){
