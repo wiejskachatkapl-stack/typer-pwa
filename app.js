@@ -425,178 +425,9 @@ function modalOpen(title, bodyNode){
   if(bodyNode) b.appendChild(bodyNode);
   m.classList.add("active");
 }
-function openAvatarPicker(currentSrc, onPick){
-  // Modal overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'modal';
-  wrapper.style.width = 'min(900px, 92vw)';
-  wrapper.style.maxHeight = '85vh';
-  wrapper.style.overflow = 'auto';
-  wrapper.style.padding = '18px';
-
-  // Header
-  const header = document.createElement('div');
-  header.style.display = 'flex';
-  header.style.alignItems = 'center';
-  header.style.justifyContent = 'space-between';
-  header.style.gap = '12px';
-
-  const title = document.createElement('div');
-  title.style.fontSize = '28px';
-  title.style.fontWeight = '900';
-  title.textContent = (getLang()==='en') ? 'Choose avatar' : 'Wybierz avatar';
-
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '×';
-  closeBtn.title = (getLang()==='en') ? 'Close' : 'Zamknij';
-  closeBtn.style.border = 'none';
-  closeBtn.style.background = 'transparent';
-  closeBtn.style.fontSize = '34px';
-  closeBtn.style.cursor = 'pointer';
-  closeBtn.style.color = '#fff';
-  closeBtn.addEventListener('click', ()=> overlay.remove());
-
-  header.appendChild(title);
-  header.appendChild(closeBtn);
-
-  // Grid
-  const grid = document.createElement('div');
-  grid.style.display = 'grid';
-  grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(90px, 1fr))';
-  grid.style.gap = '12px';
-  grid.style.marginTop = '16px';
-
-  // Note (visible only if no avatar files were found)
-  const emptyNote = document.createElement('div');
-  emptyNote.style.marginTop = '14px';
-  emptyNote.style.opacity = '0.9';
-  emptyNote.style.fontSize = '14px';
-  emptyNote.style.lineHeight = '1.35';
-  emptyNote.style.display = 'none';
-  emptyNote.innerHTML = (getLang()==='en')
-    ? 'No avatars found. Check that files exist in <b>ui/avatars</b> (e.g. <b>avatar_1.png</b>).'
-    : 'Nie znaleziono avatarów. Sprawdź czy pliki są w <b>ui/avatars</b> (np. <b>avatar_1.png</b>).';
-
-  // Use the same base as buttons (prevents path issues)
-  const uiBase = getBtnDir().replace(/buttons\/(pl|en)\//, ''); // usually: "ui/"
-
-  function normalizePath(p){
-    if(!p) return '';
-    // compare by filename-ish part so absolute/relative doesn't break highlight
-    try{
-      const u = new URL(p, document.baseURI);
-      return u.pathname.replace(/^\//,'');
-    }catch(e){
-      return String(p).replace(/^\//,'');
-    }
-  }
-
-  const currentNorm = normalizePath(currentSrc);
-
-  function getAvatarCandidates(i){
-    const n = String(i);
-    const n2 = String(i).padStart(2,'0');
-    // Try the most likely naming conventions (and also .PNG)
-    return [
-      `${uiBase}avatars/avatar_${n}.png`,
-      `${uiBase}avatars/avatar_${n2}.png`,
-      `${uiBase}avatars/avatar-${n}.png`,
-      `${uiBase}avatars/avatar${n}.png`,
-      `${uiBase}avatars/avatar_${n}.PNG`,
-      `${uiBase}avatars/avatar_${n2}.PNG`
-    ];
-  }
-
-  function loadFirstExisting(img, candidates, onOk, onFail){
-    let idx = 0;
-    const trySrc = () => {
-      if(idx >= candidates.length){
-        onFail && onFail();
-        return;
-      }
-      const src = candidates[idx++];
-      img.dataset.avatarSrc = src;
-      img.src = src;
-    };
-    img.onload = () => { onOk && onOk(img.dataset.avatarSrc || img.src); };
-    img.onerror = () => { trySrc(); };
-    trySrc();
-  }
-
-  const MAX = 60; // future-proof
-  let pending = 0;
-  let anyShown = false;
-
-  function checkDone(){
-    if(pending === 0 && !anyShown){
-      emptyNote.style.display = 'block';
-    }
-  }
-
-  for(let i=1; i<=MAX; i++){
-    pending++;
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.style.border = '1px solid rgba(255,255,255,0.10)';
-    btn.style.background = 'rgba(255,255,255,0.06)';
-    btn.style.borderRadius = '12px';
-    btn.style.padding = '8px';
-    btn.style.cursor = 'pointer';
-    btn.style.display = 'flex';
-    btn.style.alignItems = 'center';
-    btn.style.justifyContent = 'center';
-    btn.style.height = '92px';
-    btn.style.width = '92px';
-
-    const img = document.createElement('img');
-    img.style.maxWidth = '100%';
-    img.style.maxHeight = '100%';
-    img.style.objectFit = 'contain';
-    img.alt = `avatar ${i}`;
-
-    loadFirstExisting(
-      img,
-      getAvatarCandidates(i),
-      (srcUsed)=>{
-        anyShown = true;
-        pending--;
-
-        // highlight current avatar
-        if(normalizePath(srcUsed) === currentNorm){
-          btn.style.outline = '3px solid rgba(255,255,255,0.55)';
-          btn.style.boxShadow = '0 0 0 3px rgba(0,0,0,0.25) inset';
-        }
-
-        checkDone();
-      },
-      ()=>{
-        btn.remove();
-        pending--;
-        checkDone();
-      }
-    );
-
-    btn.addEventListener('click', ()=>{
-      const rel = img.dataset.avatarSrc || img.src;
-      setSelectedAvatar(rel);
-      if(typeof onPick === 'function') onPick(rel);
-      overlay.remove();
-    });
-
-    btn.appendChild(img);
-    grid.appendChild(btn);
-  }
-
-  wrapper.appendChild(header);
-  wrapper.appendChild(grid);
-  wrapper.appendChild(emptyNote);
-  overlay.appendChild(wrapper);
-
-  document.body.appendChild(overlay);
+function modalClose(){
+  const m = el("modal");
+  if(m) m.classList.remove("active");
 }
 
 /** ROOMS MENU MODALS **/
@@ -621,6 +452,7 @@ function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=n
 
 function openRoomsChoiceModal(){
   const wrap = document.createElement("div");
+  wrap.style.position = 'relative';
   wrap.className = "roomsChoice";
 
   const p = document.createElement("div");
@@ -955,7 +787,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
 
   const existing = getProfile() || {};
-  let selectedAvatar = existing.avatar || "";
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
   const defaultCountry = existing.country || (lang === "pl" ? "pl" : "gb");
   const defaultFav = (existing.favClub || "").trim();
@@ -965,10 +796,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   wrap.innerHTML = `
     <div class="profileRow">
       <div class="profileLeftCol" aria-label="Avatar">
-        <div class="profileAvatarBox">
-          <img id="profileAvatarImg" class="profileAvatarImg" style="display:none" alt="avatar">
-          <div id="profileAvatarEmoji" class="profileAvatarPlaceholder">🙂</div>
-        </div>
+        <div class="profileAvatarBox profileAvatarPreview" id="profileAvatarPreview"></div>
         <div id="profileAvatarBtnSlot"></div>
       </div>
       <div class="profileFields">
@@ -992,28 +820,82 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   modalOpen(L.title, wrap);
 
-  const avatarImg = wrap.querySelector("#profileAvatarImg");
-  const avatarEmoji = wrap.querySelector("#profileAvatarEmoji");
-  if(selectedAvatar){
-    avatarImg.src = selectedAvatar;
-    avatarImg.style.display = "";
-    avatarEmoji.style.display = "none";
-  }
+  // Przycisk Avatar (otwiera wybór avatara)
+  const avatarPreview = wrap.querySelector('#profileAvatarPreview');
+  const renderAvatarPreview = (avatarNum) => {
+    if(!avatarPreview) return;
+    avatarPreview.innerHTML = '';
+    if(avatarNum){
+      const img = document.createElement('img');
+      img.alt = `avatar_${avatarNum}`;
+      img.src = `ui/avatars/avatar_${avatarNum}.png`;
+      img.onerror = () => {
+        avatarPreview.innerHTML = '<div class="profileAvatarPlaceholder">🙂</div>';
+      };
+      avatarPreview.appendChild(img);
+    } else {
+      avatarPreview.innerHTML = '<div class="profileAvatarPlaceholder">🙂</div>';
+    }
+  };
+  renderAvatarPreview(existing.avatar || null);
 
-  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
+  const openAvatarOverlay = () => {
+    if(wrap.querySelector('#avatarOverlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'avatarOverlay';
+    overlay.className = 'avatarOverlay';
+
+    const header = document.createElement('div');
+    header.className = 'avatarOverlayHeader';
+
+    const title = document.createElement('div');
+    title.className = 'avatarOverlayTitle';
+    title.textContent = (lang === 'en') ? 'Choose an avatar' : 'Wybierz avatar';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btnGhost';
+    closeBtn.textContent = (lang === 'en') ? 'Close' : 'Zamknij';
+    closeBtn.onclick = () => overlay.remove();
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    const grid = document.createElement('div');
+    grid.className = 'avatarGrid';
+
+    const MAX_AVATARS = 60; // przyszłościowo
+    const selected = existing.avatar || null;
+
+    for(let i=1;i<=MAX_AVATARS;i++){
+      const tile = document.createElement('div');
+      tile.className = 'avatarTile' + (i === selected ? ' selected' : '');
+      const img = document.createElement('img');
+      img.alt = `avatar_${i}`;
+      img.loading = 'lazy';
+      img.src = `ui/avatars/avatar_${i}.png`;
+      img.onerror = () => tile.remove();
+      tile.appendChild(img);
+
+      tile.onclick = () => {
+        existing.avatar = i;
+        setProfile(existing);
+        renderAvatarPreview(i);
+        overlay.remove();
+      };
+
+      grid.appendChild(tile);
+    }
+
+    overlay.appendChild(header);
+    overlay.appendChild(grid);
+    wrap.appendChild(overlay);
+  };
+
   const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
   if(avatarSlot){
     const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
-    btnAvatar.onclick = ()=>{
-      openAvatarPicker(selectedAvatar, (src)=>{
-        selectedAvatar = src;
-        const img = wrap.querySelector("#profileAvatarImg");
-        const em = wrap.querySelector("#profileAvatarEmoji");
-        img.src = src;
-        img.style.display = "";
-        em.style.display = "none";
-      });
-    };
+    btnAvatar.onclick = () => openAvatarOverlay();
     avatarSlot.appendChild(btnAvatar);
   }
 
@@ -1032,7 +914,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, avatar: (selectedAvatar||""), updatedAt: Date.now()};
+    const profile = {...existing, nick, country, favClub, updatedAt: Date.now()};
     if(!isProfileComplete(profile)){
       showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
       return;
@@ -2609,30 +2491,12 @@ function escapeHtml(s){
     .replaceAll("'","&#039;");
 }
 
-function injectCssOnce(id, cssText){
-  if(document.getElementById(id)) return;
-  const st = document.createElement("style");
-  st.id = id;
-  st.textContent = cssText;
-  document.head.appendChild(st);
-}
-
 // ===== START =====
 (async()=>{
   try{
     setBg(BG_HOME);
     setFooter(`BUILD ${BUILD}`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
-
-    injectCssOnce("avatar-picker-css", `
-      .avatarPickerWrap{display:flex;flex-direction:column;gap:12px;max-height:70vh;}
-      .avatarGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;overflow:auto;padding:6px 2px;}
-      .avatarItem{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .08s ease, border-color .12s ease;}
-      .avatarItem:hover{transform:scale(1.03);border-color:rgba(255,255,255,0.28);}
-      .avatarItem.selected{border-color:rgba(80,200,255,0.9);box-shadow:0 0 0 2px rgba(80,200,255,0.25) inset;}
-      .avatarItem img{width:64px;height:64px;object-fit:contain;image-rendering:auto;}
-      .profileAvatarImg{width:100%;height:100%;object-fit:contain;border-radius:14px;}
-    `);
 
     await initFirebase();
     bindUI();
