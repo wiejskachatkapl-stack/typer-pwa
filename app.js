@@ -427,7 +427,12 @@ function modalOpen(title, bodyNode){
 }
 function modalClose(){
   const m = el("modal");
-  if(m) m.classList.remove("active");
+  if(m){
+    m.classList.remove("active");
+    m.classList.remove("profileMode");
+  }
+  const mb = el("modalBack");
+  if(mb) mb.remove();
 }
 
 /** ROOMS MENU MODALS **/
@@ -694,21 +699,36 @@ function openSettings(){
   btnProfil.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnProfil);
 
-  // Zamiast przycisku Avatar w Ustawieniach: przycisk Reset Profilu (przeniesiony w jego miejsce)
-  const btnClear = document.createElement("button");
-  btnClear.className = "imgBtn sysBtn sysBtnBig";
-  btnClear.type = "button";
-  btnClear.title = t("clearProfile");
-  btnClear.setAttribute("aria-label", t("clearProfile"));
-  const img = document.createElement("img");
-  img.dataset.btn = "btn_reset_profilu.png";
-  img.alt = t("clearProfile");
-  img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
-  btnClear.appendChild(img);
-  btnClear.onclick = () => clearProfile();
-  btnRow.appendChild(btnClear);
+  const btnAvatar = document.createElement("button");
+  btnAvatar.className = "imgBtn sysBtn sysBtnBig";
+  btnAvatar.type = "button";
+  btnAvatar.title = (getLang()==="pl") ? "Avatar" : "Avatar";
+  btnAvatar.setAttribute("aria-label", btnAvatar.title);
+  const imgAvatar = document.createElement("img");
+  imgAvatar.dataset.btn = "btn_avatar.png";
+  imgAvatar.alt = btnAvatar.title;
+  imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
+  btnAvatar.appendChild(imgAvatar);
+  // Avatar wybieramy w oknie Profil (tam jest podgląd i zapis profilu)
+  btnAvatar.onclick = ()=> openProfileModal({required:false});
+  btnRow.appendChild(btnAvatar);
 
   wrap.appendChild(btnRow);
+
+
+const btnClear = document.createElement("button");
+btnClear.className = "imgBtn sysBtn sysBtnBig";
+btnClear.type = "button";
+btnClear.title = t("clearProfile");
+btnClear.setAttribute("aria-label", t("clearProfile"));
+btnClear.style.alignSelf = "flex-start";
+const img = document.createElement("img");
+img.dataset.btn = "btn_reset_profilu.png";
+img.alt = t("clearProfile");
+img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
+btnClear.appendChild(img);
+btnClear.onclick = () => clearProfile();
+wrap.appendChild(btnClear);
 
 const warn = document.createElement("div");
 warn.className = "sub";
@@ -993,11 +1013,6 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
 }
 
 function openProfileModal({required=false, onDone, onCancel}={}){
-  // Upewnij się, że style dla avatara są wstrzyknięte ZANIM pokażemy obrazek.
-  // Inaczej przy pierwszym otwarciu może pojawić się „flash” ogromnego avatara,
-  // bo reguły .profileAvatarImg (width/height/object-fit) są dodawane dynamicznie.
-  __injectAvatarPickerStyles();
-
   const lang = getLang();
   const L = (lang === "en")
     ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back", pl:"Poland", gb:"UK"}
@@ -1017,7 +1032,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
           <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" style="display:none;" />
           <div class="profileAvatarPlaceholder" id="profileAvatarPlaceholder">🙂</div>
         </div>
-        <div id="profileAvatarBtnSlot"></div>
+        <div id="profileAvatarBtnSlot" class="profileAvatarBtnSlot"></div>
       </div>
       <div class="profileFields">
         <div class="profileDesc">${escapeHtml(L.desc)}</div>
@@ -1039,6 +1054,20 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   `;
 
   modalOpen(L.title, wrap);
+
+  // Układ profilu: większy tytuł + przycisk "Wróć" u góry obok "Wyjście"
+  const modalEl = el("modal");
+  if(modalEl) modalEl.classList.add("profileMode");
+  const modalCloseBtn = el("modalClose");
+  if(modalCloseBtn && !el("modalBack")){
+    const btnBackTop = makeSysImgButton("btn_back.png", {cls:"sysBtn small", alt:L.cancelBtn, title:L.cancelBtn});
+    btnBackTop.id = "modalBack";
+    btnBackTop.onclick = ()=>{
+      modalClose();
+      if(typeof onCancel === "function") onCancel();
+    };
+    modalCloseBtn.parentNode.insertBefore(btnBackTop, modalCloseBtn);
+  }
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
   let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
@@ -1077,6 +1106,29 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       });
     };
     avatarSlot.appendChild(btnAvatar);
+
+    // Zamiast przycisku "Zmień" na dole: "Dodaj profil" obok "Avatar"
+    const btnAddProfile = makeSysImgButton("btn_add_profil.png", {
+      cls:"sysBtn profileAvatarBtn profileAddBtn",
+      alt:(lang === "en" ? "Add profile" : "Dodaj profil"),
+      title:(lang === "en" ? "Add profile" : "Dodaj profil")
+    });
+    btnAddProfile.onclick = ()=>{
+      const nick = (document.getElementById("profileNick")?.value || "").trim();
+      const country = (document.getElementById("profileCountry")?.value || "").trim();
+      const favClub = (document.getElementById("profileFav")?.value || "").trim();
+      const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
+      if(!isProfileComplete(profile)){
+        showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
+        return;
+      }
+      localStorage.setItem(KEY_NICK, nick);
+      setProfile(profile);
+      refreshNickLabels();
+      modalClose();
+      if(typeof onDone === "function") onDone(profile);
+    };
+    avatarSlot.appendChild(btnAddProfile);
   }
 
   requestAnimationFrame(()=>{
@@ -1084,32 +1136,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     if(sel) sel.value = defaultCountry;
   });
 
+  // Dolny pasek przycisków nieużywany w profilu (akcje są przy avatarze + u góry)
   const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
-  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
-  btnRow.appendChild(btnSave);
-  btnRow.appendChild(btnBack);
-
-  btnSave.onclick = ()=>{
-    const nick = (document.getElementById("profileNick")?.value || "").trim();
-    const country = (document.getElementById("profileCountry")?.value || "").trim();
-    const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
-    if(!isProfileComplete(profile)){
-      showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
-      return;
-    }
-    localStorage.setItem(KEY_NICK, nick);
-    setProfile(profile);
-    refreshNickLabels();
-    modalClose();
-    if(typeof onDone === "function") onDone(profile);
-  };
-
-  btnBack.onclick = ()=>{
-    modalClose();
-    if(typeof onCancel === "function") onCancel();
-  };
+  if(btnRow) btnRow.innerHTML = "";
 }
 
 async function ensureProfile(){

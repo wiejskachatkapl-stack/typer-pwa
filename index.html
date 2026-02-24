@@ -889,9 +889,14 @@
     }
     .modal.profileMode #modalTitle{
       margin: 0 auto;
-      font-size: 38px; /* slightly smaller */
+      font-size: clamp(48px, 5.6vw, 78px);
       font-weight: 900;
       padding: 10px 22px;
+    }
+    .modal.profileMode #modalBack{
+      position: absolute;
+      right: 150px;
+      top: 18px;
     }
     .modal.profileMode #modalClose{
       position: absolute;
@@ -917,6 +922,9 @@
 /* Profile modal - place Add Profile button under Avatar */
 .modal.profileMode .profileBtns{ display:none; }
 .modal.profileMode .profileAddBtn{ margin-top: 12px; }
+
+/* Profile: Avatar + Dodaj profil obok siebie */
+.profileAvatarBtnSlot{ display:flex; gap:14px; align-items:center; justify-content:center; flex-wrap:wrap; }
 
 
 </style>
