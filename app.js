@@ -449,7 +449,8 @@ function openAvatarPicker(currentSrc, onPick){
     grid.appendChild(btn);
   }
 
-  modalOpen(wrap, {wide:true});
+  // modalOpen(title, bodyNode)
+  modalOpen((LANG === "pl" ? "Wybierz avatar" : "Choose avatar"), wrap);
 }
 
 function modalClose(){
@@ -813,7 +814,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
 
   const existing = getProfile() || {};
-  let selectedAvatar = existing.avatar || "";
   let selectedAvatar = existing.avatar || "";
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
   const defaultCountry = existing.country || (lang === "pl" ? "pl" : "gb");
