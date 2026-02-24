@@ -993,6 +993,11 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
 }
 
 function openProfileModal({required=false, onDone, onCancel}={}){
+  // Upewnij się, że style dla avatara są wstrzyknięte ZANIM pokażemy obrazek.
+  // Inaczej przy pierwszym otwarciu może pojawić się „flash” ogromnego avatara,
+  // bo reguły .profileAvatarImg (width/height/object-fit) są dodawane dynamicznie.
+  __injectAvatarPickerStyles();
+
   const lang = getLang();
   const L = (lang === "en")
     ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back", pl:"Poland", gb:"UK"}
