@@ -420,10 +420,6 @@ function modalOpen(title, bodyNode){
   const tEl = el("modalTitle");
   const b = el("modalBody");
   if(!m || !tEl || !b) return;
-
-  // reset modal mode classes
-  m.classList.remove("profileMode");
-
   tEl.textContent = title || "—";
   b.innerHTML = "";
   if(bodyNode) b.appendChild(bodyNode);
@@ -431,10 +427,7 @@ function modalOpen(title, bodyNode){
 }
 function modalClose(){
   const m = el("modal");
-  if(m){
-    m.classList.remove("active");
-    m.classList.remove("profileMode");
-  }
+  if(m) m.classList.remove("active");
 }
 
 /** ROOMS MENU MODALS **/
@@ -701,36 +694,21 @@ function openSettings(){
   btnProfil.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnProfil);
 
-  const btnAvatar = document.createElement("button");
-  btnAvatar.className = "imgBtn sysBtn sysBtnBig";
-  btnAvatar.type = "button";
-  btnAvatar.title = (getLang()==="pl") ? "Avatar" : "Avatar";
-  btnAvatar.setAttribute("aria-label", btnAvatar.title);
-  const imgAvatar = document.createElement("img");
-  imgAvatar.dataset.btn = "btn_avatar.png";
-  imgAvatar.alt = btnAvatar.title;
-  imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
-  btnAvatar.appendChild(imgAvatar);
-  // Avatar wybieramy w oknie Profil (tam jest podgląd i zapis profilu)
-  btnAvatar.onclick = ()=> openProfileModal({required:false});
-  btnRow.appendChild(btnAvatar);
+  // Zamiast przycisku Avatar w Ustawieniach: przycisk Reset Profilu (przeniesiony w jego miejsce)
+  const btnClear = document.createElement("button");
+  btnClear.className = "imgBtn sysBtn sysBtnBig";
+  btnClear.type = "button";
+  btnClear.title = t("clearProfile");
+  btnClear.setAttribute("aria-label", t("clearProfile"));
+  const img = document.createElement("img");
+  img.dataset.btn = "btn_reset_profilu.png";
+  img.alt = t("clearProfile");
+  img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
+  btnClear.appendChild(img);
+  btnClear.onclick = () => clearProfile();
+  btnRow.appendChild(btnClear);
 
   wrap.appendChild(btnRow);
-
-
-const btnClear = document.createElement("button");
-btnClear.className = "imgBtn sysBtn sysBtnBig";
-btnClear.type = "button";
-btnClear.title = t("clearProfile");
-btnClear.setAttribute("aria-label", t("clearProfile"));
-btnClear.style.alignSelf = "flex-start";
-const img = document.createElement("img");
-img.dataset.btn = "btn_reset_profilu.png";
-img.alt = t("clearProfile");
-img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
-btnClear.appendChild(img);
-btnClear.onclick = () => clearProfile();
-wrap.appendChild(btnClear);
 
 const warn = document.createElement("div");
 warn.className = "sub";
@@ -1056,20 +1034,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   `;
 
   modalOpen(L.title, wrap);
-  const __m = el("modal");
-  if(__m) __m.classList.add("profileMode");
-  refreshAllButtonImages();
-
-  // Back button moved to top (next to Exit) for Profile modal
-  const modalHead = document.querySelector("#modal .modalHead");
-  const modalCloseBtn = document.getElementById("modalClose");
-  const btnBackTop = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn small profileBackTop", alt:L.cancelBtn, title:L.cancelBtn});
-  if(modalHead && modalCloseBtn){
-    modalHead.insertBefore(btnBackTop, modalCloseBtn);
-  }else if(modalHead){
-    modalHead.appendChild(btnBackTop);
-  }
-
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
   let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
@@ -1115,20 +1079,13 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     if(sel) sel.value = defaultCountry;
   });
 
-  
-const btnRow = wrap.querySelector("#profileBtns");
+  const btnRow = wrap.querySelector("#profileBtns");
+  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
+  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
+  btnRow.appendChild(btnSave);
+  btnRow.appendChild(btnBack);
 
-// Przycisk "Dodaj profil" / "Add profile" obok przycisku Avatar
-const avatarSlot2 = wrap.querySelector('#profileAvatarBtnSlot');
-let btnAddProfile = null;
-if(avatarSlot2){
-  btnAddProfile = makeSysImgButton("btn_add_profil.png", {cls:"sysBtn profileAddBtn", alt:L.saveBtn, title:L.saveBtn});
-  avatarSlot2.appendChild(btnAddProfile);
-}
-
-// Na dole bez przycisku Cofnij (przeniesiony na górę)
-
-  if(btnAddProfile) btnAddProfile.onclick = ()=>{
+  btnSave.onclick = ()=>{
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
@@ -1144,7 +1101,7 @@ if(avatarSlot2){
     if(typeof onDone === "function") onDone(profile);
   };
 
-  btnBackTop.onclick = ()=>{
+  btnBack.onclick = ()=>{
     modalClose();
     if(typeof onCancel === "function") onCancel();
   };

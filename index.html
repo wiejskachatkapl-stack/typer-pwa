@@ -889,7 +889,7 @@
     }
     .modal.profileMode #modalTitle{
       margin: 0 auto;
-      font-size: clamp(38px, 5.2vw, 68px); /* reduced a bit */
+      font-size: 38px; /* slightly smaller */
       font-weight: 900;
       padding: 10px 22px;
     }
@@ -897,12 +897,6 @@
       position: absolute;
       right: 28px;
       top: 18px; /* move to top-right (green box) */
-    }
-
-    .modal.profileMode .profileBackTop{
-      position: absolute;
-      right: 170px; /* next to exit */
-      top: 18px;
     }
     .modal.profileMode .modalBody{
       padding-top: 18px;
@@ -920,15 +914,10 @@
     }
 
 
+/* Profile modal - place Add Profile button under Avatar */
+.modal.profileMode .profileBtns{ display:none; }
+.modal.profileMode .profileAddBtn{ margin-top: 12px; }
 
-/* Profile modal: Avatar + Add Profile buttons in one row */
-.modal.profileMode #profileAvatarBtnSlot{
-  display:flex;
-  gap:14px;
-  justify-content:center;
-  align-items:center;
-  margin-top:12px;
-}
 
 </style>
 </head>
