@@ -426,37 +426,167 @@ function modalOpen(title, bodyNode){
   m.classList.add("active");
 }
 function openAvatarPicker(currentSrc, onPick){
-  const wrap = el("div",{class:"avatarPickerWrap"});
-  const title = el("div",{style:"font-weight:700;font-size:18px;"}, (LANG==="pl" ? "Wybierz avatar" : "Choose avatar"));
-  const grid = el("div",{class:"avatarGrid"});
-  wrap.appendChild(title);
-  wrap.appendChild(grid);
-
-  // próbujemy załadować avatar_1..avatar_60 i ukrywamy brakujące
+  // Opens a lightweight overlay ABOVE the current modal (doesn't replace it).
+  // Loads avatars dynamically from ui/avatars/avatar_1.png ... up to MAX (missing files are ignored).
+  const lang = getLang();
+  const titleText = (lang === 'pl') ? 'Wybierz avatar' : 'Choose avatar';
+  const hintText  = (lang === 'pl') ? 'Kliknij avatar, aby wybrać.' : 'Click an avatar to select it.';
+  const closeText = (lang === 'pl') ? 'Zamknij' : 'Close';
   const MAX = 60;
-  for(let i=1;i<=MAX;i++){
-    const src = `ui/avatars/avatar_${i}.png`;
-    const img = el("img",{src, alt:`avatar ${i}`});
-    const btn = el("button",{class:"avatarItem", type:"button"});
-    if(currentSrc && currentSrc.endsWith(`/avatar_${i}.png`)) btn.classList.add("selected");
 
-    img.onerror = ()=>{ btn.remove(); };
-    btn.onclick = ()=>{
-      try{ onPick(src); }catch(e){}
-      modalClose();
+  const norm = (v) => String(v || '').split('#')[0].split('?')[0];
+  const isSelected = (a, b) => {
+    a = norm(a); b = norm(b);
+    if(!a || !b) return false;
+    return a.endsWith(b) || b.endsWith(a);
+  };
+
+  // If the overlay already exists, remove it first
+  const prev = document.getElementById('avatarPickerOverlay');
+  if(prev) prev.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'avatarPickerOverlay';
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '999999';
+  overlay.style.background = 'rgba(0,0,0,0.55)';
+  overlay.style.backdropFilter = 'blur(6px)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.padding = '24px';
+
+  const panel = document.createElement('div');
+  panel.style.width = 'min(980px, 96vw)';
+  panel.style.maxHeight = '82vh';
+  panel.style.overflow = 'auto';
+  panel.style.background = 'rgba(8,18,40,0.92)';
+  panel.style.border = '1px solid rgba(255,255,255,0.18)';
+  panel.style.borderRadius = '18px';
+  panel.style.boxShadow = '0 12px 50px rgba(0,0,0,0.55)';
+  panel.style.padding = '16px 16px 18px';
+  panel.style.color = '#fff';
+
+  // Prevent closing when clicking inside panel
+  panel.addEventListener('click', (e) => e.stopPropagation());
+
+  const header = document.createElement('div');
+  header.style.display = 'flex';
+  header.style.alignItems = 'center';
+  header.style.justifyContent = 'space-between';
+  header.style.gap = '12px';
+  header.style.marginBottom = '10px';
+
+  const title = document.createElement('div');
+  title.textContent = titleText;
+  title.style.fontSize = '22px';
+  title.style.fontWeight = '700';
+  title.style.letterSpacing = '0.2px';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.textContent = '✕';
+  closeBtn.setAttribute('aria-label', closeText);
+  closeBtn.style.cursor = 'pointer';
+  closeBtn.style.width = '42px';
+  closeBtn.style.height = '42px';
+  closeBtn.style.borderRadius = '12px';
+  closeBtn.style.border = '1px solid rgba(255,255,255,0.22)';
+  closeBtn.style.background = 'rgba(255,255,255,0.08)';
+  closeBtn.style.color = '#fff';
+  closeBtn.style.fontSize = '18px';
+  closeBtn.style.fontWeight = '700';
+
+  closeBtn.onmouseenter = () => closeBtn.style.background = 'rgba(255,255,255,0.14)';
+  closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(255,255,255,0.08)';
+
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  const hint = document.createElement('div');
+  hint.textContent = hintText;
+  hint.style.opacity = '0.85';
+  hint.style.fontSize = '13px';
+  hint.style.marginBottom = '12px';
+
+  const grid = document.createElement('div');
+  grid.style.display = 'grid';
+  grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(74px, 1fr))';
+  grid.style.gap = '12px';
+  grid.style.padding = '6px 2px 2px';
+
+  panel.appendChild(header);
+  panel.appendChild(hint);
+  panel.appendChild(grid);
+
+  overlay.appendChild(panel);
+
+  const close = () => {
+    document.removeEventListener('keydown', onKeyDown, true);
+    overlay.remove();
+  };
+
+  const onKeyDown = (e) => {
+    if(e.key === 'Escape') close();
+  };
+
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', close);
+  document.addEventListener('keydown', onKeyDown, true);
+
+  // Build items
+  for(let i=1; i<=MAX; i++){
+    const rel = `ui/avatars/avatar_${i}.png`;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.style.cursor = 'pointer';
+    btn.style.border = '1px solid rgba(255,255,255,0.20)';
+    btn.style.background = 'rgba(255,255,255,0.06)';
+    btn.style.borderRadius = '16px';
+    btn.style.padding = '10px';
+    btn.style.display = 'flex';
+    btn.style.alignItems = 'center';
+    btn.style.justifyContent = 'center';
+    btn.style.aspectRatio = '1 / 1';
+
+    btn.onmouseenter = () => btn.style.background = 'rgba(255,255,255,0.10)';
+    btn.onmouseleave = () => btn.style.background = 'rgba(255,255,255,0.06)';
+
+    const img = new Image();
+    img.alt = `avatar_${i}`;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.style.width = '56px';
+    img.style.height = '56px';
+    img.style.objectFit = 'contain';
+
+    img.onload = () => {
+      // highlight selected
+      if(isSelected(rel, currentSrc) || isSelected(img.src, currentSrc)){
+        btn.style.outline = '3px solid rgba(110,200,255,0.95)';
+        btn.style.outlineOffset = '2px';
+      }
     };
+    img.onerror = () => {
+      // If avatar doesn't exist, remove it (so future added ones show automatically)
+      btn.remove();
+    };
+
+    btn.addEventListener('click', () => {
+      try{ onPick && onPick(rel); }catch(_e){}
+      close();
+    });
+
+    img.src = rel;
     btn.appendChild(img);
     grid.appendChild(btn);
   }
 
-  // modalOpen(title, bodyNode)
-  modalOpen((LANG === "pl" ? "Wybierz avatar" : "Choose avatar"), wrap);
+  document.body.appendChild(overlay);
 }
 
-function modalClose(){
-  const m = el("modal");
-  if(m) m.classList.remove("active");
-}
 
 /** ROOMS MENU MODALS **/
 
