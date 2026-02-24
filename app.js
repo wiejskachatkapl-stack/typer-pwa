@@ -420,6 +420,10 @@ function modalOpen(title, bodyNode){
   const tEl = el("modalTitle");
   const b = el("modalBody");
   if(!m || !tEl || !b) return;
+
+  // reset modal mode classes
+  m.classList.remove("profileMode");
+
   tEl.textContent = title || "—";
   b.innerHTML = "";
   if(bodyNode) b.appendChild(bodyNode);
@@ -427,7 +431,10 @@ function modalOpen(title, bodyNode){
 }
 function modalClose(){
   const m = el("modal");
-  if(m) m.classList.remove("active");
+  if(m){
+    m.classList.remove("active");
+    m.classList.remove("profileMode");
+  }
 }
 
 /** ROOMS MENU MODALS **/
@@ -1049,6 +1056,10 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   `;
 
   modalOpen(L.title, wrap);
+  const __m = el("modal");
+  if(__m) __m.classList.add("profileMode");
+  refreshAllButtonImages();
+
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
   let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
@@ -1094,13 +1105,22 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     if(sel) sel.value = defaultCountry;
   });
 
-  const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
-  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
-  btnRow.appendChild(btnSave);
-  btnRow.appendChild(btnBack);
+  
+const btnRow = wrap.querySelector("#profileBtns");
 
-  btnSave.onclick = ()=>{
+// Przycisk "Dodaj profil" / "Add profile" obok przycisku Avatar
+const avatarSlot2 = wrap.querySelector('#profileAvatarBtnSlot');
+let btnAddProfile = null;
+if(avatarSlot2){
+  btnAddProfile = makeSysImgButton("btn_add_profil.png", {cls:"sysBtn profileAddBtn", alt:L.saveBtn, title:L.saveBtn});
+  avatarSlot2.appendChild(btnAddProfile);
+}
+
+// Na dole zostaje tylko "Cofnij/Back"
+const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
+btnRow.appendChild(btnBack);
+
+  if(btnAddProfile) btnAddProfile.onclick = ()=>{
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
