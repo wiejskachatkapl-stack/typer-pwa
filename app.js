@@ -1060,6 +1060,16 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   if(__m) __m.classList.add("profileMode");
   refreshAllButtonImages();
 
+  // Back button moved to top (next to Exit) for Profile modal
+  const modalHead = document.querySelector("#modal .modalHead");
+  const modalCloseBtn = document.getElementById("modalClose");
+  const btnBackTop = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn small profileBackTop", alt:L.cancelBtn, title:L.cancelBtn});
+  if(modalHead && modalCloseBtn){
+    modalHead.insertBefore(btnBackTop, modalCloseBtn);
+  }else if(modalHead){
+    modalHead.appendChild(btnBackTop);
+  }
+
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
   let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
@@ -1116,9 +1126,7 @@ if(avatarSlot2){
   avatarSlot2.appendChild(btnAddProfile);
 }
 
-// Na dole zostaje tylko "Cofnij/Back"
-const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
-btnRow.appendChild(btnBack);
+// Na dole bez przycisku Cofnij (przeniesiony na górę)
 
   if(btnAddProfile) btnAddProfile.onclick = ()=>{
     const nick = (document.getElementById("profileNick")?.value || "").trim();
@@ -1136,7 +1144,7 @@ btnRow.appendChild(btnBack);
     if(typeof onDone === "function") onDone(profile);
   };
 
-  btnBack.onclick = ()=>{
+  btnBackTop.onclick = ()=>{
     modalClose();
     if(typeof onCancel === "function") onCancel();
   };
