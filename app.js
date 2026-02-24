@@ -704,17 +704,8 @@ function openSettings(){
   imgAvatar.alt = btnAvatar.title;
   imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
   btnAvatar.appendChild(imgAvatar);
-  btnAvatar.onclick = ()=> {
-    openAvatarPicker({
-      lang: getLang(),
-      current: chosenAvatar,
-      onPick: (url)=>{
-        // zapisujemy tylko nazwę pliku (np. avatar_3.png)
-        chosenAvatar = (url && typeof url === "string") ? url.split("/").pop() : "";
-        renderProfileAvatar();
-      }
-    });
-  };
+  // Avatar wybieramy w oknie Profil (tam jest podgląd i zapis profilu)
+  btnAvatar.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnAvatar);
 
   wrap.appendChild(btnRow);
@@ -879,9 +870,12 @@ function __avatarCacheBust(){
 function __normalizeAvatarValue(val){
   if(!val) return "";
   if(typeof val !== "string") return "";
-  // allow either 'avatar_1.png' or full 'ui/avatars/avatar_1.png'
-  if(val.includes("/")) return val;
-  return `ui/avatars/${val}`;
+  // usuń ewentualny query string / hash (cache bust)
+  const cleaned = val.split("?")[0].split("#")[0].trim();
+  if(!cleaned) return "";
+  // allow either 'avatar_1.png' / 'avatar_1.jpg' or full 'ui/avatars/avatar_1.png'
+  if(cleaned.includes("/")) return cleaned;
+  return `ui/avatars/${cleaned}`;
 }
 
 function __probeImage(url, timeoutMs=2500){
@@ -897,13 +891,42 @@ function __probeImage(url, timeoutMs=2500){
 }
 
 async function __listAvailableAvatars(max=60){
-  const urls = [];
+  // Avatary mogą być w .png (docelowo) lub .jpg/.jpeg (obecnie w repozytorium)
+  // Skanujemy avatar_1..avatar_N i kończymy po kilku brakach z rzędu.
+  const present = [];
+  let missStreak = 0;
+
   for(let i=1;i<=max;i++){
-    urls.push(`ui/avatars/avatar_${i}.png`);
+    const candidates = [
+      `ui/avatars/avatar_${i}.png`,
+      `ui/avatars/avatar_${i}.jpg`,
+      `ui/avatars/avatar_${i}.jpeg`,
+    ];
+
+    let found = "";
+    for(const u of candidates){
+      // eslint-disable-next-line no-await-in-loop
+      const ok = await __probeImage(u);
+      if(ok){ found = u; break; }
+    }
+
+    if(found){
+      present.push(found);
+      missStreak = 0;
+    }else{
+      missStreak++;
+      if(missStreak >= 5) break;
+    }
   }
-  const oks = await Promise.all(urls.map(u => __probeImage(u)));
-  const present = urls.filter((u, idx) => oks[idx]);
+
   return present;
+}
+
+function __avatarValueToStore(val){
+  // zapisuj jako samą nazwę pliku, żeby nie mieszać ścieżek i cache-bustów
+  if(!val) return "";
+  const cleaned = String(val).split("?")[0].split("#")[0].trim();
+  return cleaned.split("/").pop();
 }
 
 function openAvatarPicker({lang="pl", current="", onPick}={}){
@@ -914,8 +937,8 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
   const closeTxt = (lang==="en") ? "Close" : "Zamknij";
   const loadingTxt = (lang==="en") ? "Loading..." : "Ładowanie...";
   const emptyTxt = (lang==="en")
-    ? "No avatars found in ui/avatars (expected avatar_1.png ...)."
-    : "Nie znaleziono avatarów w ui/avatars (oczekiwane avatar_1.png ...).";
+    ? "No avatars found in ui/avatars (expected avatar_1.png / avatar_1.jpg ...)."
+    : "Nie znaleziono avatarów w ui/avatars (oczekiwane avatar_1.png / avatar_1.jpg ...).";
 
   const overlay = document.createElement("div");
   overlay.className = "avatarPickerOverlay";
@@ -1053,7 +1076,16 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
   if(avatarSlot){
     const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
-    btnAvatar.onclick = ()=>{ showToast(lang==='en' ? 'Avatar selection soon.' : 'Wybór avatara wkrótce.'); };
+    btnAvatar.onclick = ()=>{
+      openAvatarPicker({
+        lang,
+        current: chosenAvatar,
+        onPick: (url)=>{
+          chosenAvatar = __avatarValueToStore(url);
+          renderProfileAvatar();
+        }
+      });
+    };
     avatarSlot.appendChild(btnAvatar);
   }
 
@@ -1072,7 +1104,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, avatar: chosenAvatar, updatedAt: Date.now()};
+    const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
     if(!isProfileComplete(profile)){
       showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
       return;
