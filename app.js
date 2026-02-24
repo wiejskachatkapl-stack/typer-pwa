@@ -1,4 +1,4 @@
-const BUILD = 4015;
+const BUILD = 4017;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -806,6 +806,8 @@ function __getCountryDisplayName(lang, codeUpper){
 
 function __buildCountryOptionsHtml(lang){
   const opts = [];
+  // Empty option first so the select can start blank
+  opts.push('<option value=""></option>');
   for(const codeUpper of __COUNTRY_CODES){
     const value = codeUpper.toLowerCase();
     const name = __getCountryDisplayName(lang, codeUpper);
@@ -1049,7 +1051,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
-  const defaultCountry = existing.country || (lang === "pl" ? "pl" : "gb");
+  // Start blank when no country is set yet
+  const defaultCountry = existing.country || "";
   const defaultFav = (existing.favClub || "").trim();
 
   const wrap = document.createElement("div");
