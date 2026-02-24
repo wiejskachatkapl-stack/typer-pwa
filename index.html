@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 4016)</title>
+  <title>Typer (BUILD 3022)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -163,18 +163,29 @@
       justify-content:center;
       position:relative;
     }
+    /* HOME buttons layout (start screen)
+       - prevents overlaps when PNG buttons are very wide
+       - 2 columns on desktop; Exit spans full width
+       - switches to 1 column on smaller screens */
     .homeBtns{
       position:absolute;
       left:50%;
       top:52%;
       transform:translate(-50%,-50%);
-      display:flex;
-      flex-wrap:wrap;
-      gap: clamp(14px, 3vw, 36px);
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      justify-items:center;
       align-items:center;
-      justify-content:center;
+      column-gap: clamp(24px, 4vw, 80px);
+      row-gap: clamp(18px, 3.5vw, 44px);
       padding:10px;
-      width: min(1100px, 94vw);
+      width: min(1500px, 94vw);
+    }
+    #btnHomeExit{ grid-column: 1 / -1; }
+
+    @media (max-width:900px){
+      .homeBtns{ grid-template-columns: 1fr; width: min(900px, 94vw); }
+      #btnHomeExit{ grid-column:auto; }
     }
     .imgBtn{
       appearance:none;
@@ -193,42 +204,24 @@
       max-height: clamp(120px, 20vh, 220px);
       border-radius: 0;
     }
+
+/* HOME: bigger main menu buttons */
+.homeBtns .imgBtn img{
+  width: clamp(340px, 36vw, 600px);
+  max-height: clamp(150px, 22vh, 280px);
+}
+
+@media (max-width: 900px){
+  .homeBtns .imgBtn img{
+    width: clamp(260px, 70vw, 520px);
+    max-height: clamp(120px, 18vh, 220px);
+  }
+}
     .imgBtn:hover{filter: drop-shadow(0 14px 28px rgba(0,0,0,.45))}
     .imgBtn:active{transform: translateY(1px)}
 
-    /* ===== NOWE: ZĘBATKA USTAWIEŃ ===== */
-    .homeGear{
-      position:absolute;
-      left:26px;
-      top:50%;
-      transform:translateY(-50%);
-      width:98px;
-      height:98px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(8,22,52,.55);
-      box-shadow:0 18px 60px rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .12s ease, background .12s ease;
-    }
-    .homeGear:hover{
-      background:rgba(8,22,52,.65);
-      transform:translateY(-50%) scale(1.03);
-    }
-    .homeGear:active{
-      transform:translateY(-50%) scale(0.99);
-    }
-    .homeGear span{
-      font-size:44px;
-      line-height:1;
-      filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
-    }
+    
+
 
     /* ===== ROOMS ===== */
     #rooms{padding:22px;gap:14px}
@@ -808,71 +801,124 @@
   #roomActionsCol .sysBtn img{ height: 54px; }
 }
 
-/* Avatar picker overlay */
-.avatarOverlay{
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-radius: 24px;
-  display: flex;
-  flex-direction: column;
-  padding: 14px;
-  z-index: 50;
-}
-.avatarOverlayHeader{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.avatarOverlayTitle{
-  font-weight: 900;
-  font-size: 22px;
-}
-.avatarGrid{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 12px;
-  padding: 8px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
-  overflow: auto;
-  flex: 1;
-}
-.avatarTile{
-  width: 80px;
-  height: 80px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255,255,255,0.12);
-  cursor: pointer;
-  transition: transform .12s ease, border-color .12s ease;
-}
-.avatarTile:hover{
-  transform: scale(1.05);
-  border-color: rgba(255,255,255,0.35);
-}
-.avatarTile.selected{
-  border-color: rgba(120,200,255,0.90);
-  box-shadow: 0 0 0 2px rgba(120,200,255,0.25) inset;
-}
-.avatarTile img{
-  width: 70px;
-  height: 70px;
-  object-fit: contain;
-}
-.profileAvatarPreview img{
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
+    /* language flags (top-right) */
+    .homeLang{position:absolute; right:26px; top:18px; display:flex; gap:14px; z-index:50;}
+    #btnLangPL, #btnLangEN{
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
+      background:transparent !important;
+      padding:0 !important;
+      margin:0 !important;
+      cursor:pointer;
+    }
+    .flagBtn img, .flagImg{
+      width: 58px;
+      height: 40px;
+      border-radius:6px;
+      display:block;
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
+    }
+
+
+    /* HOME settings button (bottom-left) */
+    .homeGear{
+      position:absolute;
+      left:26px;
+      bottom:26px;
+      top:auto;
+      transform:none;
+      width:auto;
+      height:auto;
+      border:none;
+      background:transparent;
+      box-shadow:none;
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      z-index:50;
+    }
+    .homeGearImg{
+      width: 110px;
+      height:auto;
+      display:block;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
+    }
+
+
+    /* BUILD corner (bottom-right): logo + version */
+    #buildCorner{
+      position:fixed;
+      right:18px;
+      bottom:14px;
+      display:flex !important;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:9999;
+      pointer-events:none;
+      user-select:none;
+    }
+    #buildCornerLogo{
+      width:150px;
+      height:auto;
+      display:block !important;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
+    }
+    #buildCornerText{
+      color:rgba(255,255,255,.9);
+      font-size:14px;
+      font-weight:900;
+      text-shadow:0 2px 6px rgba(0,0,0,.55);
+      letter-spacing:.5px;
+    }
+    .footerRight{display:none !important;}
+
+
+    /* Profile modal layout tweaks */
+    .modal.profileMode .modalHead{
+      position: relative;
+      justify-content: center;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+    .modal.profileMode #modalTitle{
+      margin: 0 auto;
+      font-size: 38px; /* slightly smaller */
+      font-weight: 900;
+      padding: 10px 22px;
+    }
+    .modal.profileMode #modalClose{
+      position: absolute;
+      right: 28px;
+      top: 18px; /* move to top-right (green box) */
+    }
+    .modal.profileMode .modalBody{
+      padding-top: 18px;
+    }
+    .modal.profileMode .profileModal{
+      position: relative;
+    }
+    .modal.profileMode .profileModal .profileBtns{
+      position: absolute;
+      right: 44px;  /* move to green box */
+      bottom: 34px;
+      display:flex;
+      justify-content:flex-end;
+      gap: 14px;
+    }
+
+
+/* Profile modal - place Add Profile button under Avatar */
+.modal.profileMode .profileBtns{ display:none; }
+.modal.profileMode .profileAddBtn{ margin-top: 12px; }
+
+
 </style>
 </head>
 
@@ -901,18 +947,18 @@
         </div>
         <!-- NOWE: zębatka ustawień -->
         <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
-          <span>⚙️</span>
+          <img class="homeGearImg" src="ui/logo/btn_ustawienia.png" alt="Ustawienia">
         </div>
 
         <div class="homeBtns" aria-label="Menu">
-          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów" data-btn="btn_pokoj_typerow.png">
-            <img src="ui/buttons/pl/btn_pokoj_typerow.png" alt="Pokoje typerów" data-btn="btn_pokoj_typerow.png">
+          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów" data-btn="btn_tipster_room.png">
+            <img src="ui/buttons/pl/btn_tipster_room.png" alt="Pokoje typerów" data-btn="btn_tipster_room.png">
           </button>
-          <button class="imgBtn" id="btnHomeStats" title="Statystyki" data-btn="btn_statystyki.png">
-            <img src="ui/buttons/pl/btn_statystyki.png" alt="Statystyki" data-btn="btn_statystyki.png">
+          <button class="imgBtn" id="btnHomeStats" title="Statystyki" data-btn="btn_statistics.png">
+            <img src="ui/buttons/pl/btn_statistics.png" alt="Statystyki" data-btn="btn_statistics.png">
           </button>
-          <button class="imgBtn" id="btnHomeExit" title="Wyjście" data-btn="btn_wyjscie.png">
-            <img src="ui/buttons/pl/btn_wyjscie.png" alt="Wyjście" data-btn="btn_wyjscie.png">
+          <button class="imgBtn" id="btnHomeExit" title="Wyjście" data-btn="btn_exit.png">
+            <img src="ui/buttons/pl/btn_exit.png" alt="Wyjście" data-btn="btn_exit.png">
           </button>
         </div>
       </section>
@@ -1061,7 +1107,7 @@
 
             <div class="rightFooterBtn">
 	              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
-	              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="ui/buttons/pl/btn_wyjscie.png" alt="btnExitFromRoomRight"></button>
+	              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="btnExitFromRoomRight"></button>
             </div>
           </div>
 
@@ -1138,7 +1184,7 @@
           <div class="modalHead">
             <div class="chip" id="modalTitle">—</div>
             <div class="spacer"></div>
-            <button class="imgBtn sysBtn small" id="modalClose" type="button" class="imgBtn sysBtn small" data-btn="btn_wyjscie.png"><img data-btn="btn_wyjscie.png" src="ui/buttons/pl/btn_wyjscie.png" alt="modalClose"></button>
+            <button class="imgBtn sysBtn small" id="modalClose" type="button" class="imgBtn sysBtn small" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="modalClose"></button>
           </div>
           <div class="modalBody" id="modalBody"></div>
         </div>
@@ -1165,7 +1211,7 @@
     });
   </script>
 
-  <script type="module" src="./app.js?v=2000"></script>
+  <script type="module" src="./app.js?v=3025"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -1174,6 +1220,13 @@
     });
   }
 </script>
+
+
+  <!-- BUILD corner -->
+  <div id="buildCorner" aria-hidden="true">
+    <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
+    <div id="buildCornerText">BUILD 3022</div>
+  </div>
 
 </body>
 </html>
