@@ -452,7 +452,6 @@ function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=n
 
 function openRoomsChoiceModal(){
   const wrap = document.createElement("div");
-  wrap.style.position = 'relative';
   wrap.className = "roomsChoice";
 
   const p = document.createElement("div");
@@ -705,7 +704,17 @@ function openSettings(){
   imgAvatar.alt = btnAvatar.title;
   imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
   btnAvatar.appendChild(imgAvatar);
-  btnAvatar.onclick = ()=> showToast(getLang()==="pl" ? "Wkrótce..." : "Coming soon...");
+  btnAvatar.onclick = ()=> {
+    openAvatarPicker({
+      lang: getLang(),
+      current: chosenAvatar,
+      onPick: (url)=>{
+        // zapisujemy tylko nazwę pliku (np. avatar_3.png)
+        chosenAvatar = (url && typeof url === "string") ? url.split("/").pop() : "";
+        renderProfileAvatar();
+      }
+    });
+  };
   btnRow.appendChild(btnAvatar);
 
   wrap.appendChild(btnRow);
@@ -780,6 +789,201 @@ function isProfileComplete(p){
   return nickOk && countryOk;
 }
 
+
+/* v4007: Avatar picker (auto-detect ui/avatars/avatar_1..avatar_60) */
+let __avatarPickerStylesAdded = false;
+
+function __injectAvatarPickerStyles(){
+  if(__avatarPickerStylesAdded) return;
+  __avatarPickerStylesAdded = true;
+  const st = document.createElement("style");
+  st.textContent = `
+  .avatarPickerOverlay{
+    position: fixed; inset: 0; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .avatarPickerPanel{
+    width: min(860px, 92vw);
+    max-height: min(640px, 82vh);
+    overflow: hidden;
+    border-radius: 22px;
+    background: rgba(10,24,44,.88);
+    box-shadow: 0 18px 40px rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .avatarPickerHeader{
+    display:flex; align-items:center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+  .avatarPickerTitle{
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: .2px;
+  }
+  .avatarPickerClose{
+    cursor:pointer;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.12);
+    color: #fff;
+    font-weight: 700;
+  }
+  .avatarPickerBody{
+    padding: 14px 16px 18px;
+    overflow: auto;
+    max-height: calc(min(640px, 82vh) - 58px);
+  }
+  .avatarGrid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+    gap: 12px;
+  }
+  .avatarItem{
+    cursor: pointer;
+    border-radius: 16px;
+    padding: 10px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.10);
+    transition: transform .08s ease, background .12s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .avatarItem:hover{ transform: translateY(-1px); background: rgba(255,255,255,.10); }
+  .avatarItemSelected{ outline: 2px solid rgba(110,210,255,.9); }
+  .avatarItem img{
+    width: 58px; height: 58px;
+    object-fit: contain;
+    image-rendering: auto;
+  }
+  .profileAvatarImg{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 16px;
+    display: block;
+  }
+  `;
+  document.head.appendChild(st);
+}
+
+function __avatarCacheBust(){
+  // Stabilny cache-bust w obrębie builda
+  const v = (window && window.__BUILD) ? window.__BUILD : "";
+  return v ? `?v=${encodeURIComponent(v)}` : "";
+}
+
+function __normalizeAvatarValue(val){
+  if(!val) return "";
+  if(typeof val !== "string") return "";
+  // allow either 'avatar_1.png' or full 'ui/avatars/avatar_1.png'
+  if(val.includes("/")) return val;
+  return `ui/avatars/${val}`;
+}
+
+function __probeImage(url, timeoutMs=2500){
+  return new Promise((resolve) => {
+    const img = new Image();
+    let done = false;
+    const finish = (ok) => { if(done) return; done = true; resolve(ok); };
+    const t = setTimeout(() => finish(false), timeoutMs);
+    img.onload = () => { clearTimeout(t); finish(true); };
+    img.onerror = () => { clearTimeout(t); finish(false); };
+    img.src = url + __avatarCacheBust();
+  });
+}
+
+async function __listAvailableAvatars(max=60){
+  const urls = [];
+  for(let i=1;i<=max;i++){
+    urls.push(`ui/avatars/avatar_${i}.png`);
+  }
+  const oks = await Promise.all(urls.map(u => __probeImage(u)));
+  const present = urls.filter((u, idx) => oks[idx]);
+  return present;
+}
+
+function openAvatarPicker({lang="pl", current="", onPick}={}){
+  __injectAvatarPickerStyles();
+
+  const currentNorm = __normalizeAvatarValue(current);
+  const title = (lang==="en") ? "Choose avatar" : "Wybierz avatar";
+  const closeTxt = (lang==="en") ? "Close" : "Zamknij";
+  const loadingTxt = (lang==="en") ? "Loading..." : "Ładowanie...";
+  const emptyTxt = (lang==="en")
+    ? "No avatars found in ui/avatars (expected avatar_1.png ...)."
+    : "Nie znaleziono avatarów w ui/avatars (oczekiwane avatar_1.png ...).";
+
+  const overlay = document.createElement("div");
+  overlay.className = "avatarPickerOverlay";
+  overlay.innerHTML = `
+    <div class="avatarPickerPanel" role="dialog" aria-modal="true">
+      <div class="avatarPickerHeader">
+        <div class="avatarPickerTitle">${title}</div>
+        <button type="button" class="avatarPickerClose">${closeTxt}</button>
+      </div>
+      <div class="avatarPickerBody">
+        <div class="mutedText" id="__avatarLoading">${loadingTxt}</div>
+        <div class="avatarGrid" id="__avatarGrid" style="display:none;"></div>
+        <div class="mutedText" id="__avatarEmpty" style="display:none;">${emptyTxt}</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const closeBtn = overlay.querySelector(".avatarPickerClose");
+  const grid = overlay.querySelector("#__avatarGrid");
+  const loading = overlay.querySelector("#__avatarLoading");
+  const empty = overlay.querySelector("#__avatarEmpty");
+
+  const close = () => {
+    document.removeEventListener("keydown", onKey);
+    overlay.remove();
+  };
+
+  const onKey = (e) => {
+    if(e.key === "Escape") close();
+  };
+
+  document.addEventListener("keydown", onKey);
+  closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if(e.target === overlay) close(); });
+
+  (async () => {
+    const avatars = await __listAvailableAvatars(60);
+
+    loading.style.display = "none";
+
+    if(!avatars.length){
+      empty.style.display = "block";
+      return;
+    }
+
+    grid.style.display = "grid";
+    grid.innerHTML = "";
+
+    avatars.forEach((url) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "avatarItem" + ((currentNorm && currentNorm === url) ? " avatarItemSelected" : "");
+      btn.title = url.split("/").pop();
+      btn.innerHTML = `<img alt="avatar" src="${url + __avatarCacheBust()}">`;
+      btn.addEventListener("click", () => {
+        if(typeof onPick === "function") onPick(url);
+        close();
+      });
+      grid.appendChild(btn);
+    });
+  })().catch((err) => {
+    console.error(err);
+    loading.style.display = "none";
+    empty.style.display = "block";
+  });
+}
+
 function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
@@ -796,7 +1000,10 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   wrap.innerHTML = `
     <div class="profileRow">
       <div class="profileLeftCol" aria-label="Avatar">
-        <div class="profileAvatarBox profileAvatarPreview" id="profileAvatarPreview"></div>
+        <div class="profileAvatarBox">
+          <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" style="display:none;" />
+          <div class="profileAvatarPlaceholder" id="profileAvatarPlaceholder">🙂</div>
+        </div>
         <div id="profileAvatarBtnSlot"></div>
       </div>
       <div class="profileFields">
@@ -820,82 +1027,33 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   modalOpen(L.title, wrap);
 
-  // Przycisk Avatar (otwiera wybór avatara)
-  const avatarPreview = wrap.querySelector('#profileAvatarPreview');
-  const renderAvatarPreview = (avatarNum) => {
-    if(!avatarPreview) return;
-    avatarPreview.innerHTML = '';
-    if(avatarNum){
-      const img = document.createElement('img');
-      img.alt = `avatar_${avatarNum}`;
-      img.src = `ui/avatars/avatar_${avatarNum}.png`;
-      img.onerror = () => {
-        avatarPreview.innerHTML = '<div class="profileAvatarPlaceholder">🙂</div>';
-      };
-      avatarPreview.appendChild(img);
-    } else {
-      avatarPreview.innerHTML = '<div class="profileAvatarPlaceholder">🙂</div>';
+  // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
+  let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
+  const avatarImgEl = wrap.querySelector("#profileAvatarImg");
+  const avatarPlaceholderEl = wrap.querySelector("#profileAvatarPlaceholder");
+
+  function renderProfileAvatar(){
+    const path = __normalizeAvatarValue(chosenAvatar);
+    if(path){
+      if(avatarImgEl){
+        avatarImgEl.src = path + __avatarCacheBust();
+        avatarImgEl.style.display = "block";
+      }
+      if(avatarPlaceholderEl) avatarPlaceholderEl.style.display = "none";
+    }else{
+      if(avatarImgEl) avatarImgEl.style.display = "none";
+      if(avatarPlaceholderEl) avatarPlaceholderEl.style.display = "flex";
     }
-  };
-  renderAvatarPreview(existing.avatar || null);
+  }
 
-  const openAvatarOverlay = () => {
-    if(wrap.querySelector('#avatarOverlay')) return;
+  renderProfileAvatar();
 
-    const overlay = document.createElement('div');
-    overlay.id = 'avatarOverlay';
-    overlay.className = 'avatarOverlay';
 
-    const header = document.createElement('div');
-    header.className = 'avatarOverlayHeader';
-
-    const title = document.createElement('div');
-    title.className = 'avatarOverlayTitle';
-    title.textContent = (lang === 'en') ? 'Choose an avatar' : 'Wybierz avatar';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'btnGhost';
-    closeBtn.textContent = (lang === 'en') ? 'Close' : 'Zamknij';
-    closeBtn.onclick = () => overlay.remove();
-
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-
-    const grid = document.createElement('div');
-    grid.className = 'avatarGrid';
-
-    const MAX_AVATARS = 60; // przyszłościowo
-    const selected = existing.avatar || null;
-
-    for(let i=1;i<=MAX_AVATARS;i++){
-      const tile = document.createElement('div');
-      tile.className = 'avatarTile' + (i === selected ? ' selected' : '');
-      const img = document.createElement('img');
-      img.alt = `avatar_${i}`;
-      img.loading = 'lazy';
-      img.src = `ui/avatars/avatar_${i}.png`;
-      img.onerror = () => tile.remove();
-      tile.appendChild(img);
-
-      tile.onclick = () => {
-        existing.avatar = i;
-        setProfile(existing);
-        renderAvatarPreview(i);
-        overlay.remove();
-      };
-
-      grid.appendChild(tile);
-    }
-
-    overlay.appendChild(header);
-    overlay.appendChild(grid);
-    wrap.appendChild(overlay);
-  };
-
+  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
   const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
   if(avatarSlot){
     const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
-    btnAvatar.onclick = () => openAvatarOverlay();
+    btnAvatar.onclick = ()=>{ showToast(lang==='en' ? 'Avatar selection soon.' : 'Wybór avatara wkrótce.'); };
     avatarSlot.appendChild(btnAvatar);
   }
 
@@ -914,7 +1072,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     const nick = (document.getElementById("profileNick")?.value || "").trim();
     const country = (document.getElementById("profileCountry")?.value || "").trim();
     const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, updatedAt: Date.now()};
+    const profile = {...existing, nick, country, favClub, avatar: chosenAvatar, updatedAt: Date.now()};
     if(!isProfileComplete(profile)){
       showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
       return;
