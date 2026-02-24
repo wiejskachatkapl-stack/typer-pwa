@@ -751,8 +751,67 @@ function setProfile(p){
 function isProfileComplete(p){
   if(!p) return false;
   const nickOk = typeof p.nick === "string" && p.nick.trim().length >= 3;
-  const countryOk = p.country === "pl" || p.country === "gb";
+  const c = String(p.country || "").trim();
+  // Accept any ISO-3166 alpha-2 country/region code from our list
+  const countryOk = /^[a-z]{2}$/i.test(c) && __COUNTRY_CODE_SET.has(c.toUpperCase());
   return nickOk && countryOk;
+}
+
+// ISO 3166-1 alpha-2 country/region codes (plus XK used by many services for Kosovo)
+const __COUNTRY_CODES = [
+  "AF","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ",
+  "BS","BH","BD","BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR","IO","BN","BG","BF","BI",
+  "CV","KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CG","CD","CK","CR","CI","HR","CU","CW","CY","CZ",
+  "DK","DJ","DM","DO",
+  "EC","EG","SV","GQ","ER","EE","SZ","ET",
+  "FK","FO","FJ","FI","FR","GF","PF","TF",
+  "GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY",
+  "HT","HM","VA","HN","HK","HU",
+  "IS","IN","ID","IR","IQ","IE","IM","IL","IT",
+  "JM","JP","JE","JO",
+  "KZ","KE","KI","KP","KR","KW","KG",
+  "LA","LV","LB","LS","LR","LY","LI","LT","LU",
+  "MO","MG","MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX","FM","MD","MC","MN","ME","MS","MA","MZ","MM",
+  "NA","NR","NP","NL","NC","NZ","NI","NE","NG","NU","NF","MK","MP","NO",
+  "OM",
+  "PK","PW","PS","PA","PG","PY","PE","PH","PN","PL","PT","PR","QA",
+  "RE","RO","RU","RW",
+  "BL","SH","KN","LC","MF","PM","VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES","LK","SD","SR","SJ","SE","CH","SY",
+  "TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR","TM","TC","TV",
+  "UG","UA","AE","GB","UM","US","UY","UZ",
+  "VU","VE","VN","VG","VI",
+  "WF","EH",
+  "YE",
+  "ZM","ZW",
+  "XK"
+];
+const __COUNTRY_CODE_SET = new Set(__COUNTRY_CODES);
+
+function __getCountryDisplayName(lang, codeUpper){
+  // Prefer native browser localization if available
+  try{
+    if(typeof Intl !== "undefined" && Intl.DisplayNames){
+      const dn = new Intl.DisplayNames([lang || "en"], {type:"region"});
+      const n = dn.of(codeUpper);
+      if(n) return n;
+    }
+  }catch(e){/* ignore */}
+  // Fallbacks (keep a couple common-friendly labels)
+  if(codeUpper === "GB") return (lang === "pl") ? "Wielka Brytania" : "United Kingdom";
+  if(codeUpper === "US") return (lang === "pl") ? "Stany Zjednoczone" : "United States";
+  if(codeUpper === "PL") return (lang === "pl") ? "Polska" : "Poland";
+  if(codeUpper === "XK") return (lang === "pl") ? "Kosowo" : "Kosovo";
+  return codeUpper;
+}
+
+function __buildCountryOptionsHtml(lang){
+  const opts = [];
+  for(const codeUpper of __COUNTRY_CODES){
+    const value = codeUpper.toLowerCase();
+    const name = __getCountryDisplayName(lang, codeUpper);
+    opts.push(`<option value="${value}">${escapeHtml(name)}</option>`);
+  }
+  return opts.join("\n");
 }
 
 
@@ -985,8 +1044,8 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
 function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
-    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back", pl:"Poland", gb:"UK"}
-    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
+    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back"}
+    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij"};
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
@@ -1011,8 +1070,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         </label>
         <label class="profileLabel">${escapeHtml(L.country)}
           <select id="profileCountry" class="profileSelect">
-            <option value="pl">${escapeHtml(L.pl)}</option>
-            <option value="gb">${escapeHtml(L.gb)}</option>
+            ${__buildCountryOptionsHtml(lang)}
           </select>
         </label>
         <label class="profileLabel">${escapeHtml(L.fav)}
@@ -1085,7 +1143,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     });
     btnAddProfile.onclick = ()=>{
       const nick = (document.getElementById("profileNick")?.value || "").trim();
-      const country = (document.getElementById("profileCountry")?.value || "").trim();
+      const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
       const favClub = (document.getElementById("profileFav")?.value || "").trim();
       const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
       if(!isProfileComplete(profile)){
