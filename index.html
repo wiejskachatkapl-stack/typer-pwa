@@ -737,6 +737,9 @@
       transition: transform .12s ease, filter .12s ease, opacity .12s ease;
     }
     .sysBtn.small img{ height:52px; }
+    /* v4019: bigger right-side buttons in Room */
+    #btnLeagueFromRoom img, #btnExitFromRoomRight img{ height:60px !important; }
+
     .sysBtn:active img{ transform: translateY(1px) scale(.98); filter: drop-shadow(0 6px 10px rgba(0,0,0,.28)); }
     .sysBtn:disabled img{ opacity:.45; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
 
@@ -1070,8 +1073,7 @@
                 <div class="roomAvatarPlaceholder" id="roomAvatarPlaceholder">🙂</div>
               </div>
               <div class="col" style="gap:10px">
-                <div class="chip" id="t_room_room">Pokój</div>
-                <div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
+<div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
                 <div class="chip"><span id="t_country_room">Kraj</span>: <span id="roomCountryLabel">—</span></div>
                 <div class="chip"><span id="t_flag_room">Flaga Kraju</span>: <span id="roomFlagLabel">—</span></div>
               </div>
@@ -1079,8 +1081,7 @@
 
             <div class="panel" style="padding:14px">
               <div class="title" id="roomName">—</div>
-              <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
-              <div class="roomCodeBlock" style="margin-top:10px">
+<div class="roomCodeBlock" style="margin-top:10px">
                 <div class="row roomCodeRow">
                   <div class="chip" style="flex:1;justify-content:space-between;">
                     <span id="t_code">Kod</span>: <span id="roomCode">—</span>
