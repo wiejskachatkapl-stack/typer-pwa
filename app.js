@@ -1,4 +1,4 @@
-const BUILD = 4017;
+const BUILD = 4015;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -427,7 +427,12 @@ function modalOpen(title, bodyNode){
 }
 function modalClose(){
   const m = el("modal");
-  if(m) m.classList.remove("active");
+  if(m){
+    m.classList.remove("active");
+    m.classList.remove("profileMode");
+  }
+  const mb = el("modalBack");
+  if(mb) mb.remove();
 }
 
 /** ROOMS MENU MODALS **/
@@ -997,7 +1002,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
           <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" style="display:none;" />
           <div class="profileAvatarPlaceholder" id="profileAvatarPlaceholder">🙂</div>
         </div>
-        <div id="profileAvatarBtnSlot"></div>
+        <div id="profileAvatarBtnSlot" class="profileAvatarBtnSlot"></div>
       </div>
       <div class="profileFields">
         <div class="profileDesc">${escapeHtml(L.desc)}</div>
@@ -1019,6 +1024,20 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   `;
 
   modalOpen(L.title, wrap);
+
+  // Układ profilu: większy tytuł + przycisk "Wróć" u góry obok "Wyjście"
+  const modalEl = el("modal");
+  if(modalEl) modalEl.classList.add("profileMode");
+  const modalCloseBtn = el("modalClose");
+  if(modalCloseBtn && !el("modalBack")){
+    const btnBackTop = makeSysImgButton("btn_back.png", {cls:"sysBtn small", alt:L.cancelBtn, title:L.cancelBtn});
+    btnBackTop.id = "modalBack";
+    btnBackTop.onclick = ()=>{
+      modalClose();
+      if(typeof onCancel === "function") onCancel();
+    };
+    modalCloseBtn.parentNode.insertBefore(btnBackTop, modalCloseBtn);
+  }
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
   let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
@@ -1057,6 +1076,29 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       });
     };
     avatarSlot.appendChild(btnAvatar);
+
+    // Zamiast przycisku "Zmień" na dole: "Dodaj profil" obok "Avatar"
+    const btnAddProfile = makeSysImgButton("btn_add_profil.png", {
+      cls:"sysBtn profileAvatarBtn profileAddBtn",
+      alt:(lang === "en" ? "Add profile" : "Dodaj profil"),
+      title:(lang === "en" ? "Add profile" : "Dodaj profil")
+    });
+    btnAddProfile.onclick = ()=>{
+      const nick = (document.getElementById("profileNick")?.value || "").trim();
+      const country = (document.getElementById("profileCountry")?.value || "").trim();
+      const favClub = (document.getElementById("profileFav")?.value || "").trim();
+      const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
+      if(!isProfileComplete(profile)){
+        showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
+        return;
+      }
+      localStorage.setItem(KEY_NICK, nick);
+      setProfile(profile);
+      refreshNickLabels();
+      modalClose();
+      if(typeof onDone === "function") onDone(profile);
+    };
+    avatarSlot.appendChild(btnAddProfile);
   }
 
   requestAnimationFrame(()=>{
@@ -1064,32 +1106,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     if(sel) sel.value = defaultCountry;
   });
 
+  // Dolny pasek przycisków nieużywany w profilu (akcje są przy avatarze + u góry)
   const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
-  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
-  btnRow.appendChild(btnSave);
-  btnRow.appendChild(btnBack);
-
-  btnSave.onclick = ()=>{
-    const nick = (document.getElementById("profileNick")?.value || "").trim();
-    const country = (document.getElementById("profileCountry")?.value || "").trim();
-    const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
-    if(!isProfileComplete(profile)){
-      showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
-      return;
-    }
-    localStorage.setItem(KEY_NICK, nick);
-    setProfile(profile);
-    refreshNickLabels();
-    modalClose();
-    if(typeof onDone === "function") onDone(profile);
-  };
-
-  btnBack.onclick = ()=>{
-    modalClose();
-    if(typeof onCancel === "function") onCancel();
-  };
+  if(btnRow) btnRow.innerHTML = "";
 }
 
 async function ensureProfile(){
