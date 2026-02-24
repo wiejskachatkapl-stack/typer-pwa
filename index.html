@@ -11,6 +11,19 @@
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
 .roomCodeRow .imgBtn{flex:0 0 auto;}
 
+/* ROOM header: profile snapshot copied from Profile */
+.roomProfileHeader{display:flex;gap:14px;align-items:center;flex-wrap:nowrap;}
+.roomAvatarBox{
+  width:92px;height:92px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.22);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.roomAvatarImg{width:100%;height:100%;object-fit:contain;display:block;}
+.roomAvatarPlaceholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;opacity:.85;}
+
 :root{
       --bg:#071229;
       --glass: rgba(8, 22, 52, .58);
@@ -1051,9 +1064,17 @@
 
           <!-- LEFT -->
           <div class="leftBar panel">
-            <div class="col" style="gap:10px">
-              <div class="chip" id="t_room_room">Pokój</div>
-              <div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
+            <div class="roomProfileHeader">
+              <div class="roomAvatarBox">
+                <img id="roomAvatarImg" class="roomAvatarImg" alt="avatar" style="display:none;" />
+                <div class="roomAvatarPlaceholder" id="roomAvatarPlaceholder">🙂</div>
+              </div>
+              <div class="col" style="gap:10px">
+                <div class="chip" id="t_room_room">Pokój</div>
+                <div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
+                <div class="chip"><span id="t_country_room">Kraj</span>: <span id="roomCountryLabel">—</span></div>
+                <div class="chip"><span id="t_flag_room">Flaga Kraju</span>: <span id="roomFlagLabel">—</span></div>
+              </div>
             </div>
 
             <div class="panel" style="padding:14px">

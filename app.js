@@ -368,6 +368,8 @@ function applyLangToUI(){
   // Room
   if(el("t_room_room")) el("t_room_room").textContent = t("room");
   if(el("t_nick2")) el("t_nick2").textContent = t("nick");
+  if(el("t_country_room")) el("t_country_room").textContent = (getLang()==="en") ? "Country" : "Kraj";
+  if(el("t_flag_room")) el("t_flag_room").textContent = (getLang()==="en") ? "Country flag" : "Flaga Kraju";
   if(el("t_admin")) el("t_admin").textContent = t("admin");
   if(el("t_code")) el("t_code").textContent = t("code");
   setBtnLabelSafe("btnCopyCode", t("copy"));
@@ -802,6 +804,21 @@ function __getCountryDisplayName(lang, codeUpper){
   if(codeUpper === "PL") return (lang === "pl") ? "Polska" : "Poland";
   if(codeUpper === "XK") return (lang === "pl") ? "Kosowo" : "Kosovo";
   return codeUpper;
+}
+
+function __countryCodeToFlagEmoji(codeUpper){
+  // Works for most ISO alpha-2 codes (including XK used by some services)
+  try{
+    const c = String(codeUpper||"").trim().toUpperCase();
+    if(c.length !== 2) return "";
+    const A = 0x1F1E6;
+    const first = c.charCodeAt(0) - 65;
+    const second = c.charCodeAt(1) - 65;
+    if(first < 0 || first > 25 || second < 0 || second > 25) return "";
+    return String.fromCodePoint(A + first) + String.fromCodePoint(A + second);
+  }catch(e){
+    return "";
+  }
 }
 
 function __buildCountryOptionsHtml(lang){
@@ -1311,6 +1328,29 @@ function refreshNickLabels(){
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
   if (el("leagueNick")) el("leagueNick").textContent = nick;
+  refreshRoomProfileHeader();
+}
+
+function refreshRoomProfileHeader(){
+  // Snapshot of profile shown in ROOM header (avatar + country + flag)
+  const lang = getLang();
+  const p = getProfile() || {};
+  const codeUpper = String(p.country || "").trim().toUpperCase();
+
+  if(el("roomCountryLabel")) el("roomCountryLabel").textContent = codeUpper ? __getCountryDisplayName(lang, codeUpper) : "—";
+  if(el("roomFlagLabel")) el("roomFlagLabel").textContent = codeUpper ? (__countryCodeToFlagEmoji(codeUpper) || "—") : "—";
+
+  const img = el("roomAvatarImg");
+  const ph = el("roomAvatarPlaceholder");
+  const avatarPath = __normalizeAvatarValue(p.avatar || "");
+  if(avatarPath && img){
+    img.src = avatarPath + __avatarCacheBust();
+    img.style.display = "block";
+    if(ph) ph.style.display = "none";
+  }else{
+    if(img) img.style.display = "none";
+    if(ph) ph.style.display = "flex";
+  }
 }
 
 function getSavedRoom(){
