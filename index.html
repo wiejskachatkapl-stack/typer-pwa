@@ -163,18 +163,29 @@
       justify-content:center;
       position:relative;
     }
+    /* HOME buttons layout (start screen)
+       - prevents overlaps when PNG buttons are very wide
+       - 2 columns on desktop; Exit spans full width
+       - switches to 1 column on smaller screens */
     .homeBtns{
       position:absolute;
       left:50%;
       top:52%;
       transform:translate(-50%,-50%);
-      display:flex;
-      flex-wrap:wrap;
-      gap: clamp(14px, 3vw, 36px);
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      justify-items:center;
       align-items:center;
-      justify-content:center;
+      column-gap: clamp(24px, 4vw, 80px);
+      row-gap: clamp(18px, 3.5vw, 44px);
       padding:10px;
-      width: min(1100px, 94vw);
+      width: min(1500px, 94vw);
+    }
+    #btnHomeExit{ grid-column: 1 / -1; }
+
+    @media (max-width:900px){
+      .homeBtns{ grid-template-columns: 1fr; width: min(900px, 94vw); }
+      #btnHomeExit{ grid-column:auto; }
     }
     .imgBtn{
       appearance:none;
@@ -908,30 +919,30 @@
 .modal.profileMode .profileAddBtn{ margin-top: 12px; }
 
 
-/* v3025: bigger main menu buttons (home screen) */
-button:has(> img[src*="btn_tipster_room"]),
-button:has(> img[src*="btn_statistics"]),
-button:has(> img[src*="btn_exit"]),
+/* v3022: bigger main menu buttons (home screen) */
+button:has(> img[src*="btn_pokoj_typerow"]),
+button:has(> img[src*="btn_statystyki"]),
+button:has(> img[src*="btn_wyjscie"]),
 button:has(> img[src*="btn_typer_room"]),
 button:has(> img[src*="btn_statistics"]),
 button:has(> img[src*="btn_exit"]){
-  width: 390px;
-  height: 150px;
+  width: 420px;
+  height: 120px;
 }
-button:has(> img[src*="btn_tipster_room"]) > img,
-button:has(> img[src*="btn_statistics"]) > img,
-button:has(> img[src*="btn_exit"]) > img,
+button:has(> img[src*="btn_pokoj_typerow"]) > img,
+button:has(> img[src*="btn_statystyki"]) > img,
+button:has(> img[src*="btn_wyjscie"]) > img,
 button:has(> img[src*="btn_typer_room"]) > img,
 button:has(> img[src*="btn_statistics"]) > img,
 button:has(> img[src*="btn_exit"]) > img{
-  width: 420%;
-  height: 420%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 @media (max-width: 900px){
-  button:has(> img[src*="btn_tipster_room"]),
-  button:has(> img[src*="btn_statistics"]),
-  button:has(> img[src*="btn_exit"]),
+  button:has(> img[src*="btn_pokoj_typerow"]),
+  button:has(> img[src*="btn_statystyki"]),
+  button:has(> img[src*="btn_wyjscie"]),
   button:has(> img[src*="btn_typer_room"]),
   button:has(> img[src*="btn_statistics"]),
   button:has(> img[src*="btn_exit"]){
@@ -940,9 +951,9 @@ button:has(> img[src*="btn_exit"]) > img{
   }
 }
 @media (max-width: 600px){
-  button:has(> img[src*="btn_tipster_room"]),
-  button:has(> img[src*="btn_statistics"]),
-  button:has(> img[src*="btn_exit"]),
+  button:has(> img[src*="btn_pokoj_typerow"]),
+  button:has(> img[src*="btn_statystyki"]),
+  button:has(> img[src*="btn_wyjscie"]),
   button:has(> img[src*="btn_typer_room"]),
   button:has(> img[src*="btn_statistics"]),
   button:has(> img[src*="btn_exit"]){
