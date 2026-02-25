@@ -1,4 +1,4 @@
-const BUILD = 5204;
+const BUILD = 5205;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1605,7 +1605,7 @@ function bindUI(){
 
   // Random / Manual – obsługę dopinamy w następnym kroku
   const __btnAQRandom = el("btnAQRandom");
-  if(__btnAQRandom) __btnAQRandom.onclick = ()=>{};
+  if(__btnAQRandom) __btnAQRandom.onclick = async ()=>{ closeAddQueueMenu(); await addRandomQueue(); };
   const __btnAQManual = el("btnAQManual");
   if(__btnAQManual) __btnAQManual.onclick = ()=>{};
 
@@ -2485,6 +2485,62 @@ async function addTestQueue(){
   });
   await b.commit();
   showToast(getLang()==="en" ? "Fixture added (test)" : "Dodano kolejkę (test)");
+}
+
+// ===== RANDOM QUEUE (btn_random.png) =====
+// Podpinamy pod przycisk "Losowe" (btn_random.png) losowe wybieranie pojedynków
+// (wcześniej było to automatyczne wybieranie pojedynków).
+function __shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    const t = arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+  return arr;
+}
+
+async function addRandomQueue(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){
+    showToast(getLang()==="en" ? "Admin only" : "Tylko admin");
+    return;
+  }
+
+  // Jeśli już są mecze w aktywnej kolejce – nie dokładamy kolejnych.
+  if(matchesCache && matchesCache.length){
+    showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
+    return;
+  }
+
+  // Pool 20 drużyn -> losowe pary 10 meczów.
+  const teams = [
+    "Jagiellonia","Piast","Lechia","Legia","Wisla Plock","Radomiak","GKS Katowice","Gornik",
+    "Arka","Cracovia","Lech","Pogon","Motor","Rakow","Korona","Widzew",
+    "Slask","Zaglebie","Stal Mielec","Puszcza"
+  ];
+
+  __shuffle(teams);
+
+  const b = boot.writeBatch(db);
+  for(let i=0;i<10;i++){
+    const a = teams[i*2];
+    const d = teams[i*2+1];
+
+    // losowo ustawiamy gospodarza/gościa
+    const homeFirst = Math.random() < 0.5;
+    const home = homeFirst ? a : d;
+    const away = homeFirst ? d : a;
+
+    const id = `m_${Date.now()}_${i}`;
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+    b.set(ref, {
+      idx: i,
+      home,
+      away,
+      createdAt: boot.serverTimestamp()
+    });
+  }
+  await b.commit();
+  showToast(getLang()==="en" ? "Random fixture added" : "Dodano losową kolejkę");
 }
 
 // ===== LEAGUE (prawdziwa) =====
