@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 3022)</title>
+  <title>Typer (BUILD 5200)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -1083,7 +1083,6 @@
                 <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
 
                 <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
-                <button class="imgBtn sysBtn" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
               </div>
             </div>
 
@@ -1097,7 +1096,11 @@
               <div class="row">
                 <div>
                   <div class="title" id="t_matches">Spotkania</div>
-                  <div class="sub" id="t_matches_sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                </div>
+
+                <!-- ADMIN: przeniesione z lewego panelu (Akcje) na górę, obok nagłówka Spotkań -->
+                <div class="roomTopBtns">
+                  <button class="imgBtn sysBtn actionSmall" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
                 </div>
                 <div class="spacer"></div>
                 <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
@@ -1237,7 +1240,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">BUILD 3022</div>
+    <div id="buildCornerText">BUILD 5200</div>
   </div>
 
 </body>
