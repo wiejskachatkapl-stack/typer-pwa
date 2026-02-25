@@ -773,10 +773,50 @@ function setProfile(p){
   localStorage.setItem(KEY_PROFILE, JSON.stringify(p || {}));
 }
 
+function __getAllRegionCodes(){
+  try{
+    if(typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function"){
+      const vals = Intl.supportedValuesOf("region") || [];
+      return vals.filter(v => typeof v === "string" && v.length === 2);
+    }
+  }catch(e){}
+  // Fallback (minimum) – większość przeglądarek będzie miała supportedValuesOf
+  return ["PL","GB","US","DE","FR","ES","IT","NL","BE","PT","SE","NO","FI","DK","IE","CH","AT","CZ","SK","HU","RO","BG","GR","HR","RS","BA","SI","UA","TR"];
+}
+
+function __populateCountrySelect(selectEl, lang, current){
+  if(!selectEl) return;
+  const locale = (lang === "en") ? "en" : "pl";
+  const dn = (typeof Intl !== "undefined" && Intl.DisplayNames) ? new Intl.DisplayNames([locale], {type:"region"}) : null;
+  const codes = __getAllRegionCodes();
+  const items = [];
+  for(const code of codes){
+    const name = dn ? dn.of(code) : code;
+    if(!name) continue;
+    items.push({code: code.toLowerCase(), name});
+  }
+  items.sort((a,b)=>a.name.localeCompare(b.name, locale));
+
+  selectEl.innerHTML = "";
+  const optEmpty = document.createElement("option");
+  optEmpty.value = "";
+  optEmpty.textContent = "";
+  selectEl.appendChild(optEmpty);
+
+  for(const it of items){
+    const opt = document.createElement("option");
+    opt.value = it.code;
+    opt.textContent = it.name;
+    selectEl.appendChild(opt);
+  }
+  selectEl.value = (current || "").toLowerCase();
+}
+
 function isProfileComplete(p){
   if(!p) return false;
   const nickOk = typeof p.nick === "string" && p.nick.trim().length >= 3;
-  const countryOk = p.country === "pl" || p.country === "gb";
+  const c = (typeof p.country === "string") ? p.country.trim() : "";
+  const countryOk = c.length === 2;
   return nickOk && countryOk;
 }
 
@@ -1010,12 +1050,12 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
 function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
-    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back", pl:"Poland", gb:"UK"}
-    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij", pl:"Polska", gb:"Wielka Brytania"};
+    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back"}
+    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij"};
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
-  const defaultCountry = existing.country || (lang === "pl" ? "pl" : "gb");
+  const defaultCountry = (existing.country || "").trim();
   const defaultFav = (existing.favClub || "").trim();
 
   const wrap = document.createElement("div");
@@ -1037,10 +1077,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         <label class="profileLabel">${escapeHtml(L.country)}
           <div class="countryRow">
             <img class="countryFlagPng" id="countryFlagPng" alt="" />
-            <select id="profileCountry" class="profileSelect">
-              <option value="pl">${escapeHtml(L.pl)}</option>
-              <option value="gb">${escapeHtml(L.gb)}</option>
-            </select>
+            <select id="profileCountry" class="profileSelect"></select>
           </div>
         </label>
         <label class="profileLabel">${escapeHtml(L.fav)}
