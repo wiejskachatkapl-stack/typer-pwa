@@ -1,4 +1,4 @@
-const BUILD = 5200;
+const BUILD = 5204;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1590,8 +1590,24 @@ function bindUI(){
     await endRoundConfirmAndArchive();
   };
 
-  el("btnAddQueue").onclick = async ()=>{ await addTestQueue(); };
+  el("btnAddQueue").onclick = ()=>{ openAddQueueMenu(); };
   el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+
+  // Add Queue menu (modal)
+  const __ov = el("addQueueOverlay");
+  if(__ov){
+    __ov.addEventListener("click", (e)=>{
+      if(e.target === __ov) closeAddQueueMenu();
+    });
+  }
+  const __btnAQBack = el("btnAQBack");
+  if(__btnAQBack) __btnAQBack.onclick = ()=> closeAddQueueMenu();
+
+  // Random / Manual – obsługę dopinamy w następnym kroku
+  const __btnAQRandom = el("btnAQRandom");
+  if(__btnAQRandom) __btnAQRandom.onclick = ()=>{};
+  const __btnAQManual = el("btnAQManual");
+  if(__btnAQManual) __btnAQManual.onclick = ()=>{};
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1611,6 +1627,18 @@ function bindUI(){
   };
 }
 
+
+// ===== ADD QUEUE MENU (BUILD 5204) =====
+function openAddQueueMenu(){
+  const ov = el("addQueueOverlay");
+  if(!ov) return;
+  ov.style.display = "flex";
+}
+function closeAddQueueMenu(){
+  const ov = el("addQueueOverlay");
+  if(!ov) return;
+  ov.style.display = "none";
+}
 function isAdmin(){
   return currentRoom?.adminUid === userUid;
 }

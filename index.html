@@ -379,6 +379,49 @@
     }
     .rightFooterBtn .btn{width:auto}
 
+
+    /* ===== ADD QUEUE MENU (modal) ===== */
+    #addQueueOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index:90;
+    }
+    .aqModal{
+      width:min(620px,92vw);
+      padding:18px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(8, 22, 52, .72);
+      box-shadow:0 18px 60px rgba(0,0,0,.55);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      align-items:center;
+      justify-content:center;
+    }
+    .aqBtns{
+      display:flex;
+      gap:18px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    .aqBtns .imgBtn img{
+      width:220px;
+      height:auto;
+      display:block;
+      object-fit:contain;
+    }
+    @media (max-width:720px){
+      .aqBtns .imgBtn img{ width: min(240px, 70vw); }
+    }
+
     /* ===== RESULTS SCREEN ===== */
     #results{
       padding:22px;
@@ -1139,7 +1182,25 @@
           </div>
 
         </div>
-      </section>
+      
+          <!-- ADD QUEUE MENU OVERLAY (BUILD 5204) -->
+          <div id="addQueueOverlay" aria-hidden="true">
+            <div class="aqModal panel" role="dialog" aria-label="Add queue menu">
+              <div class="aqBtns">
+                <button class="imgBtn sysBtn" id="btnAQRandom" type="button" data-btn="btn_random.png">
+                  <img data-btn="btn_random.png" src="ui/buttons/pl/btn_random.png" alt="btn_random">
+                </button>
+                <button class="imgBtn sysBtn" id="btnAQManual" type="button" data-btn="btn_manual.png">
+                  <img data-btn="btn_manual.png" src="ui/buttons/pl/btn_manual.png" alt="btn_manual">
+                </button>
+                <button class="imgBtn sysBtn" id="btnAQBack" type="button" data-btn="btn_back.png">
+                  <img data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png" alt="btn_back">
+                </button>
+              </div>
+            </div>
+          </div>
+
+</section>
 
       <!-- RESULTS (ADMIN) -->
       <section id="results" class="screen">
