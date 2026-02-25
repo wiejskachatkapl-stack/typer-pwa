@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 5202)</title>
+  <title>Typer (BUILD 5203)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -123,8 +123,15 @@
       font-weight:900;
     }
 
-    /* BUILD 5202: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
+    /* BUILD 5203: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
     #t_round, #sep_round{display:none;}
+
+    /* BUILD 5203: usuń debug/placeholder "dummyAdOne"/"dummyAdTwo" (z lewej strony) */
+    #dummyAdOne, #dummyAdTwo,
+    img[alt="dummyAdOne"], img[alt="dummyAdTwo"],
+    img[src*="dummyAdOne"], img[src*="dummyAdTwo"]{
+      display:none !important;
+    }
 
     .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
     .sub{color:var(--muted);font-weight:700;font-size:13px}
@@ -1086,6 +1093,9 @@
                 <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
 
                 <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
+
+                <!-- BUILD 5203: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
+                <button class="imgBtn sysBtn" id="btnExitFromRoomRight" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="btnExitFromRoomRight"></button>
               </div>
             </div>
 
@@ -1125,7 +1135,6 @@
 
             <div class="rightFooterBtn">
 	              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
-	              <button class="imgBtn sysBtn small" id="btnExitFromRoomRight" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="btnExitFromRoomRight"></button>
             </div>
           </div>
 
@@ -1232,6 +1241,23 @@
   <script type="module" src="./app.js?v=3025"></script>
 
 <script>
+  // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
+  document.addEventListener('DOMContentLoaded', () => {
+    const kill = (key) => {
+      const nodes = document.querySelectorAll(
+        `#${key}, img[alt="${key}"], img[src*="${key}"], [data-btn="${key}"]`
+      );
+      nodes.forEach((n) => {
+        const btn = n.closest && n.closest('button');
+        (btn || n).remove();
+      });
+    };
+    kill('dummyAdOne');
+    kill('dummyAdTwo');
+  });
+</script>
+
+<script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js?v=2000').catch(() => {});
@@ -1243,7 +1269,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">BUILD 5202</div>
+    <div id="buildCornerText">BUILD 5203</div>
   </div>
 
 </body>
