@@ -1,4 +1,4 @@
-const BUILD = 5010;
+const BUILD = 5100;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -368,6 +368,8 @@ function applyLangToUI(){
   // Room
   if(el("t_room_room")) el("t_room_room").textContent = t("room");
   if(el("t_nick2")) el("t_nick2").textContent = t("nick");
+  if(el("t_country_room")) el("t_country_room").textContent = (getLang()==="en") ? "Country" : "Kraj";
+  if(el("t_flag_room")) el("t_flag_room").textContent = (getLang()==="en") ? "Country flag" : "Flaga Kraju";
   if(el("t_admin")) el("t_admin").textContent = t("admin");
   if(el("t_code")) el("t_code").textContent = t("code");
   setBtnLabelSafe("btnCopyCode", t("copy"));
@@ -427,7 +429,12 @@ function modalOpen(title, bodyNode){
 }
 function modalClose(){
   const m = el("modal");
-  if(m) m.classList.remove("active");
+  if(m){
+    m.classList.remove("active");
+    m.classList.remove("profileMode");
+  }
+  const mb = el("modalBack");
+  if(mb) mb.remove();
 }
 
 /** ROOMS MENU MODALS **/
@@ -661,21 +668,12 @@ function openSettings(){
   const head = document.createElement("div");
   head.className = "chip";
   head.textContent = t("settings");
+  // delikatnie większy nagłówek w oknie Ustawień
+  head.style.fontSize = "18px";
+  head.style.padding = "12px 16px";
   wrap.appendChild(head);
 
-  const infoLang = document.createElement("div");
-  infoLang.className = "sub";
-  infoLang.textContent = t("langOnHome");
-  wrap.appendChild(infoLang);
-
-  const info = document.createElement("div");
-  info.className = "sub";
-  info.textContent = (getLang() === "pl")
-    ? "Zmiana języka działa od razu na całej aplikacji."
-    : "Language changes apply immediately across the app.";
-  wrap.appendChild(info);
-
-  // Przyciski: Profil / Avatar (obsługa avatara w kolejnym kroku)
+  // Przyciski: Profil + Reset profilu (bez avatara i bez opisów)
   const btnRow = document.createElement("div");
   btnRow.style.display = "flex";
   btnRow.style.gap = "14px";
@@ -694,42 +692,21 @@ function openSettings(){
   btnProfil.onclick = ()=> openProfileModal({required:false});
   btnRow.appendChild(btnProfil);
 
-  const btnAvatar = document.createElement("button");
-  btnAvatar.className = "imgBtn sysBtn sysBtnBig";
-  btnAvatar.type = "button";
-  btnAvatar.title = (getLang()==="pl") ? "Avatar" : "Avatar";
-  btnAvatar.setAttribute("aria-label", btnAvatar.title);
-  const imgAvatar = document.createElement("img");
-  imgAvatar.dataset.btn = "btn_avatar.png";
-  imgAvatar.alt = btnAvatar.title;
-  imgAvatar.src = getBtnDir() + mapBtnName("btn_avatar.png");
-  btnAvatar.appendChild(imgAvatar);
-  // Avatar wybieramy w oknie Profil (tam jest podgląd i zapis profilu)
-  btnAvatar.onclick = ()=> openProfileModal({required:false});
-  btnRow.appendChild(btnAvatar);
+  const btnClear = document.createElement("button");
+  btnClear.className = "imgBtn sysBtn sysBtnBig";
+  btnClear.type = "button";
+  btnClear.title = t("clearProfile");
+  btnClear.setAttribute("aria-label", t("clearProfile"));
+  const img = document.createElement("img");
+  img.dataset.btn = "btn_reset_profilu.png";
+  img.alt = t("clearProfile");
+  img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
+  btnClear.appendChild(img);
+  btnClear.onclick = () => clearProfile();
+  // reset obok Profil
+  btnRow.appendChild(btnClear);
 
   wrap.appendChild(btnRow);
-
-
-const btnClear = document.createElement("button");
-btnClear.className = "imgBtn sysBtn sysBtnBig";
-btnClear.type = "button";
-btnClear.title = t("clearProfile");
-btnClear.setAttribute("aria-label", t("clearProfile"));
-btnClear.style.alignSelf = "flex-start";
-const img = document.createElement("img");
-img.dataset.btn = "btn_reset_profilu.png";
-img.alt = t("clearProfile");
-img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
-btnClear.appendChild(img);
-btnClear.onclick = () => clearProfile();
-wrap.appendChild(btnClear);
-
-const warn = document.createElement("div");
-warn.className = "sub";
-warn.style.opacity = ".8";
-warn.textContent = (getLang()==="pl") ? "Usuwa nick, pokój i całą lokalną pamięć tej gry na tym urządzeniu." : "Removes nickname, room and all local data of this game on this device.";
-wrap.appendChild(warn);
 
   modalOpen(t("settings"), wrap);
 }
@@ -773,51 +750,87 @@ function setProfile(p){
   localStorage.setItem(KEY_PROFILE, JSON.stringify(p || {}));
 }
 
-function __getAllRegionCodes(){
-  try{
-    if(typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function"){
-      const vals = Intl.supportedValuesOf("region") || [];
-      return vals.filter(v => typeof v === "string" && v.length === 2);
-    }
-  }catch(e){}
-  // Fallback (minimum) – większość przeglądarek będzie miała supportedValuesOf
-  return ["PL","GB","US","DE","FR","ES","IT","NL","BE","PT","SE","NO","FI","DK","IE","CH","AT","CZ","SK","HU","RO","BG","GR","HR","RS","BA","SI","UA","TR"];
-}
-
-function __populateCountrySelect(selectEl, lang, current){
-  if(!selectEl) return;
-  const locale = (lang === "en") ? "en" : "pl";
-  const dn = (typeof Intl !== "undefined" && Intl.DisplayNames) ? new Intl.DisplayNames([locale], {type:"region"}) : null;
-  const codes = __getAllRegionCodes();
-  const items = [];
-  for(const code of codes){
-    const name = dn ? dn.of(code) : code;
-    if(!name) continue;
-    items.push({code: code.toLowerCase(), name});
-  }
-  items.sort((a,b)=>a.name.localeCompare(b.name, locale));
-
-  selectEl.innerHTML = "";
-  const optEmpty = document.createElement("option");
-  optEmpty.value = "";
-  optEmpty.textContent = "";
-  selectEl.appendChild(optEmpty);
-
-  for(const it of items){
-    const opt = document.createElement("option");
-    opt.value = it.code;
-    opt.textContent = it.name;
-    selectEl.appendChild(opt);
-  }
-  selectEl.value = (current || "").toLowerCase();
-}
-
 function isProfileComplete(p){
   if(!p) return false;
   const nickOk = typeof p.nick === "string" && p.nick.trim().length >= 3;
-  const c = (typeof p.country === "string") ? p.country.trim() : "";
-  const countryOk = c.length === 2;
+  const c = String(p.country || "").trim();
+  // Accept any ISO-3166 alpha-2 country/region code from our list
+  const countryOk = /^[a-z]{2}$/i.test(c) && __COUNTRY_CODE_SET.has(c.toUpperCase());
   return nickOk && countryOk;
+}
+
+// ISO 3166-1 alpha-2 country/region codes (plus XK used by many services for Kosovo)
+const __COUNTRY_CODES = [
+  "AF","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ",
+  "BS","BH","BD","BB","BY","BE","BZ","BJ","BM","BT","BO","BQ","BA","BW","BV","BR","IO","BN","BG","BF","BI",
+  "CV","KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CG","CD","CK","CR","CI","HR","CU","CW","CY","CZ",
+  "DK","DJ","DM","DO",
+  "EC","EG","SV","GQ","ER","EE","SZ","ET",
+  "FK","FO","FJ","FI","FR","GF","PF","TF",
+  "GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY",
+  "HT","HM","VA","HN","HK","HU",
+  "IS","IN","ID","IR","IQ","IE","IM","IL","IT",
+  "JM","JP","JE","JO",
+  "KZ","KE","KI","KP","KR","KW","KG",
+  "LA","LV","LB","LS","LR","LY","LI","LT","LU",
+  "MO","MG","MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX","FM","MD","MC","MN","ME","MS","MA","MZ","MM",
+  "NA","NR","NP","NL","NC","NZ","NI","NE","NG","NU","NF","MK","MP","NO",
+  "OM",
+  "PK","PW","PS","PA","PG","PY","PE","PH","PN","PL","PT","PR","QA",
+  "RE","RO","RU","RW",
+  "BL","SH","KN","LC","MF","PM","VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES","LK","SD","SR","SJ","SE","CH","SY",
+  "TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR","TM","TC","TV",
+  "UG","UA","AE","GB","UM","US","UY","UZ",
+  "VU","VE","VN","VG","VI",
+  "WF","EH",
+  "YE",
+  "ZM","ZW",
+  "XK"
+];
+const __COUNTRY_CODE_SET = new Set(__COUNTRY_CODES);
+
+function __getCountryDisplayName(lang, codeUpper){
+  // Prefer native browser localization if available
+  try{
+    if(typeof Intl !== "undefined" && Intl.DisplayNames){
+      const dn = new Intl.DisplayNames([lang || "en"], {type:"region"});
+      const n = dn.of(codeUpper);
+      if(n) return n;
+    }
+  }catch(e){/* ignore */}
+  // Fallbacks (keep a couple common-friendly labels)
+  if(codeUpper === "GB") return (lang === "pl") ? "Wielka Brytania" : "United Kingdom";
+  if(codeUpper === "US") return (lang === "pl") ? "Stany Zjednoczone" : "United States";
+  if(codeUpper === "PL") return (lang === "pl") ? "Polska" : "Poland";
+  if(codeUpper === "XK") return (lang === "pl") ? "Kosowo" : "Kosovo";
+  return codeUpper;
+}
+
+function __countryCodeToFlagEmoji(codeUpper){
+  // Works for most ISO alpha-2 codes (including XK used by some services)
+  try{
+    const c = String(codeUpper||"").trim().toUpperCase();
+    if(c.length !== 2) return "";
+    const A = 0x1F1E6;
+    const first = c.charCodeAt(0) - 65;
+    const second = c.charCodeAt(1) - 65;
+    if(first < 0 || first > 25 || second < 0 || second > 25) return "";
+    return String.fromCodePoint(A + first) + String.fromCodePoint(A + second);
+  }catch(e){
+    return "";
+  }
+}
+
+function __buildCountryOptionsHtml(lang){
+  const opts = [];
+  // Empty option first so the select can start blank
+  opts.push('<option value=""></option>');
+  for(const codeUpper of __COUNTRY_CODES){
+    const value = codeUpper.toLowerCase();
+    const name = __getCountryDisplayName(lang, codeUpper);
+    opts.push(`<option value="${value}">${escapeHtml(name)}</option>`);
+  }
+  return opts.join("\n");
 }
 
 
@@ -1055,7 +1068,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
-  const defaultCountry = (existing.country || "").trim();
+  // Start blank when no country is set yet
+  const defaultCountry = existing.country || "";
   const defaultFav = (existing.favClub || "").trim();
 
   const wrap = document.createElement("div");
@@ -1067,7 +1081,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
           <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" style="display:none;" />
           <div class="profileAvatarPlaceholder" id="profileAvatarPlaceholder">🙂</div>
         </div>
-        <div id="profileAvatarBtnSlot"></div>
+        <div id="profileAvatarBtnSlot" class="profileAvatarBtnSlot"></div>
       </div>
       <div class="profileFields">
         <div class="profileDesc">${escapeHtml(L.desc)}</div>
@@ -1075,10 +1089,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
           <input id="profileNick" class="profileInput" type="text" maxlength="16" value="${escapeHtml(defaultNick)}" />
         </label>
         <label class="profileLabel">${escapeHtml(L.country)}
-          <div class="countryRow">
-            <img class="countryFlagPng" id="countryFlagPng" alt="" />
-            <select id="profileCountry" class="profileSelect"></select>
-          </div>
+          <select id="profileCountry" class="profileSelect">
+            ${__buildCountryOptionsHtml(lang)}
+          </select>
         </label>
         <label class="profileLabel">${escapeHtml(L.fav)}
           <input id="profileFav" class="profileInput" type="text" maxlength="26" value="${escapeHtml(defaultFav)}" />
@@ -1089,6 +1102,10 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   `;
 
   modalOpen(L.title, wrap);
+
+  // Układ profilu: tryb specjalny (przyciski na dole obok Avatar/Dodaj profil)
+  const modalEl = el("modal");
+  if(modalEl) modalEl.classList.add("profileMode");
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
   let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
@@ -1127,64 +1144,64 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       });
     };
     avatarSlot.appendChild(btnAvatar);
-  }
 
-  // PNG flaga kraju (ISO-2) – robimy okrąg CSS-em
-  function flagPngUrl(iso2){
-    const c = String(iso2||"").trim().toLowerCase();
-    if(!c || c.length !== 2) return "";
-    // Flagpedia/FlagCDN (PNG): https://flagcdn.com
-    return `https://flagcdn.com/w40/${c}.png`;
+    // Zamiast przycisku "Zmień" na dole: "Dodaj profil" obok "Avatar"
+    const btnAddProfile = makeSysImgButton("btn_add_profil.png", {
+      cls:"sysBtn profileAvatarBtn profileAddBtn",
+      alt:(lang === "en" ? "Add profile" : "Dodaj profil"),
+      title:(lang === "en" ? "Add profile" : "Dodaj profil")
+    });
+    btnAddProfile.onclick = ()=>{
+      const nick = (document.getElementById("profileNick")?.value || "").trim();
+      const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
+      const favClub = (document.getElementById("profileFav")?.value || "").trim();
+      const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
+      if(!isProfileComplete(profile)){
+        showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
+        return;
+      }
+      localStorage.setItem(KEY_NICK, nick);
+      setProfile(profile);
+      refreshNickLabels();
+      modalClose();
+      if(typeof onDone === "function") onDone(profile);
+    };
+    avatarSlot.appendChild(btnAddProfile);
+
+    // Przeniesione przyciski na dół (w jednej linii, ten sam rozmiar co Avatar/Dodaj profil)
+    const btnBackBottom = makeSysImgButton("btn_back.png", {
+      cls:"sysBtn profileAvatarBtn",
+      alt:L.cancelBtn,
+      title:L.cancelBtn
+    });
+    btnBackBottom.id = "modalBack";
+    btnBackBottom.onclick = ()=>{
+      modalClose();
+      if(typeof onCancel === "function") onCancel();
+    };
+    avatarSlot.appendChild(btnBackBottom);
+
+    const btnExitBottom = makeSysImgButton("btn_exit.png", {
+      cls:"sysBtn profileAvatarBtn",
+      alt:(lang === "en" ? "Exit" : "Wyjście"),
+      title:(lang === "en" ? "Exit" : "Wyjście")
+    });
+    btnExitBottom.id = "modalExitBottom";
+    btnExitBottom.onclick = ()=>{
+      modalClose();
+      if(typeof onCancel === "function") onCancel();
+    };
+    avatarSlot.appendChild(btnExitBottom);
   }
-  function updateProfileCountryFlag(){
-    const sel = document.getElementById("profileCountry");
-    const flagEl = document.getElementById("countryFlagPng");
-    if(!flagEl) return;
-    const code = (sel?.value || "").trim().toLowerCase();
-    const url = flagPngUrl(code);
-    if(!url){
-      flagEl.removeAttribute("src");
-      flagEl.style.visibility = "hidden";
-      return;
-    }
-    flagEl.style.visibility = "visible";
-    flagEl.src = url;
-  }
-  const countrySel = wrap.querySelector("#profileCountry");
-  if(countrySel) countrySel.addEventListener("change", updateProfileCountryFlag);
 
   requestAnimationFrame(()=>{
     const sel = document.getElementById("profileCountry");
     if(sel) sel.value = defaultCountry;
-    updateProfileCountryFlag();
   });
 
+  // Dolny pasek przycisków nieużywany w profilu (akcje są przy avatarze + u góry)
   const btnRow = wrap.querySelector("#profileBtns");
-  const btnSave = makeSysImgButton("btn_zmien.png", {cls:"sysBtn sysBtnBig", alt:L.saveBtn, title:L.saveBtn});
-  const btnBack = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn sysBtnBig", alt:L.cancelBtn, title:L.cancelBtn});
-  btnRow.appendChild(btnSave);
-  btnRow.appendChild(btnBack);
-
-  btnSave.onclick = ()=>{
-    const nick = (document.getElementById("profileNick")?.value || "").trim();
-    const country = (document.getElementById("profileCountry")?.value || "").trim();
-    const favClub = (document.getElementById("profileFav")?.value || "").trim();
-    const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
-    if(!isProfileComplete(profile)){
-      showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
-      return;
-    }
-    localStorage.setItem(KEY_NICK, nick);
-    setProfile(profile);
-    refreshNickLabels();
-    modalClose();
-    if(typeof onDone === "function") onDone(profile);
-  };
-
-  btnBack.onclick = ()=>{
-    modalClose();
-    if(typeof onCancel === "function") onCancel();
-  };
+  if(btnRow) btnRow.innerHTML = "";
 }
 
 async function ensureProfile(){
@@ -1326,6 +1343,29 @@ function refreshNickLabels(){
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
   if (el("leagueNick")) el("leagueNick").textContent = nick;
+  refreshRoomProfileHeader();
+}
+
+function refreshRoomProfileHeader(){
+  // Snapshot of profile shown in ROOM header (avatar + country + flag)
+  const lang = getLang();
+  const p = getProfile() || {};
+  const codeUpper = String(p.country || "").trim().toUpperCase();
+
+  if(el("roomCountryLabel")) el("roomCountryLabel").textContent = codeUpper ? __getCountryDisplayName(lang, codeUpper) : "—";
+  if(el("roomFlagLabel")) el("roomFlagLabel").textContent = codeUpper ? (__countryCodeToFlagEmoji(codeUpper) || "—") : "—";
+
+  const img = el("roomAvatarImg");
+  const ph = el("roomAvatarPlaceholder");
+  const avatarPath = __normalizeAvatarValue(p.avatar || "");
+  if(avatarPath && img){
+    img.src = avatarPath + __avatarCacheBust();
+    img.style.display = "block";
+    if(ph) ph.style.display = "none";
+  }else{
+    if(img) img.style.display = "none";
+    if(ph) ph.style.display = "flex";
+  }
 }
 
 function getSavedRoom(){
@@ -1673,7 +1713,9 @@ async function createRoom(roomName){
     });
 
     await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-      nick, uid: userUid, joinedAt: boot.serverTimestamp()
+      nick, uid: userUid,
+      joinedAt: boot.serverTimestamp(),
+      joinedAtMs: Date.now()
     });
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -1701,7 +1743,9 @@ async function joinRoom(code){
   }
 
   await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-    nick, uid: userUid, joinedAt: boot.serverTimestamp()
+    nick, uid: userUid,
+    joinedAt: boot.serverTimestamp(),
+    joinedAtMs: Date.now()
   }, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -1786,6 +1830,17 @@ async function openRoom(code, opts={}){
 
   refreshNickLabels();
 
+  // Ensure current user is present in players collection immediately (for UI list)
+  try{
+    const nickNow = getNick() || "—";
+    await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
+      uid: userUid,
+      nick: nickNow,
+      joinedAt: boot.serverTimestamp(),
+      joinedAtMs: Date.now()
+    }, { merge:true });
+  }catch(e){ /* ignore */ }
+
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";
   el("btnMyQueue").style.display = adm ? "block" : "none";
@@ -1809,10 +1864,21 @@ async function openRoom(code, opts={}){
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
   });
 
-  const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
-  unsubPlayers = boot.onSnapshot(pq, (qs)=>{
+  // Players: do NOT use orderBy on serverTimestamp field, because docs without the field can be excluded.
+  // We listen to the collection and sort client-side (joinedAtMs / joinedAt).
+  unsubPlayers = boot.onSnapshot(playersCol(code), (qs)=>{
     const arr = [];
-    qs.forEach(docu=> arr.push(docu.data()));
+    qs.forEach(docu=>{
+      const d = docu.data() || {};
+      // fallback: if uid missing, use document id
+      if(!d.uid) d.uid = docu.id;
+      arr.push(d);
+    });
+    arr.sort((a,b)=>{
+      const am = (typeof a.joinedAtMs==="number") ? a.joinedAtMs : (a.joinedAt?.toMillis ? a.joinedAt.toMillis() : 0);
+      const bm = (typeof b.joinedAtMs==="number") ? b.joinedAtMs : (b.joinedAt?.toMillis ? b.joinedAt.toMillis() : 0);
+      return am - bm;
+    });
     lastPlayers = arr;
     renderPlayers(arr);
   });
