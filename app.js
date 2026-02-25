@@ -1099,6 +1099,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       </div>
     </div>
     <div class="profileBtns" id="profileBtns"></div>
+    <!-- bottom bar: 4 buttons (Avatar / Dodaj profil / Cofnij / Wyjście) -->
+    <div class="profileBottomBar" id="profileBottomBar"></div>
   `;
 
   modalOpen(L.title, wrap);
