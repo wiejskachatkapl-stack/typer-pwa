@@ -1671,7 +1671,16 @@ function bindUI(){
 }
 
 function isAdmin(){
-  return currentRoom?.adminUid === userUid;
+  if(!currentRoom) return false;
+  // Primary: stable user id (when auth/anon auth is enabled)
+  if(currentRoom.adminUid && userUid && currentRoom.adminUid === userUid) return true;
+
+  // Fallback: compare by nick (for builds where userUid can be missing / reset)
+  const nick = (getNick() || "").trim().toLowerCase();
+  const adminNick = String(currentRoom.adminNick || "").trim().toLowerCase();
+  if(nick && adminNick && nick === adminNick) return true;
+
+  return false;
 }
 
 // ===== CONTINUE FLOW =====
