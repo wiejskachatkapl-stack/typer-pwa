@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 5205)</title>
+  <title>Typer (BUILD 5206)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -310,35 +310,38 @@
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
-    .midHead{padding:14px}
-    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto}
+    .midHead{padding:10px}
+    /* lista meczów ma się zmieścić w wyznaczonym obszarze (bez przewijania) */
+    .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:10px;overflow:hidden}
     .matchCard{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
-      border-radius:18px;
-      padding:12px 12px;
+      border-radius:14px;
+      padding:6px 10px;
       display:flex;align-items:center;gap:12px;
     }
     .team{
       display:flex;align-items:center;gap:10px;min-width:0;flex:1;
       font-weight:1000;
+      font-size:14px;
     }
     .teamName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .logo{
-      width:24px;height:24px;flex:0 0 24px;border-radius:6px;
+      width:20px;height:20px;flex:0 0 20px;border-radius:6px;
       background:rgba(255,255,255,.10);
       object-fit:contain;
     }
     .scoreBox{display:flex;align-items:center;gap:8px}
-    .scoreInput{width:48px;text-align:center}
+    .scoreInput{width:40px;text-align:center;height:28px;padding:4px 6px;font-size:14px}
     .sep{font-weight:1000;opacity:.85}
     .resultPill{
       margin-left:8px;
-      padding:8px 10px;
-      border-radius:14px;
+      padding:6px 8px;
+      border-radius:12px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(0,0,0,.18);
       font-weight:1000;
+      font-size:12px;
       white-space:nowrap;
     }
 
@@ -1330,7 +1333,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">5205</div>
+    <div id="buildCornerText">5206</div>
   </div>
 
 </body>
