@@ -1793,6 +1793,10 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
+  // Ensure room code is visible immediately (even before Firestore doc resolves)
+  // This prevents the UI from staying on the placeholder "—" after creating a room.
+  if(el("roomCode")) el("roomCode").textContent = code;
+
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
