@@ -1816,8 +1816,8 @@ async function openRoom(code, opts={}){
   ["btnAddQueue","btnMyQueue","btnEnterResults","btnEndRound"].forEach(id=>{ if(el(id)) el(id).style.display = "block"; });
   if(el("btnAddQueue")) el("btnAddQueue").disabled = !adm;
   if(el("btnMyQueue")) el("btnMyQueue").disabled = !adm;
-  if(el("btnEnterResults")) el("btnEnterResults").disabled = !adm || !matchesCache.length;
-  if(el("btnEndRound")) el("btnEndRound").disabled = !adm || !matchesCache.length || !allResultsComplete();
+  if(el("btnEnterResults")) el("btnEnterResults").disabled = true;
+  if(el("btnEndRound")) el("btnEndRound").disabled = true;
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
