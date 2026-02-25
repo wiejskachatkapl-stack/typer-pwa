@@ -1,4 +1,4 @@
-const BUILD = 5106;
+const BUILD = 5107;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -25,13 +25,6 @@ const firebaseConfig = {
 
 const el = (id) => document.getElementById(id);
 
-// Build badge
-function updateBuildBadge(){
-  const bc = document.getElementById("buildCornerText");
-  if(bc) bc.textContent = `BUILD ${BUILD}`;
-}
-updateBuildBadge();
-
 // Set text for normal <button>, but for image-buttons (having data-btn or <img>) only set title/aria-label.
 const setBtnLabelSafe = (id, label) => {
   const b = el(id);
@@ -45,7 +38,7 @@ const setBtnLabelSafe = (id, label) => {
   }
 };
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
-const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
+const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; const bc = el("buildCornerText"); if (bc) bc.textContent = txt; };
 
 function showToast(msg){
   const t = el("toast");
@@ -1678,15 +1671,8 @@ function bindUI(){
 }
 
 function isAdmin(){
-  if(!currentRoom) return false;
-  // Support both old and new room schemas (adminUid / adminNick / admin)
-  const aUid = currentRoom.adminUid || currentRoom.adminUID || currentRoom.admin_id;
-  if(aUid && userUid && aUid === userUid) return true;
-  const aNick = (currentRoom.adminNick || currentRoom.admin || currentRoom.ownerNick || "").toString();
-  if(aNick && currentNick && aNick.toLowerCase() === currentNick.toLowerCase()) return true;
-  return false;
+  return currentRoom?.adminUid === userUid;
 }
-
 
 // ===== CONTINUE FLOW =====
 async function showContinueIfRoomExists(code){
@@ -1839,12 +1825,12 @@ async function openRoom(code, opts={}){
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
 
+  showScreen("room");
   currentRoundNo = currentRoom?.currentRoundNo || 1;
   el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
-      el("roomCode").textContent = (d.code || currentRoomCode || "—");
   el("roomCode").textContent = code;
 
   refreshNickLabels();
