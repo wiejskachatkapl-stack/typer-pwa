@@ -1,4 +1,4 @@
-const BUILD = 5100;
+const BUILD = 5106;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -24,6 +24,13 @@ const firebaseConfig = {
 };
 
 const el = (id) => document.getElementById(id);
+
+// Build badge
+function updateBuildBadge(){
+  const bc = document.getElementById("buildCornerText");
+  if(bc) bc.textContent = `BUILD ${BUILD}`;
+}
+updateBuildBadge();
 
 // Set text for normal <button>, but for image-buttons (having data-btn or <img>) only set title/aria-label.
 const setBtnLabelSafe = (id, label) => {
@@ -1672,16 +1679,14 @@ function bindUI(){
 
 function isAdmin(){
   if(!currentRoom) return false;
-  // Primary: stable user id (when auth/anon auth is enabled)
-  if(currentRoom.adminUid && userUid && currentRoom.adminUid === userUid) return true;
-
-  // Fallback: compare by nick (for builds where userUid can be missing / reset)
-  const nick = (getNick() || "").trim().toLowerCase();
-  const adminNick = String(currentRoom.adminNick || "").trim().toLowerCase();
-  if(nick && adminNick && nick === adminNick) return true;
-
+  // Support both old and new room schemas (adminUid / adminNick / admin)
+  const aUid = currentRoom.adminUid || currentRoom.adminUID || currentRoom.admin_id;
+  if(aUid && userUid && aUid === userUid) return true;
+  const aNick = (currentRoom.adminNick || currentRoom.admin || currentRoom.ownerNick || "").toString();
+  if(aNick && currentNick && aNick.toLowerCase() === currentNick.toLowerCase()) return true;
   return false;
 }
+
 
 // ===== CONTINUE FLOW =====
 async function showContinueIfRoomExists(code){
@@ -1839,6 +1844,7 @@ async function openRoom(code, opts={}){
 
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
+      el("roomCode").textContent = (d.code || currentRoomCode || "—");
   el("roomCode").textContent = code;
 
   refreshNickLabels();
