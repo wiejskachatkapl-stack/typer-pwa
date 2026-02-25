@@ -134,10 +134,10 @@ const I18N = {
     enterResults: "Wpisz wyniki",
     endRound: "Zakończ kolejkę",
     myQueue: "Własna kolejka",
-    addQueue: "Dodaj kolejkę",
+    addQueue: "Dodaj kolejkę (test)",
 
     matches: "Spotkania",
-    matchesSub: "",
+    matchesSub: "Uzupełnij typy (0–20). Wyniki admin wpisze osobno.",
     round: "KOLEJKA",
     games: "Mecze",
     pointsRound: "PUNKTY (kolejka)",
@@ -210,7 +210,7 @@ const I18N = {
     enterResults: "Enter results",
     endRound: "End round",
     myQueue: "My fixture",
-    addQueue: "Add fixture",
+    addQueue: "Add fixture (test)",
 
     matches: "Matches",
     matchesSub: "Fill picks (0–20). Admin enters results separately.",
@@ -385,8 +385,8 @@ function applyLangToUI(){
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
   if(el("t_matches")) el("t_matches").textContent = t("matches");
-  if(el("t_matches_sub")){ const ms=t("matchesSub"); el("t_matches_sub").textContent = ms; el("t_matches_sub").style.display = ms ? "" : "none"; }
-if(el("t_round")) el("t_round").textContent = t("round");
+  if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
+  if(el("t_round")) el("t_round").textContent = t("round");
   if(el("t_games")) el("t_games").textContent = t("games");
   if(el("t_points_round")) el("t_points_round").textContent = t("pointsRound");
 
@@ -508,14 +508,6 @@ function openRoomsChoiceModal(){
 }
 
 async function handleJoinFlow(){
-  // If user is already inside a room, do not ask for a code again.
-  if(currentRoomCode){
-    modalClose();
-    showToast(getLang()==="en" ? "You are already in a room" : "Jesteś już w pokoju");
-    showScreen("room");
-    return;
-  }
-
   const saved = getSavedRoom();
   // If user has a saved active room (admin or member), enter immediately.
   if(saved && saved.length===6){
@@ -1793,10 +1785,6 @@ async function openRoom(code, opts={}){
   currentRoomCode = code;
   showScreen("room");
 
-  // Ensure room code is visible immediately (even before Firestore doc resolves)
-  // This prevents the UI from staying on the placeholder "—" after creating a room.
-  if(el("roomCode")) el("roomCode").textContent = code;
-
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
@@ -1828,8 +1816,8 @@ async function openRoom(code, opts={}){
   ["btnAddQueue","btnMyQueue","btnEnterResults","btnEndRound"].forEach(id=>{ if(el(id)) el(id).style.display = "block"; });
   if(el("btnAddQueue")) el("btnAddQueue").disabled = !adm;
   if(el("btnMyQueue")) el("btnMyQueue").disabled = !adm;
-  if(el("btnEnterResults")) el("btnEnterResults").disabled = true;
-  if(el("btnEndRound")) el("btnEndRound").disabled = true;
+  if(el("btnEnterResults")) el("btnEnterResults").disabled = !adm || !matchesCache.length;
+  if(el("btnEndRound")) el("btnEndRound").disabled = !adm || !matchesCache.length || !allResultsComplete();
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
