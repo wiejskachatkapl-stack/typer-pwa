@@ -508,6 +508,14 @@ function openRoomsChoiceModal(){
 }
 
 async function handleJoinFlow(){
+  // If user is already inside a room, do not ask for a code again.
+  if(currentRoomCode){
+    modalClose();
+    showToast(getLang()==="en" ? "You are already in a room" : "Jesteś już w pokoju");
+    showScreen("room");
+    return;
+  }
+
   const saved = getSavedRoom();
   // If user has a saved active room (admin or member), enter immediately.
   if(saved && saved.length===6){
