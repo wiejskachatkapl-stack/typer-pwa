@@ -1857,7 +1857,7 @@ async function openRoom(code, opts={}){
     await loadMyPicks();
     renderMatches();
 
-    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length;
+    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
     if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
   });
 
