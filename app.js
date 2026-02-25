@@ -523,6 +523,11 @@ async function handleJoinFlow(){
 }
 
 function openJoinRoomModal(){
+  // FIX (v5104): nie otwieraj modala dołączania, jeśli już jesteśmy w pokoju.
+  if (currentRoom) {
+    toast("Jesteś już w pokoju.");
+    return;
+  }
   const wrap = document.createElement("div");
   wrap.className = "joinRoom";
 
