@@ -1,4 +1,4 @@
-const BUILD = 4019;
+const BUILD = 4017;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1812,12 +1812,11 @@ async function openRoom(code, opts={}){
   refreshNickLabels();
 
   const adm = isAdmin();
-  // Action buttons are always visible (as in previous layout) but disabled for non-admins.
-  ["btnAddQueue","btnMyQueue","btnEnterResults","btnEndRound"].forEach(id=>{ if(el(id)) el(id).style.display = "block"; });
-  if(el("btnAddQueue")) el("btnAddQueue").disabled = !adm;
-  if(el("btnMyQueue")) el("btnMyQueue").disabled = !adm;
-  if(el("btnEnterResults")) el("btnEnterResults").disabled = !adm || !matchesCache.length;
-  if(el("btnEndRound")) el("btnEndRound").disabled = !adm || !matchesCache.length || !allResultsComplete();
+  el("btnAddQueue").style.display = adm ? "block" : "none";
+  el("btnMyQueue").style.display = adm ? "block" : "none";
+  el("btnEnterResults").style.display = adm ? "block" : "none";
+  el("btnEndRound").style.display = adm ? "block" : "none";
+  el("btnEndRound").disabled = true;
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
@@ -1828,11 +1827,11 @@ async function openRoom(code, opts={}){
     el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
-    ["btnAddQueue","btnMyQueue","btnEnterResults","btnEndRound"].forEach(id=>{ if(el(id)) el(id).style.display = "block"; });
-    if(el("btnAddQueue")) el("btnAddQueue").disabled = !adm2;
-    if(el("btnMyQueue")) el("btnMyQueue").disabled = !adm2;
-    if(el("btnEnterResults")) el("btnEnterResults").disabled = !adm2 || !matchesCache.length;
-    if(el("btnEndRound")) el("btnEndRound").disabled = !adm2 || !matchesCache.length || !allResultsComplete();
+    el("btnAddQueue").style.display = adm2 ? "block" : "none";
+    el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    el("btnEnterResults").style.display = adm2 ? "block" : "none";
+    el("btnEndRound").style.display = adm2 ? "block" : "none";
+    el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
   });
 
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
