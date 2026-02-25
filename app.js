@@ -1128,11 +1128,10 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   renderProfileAvatar();
 
-
-  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
-  const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
-  if(avatarSlot){
-    const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
+  // Dolny pasek z 4 przyciskami (zielona ramka): Avatar, Dodaj profil, Cofnij, Wyjście
+  const bottomBar = wrap.querySelector('#profileBottomBar');
+  if(bottomBar){
+    const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileBottomBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
     btnAvatar.onclick = ()=>{
       openAvatarPicker({
         lang,
@@ -1141,6 +1140,56 @@ function openProfileModal({required=false, onDone, onCancel}={}){
           chosenAvatar = __avatarValueToStore(url);
           renderProfileAvatar();
         }
+      });
+    };
+    bottomBar.appendChild(btnAvatar);
+
+    const btnAddProfile = makeSysImgButton('btn_add_profil.png', {
+      cls:'sysBtn profileBottomBtn',
+      alt:(lang === 'en' ? 'Add profile' : 'Dodaj profil'),
+      title:(lang === 'en' ? 'Add profile' : 'Dodaj profil')
+    });
+    btnAddProfile.onclick = ()=>{
+      const nick = (document.getElementById('profileNick')?.value || '').trim();
+      const country = String((document.getElementById('profileCountry')?.value || '')).trim().toLowerCase();
+      const favClub = (document.getElementById('profileFav')?.value || '').trim();
+      const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
+      if(!isProfileComplete(profile)){
+        showToast(lang === 'en' ? 'Fill nickname and country.' : 'Uzupełnij nick i kraj.');
+        return;
+      }
+      localStorage.setItem(KEY_NICK, nick);
+      setProfile(profile);
+      refreshNickLabels();
+      modalClose();
+      if(typeof onDone === 'function') onDone(profile);
+    };
+    bottomBar.appendChild(btnAddProfile);
+
+    const btnBackBottom = makeSysImgButton('btn_back.png', {
+      cls:'sysBtn profileBottomBtn',
+      alt:L.cancelBtn,
+      title:L.cancelBtn
+    });
+    btnBackBottom.id = 'modalBack';
+    btnBackBottom.onclick = ()=>{
+      modalClose();
+      if(typeof onCancel === 'function') onCancel();
+    };
+    bottomBar.appendChild(btnBackBottom);
+
+    const btnExitBottom = makeSysImgButton('btn_exit.png', {
+      cls:'sysBtn profileBottomBtn',
+      alt:(lang === 'en' ? 'Exit' : 'Wyjście'),
+      title:(lang === 'en' ? 'Exit' : 'Wyjście')
+    });
+    btnExitBottom.id = 'modalExitBottom';
+    btnExitBottom.onclick = ()=>{
+      modalClose();
+      if(typeof onCancel === 'function') onCancel();
+    };
+    bottomBar.appendChild(btnExitBottom);
+  }
       });
     };
     avatarSlot.appendChild(btnAvatar);
