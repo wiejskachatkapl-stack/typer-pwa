@@ -1,4 +1,4 @@
-const BUILD = 5107;
+const BUILD = 4017;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -38,7 +38,7 @@ const setBtnLabelSafe = (id, label) => {
   }
 };
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
-const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; const bc = el("buildCornerText"); if (bc) bc.textContent = txt; };
+const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
 function showToast(msg){
   const t = el("toast");
@@ -368,8 +368,6 @@ function applyLangToUI(){
   // Room
   if(el("t_room_room")) el("t_room_room").textContent = t("room");
   if(el("t_nick2")) el("t_nick2").textContent = t("nick");
-  if(el("t_country_room")) el("t_country_room").textContent = (getLang()==="en") ? "Country" : "Kraj";
-  if(el("t_flag_room")) el("t_flag_room").textContent = (getLang()==="en") ? "Country flag" : "Flaga Kraju";
   if(el("t_admin")) el("t_admin").textContent = t("admin");
   if(el("t_code")) el("t_code").textContent = t("code");
   setBtnLabelSafe("btnCopyCode", t("copy"));
@@ -523,11 +521,6 @@ async function handleJoinFlow(){
 }
 
 function openJoinRoomModal(){
-  // FIX (v5104): nie otwieraj modala dołączania, jeśli już jesteśmy w pokoju.
-  if (currentRoom) {
-    toast("Jesteś już w pokoju.");
-    return;
-  }
   const wrap = document.createElement("div");
   wrap.className = "joinRoom";
 
@@ -811,21 +804,6 @@ function __getCountryDisplayName(lang, codeUpper){
   return codeUpper;
 }
 
-function __countryCodeToFlagEmoji(codeUpper){
-  // Works for most ISO alpha-2 codes (including XK used by some services)
-  try{
-    const c = String(codeUpper||"").trim().toUpperCase();
-    if(c.length !== 2) return "";
-    const A = 0x1F1E6;
-    const first = c.charCodeAt(0) - 65;
-    const second = c.charCodeAt(1) - 65;
-    if(first < 0 || first > 25 || second < 0 || second > 25) return "";
-    return String.fromCodePoint(A + first) + String.fromCodePoint(A + second);
-  }catch(e){
-    return "";
-  }
-}
-
 function __buildCountryOptionsHtml(lang){
   const opts = [];
   // Empty option first so the select can start blank
@@ -1104,15 +1082,23 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       </div>
     </div>
     <div class="profileBtns" id="profileBtns"></div>
-    <!-- bottom bar: 4 buttons (Avatar / Dodaj profil / Cofnij / Wyjście) -->
-    <div class="profileBottomBar" id="profileBottomBar"></div>
   `;
 
   modalOpen(L.title, wrap);
 
-  // Układ profilu: tryb specjalny (przyciski na dole obok Avatar/Dodaj profil)
+  // Układ profilu: większy tytuł + przycisk "Wróć" u góry obok "Wyjście"
   const modalEl = el("modal");
   if(modalEl) modalEl.classList.add("profileMode");
+  const modalCloseBtn = el("modalClose");
+  if(modalCloseBtn && !el("modalBack")){
+    const btnBackTop = makeSysImgButton("btn_back.png", {cls:"sysBtn small", alt:L.cancelBtn, title:L.cancelBtn});
+    btnBackTop.id = "modalBack";
+    btnBackTop.onclick = ()=>{
+      modalClose();
+      if(typeof onCancel === "function") onCancel();
+    };
+    modalCloseBtn.parentNode.insertBefore(btnBackTop, modalCloseBtn);
+  }
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
   let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
@@ -1135,10 +1121,11 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
   renderProfileAvatar();
 
-  // Dolny pasek z 4 przyciskami (zielona ramka): Avatar, Dodaj profil, Cofnij, Wyjście
-  const bottomBar = wrap.querySelector('#profileBottomBar');
-  if(bottomBar){
-    const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileBottomBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
+
+  // Przycisk Avatar (obsługę wyboru avatara dodamy w kolejnym kroku)
+  const avatarSlot = wrap.querySelector('#profileAvatarBtnSlot');
+  if(avatarSlot){
+    const btnAvatar = makeSysImgButton('btn_avatar.png', {cls:'sysBtn profileAvatarBtn', alt:(lang==='en'?'Avatar':'Avatar'), title:(lang==='en'?'Avatar':'Avatar')});
     btnAvatar.onclick = ()=>{
       openAvatarPicker({
         lang,
@@ -1149,53 +1136,30 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         }
       });
     };
-    bottomBar.appendChild(btnAvatar);
+    avatarSlot.appendChild(btnAvatar);
 
-    const btnAddProfile = makeSysImgButton('btn_add_profil.png', {
-      cls:'sysBtn profileBottomBtn',
-      alt:(lang === 'en' ? 'Add profile' : 'Dodaj profil'),
-      title:(lang === 'en' ? 'Add profile' : 'Dodaj profil')
+    // Zamiast przycisku "Zmień" na dole: "Dodaj profil" obok "Avatar"
+    const btnAddProfile = makeSysImgButton("btn_add_profil.png", {
+      cls:"sysBtn profileAvatarBtn profileAddBtn",
+      alt:(lang === "en" ? "Add profile" : "Dodaj profil"),
+      title:(lang === "en" ? "Add profile" : "Dodaj profil")
     });
     btnAddProfile.onclick = ()=>{
-      const nick = (document.getElementById('profileNick')?.value || '').trim();
-      const country = String((document.getElementById('profileCountry')?.value || '')).trim().toLowerCase();
-      const favClub = (document.getElementById('profileFav')?.value || '').trim();
+      const nick = (document.getElementById("profileNick")?.value || "").trim();
+      const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
+      const favClub = (document.getElementById("profileFav")?.value || "").trim();
       const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
       if(!isProfileComplete(profile)){
-        showToast(lang === 'en' ? 'Fill nickname and country.' : 'Uzupełnij nick i kraj.');
+        showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
         return;
       }
       localStorage.setItem(KEY_NICK, nick);
       setProfile(profile);
       refreshNickLabels();
       modalClose();
-      if(typeof onDone === 'function') onDone(profile);
+      if(typeof onDone === "function") onDone(profile);
     };
-    bottomBar.appendChild(btnAddProfile);
-
-    const btnBackBottom = makeSysImgButton('btn_back.png', {
-      cls:'sysBtn profileBottomBtn',
-      alt:L.cancelBtn,
-      title:L.cancelBtn
-    });
-    btnBackBottom.id = 'modalBack';
-    btnBackBottom.onclick = ()=>{
-      modalClose();
-      if(typeof onCancel === 'function') onCancel();
-    };
-    bottomBar.appendChild(btnBackBottom);
-
-    const btnExitBottom = makeSysImgButton('btn_exit.png', {
-      cls:'sysBtn profileBottomBtn',
-      alt:(lang === 'en' ? 'Exit' : 'Wyjście'),
-      title:(lang === 'en' ? 'Exit' : 'Wyjście')
-    });
-    btnExitBottom.id = 'modalExitBottom';
-    btnExitBottom.onclick = ()=>{
-      modalClose();
-      if(typeof onCancel === 'function') onCancel();
-    };
-    bottomBar.appendChild(btnExitBottom);
+    avatarSlot.appendChild(btnAddProfile);
   }
 
   requestAnimationFrame(()=>{
@@ -1347,29 +1311,6 @@ function refreshNickLabels(){
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
   if (el("leagueNick")) el("leagueNick").textContent = nick;
-  refreshRoomProfileHeader();
-}
-
-function refreshRoomProfileHeader(){
-  // Snapshot of profile shown in ROOM header (avatar + country + flag)
-  const lang = getLang();
-  const p = getProfile() || {};
-  const codeUpper = String(p.country || "").trim().toUpperCase();
-
-  if(el("roomCountryLabel")) el("roomCountryLabel").textContent = codeUpper ? __getCountryDisplayName(lang, codeUpper) : "—";
-  if(el("roomFlagLabel")) el("roomFlagLabel").textContent = codeUpper ? (__countryCodeToFlagEmoji(codeUpper) || "—") : "—";
-
-  const img = el("roomAvatarImg");
-  const ph = el("roomAvatarPlaceholder");
-  const avatarPath = __normalizeAvatarValue(p.avatar || "");
-  if(avatarPath && img){
-    img.src = avatarPath + __avatarCacheBust();
-    img.style.display = "block";
-    if(ph) ph.style.display = "none";
-  }else{
-    if(img) img.style.display = "none";
-    if(ph) ph.style.display = "flex";
-  }
 }
 
 function getSavedRoom(){
@@ -1717,9 +1658,7 @@ async function createRoom(roomName){
     });
 
     await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-      nick, uid: userUid,
-      joinedAt: boot.serverTimestamp(),
-      joinedAtMs: Date.now()
+      nick, uid: userUid, joinedAt: boot.serverTimestamp()
     });
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -1747,9 +1686,7 @@ async function joinRoom(code){
   }
 
   await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-    nick, uid: userUid,
-    joinedAt: boot.serverTimestamp(),
-    joinedAtMs: Date.now()
+    nick, uid: userUid, joinedAt: boot.serverTimestamp()
   }, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -1825,7 +1762,6 @@ async function openRoom(code, opts={}){
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
 
-  showScreen("room");
   currentRoundNo = currentRoom?.currentRoundNo || 1;
   el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
@@ -1834,17 +1770,6 @@ async function openRoom(code, opts={}){
   el("roomCode").textContent = code;
 
   refreshNickLabels();
-
-  // Ensure current user is present in players collection immediately (for UI list)
-  try{
-    const nickNow = getNick() || "—";
-    await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-      uid: userUid,
-      nick: nickNow,
-      joinedAt: boot.serverTimestamp(),
-      joinedAtMs: Date.now()
-    }, { merge:true });
-  }catch(e){ /* ignore */ }
 
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";
@@ -1869,21 +1794,10 @@ async function openRoom(code, opts={}){
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
   });
 
-  // Players: do NOT use orderBy on serverTimestamp field, because docs without the field can be excluded.
-  // We listen to the collection and sort client-side (joinedAtMs / joinedAt).
-  unsubPlayers = boot.onSnapshot(playersCol(code), (qs)=>{
+  const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
+  unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
-    qs.forEach(docu=>{
-      const d = docu.data() || {};
-      // fallback: if uid missing, use document id
-      if(!d.uid) d.uid = docu.id;
-      arr.push(d);
-    });
-    arr.sort((a,b)=>{
-      const am = (typeof a.joinedAtMs==="number") ? a.joinedAtMs : (a.joinedAt?.toMillis ? a.joinedAt.toMillis() : 0);
-      const bm = (typeof b.joinedAtMs==="number") ? b.joinedAtMs : (b.joinedAt?.toMillis ? b.joinedAt.toMillis() : 0);
-      return am - bm;
-    });
+    qs.forEach(docu=> arr.push(docu.data()));
     lastPlayers = arr;
     renderPlayers(arr);
   });
