@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 5207)</title>
+  <title>Typer (BUILD 5208)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -315,12 +315,35 @@
     .midHead{padding:10px}
     /* lista meczów ma się zmieścić w wyznaczonym obszarze (bez przewijania) */
     .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:10px;overflow:hidden}
-    .matchCard{
+    /* 5208: okno typowania w 3 kolumnach: typy / wynik / data+godzina */
+    .matchRow{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.16);
       border-radius:14px;
       padding:6px 10px;
-      display:flex;align-items:center;gap:12px;
+      display:grid;
+      grid-template-columns: 1fr 110px 160px;
+      gap:10px;
+      align-items:center;
+      min-width:0;
+    }
+    .matchPickCol{display:flex;align-items:center;gap:12px;min-width:0;}
+    .matchResultCol,
+    .matchDateCol{
+      height:32px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:1000;
+      font-size:12px;
+      color:rgba(255,255,255,.88);
+      padding:0 8px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     .team{
       display:flex;align-items:center;gap:10px;min-width:0;flex:1;
@@ -1335,7 +1358,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">5207</div>
+    <div id="buildCornerText">5208</div>
   </div>
 
 </body>

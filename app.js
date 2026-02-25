@@ -2033,9 +2033,38 @@ function renderMatches(){
     return;
   }
 
+  const fmtKickoff = (m) => {
+    // wspieramy różne nazwy pól z poprzednich/ przyszłych wersji
+    const raw = m.kickoff ?? m.kickoffAt ?? m.dateTime ?? m.datetime ?? m.date ?? null;
+    if(!raw) return "—";
+
+    let d = null;
+    if(raw instanceof Date) d = raw;
+    else if(typeof raw === "number") d = new Date(raw);
+    else if(typeof raw === "string"){
+      const ms = Date.parse(raw);
+      if(!Number.isNaN(ms)) d = new Date(ms);
+    }
+    if(!d || Number.isNaN(d.getTime())) return "—";
+
+    try{
+      const lang = (getLang && getLang()==="en") ? "en-GB" : "pl-PL";
+      const dd = new Intl.DateTimeFormat(lang, { day:"2-digit", month:"2-digit" }).format(d);
+      const tt = new Intl.DateTimeFormat(lang, { hour:"2-digit", minute:"2-digit" }).format(d);
+      return `${dd} ${tt}`;
+    }catch{
+      const pad = (n)=>String(n).padStart(2,"0");
+      return `${pad(d.getDate())}.${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+  };
+
   for(const m of matchesCache){
-    const card = document.createElement("div");
-    card.className = "matchCard";
+    const row = document.createElement("div");
+    row.className = "matchRow";
+
+    // ===== KOLUMNA 1: MECZ DO TYPOWANIA =====
+    const pickCol = document.createElement("div");
+    pickCol.className = "matchPickCol";
 
     const leftTeam = document.createElement("div");
     leftTeam.className = "team";
@@ -2092,19 +2121,30 @@ function renderMatches(){
     score.appendChild(sep);
     score.appendChild(inpA);
 
+    // 5208: wynik jest wyświetlany w osobnej kolumnie (matchResultCol)
+
+    pickCol.appendChild(leftTeam);
+    pickCol.appendChild(score);
+    pickCol.appendChild(rightTeam);
+
+    // ===== KOLUMNA 2: WYNIK =====
+    const resCol = document.createElement("div");
+    resCol.className = "matchResultCol";
     if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
-      const rp = document.createElement("div");
-      rp.className = "resultPill";
-      rp.textContent = (getLang()==="en")
-        ? `Result: ${m.resultH}:${m.resultA}`
-        : `Wynik: ${m.resultH}:${m.resultA}`;
-      score.appendChild(rp);
+      resCol.textContent = `${m.resultH}:${m.resultA}`;
+    }else{
+      resCol.textContent = "—";
     }
 
-    card.appendChild(leftTeam);
-    card.appendChild(score);
-    card.appendChild(rightTeam);
-    list.appendChild(card);
+    // ===== KOLUMNA 3: DATA + GODZINA =====
+    const dtCol = document.createElement("div");
+    dtCol.className = "matchDateCol";
+    dtCol.textContent = fmtKickoff(m);
+
+    row.appendChild(pickCol);
+    row.appendChild(resCol);
+    row.appendChild(dtCol);
+    list.appendChild(row);
   }
 
   updateSaveButtonState();
