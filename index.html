@@ -123,6 +123,9 @@
       font-weight:900;
     }
 
+    /* BUILD 5200a: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
+    #t_round, #sep_round, #t_points_round, #sep_points_round{display:none;}
+
     .title{font-size:22px;font-weight:1000;margin:0 0 6px 0}
     .sub{color:var(--muted);font-weight:700;font-size:13px}
 
@@ -1103,9 +1106,9 @@
                   <button class="imgBtn sysBtn actionSmall" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
                 </div>
                 <div class="spacer"></div>
-                <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
+	                <div class="chip"><span id="t_round">KOLEJKA</span><span class="chipSep" id="sep_round">: </span><span id="roundLabel">—</span></div>
                 <div class="chip"><span id="t_games">Mecze</span>: <span id="matchesCount">0</span></div>
-                <div class="chip"><span id="t_points_round">PUNKTY (kolejka)</span>: <span id="myPointsLabel">—</span></div>
+	                <div class="chip"><span id="t_points_round">PUNKTY (kolejka)</span><span class="chipSep" id="sep_points_round">: </span><span id="myPointsLabel">—</span></div>
               </div>
             </div>
 
