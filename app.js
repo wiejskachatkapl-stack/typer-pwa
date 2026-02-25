@@ -1,4 +1,4 @@
-const BUILD = 4016;
+const BUILD = 5010;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1036,7 +1036,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         </label>
         <label class="profileLabel">${escapeHtml(L.country)}
           <div class="countryRow">
-            <span class="countryFlag" id="countryFlag" aria-hidden="true">🏳️</span>
+            <img class="countryFlagPng" id="countryFlagPng" alt="" />
             <select id="profileCountry" class="profileSelect">
               <option value="pl">${escapeHtml(L.pl)}</option>
               <option value="gb">${escapeHtml(L.gb)}</option>
@@ -1092,23 +1092,26 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     avatarSlot.appendChild(btnAvatar);
   }
 
-  // Emoji flaga kraju (na podstawie ISO-2 w value selecta)
-  function countryCodeToFlagEmoji(code){
-    if(!code || typeof code !== "string") return "🏳️";
-    const cc = code.trim().toUpperCase();
-    if(cc.length !== 2) return "🏳️";
-    const a = cc.charCodeAt(0);
-    const b = cc.charCodeAt(1);
-    if(a < 65 || a > 90 || b < 65 || b > 90) return "🏳️";
-    const A = 0x1F1E6;
-    return String.fromCodePoint(A + (a - 65), A + (b - 65));
+  // PNG flaga kraju (ISO-2) – robimy okrąg CSS-em
+  function flagPngUrl(iso2){
+    const c = String(iso2||"").trim().toLowerCase();
+    if(!c || c.length !== 2) return "";
+    // Flagpedia/FlagCDN (PNG): https://flagcdn.com
+    return `https://flagcdn.com/w40/${c}.png`;
   }
   function updateProfileCountryFlag(){
     const sel = document.getElementById("profileCountry");
-    const flagEl = document.getElementById("countryFlag");
+    const flagEl = document.getElementById("countryFlagPng");
     if(!flagEl) return;
-    const code = (sel?.value || "").trim();
-    flagEl.textContent = countryCodeToFlagEmoji(code);
+    const code = (sel?.value || "").trim().toLowerCase();
+    const url = flagPngUrl(code);
+    if(!url){
+      flagEl.removeAttribute("src");
+      flagEl.style.visibility = "hidden";
+      return;
+    }
+    flagEl.style.visibility = "visible";
+    flagEl.src = url;
   }
   const countrySel = wrap.querySelector("#profileCountry");
   if(countrySel) countrySel.addEventListener("change", updateProfileCountryFlag);
