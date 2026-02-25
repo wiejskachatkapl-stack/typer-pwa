@@ -134,10 +134,10 @@ const I18N = {
     enterResults: "Wpisz wyniki",
     endRound: "Zakończ kolejkę",
     myQueue: "Własna kolejka",
-    addQueue: "Dodaj kolejkę (test)",
+    addQueue: "Dodaj kolejkę",
 
     matches: "Spotkania",
-    matchesSub: "Uzupełnij typy (0–20). Wyniki admin wpisze osobno.",
+    matchesSub: "",
     round: "KOLEJKA",
     games: "Mecze",
     pointsRound: "PUNKTY (kolejka)",
@@ -210,7 +210,7 @@ const I18N = {
     enterResults: "Enter results",
     endRound: "End round",
     myQueue: "My fixture",
-    addQueue: "Add fixture (test)",
+    addQueue: "Add fixture",
 
     matches: "Matches",
     matchesSub: "Fill picks (0–20). Admin enters results separately.",
@@ -385,8 +385,8 @@ function applyLangToUI(){
   setBtnLabelSafe("btnBackFromRoom", t("back"));
 
   if(el("t_matches")) el("t_matches").textContent = t("matches");
-  if(el("t_matches_sub")) el("t_matches_sub").textContent = t("matchesSub");
-  if(el("t_round")) el("t_round").textContent = t("round");
+  if(el("t_matches_sub")){ const ms=t("matchesSub"); el("t_matches_sub").textContent = ms; el("t_matches_sub").style.display = ms ? "" : "none"; }
+if(el("t_round")) el("t_round").textContent = t("round");
   if(el("t_games")) el("t_games").textContent = t("games");
   if(el("t_points_round")) el("t_points_round").textContent = t("pointsRound");
 

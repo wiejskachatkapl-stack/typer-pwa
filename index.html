@@ -947,6 +947,14 @@
 /* Profile: Avatar + Dodaj profil obok siebie */
 .profileAvatarBtnSlot{ display:flex; gap:14px; align-items:center; justify-content:center; flex-wrap:wrap; }
 
+
+/* v5002: add queue button under Matches title */
+.matchesAddQueueWrap{
+  margin-top: 10px;
+}
+.matchesAddQueueWrap .imgBtn{
+  transform: scale(1.0);
+}
 </style>
 </head>
 
@@ -1105,8 +1113,7 @@
                 <button class="imgBtn sysBtn" id="btnEndRound" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
 
                 <button class="imgBtn sysBtn" id="btnMyQueue" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
-                <button class="imgBtn sysBtn" id="btnAddQueue" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
-              </div>
+</div>
             </div>
 
             <div class="spacer"></div>
@@ -1119,7 +1126,13 @@
               <div class="row">
                 <div>
                   <div class="title" id="t_matches">Spotkania</div>
-                  <div class="sub" id="t_matches_sub">Uzupełnij typy (0–20). Wyniki admin wpisze osobno.</div>
+                  <div class="matchesAddQueueWrap">
+                    <button class="imgBtn sysBtn" id="btnAddQueue" type="button" data-btn="btn_dodaj_kolejke.png">
+                      <img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue">
+                    </button>
+                  </div>
+
+                  <div class="sub" id="t_matches_sub"></div>
                 </div>
                 <div class="spacer"></div>
                 <div class="chip"><span id="t_round">KOLEJKA</span>: <span id="roundLabel">—</span></div>
