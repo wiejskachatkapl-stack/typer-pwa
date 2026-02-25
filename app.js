@@ -1190,58 +1190,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     };
     bottomBar.appendChild(btnExitBottom);
   }
-      });
-    };
-    avatarSlot.appendChild(btnAvatar);
-
-    // Zamiast przycisku "Zmień" na dole: "Dodaj profil" obok "Avatar"
-    const btnAddProfile = makeSysImgButton("btn_add_profil.png", {
-      cls:"sysBtn profileAvatarBtn profileAddBtn",
-      alt:(lang === "en" ? "Add profile" : "Dodaj profil"),
-      title:(lang === "en" ? "Add profile" : "Dodaj profil")
-    });
-    btnAddProfile.onclick = ()=>{
-      const nick = (document.getElementById("profileNick")?.value || "").trim();
-      const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
-      const favClub = (document.getElementById("profileFav")?.value || "").trim();
-      const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
-      if(!isProfileComplete(profile)){
-        showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
-        return;
-      }
-      localStorage.setItem(KEY_NICK, nick);
-      setProfile(profile);
-      refreshNickLabels();
-      modalClose();
-      if(typeof onDone === "function") onDone(profile);
-    };
-    avatarSlot.appendChild(btnAddProfile);
-
-    // Przeniesione przyciski na dół (w jednej linii, ten sam rozmiar co Avatar/Dodaj profil)
-    const btnBackBottom = makeSysImgButton("btn_back.png", {
-      cls:"sysBtn profileAvatarBtn",
-      alt:L.cancelBtn,
-      title:L.cancelBtn
-    });
-    btnBackBottom.id = "modalBack";
-    btnBackBottom.onclick = ()=>{
-      modalClose();
-      if(typeof onCancel === "function") onCancel();
-    };
-    avatarSlot.appendChild(btnBackBottom);
-
-    const btnExitBottom = makeSysImgButton("btn_exit.png", {
-      cls:"sysBtn profileAvatarBtn",
-      alt:(lang === "en" ? "Exit" : "Wyjście"),
-      title:(lang === "en" ? "Exit" : "Wyjście")
-    });
-    btnExitBottom.id = "modalExitBottom";
-    btnExitBottom.onclick = ()=>{
-      modalClose();
-      if(typeof onCancel === "function") onCancel();
-    };
-    avatarSlot.appendChild(btnExitBottom);
-  }
 
   requestAnimationFrame(()=>{
     const sel = document.getElementById("profileCountry");
