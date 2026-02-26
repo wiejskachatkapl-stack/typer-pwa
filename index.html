@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 6011)</title>
+  <title>Typer (BUILD 6012)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -45,6 +45,36 @@
       padding:14px;
       z-index:1;
     }
+
+    #rotateOverlay{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(0,0,0,.65);
+      z-index:9999;
+    }
+    .rotateCard{
+      width:min(560px,92vw);
+      border:1px solid var(--stroke);
+      border-radius:22px;
+      background:var(--glass);
+      padding:18px 16px;
+      text-align:center;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .rotateTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0;}
+    .rotateSub{color:var(--muted);font-weight:800;white-space:pre-line;line-height:1.25;}
+    body.lockedPortrait #app{filter:blur(6px);pointer-events:none;}
+
+     (max-width: 900px) and (orientation: landscape){
+      #app{padding:8px;}
+      .frame{width:98vw;height:96vh;border-radius:18px;}
+    }
+
 
     .frame{
       width:min(1580px,96vw);
@@ -1154,7 +1184,15 @@
 <body>
   <div id="bg"></div>
 
-  <div id="app">
+  <div id="rotateOverlay" aria-live="polite">
+    <div class="rotateCard">
+      <div class="rotateTitle">Obróć telefon poziomo</div>
+      <div class="rotateSub">Ta część gry działa w trybie poziomym.
+Gdy obrócisz ekran, wrócisz do typowania.</div>
+    </div>
+  </div>
+
+<div id="app">
     <div class="frame">
 
       <!-- SPLASH -->
@@ -1517,7 +1555,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">6011</div>
+    <div id="buildCornerText">6012</div>
   </div>
 
 </body>

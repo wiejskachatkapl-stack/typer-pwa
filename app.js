@@ -1,4 +1,4 @@
-const BUILD = 6010;
+const BUILD = 6012;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3255,6 +3255,24 @@ function escapeHtml(s){
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
+
+// ===== ORIENTATION (phones: landscape-first) =====
+function updateLandscapeLock(){
+  const overlay = el("rotateOverlay");
+  if(!overlay) return;
+  const isPhone = window.matchMedia("(max-width: 900px)").matches;
+  if(!isPhone){
+    overlay.style.display = "none";
+    document.body.classList.remove("lockedPortrait");
+    return;
+  }
+  const portrait = window.matchMedia("(orientation: portrait)").matches;
+  overlay.style.display = portrait ? "flex" : "none";
+  document.body.classList.toggle("lockedPortrait", portrait);
+}
+
+window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); }catch(e){} }, {passive:true});
+window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 60); });
 
 // ===== START =====
 (async()=>{
