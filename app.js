@@ -1,4 +1,4 @@
-const BUILD = 6023;
+const BUILD = 6024;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1610,12 +1610,45 @@ function _updateMsgDeleteBtn(){
   if(!btn) return;
   const set = _msgsSelected[_msgsActiveTab];
   const n = set ? set.size : 0;
+  // jeśli przycisk ma skórkę obrazkową, nie nadpisuj HTML; tylko pokaż licznik
+  let badge = btn.querySelector(".msgDeleteCount");
+  if(!badge){
+    badge = document.createElement("span");
+    badge.className = "msgDeleteCount";
+    btn.appendChild(badge);
+  }
+
   if(n>0){
     btn.classList.add("show");
-    btn.textContent = (getLang()==="en") ? `Delete (${n})` : `Usuń (${n})`;
+    badge.style.display = "inline-block";
+    badge.textContent = String(n);
+    btn.title = (getLang()==="en") ? "Delete" : "Usuń";
+    btn.setAttribute("aria-label", btn.title);
   }else{
     btn.classList.remove("show");
-    btn.textContent = (getLang()==="en") ? "Delete" : "Usuń";
+    badge.style.display = "none";
+    badge.textContent = "";
+    btn.title = (getLang()==="en") ? "Delete" : "Usuń";
+    btn.setAttribute("aria-label", btn.title);
+  }
+}
+
+function _applyMessagesBtnSkins(){
+  const lang = (getLang()==="en") ? "en" : "pl";
+
+  const del = el("btnMsgDelete");
+  if(del){
+    // zachowaj licznik (span) dodawany w _updateMsgDeleteBtn
+    const badge = del.querySelector(".msgDeleteCount");
+    del.innerHTML = `<img class="msgBtnImg" src="ui/buttons/${lang}/btn_delete.png" alt=""/>`;
+    if(badge) del.appendChild(badge);
+  }
+
+  const send = el("btnMsgSend");
+  if(send){
+    send.innerHTML = `<img class="msgBtnImg" src="ui/buttons/${lang}/btn_send.png" alt=""/>`;
+    send.title = (getLang()==="en") ? "Send" : "Wyślij";
+    send.setAttribute("aria-label", send.title);
   }
 }
 
@@ -1627,13 +1660,28 @@ async function _deleteSelectedMessages(){
   // usuń definitywnie z firestore
   for(const id of ids){
     try{
-      await deleteDoc(doc(db, `rooms/${getRoomCode()}/messages/${id}`));
+      const ref = boot.doc(db, "rooms", currentRoomCode, "messages", id);
+      await boot.deleteDoc(ref);
     }catch(e){
       console.warn("delete message failed", id, e);
     }
   }
+
+  // usuń z cache + odśwież widok
+  _msgsCache[kind] = (_msgsCache[kind] || []).filter(m=> !set.has(m.id));
   set.clear();
   _updateMsgDeleteBtn();
+
+  // jeżeli skasowano aktualnie podglądaną wiadomość, wyczyść podgląd
+  if(_msgsOpenKind === kind && _msgsOpenId && !_msgsCache[kind].some(m=>m.id===_msgsOpenId)){
+    _clearView(kind);
+    _msgsOpenKind = null;
+    _msgsOpenId = null;
+  }
+
+  // odśwież listy + badge
+  renderMessagesLists();
+  startMessagesListener();
 }
 
 
@@ -1913,6 +1961,9 @@ function openMessagesModal(){
   // reset zaznaczeń i przycisku Usuń
   ["inbox","sent","system"].forEach(k=>{ try{ _msgsSelected[k].clear(); }catch(e){} });
   _updateMsgDeleteBtn();
+
+  // podmień przyciski na grafiki (btn_send / btn_delete)
+  _applyMessagesBtnSkins();
 
   ov.classList.add("show");
   ov.setAttribute("aria-hidden","false");

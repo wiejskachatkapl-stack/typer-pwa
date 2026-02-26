@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6023)</title>
+<title>Typer (BUILD 6024)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -732,6 +732,8 @@
       .msgSel{min-width: min(420px, 88vw); width:100%;}
       .msgSendBtn{min-width:min(240px, 70vw)}
       .msgFooter .imgBtn img{ width:min(240px, 70vw); }
+      .msgBtnImg{ width:min(240px, 70vw); }
+      .msgDeleteBtn .msgBtnImg{ width:min(180px, 55vw); }
     }
 
     
@@ -752,6 +754,30 @@
       white-space:nowrap;
     }
     .msgDeleteBtn.show{display:inline-flex;}
+
+    /* obrazkowe przyciski w wiadomościach */
+    .msgBtnImg{display:block; width:220px; height:auto; object-fit:contain;}
+    .msgSendBtn{background:transparent; border:none; padding:0; min-width:auto;}
+    .msgDeleteBtn{background:transparent; border:none; padding:0; height:auto; position:relative;}
+    .msgDeleteBtn .msgBtnImg{width:160px;}
+    .msgDeleteCount{
+      position:absolute;
+      top:-6px;
+      right:-6px;
+      min-width:22px;
+      height:22px;
+      padding:0 6px;
+      border-radius:999px;
+      background:#ff2b2b;
+      color:#fff;
+      font-size:12px;
+      font-weight:900;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      line-height:22px;
+      box-shadow:0 0 10px rgba(0,0,0,.35);
+    }
     .msgChk{
       width:18px;height:18px;
       accent-color:#ff3b3b;
@@ -1632,7 +1658,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 6023) -->
+<!-- MESSAGES OVERLAY (BUILD 6024) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
@@ -1794,7 +1820,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6023" type="module"></script>
+<script src="./app.js?v=6024" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1814,7 +1840,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6023').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=6024').catch(() => {});
     });
   }
 </script>
