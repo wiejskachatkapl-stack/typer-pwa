@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 6000)</title>
+  <title>Typer (BUILD 6001)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -315,6 +315,8 @@
     .midHead{padding:10px}
     /* lista meczów ma się zmieścić w wyznaczonym obszarze (bez przewijania) */
     .matchesWrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:10px;overflow:hidden}
+    .matchActionsPanel{padding:12px;display:flex;justify-content:center;gap:18px;align-items:center;min-height:74px}
+
     /* 5208: okno typowania w 3 kolumnach: typy / wynik / data+godzina */
     .matchRow{
       border:1px solid rgba(255,255,255,.12);
@@ -1159,11 +1161,7 @@
               <div class="col" id="roomActionsCol" style="margin-top:10px">
                 <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
 
-                <!-- ADMIN -->
-                <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png"><img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults"></button>
-                <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png"><img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound"></button>
-
-                <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
+<button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png"><img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue"></button>
 
                 <!-- BUILD 5203: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
                 <button class="imgBtn sysBtn" id="btnExitFromRoomRight" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="btnExitFromRoomRight"></button>
@@ -1194,6 +1192,17 @@
             </div>
 
             <div class="panel matchesWrap" id="matchesList"></div>
+
+            <!-- 6001: panel pod meczami na przyciski (Wpisz Wyniki / Zakończ kolejkę) -->
+            <div class="panel matchActionsPanel" id="matchActionsPanel">
+              <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png">
+                <img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults">
+              </button>
+              <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png">
+                <img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound">
+              </button>
+            </div>
+
           </div>
 
           <!-- RIGHT -->
@@ -1358,7 +1367,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">6000</div>
+    <div id="buildCornerText">6001</div>
   </div>
 
 </body>
