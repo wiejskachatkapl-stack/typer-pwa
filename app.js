@@ -1894,6 +1894,7 @@ function allMyPicksFilled(){
 function syncActionButtons(){
   const btnSave = el("btnSaveAll");
   const btnEnter = el("btnEnterResults");
+  const btnAddQueue = el("btnAddQueue");
   const submitted = iAmSubmitted();
   const adm = isAdmin();
   const resultsOk = allResultsComplete();
@@ -1909,6 +1910,12 @@ function syncActionButtons(){
     // Aktywny tylko jeśli są mecze i NIE ma jeszcze kompletu wyników.
     // Gdy wszystkie wyniki wpisane/zatwierdzone -> przycisk ma być nieaktywny.
     btnEnter.disabled = !(adm && submitted && matchesCache.length) || resultsOk;
+  }
+
+  // 6003: po dodaniu kolejki (gdy istnieją mecze w aktywnej kolejce) blokujemy "Dodaj kolejkę"
+  // aż do zakończenia kolejki (archiwizacja usuwa mecze -> przycisk znów aktywny).
+  if(btnAddQueue){
+    btnAddQueue.disabled = !!(adm && matchesCache.length);
   }
 }
 
@@ -2633,6 +2640,9 @@ async function addRandomQueue(){
   }
   await b.commit();
   showToast(getLang()==="en" ? "Random fixture added" : "Dodano losową kolejkę");
+
+  // 6003: natychmiast blokujemy "Dodaj kolejkę" do czasu zakończenia/wyczyszczenia kolejki
+  syncActionButtons();
 }
 
 // ===== LEAGUE (prawdziwa) =====
