@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6018)</title>
+<title>Typer (BUILD 6020)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -734,7 +734,74 @@
       .msgFooter .imgBtn img{ width:min(240px, 70vw); }
     }
 
-    /* ===== RESULTS SCREEN ===== */
+    
+    .msgHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 6px;}
+    .msgTabs{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px;}
+    .msgTab{
+      height:34px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.22);
+      color:rgba(255,255,255,.92);
+      font-weight:1000;
+      cursor:pointer;
+    }
+    .msgTab.active{
+      background:rgba(30,110,255,.22);
+      border-color:rgba(120,190,255,.35);
+    }
+    .msgBody{padding:0 6px 6px 6px;}
+    .msgPane{display:none;}
+    .msgPane.show{display:block;}
+    .msgSplit{display:grid;grid-template-columns: 1fr 1.2fr;gap:12px;}
+    .msgList{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      background:rgba(0,0,0,.16);
+      max-height:min(420px,52vh);
+      overflow:auto;
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .msgItem{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      background:rgba(8,22,52,.35);
+      padding:10px 10px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      cursor:pointer;
+    }
+    .msgItem:hover{background:rgba(8,22,52,.55)}
+    .msgItemTop{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .msgItemWho{font-weight:1000;color:rgba(255,255,255,.95);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;}
+    .msgItemTime{font-weight:900;color:rgba(255,255,255,.70);font-size:12px;white-space:nowrap;}
+    .msgItemPrev{font-weight:900;color:rgba(255,255,255,.80);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .msgDot{
+      width:10px;height:10px;border-radius:999px;background:rgba(255,40,40,.95);
+      border:1px solid rgba(255,255,255,.35);display:inline-block;margin-right:8px;flex:0 0 auto;
+    }
+    .msgView{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      background:rgba(0,0,0,.16);
+      padding:12px;
+      min-height:220px;
+    }
+    .msgViewEmpty{font-weight:1000;color:rgba(255,255,255,.70);}
+    .msgViewMeta{font-weight:1000;color:rgba(255,255,255,.85);margin-bottom:10px;}
+    .msgViewText{white-space:pre-wrap;font-weight:900;color:rgba(255,255,255,.92);line-height:1.35;}
+    .msgCompose{display:flex;flex-direction:column;gap:12px;}
+    @media (max-width:640px){
+      .msgSplit{grid-template-columns:1fr; }
+      .msgList{max-height:min(280px,35vh);}
+    }
+
+/* ===== RESULTS SCREEN ===== */
     #results{
       padding:22px;
       align-items:center;
@@ -1539,21 +1606,77 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 6018) -->
+<!-- MESSAGES OVERLAY (BUILD 6020) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
-    <div class="msgTitle" id="msgTitle">Wiadomość do gracza</div>
-    <div class="msgRow">
-      <div class="msgLabel" id="msgToLabel">Do:</div>
-      <select class="msgSel" id="msgToSelect"></select>
-    </div>
-    <textarea class="msgText" id="msgText" placeholder="Napisz wiadomość..."></textarea>
-    <div class="msgFooter">
-      <button class="btn msgSendBtn" id="btnMsgSend" type="button">Wyślij</button>
+    <div class="msgHeader">
+      <div class="msgTitle" id="msgTitle">Wiadomości</div>
       <button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnMsgBack" type="button">
         <img alt="btnMsgBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
       </button>
     </div>
+
+    <div class="msgTabs" role="tablist">
+      <button class="msgTab active" id="tabInbox" type="button" data-tab="inbox">Odebrane</button>
+      <button class="msgTab" id="tabSent" type="button" data-tab="sent">Wysłane</button>
+      <button class="msgTab" id="tabSystem" type="button" data-tab="system">Systemowe</button>
+      <button class="msgTab" id="tabCompose" type="button" data-tab="compose">Nowa</button>
+    </div>
+
+    <div class="msgBody">
+      <div class="msgPane show" id="paneInbox">
+        <div class="msgSplit">
+          <div class="msgList" id="msgInboxList"></div>
+          <div class="msgView" id="msgInboxView">
+            <div class="msgViewEmpty" id="msgViewEmpty">Wybierz wiadomość z listy.</div>
+            <div class="msgViewCard" id="msgViewCard" style="display:none">
+              <div class="msgViewMeta" id="msgViewMeta"></div>
+              <div class="msgViewText" id="msgViewText"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="msgPane" id="paneSent">
+        <div class="msgSplit">
+          <div class="msgList" id="msgSentList"></div>
+          <div class="msgView" id="msgSentView">
+            <div class="msgViewEmpty" id="msgSentEmpty">Wybierz wiadomość z listy.</div>
+            <div class="msgViewCard" id="msgSentCard" style="display:none">
+              <div class="msgViewMeta" id="msgSentMeta"></div>
+              <div class="msgViewText" id="msgSentText"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="msgPane" id="paneSystem">
+        <div class="msgSplit">
+          <div class="msgList" id="msgSystemList"></div>
+          <div class="msgView" id="msgSystemView">
+            <div class="msgViewEmpty" id="msgSystemEmpty">Wybierz wiadomość z listy.</div>
+            <div class="msgViewCard" id="msgSystemCard" style="display:none">
+              <div class="msgViewMeta" id="msgSystemMeta"></div>
+              <div class="msgViewText" id="msgSystemText"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="msgPane" id="paneCompose">
+        <div class="msgCompose">
+          <div class="msgRow">
+            <div class="msgLabel" id="msgToLabel">Do:</div>
+            <select class="msgSel" id="msgToSelect"></select>
+          </div>
+          <textarea class="msgText" id="msgText" placeholder="Napisz wiadomość..."></textarea>
+          <div class="msgFooter">
+            <button class="btn msgSendBtn" id="btnMsgSend" type="button">Wyślij</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 </section>
@@ -1671,7 +1794,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6018</div>
+<div id="buildCornerText">6020</div>
 </div>
 </body>
 </html>
