@@ -1,4 +1,4 @@
-const BUILD = 6027;
+const BUILD = 6028;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2870,12 +2870,7 @@ function renderPlayers(players){
       b.textContent = "ADMIN";
       right.appendChild(b);
     }
-    if(p.uid === userUid){
-      const b2 = document.createElement("div");
-      b2.className = "badge";
-      b2.textContent = (getLang()==="en") ? "YOU" : "TY";
-      right.appendChild(b2);
-    }
+    // 6028: usunięto etykietę "TY"/"YOU" w panelu Gracze (zajmowała miejsce)
 
     row.appendChild(left);
     row.appendChild(right);
