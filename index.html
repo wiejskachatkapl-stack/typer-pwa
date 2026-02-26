@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6017)</title>
+<title>Typer (BUILD 6018)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -139,6 +139,26 @@
     }
     .btn:hover{background:rgba(255,255,255,.14)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
+
+    /* ===== MESSAGES BADGE (red exclamation) ===== */
+    .msgBadge{
+      position:absolute;
+      top:-6px;
+      right:-6px;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      background:rgba(255,40,40,.95);
+      border:1px solid rgba(255,255,255,.35);
+      color:#fff;
+      font-weight:1000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 8px 18px rgba(0,0,0,.45);
+      pointer-events:none;
+      z-index:3;
+    }
 
     .btnSmall{padding:8px 12px;border-radius:14px;font-weight:900}
 
@@ -646,6 +666,72 @@
       .mqRow .mqSep{ display:none; }
       .mqRow .mqAway{ grid-column:1 / -1; }
       .mqFooter .imgBtn img{ width:min(240px, 70vw); }
+    }
+
+    /* ===== MESSAGES (modal) ===== */
+    #messagesOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index:92;
+      padding:16px;
+    }
+    #messagesOverlay.show{display:flex;}
+    .msgModal{
+      width:min(780px,94vw);
+      padding:16px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(8, 22, 52, .78);
+      box-shadow:0 18px 60px rgba(0,0,0,.55);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:stretch;
+    }
+    .msgTitle{
+      font-weight:1000;
+      font-size:18px;
+      color:rgba(255,255,255,.95);
+      padding:2px 6px;
+    }
+    .msgRow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:0 6px;}
+    .msgLabel{font-weight:900;color:rgba(255,255,255,.85)}
+    .msgSel{
+      height:36px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:rgba(255,255,255,.92);
+      font-weight:900;
+      padding:0 10px;
+      outline:none;
+      min-width:260px;
+    }
+    .msgText{
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:rgba(255,255,255,.92);
+      font-weight:900;
+      padding:12px;
+      min-height:150px;
+      outline:none;
+      resize:none;
+      margin:0 6px;
+    }
+    .msgFooter{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;padding-top:4px;}
+    .msgSendBtn{min-width:220px}
+    .msgFooter .imgBtn img{ width:220px; height:auto; display:block; object-fit:contain; }
+    @media (max-width:640px){
+      .msgSel{min-width: min(420px, 88vw); width:100%;}
+      .msgSendBtn{min-width:min(240px, 70vw)}
+      .msgFooter .imgBtn img{ width:min(240px, 70vw); }
     }
 
     /* ===== RESULTS SCREEN ===== */
@@ -1408,7 +1494,8 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- 6017: dwa osobne kontenery na dole po prawej (Wyjście + Wiadomości) -->
 <div class="rightBottomStack">
   <div class="panel rightBottomMessages">
-    <button class="imgBtn sysBtn" data-btn="btn_messages.png" id="btnMessagesFromRoom" type="button">
+    <button class="imgBtn sysBtn" data-btn="btn_messages.png" id="btnMessagesFromRoom" style="position:relative" type="button">
+      <span class="msgBadge" id="msgBadge">!</span>
       <img alt="btnMessagesFromRoom" data-btn="btn_messages.png" src="ui/buttons/pl/btn_messages.png"/>
     </button>
   </div>
@@ -1450,6 +1537,24 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </button>
 </div>
 </div>
+</div>
+
+<!-- MESSAGES OVERLAY (BUILD 6018) -->
+<div aria-hidden="true" id="messagesOverlay">
+  <div aria-label="Messages" class="msgModal panel" role="dialog">
+    <div class="msgTitle" id="msgTitle">Wiadomość do gracza</div>
+    <div class="msgRow">
+      <div class="msgLabel" id="msgToLabel">Do:</div>
+      <select class="msgSel" id="msgToSelect"></select>
+    </div>
+    <textarea class="msgText" id="msgText" placeholder="Napisz wiadomość..."></textarea>
+    <div class="msgFooter">
+      <button class="btn msgSendBtn" id="btnMsgSend" type="button">Wyślij</button>
+      <button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnMsgBack" type="button">
+        <img alt="btnMsgBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
+      </button>
+    </div>
+  </div>
 </div>
 </section>
 <!-- RESULTS (ADMIN) -->
@@ -1566,7 +1671,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6017</div>
+<div id="buildCornerText">6018</div>
 </div>
 </body>
 </html>

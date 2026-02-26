@@ -1,4 +1,4 @@
-const BUILD = 6012;
+const BUILD = 6018;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1520,7 +1520,7 @@ async function initFirebase(){
   const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
   const {
     getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-    collection, query, orderBy, onSnapshot,
+    collection, query, where, orderBy, onSnapshot,
     writeBatch, deleteDoc, getDocs, increment
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
@@ -1531,6 +1531,7 @@ async function initFirebase(){
   boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
+  boot.where = where;
   boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc; boot.getDocs = getDocs;
   boot.increment = increment;
 
@@ -1548,6 +1549,139 @@ async function initFirebase(){
     });
     setTimeout(()=>reject(new Error("Auth timeout (12s)")), 12000);
   });
+}
+
+// ===== MESSAGES (ROOM) =====
+let unsubMsgsUnread = null;
+let unreadMsgsCount = 0;
+let _lastUnreadToastAt = 0;
+
+function updateMessagesBadge(){
+  const b = el("msgBadge");
+  if(!b) return;
+  b.style.display = unreadMsgsCount > 0 ? "flex" : "none";
+}
+
+function stopMessagesListener(){
+  if(unsubMsgsUnread){ try{unsubMsgsUnread();}catch(e){} }
+  unsubMsgsUnread = null;
+  unreadMsgsCount = 0;
+  updateMessagesBadge();
+}
+
+function startMessagesListener(){
+  stopMessagesListener();
+  if(!db || !currentRoomCode || !userUid) return;
+
+  const col = boot.collection(db, "rooms", currentRoomCode, "messages");
+  const q = boot.query(
+    col,
+    boot.where("toUid","==", userUid),
+    boot.where("read","==", false)
+  );
+
+  unsubMsgsUnread = boot.onSnapshot(q, (qs)=>{
+    const prev = unreadMsgsCount;
+    unreadMsgsCount = qs.size || 0;
+    updateMessagesBadge();
+
+    // delikatny toast przy nowej wiadomości (max raz na 4s)
+    if(unreadMsgsCount > prev){
+      const now = Date.now();
+      if(now - _lastUnreadToastAt > 4000){
+        _lastUnreadToastAt = now;
+        showToast(getLang()==="en" ? "New message" : "Nowa wiadomość");
+      }
+    }
+  });
+}
+
+function openMessagesModal(){
+  const ov = el("messagesOverlay");
+  if(!ov) return;
+
+  // wypełnij select graczami z pokoju
+  const sel = el("msgToSelect");
+  if(sel){
+    sel.innerHTML = "";
+    const opts = lastPlayers
+      .filter(p=>p && p.uid && p.uid !== userUid)
+      .map(p=>({ uid: p.uid, nick: p.nick || "—" }));
+
+    if(opts.length === 0){
+      const o = document.createElement("option");
+      o.value = "";
+      o.textContent = getLang()==="en" ? "No other players" : "Brak innych graczy";
+      sel.appendChild(o);
+      sel.disabled = true;
+    }else{
+      sel.disabled = false;
+      opts.forEach(p=>{
+        const o = document.createElement("option");
+        o.value = p.uid;
+        o.textContent = p.nick;
+        sel.appendChild(o);
+      });
+    }
+  }
+
+  const ta = el("msgText");
+  if(ta) ta.value = "";
+
+  // po wejściu do okna oznaczamy wiadomości jako przeczytane (czyści wykrzyknik)
+  markAllMyMessagesRead().catch(()=>{});
+
+  ov.classList.add("show");
+  ov.setAttribute("aria-hidden","false");
+}
+
+function closeMessagesModal(){
+  const ov = el("messagesOverlay");
+  if(!ov) return;
+  ov.classList.remove("show");
+  ov.setAttribute("aria-hidden","true");
+}
+
+async function sendRoomMessage(){
+  if(!db || !currentRoomCode) return;
+  const sel = el("msgToSelect");
+  const ta = el("msgText");
+  const toUid = sel?.value || "";
+  const text = (ta?.value || "").trim();
+  if(!toUid){ showToast(getLang()==="en" ? "Select player" : "Wybierz gracza"); return; }
+  if(text.length < 1){ showToast(getLang()==="en" ? "Write message" : "Wpisz wiadomość"); return; }
+
+  const fromNick = getNick() || (currentRoom?.myNick) || "—";
+  const toNick = (lastPlayers.find(p=>p.uid===toUid)?.nick) || "—";
+
+  const col = boot.collection(db, "rooms", currentRoomCode, "messages");
+  const ref = boot.doc(col);
+  await boot.setDoc(ref, {
+    fromUid: userUid,
+    fromNick,
+    toUid,
+    toNick,
+    text,
+    read: false,
+    createdAt: boot.serverTimestamp()
+  });
+
+  closeMessagesModal();
+  showToast(getLang()==="en" ? "Sent" : "Wysłano");
+}
+
+async function markAllMyMessagesRead(){
+  if(!db || !currentRoomCode || !userUid) return;
+  const col = boot.collection(db, "rooms", currentRoomCode, "messages");
+  const q = boot.query(col, boot.where("toUid","==", userUid), boot.where("read","==", false));
+  const qs = await boot.getDocs(q);
+  if(qs.empty) { unreadMsgsCount = 0; updateMessagesBadge(); return; }
+
+  const batch = boot.writeBatch(db);
+  qs.forEach(d=>{
+    batch.update(d.ref, { read:true, readAt: boot.serverTimestamp() });
+  });
+  await batch.commit();
 }
 
 // ===== UI =====
@@ -1653,6 +1787,10 @@ function bindUI(){
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
   if(__btnExitFromRoomRight) __btnExitFromRoomRight.onclick = __goHomeFromRoom;
+
+  // Wiadomości (otwórz okno + czyść wykrzyknik po wejściu)
+  const __btnMsgs = el("btnMessagesFromRoom");
+  if(__btnMsgs) __btnMsgs.onclick = ()=> openMessagesModal();
   const __btnRefresh = el("btnRefresh");
   if(__btnRefresh) __btnRefresh.onclick = async ()=>{ if(currentRoomCode) await openRoom(currentRoomCode, {silent:true, force:true}); };
 
@@ -1699,6 +1837,16 @@ function bindUI(){
   if(__btnMQBack) __btnMQBack.onclick = ()=> closeManualQueueMenu();
   const __btnMQSave = el("btnMQSave");
   if(__btnMQSave) __btnMQSave.onclick = async ()=>{ await saveManualQueueFromUI(); };
+
+  // Messages modal
+  const __msgOv = el("messagesOverlay");
+  if(__msgOv){
+    __msgOv.addEventListener("click", (e)=>{ if(e.target === __msgOv) closeMessagesModal(); });
+  }
+  const __msgBack = el("btnMsgBack");
+  if(__msgBack) __msgBack.onclick = ()=> closeMessagesModal();
+  const __msgSend = el("btnMsgSend");
+  if(__msgSend) __msgSend.onclick = async ()=>{ await sendRoomMessage(); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -2011,6 +2159,7 @@ function cleanupRoomListeners(){
   if(unsubPlayers){ unsubPlayers(); unsubPlayers=null; }
   if(unsubMatches){ unsubMatches(); unsubMatches=null; }
   if(unsubPicks){ unsubPicks(); unsubPicks=null; }
+  stopMessagesListener();
 }
 
 // ===== OPEN ROOM =====
@@ -2119,6 +2268,9 @@ async function openRoom(code, opts={}){
     syncActionButtons();
     if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
   });
+
+  // Wiadomości (czerwony wykrzyknik na btn_messages)
+  startMessagesListener();
 
   if(!silent) showToast((getLang()==="en") ? `In room: ${code}` : `W pokoju: ${code}`);
 }
