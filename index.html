@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 6033)</title>
+  <title>Typer (BUILD 6034)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -478,6 +478,21 @@
       align-items:center;
       min-width:0;
     }
+/* 6034: układ listy w oknie 'Wpisz wyniki' (desktop + mobile) */
+    .matchCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:14px;
+      padding:10px 12px;
+      display:grid;
+      grid-template-columns: 1fr 120px 1fr;
+      gap:12px;
+      align-items:center;
+      min-width:0;
+    }
+    .matchCard .team{flex:unset;min-width:0;}
+    .matchCard .scoreBox{justify-content:center;}
+
     .matchPickCol{display:flex;align-items:center;gap:12px;min-width:0;}
     .matchResultCol,
     .matchDateCol{
@@ -1658,7 +1673,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- ADD QUEUE MENU OVERLAY (BUILD 5204) -->
+<!-- ADD QUEUE MENU OVERLAY (BUILD 6034) -->
 <div aria-hidden="true" id="addQueueOverlay">
 <div aria-label="Add queue menu" class="aqModal panel" role="dialog">
 <div class="aqBtns">
@@ -1674,7 +1689,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- MANUAL QUEUE OVERLAY (BUILD 6008) -->
+<!-- MANUAL QUEUE OVERLAY (BUILD 6034) -->
 <div aria-hidden="true" id="manualQueueOverlay">
 <div aria-label="Manual queue" class="mqModal panel" role="dialog">
 <div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
@@ -1690,7 +1705,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 6025) -->
+<!-- MESSAGES OVERLAY (BUILD 6034) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
@@ -1852,7 +1867,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6033" type="module"></script>
+<script src="./app.js?v=6034" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1872,14 +1887,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6033').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=6034').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6032</div>
+<div id="buildCornerText">6034</div>
 </div>
 </body>
 </html>
