@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6015)</title>
+<title>Typer (BUILD 6016)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -342,6 +342,25 @@
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;min-width:0}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
+    /* 6016: lewy panel - profil u góry, reszta dociśnięta do dołu */
+    .leftTopProfile{padding:14px;display:flex;gap:12px;align-items:center}
+    .leftTopProfile .avatarBox{
+      width:62px;height:62px;border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+      flex:0 0 62px;
+    }
+    .leftTopProfile .avatarBox img{width:100%;height:100%;object-fit:cover;display:block}
+    .leftTopProfile .profileLines{min-width:0;display:flex;flex-direction:column;gap:4px}
+    .leftTopProfile .profileNick{font-weight:1000;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .leftTopProfile .profileMeta{font-weight:900;font-size:12px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+
+    /* 6016: prawy dół - osobny kontener na Wyjście */
+    .rightBottomExit{padding:14px;display:flex;justify-content:center;align-items:center}
+
     /* ===== ROOM (RESPONSIVE) =====
        Na telefonie/przy wąskim ekranie układ 3-kolumnowy nie może wypychać elementów poza ekran.
        Składamy panele w kolumnę i pozwalamy na przewijanie treści.
@@ -487,14 +506,8 @@
 
     
 
-    .rightExitContainer{
-      position:absolute;
-      right:14px;
-      bottom:14px;
-      display:flex;
-      justify-content:flex-end;
-      align-items:center;
-    }
+    /* 6016: legacy container (Wyjście jest w osobnym panelu) */
+    .rightExitContainer{display:none;}
 /* ===== ADD QUEUE MENU (modal) ===== */
     #addQueueOverlay{
       position:absolute;
@@ -1301,11 +1314,22 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div id="roomLayout">
 <!-- LEFT -->
 <div class="leftBar panel">
-<div class="col" style="gap:10px">
-<div class="chip" id="t_room_room">Pokój</div>
-<div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
-</div>
-<div class="panel" style="padding:14px">
+  <!-- 6016: profil gracza (avatar + nick + kraj + klub) na górze -->
+  <div class="panel leftTopProfile" id="roomProfileCard">
+    <div class="avatarBox">
+      <img id="roomAvatarImg" alt="avatar" style="display:none" />
+      <div id="roomAvatarFallback" style="font-weight:1000;opacity:.75">🙂</div>
+    </div>
+    <div class="profileLines">
+      <div class="profileNick" id="roomProfileNick">—</div>
+      <div class="profileMeta" id="roomProfileCountry">Kraj: —</div>
+      <div class="profileMeta" id="roomProfileFav">Klub: —</div>
+    </div>
+  </div>
+
+  <!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
+  <div class="leftBottomStack">
+  <div class="panel" style="padding:14px">
 <div class="title" id="roomName">—</div>
 <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
 <div class="roomCodeBlock" style="margin-top:10px">
@@ -1318,7 +1342,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button> </div>
 </div>
 </div>
-<div class="panel" style="padding:14px">
+  <div class="panel" style="padding:14px">
 
 
 <div class="col" id="roomActionsCol" style="margin-top:10px">
@@ -1331,8 +1355,8 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <button class="imgBtn sysBtn small" data-btn="btn_all_ranking.png" id="btnAllRankingFromRoom" type="button"><img alt="btnAllRankingFromRoom" data-btn="btn_all_ranking.png" src="ui/buttons/pl/btn_all_ranking.png"/></button>
 </div>
 </div>
-<div class="spacer"></div>
-<!-- back button removed (back is now on the right as "Wyjście") -->
+  </div>
+  <!-- back button removed (back is now on the right as "Wyjście") -->
 </div>
 <!-- MIDDLE -->
 <div class="mid">
@@ -1373,7 +1397,13 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="sub" id="t_players_sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
 </div>
 <div class="playersList" id="playersList"></div>
-<div class="rightExitContainer"><button class="imgBtn sysBtn" data-btn="btn_exit.png" id="btnExitFromRoomRight" type="button"><img alt="btnExitFromRoomRight" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/></button></div>
+<div class="spacer"></div>
+<!-- 6016: osobny panel na Wyjście (prawy dół) -->
+<div class="panel rightBottomExit">
+  <button class="imgBtn sysBtn" data-btn="btn_exit.png" id="btnExitFromRoomRight" type="button">
+    <img alt="btnExitFromRoomRight" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/>
+  </button>
+</div>
 </div>
 </div>
 <!-- ADD QUEUE MENU OVERLAY (BUILD 5204) -->
@@ -1522,7 +1552,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6015</div>
+<div id="buildCornerText">6016</div>
 </div>
 </body>
 </html>

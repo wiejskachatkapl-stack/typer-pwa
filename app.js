@@ -1310,6 +1310,36 @@ function refreshNickLabels(){
   if (el("nickLabelRooms")) el("nickLabelRooms").textContent = nick;
   if (el("nickLabelRoom")) el("nickLabelRoom").textContent = nick;
   if (el("leagueNick")) el("leagueNick").textContent = nick;
+
+  // 6016: karta profilu w pokoju (avatar + nick + kraj + ulubiony klub)
+  try{
+    const p = getProfile() || {};
+    const lang = getLang ? getLang() : "pl";
+    const nickShow = (p.nick || nick || "—").toString().trim() || "—";
+    if(el("roomProfileNick")) el("roomProfileNick").textContent = nickShow;
+
+    const c = String(p.country || "").trim().toUpperCase();
+    const countryName = c ? __getCountryDisplayName(lang, c) : "—";
+    if(el("roomProfileCountry")) el("roomProfileCountry").textContent = (lang==="en"?"Country: ":"Kraj: ") + countryName;
+
+    const fav = String(p.favClub || "").trim();
+    if(el("roomProfileFav")) el("roomProfileFav").textContent = (lang==="en"?"Club: ":"Klub: ") + (fav || "—");
+
+    const avatarFile = String(p.avatar || "").trim();
+    const avatarImg = el("roomAvatarImg");
+    const avatarFallback = el("roomAvatarFallback");
+    if(avatarImg){
+      if(avatarFile){
+        avatarImg.src = `ui/avatars/${avatarFile}`;
+        avatarImg.style.display = "block";
+        if(avatarFallback) avatarFallback.style.display = "none";
+      }else{
+        avatarImg.removeAttribute("src");
+        avatarImg.style.display = "none";
+        if(avatarFallback) avatarFallback.style.display = "block";
+      }
+    }
+  }catch(e){/* ignore */}
 }
 
 function getSavedRoom(){
