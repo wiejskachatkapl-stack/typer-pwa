@@ -1,4 +1,4 @@
-const BUILD = 6005;
+const BUILD = 6006;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1609,7 +1609,17 @@ function bindUI(){
   const __btnAQRandom = el("btnAQRandom");
   if(__btnAQRandom) __btnAQRandom.onclick = async ()=>{ closeAddQueueMenu(); await addRandomQueue(); };
   const __btnAQManual = el("btnAQManual");
-  if(__btnAQManual) __btnAQManual.onclick = ()=>{};
+  if(__btnAQManual) __btnAQManual.onclick = ()=>{ closeAddQueueMenu(); openManualQueueMenu(); };
+
+  // Manual queue modal
+  const __mov = el("manualQueueOverlay");
+  if(__mov){
+    __mov.addEventListener("click", (e)=>{ if(e.target === __mov) closeManualQueueMenu(); });
+  }
+  const __btnMQBack = el("btnMQBack");
+  if(__btnMQBack) __btnMQBack.onclick = ()=> closeManualQueueMenu();
+  const __btnMQSave = el("btnMQSave");
+  if(__btnMQSave) __btnMQSave.onclick = async ()=>{ await saveManualQueueFromUI(); };
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
@@ -1640,6 +1650,152 @@ function closeAddQueueMenu(){
   const ov = el("addQueueOverlay");
   if(!ov) return;
   ov.style.display = "none";
+}
+
+// ===== MANUAL QUEUE MENU (BUILD 6006) =====
+function openManualQueueMenu(){
+  const ov = el("manualQueueOverlay");
+  if(!ov) return;
+  ov.style.display = "flex";
+  buildManualQueueUI();
+}
+function closeManualQueueMenu(){
+  const ov = el("manualQueueOverlay");
+  if(!ov) return;
+  ov.style.display = "none";
+}
+
+// Test leagues: Spain, Germany, Netherlands, Italy, Ekstraklasa
+const MANUAL_LEAGUES = [
+  { key: "ES", namePL: "Hiszpania (LaLiga)", nameEN: "Spain (LaLiga)" },
+  { key: "DE", namePL: "Niemcy (Bundesliga)", nameEN: "Germany (Bundesliga)" },
+  { key: "NL", namePL: "Holandia (Eredivisie)", nameEN: "Netherlands (Eredivisie)" },
+  { key: "IT", namePL: "Włochy (Serie A)", nameEN: "Italy (Serie A)" },
+  { key: "PL", namePL: "Polska (Ekstraklasa)", nameEN: "Poland (Ekstraklasa)" }
+];
+
+const MANUAL_TEAMS = {
+  ES: ["Real Madrid","Barcelona","Atletico Madrid","Sevilla","Valencia","Villarreal","Real Sociedad","Athletic Club","Betis","Girona"],
+  DE: ["Bayern","Dortmund","Leipzig","Leverkusen","Frankfurt","Stuttgart","Wolfsburg","Gladbach","Freiburg","Union Berlin"],
+  NL: ["Ajax","PSV","Feyenoord","AZ","Twente","Utrecht","Heerenveen","Groningen","Sparta","Vitesse"],
+  IT: ["Juventus","Inter","Milan","Napoli","Roma","Lazio","Atalanta","Fiorentina","Torino","Bologna"],
+  PL: ["Legia","Lech","Rakow","Jagiellonia","Wisla Plock","Radomiak","GKS Katowice","Gornik","Slask","Lechia"]
+};
+
+function buildManualQueueUI(){
+  const list = el("manualQueueList");
+  if(!list) return;
+  list.innerHTML = "";
+
+  const lang = getLang();
+  const leagueOptionsHtml = MANUAL_LEAGUES.map(l=>`<option value="${l.key}">${escapeHtml(lang==="en"?l.nameEN:l.namePL)}</option>`).join("");
+
+  // Prefill 10 rows cycling leagues, with random teams.
+  for(let i=0;i<10;i++){
+    const row = document.createElement("div");
+    row.className = "mqRow";
+
+    const leagueKey = MANUAL_LEAGUES[i % MANUAL_LEAGUES.length].key;
+    const teams = [...(MANUAL_TEAMS[leagueKey]||[])];
+    __shuffle(teams);
+    const home = teams[0] || "—";
+    const away = teams[1] || "—";
+
+    row.innerHTML = `
+      <div class="mqIdx">${i+1}.</div>
+      <select class="mqSel mqLeague" data-i="${i}">${leagueOptionsHtml}</select>
+      <select class="mqSel mqHome" data-i="${i}"></select>
+      <div class="mqSep">vs</div>
+      <select class="mqSel mqAway" data-i="${i}"></select>
+    `;
+    list.appendChild(row);
+
+    // set defaults
+    const selLeague = row.querySelector(".mqLeague");
+    selLeague.value = leagueKey;
+    fillTeamSelectsForRow(i, leagueKey, home, away);
+    selLeague.addEventListener("change", ()=>{
+      const lk = selLeague.value;
+      fillTeamSelectsForRow(i, lk, null, null);
+    });
+  }
+}
+
+function fillTeamSelectsForRow(i, leagueKey, homeDefault, awayDefault){
+  const list = el("manualQueueList");
+  if(!list) return;
+  const row = list.querySelector(`.mqRow:nth-child(${i+1})`);
+  if(!row) return;
+
+  const homeSel = row.querySelector(".mqHome");
+  const awaySel = row.querySelector(".mqAway");
+  const teams = (MANUAL_TEAMS[leagueKey]||[]);
+  const options = teams.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+  homeSel.innerHTML = options;
+  awaySel.innerHTML = options;
+
+  // defaults
+  if(homeDefault && teams.includes(homeDefault)) homeSel.value = homeDefault;
+  else homeSel.selectedIndex = 0;
+  if(awayDefault && teams.includes(awayDefault)) awaySel.value = awayDefault;
+  else awaySel.selectedIndex = Math.min(1, Math.max(0, teams.length-1));
+
+  const enforceDifferent = ()=>{
+    if(homeSel.value === awaySel.value){
+      // move away to next option
+      const idx = awaySel.selectedIndex;
+      awaySel.selectedIndex = (idx+1 < awaySel.options.length) ? idx+1 : 0;
+    }
+  };
+  homeSel.onchange = enforceDifferent;
+  awaySel.onchange = enforceDifferent;
+  enforceDifferent();
+}
+
+async function saveManualQueueFromUI(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
+  if(matchesCache && matchesCache.length){
+    showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
+    return;
+  }
+  const list = el("manualQueueList");
+  if(!list) return;
+  const rows = [...list.querySelectorAll(".mqRow")];
+  const arr = [];
+  rows.forEach((row, idx)=>{
+    const league = row.querySelector(".mqLeague")?.value || "PL";
+    const home = row.querySelector(".mqHome")?.value || "";
+    const away = row.querySelector(".mqAway")?.value || "";
+    if(home && away && home !== away){
+      arr.push({ idx, league, home, away });
+    }
+  });
+  if(arr.length !== 10){
+    showToast(getLang()==="en" ? "Fill all 10 matches" : "Uzupełnij 10 meczów");
+    return;
+  }
+
+  await addManualQueue(arr);
+  closeManualQueueMenu();
+}
+
+async function addManualQueue(arr){
+  const b = boot.writeBatch(db);
+  for(const m of arr){
+    const id = `m_${Date.now()}_${m.idx}`;
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+    b.set(ref, {
+      idx: m.idx,
+      home: m.home,
+      away: m.away,
+      league: m.league,
+      createdAt: boot.serverTimestamp()
+    });
+  }
+  await b.commit();
+  showToast(getLang()==="en" ? "Manual fixture added" : "Dodano ręczną kolejkę");
+  syncActionButtons();
 }
 function isAdmin(){
   return currentRoom?.adminUid === userUid;

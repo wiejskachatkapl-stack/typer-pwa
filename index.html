@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 6005)</title>
+  <title>Typer (BUILD 6006)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -450,6 +450,85 @@
     }
     @media (max-width:720px){
       .aqBtns .imgBtn img{ width: min(240px, 70vw); }
+    }
+
+    /* ===== MANUAL QUEUE (modal) ===== */
+    #manualQueueOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index:91;
+    }
+    .mqModal{
+      width:min(920px,94vw);
+      padding:16px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(8, 22, 52, .78);
+      box-shadow:0 18px 60px rgba(0,0,0,.55);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:stretch;
+    }
+    .mqTitle{
+      font-weight:900;
+      font-size:18px;
+      color:rgba(255,255,255,.95);
+      padding:2px 6px;
+    }
+    .mqList{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:56vh;
+      overflow:auto;
+      padding:6px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+    }
+    .mqRow{
+      display:grid;
+      grid-template-columns: 34px 220px 1fr 44px 1fr;
+      gap:10px;
+      align-items:center;
+    }
+    .mqIdx{ color:rgba(255,255,255,.85); font-weight:900; text-align:right; padding-right:2px; }
+    .mqSep{ color:rgba(255,255,255,.65); font-weight:900; text-align:center; }
+    .mqSel{
+      height:34px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:rgba(255,255,255,.92);
+      font-weight:800;
+      padding:0 10px;
+      outline:none;
+    }
+    .mqFooter{
+      display:flex;
+      gap:16px;
+      justify-content:center;
+      align-items:center;
+      padding-top:4px;
+    }
+    .mqFooter .imgBtn img{ width:220px; height:auto; display:block; object-fit:contain; }
+    @media (max-width:920px){
+      .mqRow{ grid-template-columns: 26px 1fr 1fr 34px 1fr; }
+    }
+    @media (max-width:640px){
+      .mqRow{ grid-template-columns: 26px 1fr; grid-template-rows:auto auto auto; }
+      .mqRow .mqLeague{ grid-column:1 / -1; }
+      .mqRow .mqHome{ grid-column:1 / -1; }
+      .mqRow .mqSep{ display:none; }
+      .mqRow .mqAway{ grid-column:1 / -1; }
+      .mqFooter .imgBtn img{ width:min(240px, 70vw); }
     }
 
     /* ===== RESULTS SCREEN ===== */
@@ -1239,6 +1318,22 @@
             </div>
           </div>
 
+          <!-- MANUAL QUEUE OVERLAY (BUILD 6006) -->
+          <div id="manualQueueOverlay" aria-hidden="true">
+            <div class="mqModal panel" role="dialog" aria-label="Manual queue">
+              <div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
+              <div class="mqList" id="manualQueueList"></div>
+              <div class="mqFooter">
+                <button class="imgBtn sysBtn" id="btnMQSave" type="button" data-btn="btn_zapisz_typy.png">
+                  <img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnMQSave">
+                </button>
+                <button class="imgBtn sysBtn" id="btnMQBack" type="button" data-btn="btn_back.png">
+                  <img data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png" alt="btnMQBack">
+                </button>
+              </div>
+            </div>
+          </div>
+
 </section>
 
       <!-- RESULTS (ADMIN) -->
@@ -1369,7 +1464,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">6005</div>
+    <div id="buildCornerText">6006</div>
   </div>
 
 </body>
