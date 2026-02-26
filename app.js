@@ -1,4 +1,4 @@
-const BUILD = 6002;
+const BUILD = 6005;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1591,7 +1591,9 @@ function bindUI(){
   };
 
   el("btnAddQueue").onclick = ()=>{ openAddQueueMenu(); };
-  el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  if (el("btnMyQueue")) {
+    el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
+  }
 
   // Add Queue menu (modal)
   const __ov = el("addQueueOverlay");
@@ -1801,7 +1803,7 @@ async function openRoom(code, opts={}){
 
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";
-  el("btnMyQueue").style.display = adm ? "block" : "none";
+  if (el("btnMyQueue")) el("btnMyQueue").style.display = adm ? "block" : "none";
   // 6000: widoczność „Wpisz wyniki” sterowana przez syncActionButtons()
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
@@ -1818,7 +1820,7 @@ async function openRoom(code, opts={}){
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
-    el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    if (el("btnMyQueue")) el("btnMyQueue").style.display = adm2 ? "block" : "none";
     // 6000: widoczność „Wpisz wyniki” sterowana przez syncActionButtons()
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
