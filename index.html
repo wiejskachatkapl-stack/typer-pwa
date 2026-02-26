@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6016)</title>
+<title>Typer (BUILD 6017)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -342,24 +342,32 @@
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;min-width:0}
     .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
-    /* 6016: lewy panel - profil u góry, reszta dociśnięta do dołu */
-    .leftTopProfile{padding:14px;display:flex;gap:12px;align-items:center}
+    /* 6017: lewy panel - większy kontener profilu (jak na screenie) */
+    .leftTopProfile{
+      padding:16px;
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      min-height:170px; /* powiększony */
+    }
     .leftTopProfile .avatarBox{
-      width:62px;height:62px;border-radius:18px;
+      width:86px;height:86px;border-radius:22px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(0,0,0,.20);
       display:flex;align-items:center;justify-content:center;
       overflow:hidden;
-      flex:0 0 62px;
+      flex:0 0 86px;
     }
     .leftTopProfile .avatarBox img{width:100%;height:100%;object-fit:cover;display:block}
-    .leftTopProfile .profileLines{min-width:0;display:flex;flex-direction:column;gap:4px}
-    .leftTopProfile .profileNick{font-weight:1000;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .leftTopProfile .profileMeta{font-weight:900;font-size:12px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .leftTopProfile .profileLines{min-width:0;display:flex;flex-direction:column;gap:6px;padding-top:2px}
+    .leftTopProfile .profileNick{font-weight:1000;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .leftTopProfile .profileMeta{font-weight:900;font-size:13px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:12px}
 
     /* 6016: prawy dół - osobny kontener na Wyjście */
     .rightBottomExit{padding:14px;display:flex;justify-content:center;align-items:center}
+    .rightBottomStack{display:flex;flex-direction:column;gap:12px}
+    .rightBottomMessages{padding:14px;display:flex;justify-content:center;align-items:center}
 
     /* ===== ROOM (RESPONSIVE) =====
        Na telefonie/przy wąskim ekranie układ 3-kolumnowy nie może wypychać elementów poza ekran.
@@ -1351,7 +1359,6 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <button class="imgBtn sysBtn small" data-btn="btn_tabela_typerow.png" id="btnLeagueFromRoom" type="button"><img alt="btnLeagueFromRoom" data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png"/></button>
 
 <!-- 6015: dodatkowe przyciski w lewym kontenerze (później podepniemy kodem) -->
-<button class="imgBtn sysBtn small" data-btn="btn_messages.png" id="btnMessagesFromRoom" type="button"><img alt="btnMessagesFromRoom" data-btn="btn_messages.png" src="ui/buttons/pl/btn_messages.png"/></button>
 <button class="imgBtn sysBtn small" data-btn="btn_all_ranking.png" id="btnAllRankingFromRoom" type="button"><img alt="btnAllRankingFromRoom" data-btn="btn_all_ranking.png" src="ui/buttons/pl/btn_all_ranking.png"/></button>
 </div>
 </div>
@@ -1398,11 +1405,18 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <div class="playersList" id="playersList"></div>
 <div class="spacer"></div>
-<!-- 6016: osobny panel na Wyjście (prawy dół) -->
-<div class="panel rightBottomExit">
-  <button class="imgBtn sysBtn" data-btn="btn_exit.png" id="btnExitFromRoomRight" type="button">
-    <img alt="btnExitFromRoomRight" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/>
-  </button>
+<!-- 6017: dwa osobne kontenery na dole po prawej (Wyjście + Wiadomości) -->
+<div class="rightBottomStack">
+  <div class="panel rightBottomMessages">
+    <button class="imgBtn sysBtn" data-btn="btn_messages.png" id="btnMessagesFromRoom" type="button">
+      <img alt="btnMessagesFromRoom" data-btn="btn_messages.png" src="ui/buttons/pl/btn_messages.png"/>
+    </button>
+  </div>
+  <div class="panel rightBottomExit">
+    <button class="imgBtn sysBtn" data-btn="btn_exit.png" id="btnExitFromRoomRight" type="button">
+      <img alt="btnExitFromRoomRight" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/>
+    </button>
+  </div>
 </div>
 </div>
 </div>
@@ -1552,7 +1566,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6016</div>
+<div id="buildCornerText">6017</div>
 </div>
 </body>
 </html>
