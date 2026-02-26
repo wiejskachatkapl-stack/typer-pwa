@@ -405,7 +405,6 @@ function applyLangToUI(){
   if(el("t_room3")) el("t_room3").textContent = t("room");
   if(el("t_nick3")) el("t_nick3").textContent = t("nick");
   if(el("t_after_round")) el("t_after_round").textContent = t("afterRound");
-  if(el("btnLeagueRefresh")) el("btnLeagueRefresh").textContent = t("refresh");
   setBtnLabelSafe("btnLeagueBack", t("back"));
   if(el("t_ranking")) el("t_ranking").textContent = t("ranking");
   if(el("leagueHint")) el("leagueHint").textContent = t("leagueHint");
@@ -1683,10 +1682,7 @@ function bindUI(){
 
   // League
   el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
-  el("btnLeagueRefresh").onclick = async ()=>{
-    if(!leagueState.roomCode) return;
-    await openLeagueTable(leagueState.roomCode, {silent:true});
-  };
+  // btnLeagueRefresh removed (BUILD 6014)
 
 
   // 6008: odświeżaj licznik co 1s (bez dodatkowych renderów)
@@ -3057,11 +3053,13 @@ function renderLeagueTable(){
   }
 
   rows.forEach((r, idx)=>{
+    const cupSrc = (idx===0) ? "ui/medale/puchar_1.png" : (idx===1) ? "ui/medale/puchar_2.png" : (idx===2) ? "ui/medale/puchar_3.png" : "";
+    const cupHtml = cupSrc ? `<img alt="cup" src="${cupSrc}" style="width:22px;height:22px;vertical-align:middle;margin-right:6px"/>` : "";
     const tr = document.createElement("tr");
     tr.className = "linkRow";
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
+      <td>${cupHtml}${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
@@ -3102,11 +3100,89 @@ async function openPlayerStatsFromLeague(uid, nick){
     return;
   }
 
-  qs.forEach(d=>{
-    const rd = d.data();
+  // === Medale za kolejki (TOP3 w zakończonych kolejkach) ===
+  const medalCounts = {1:0,2:0,3:0};
+  const medalRounds = {1:[],2:[],3:[]};
+
+  const roundDocs = [];
+  qs.forEach(d=> roundDocs.push(d.data()));
+
+  for(const rd of roundDocs){
+    const rn = rd?.roundNo ?? 0;
+    const ptsMap = rd?.pointsByUid || {};
+    const nickMap = rd?.nickByUid || {};
+    const entries = Object.entries(ptsMap)
+      .filter(([,v])=> Number.isFinite(v))
+      .map(([k,v])=>({uid:k, pts:Number(v), nick: String(nickMap[k]||"") }));
+    if(entries.length<1) continue;
+    entries.sort((a,b)=>{
+      if(b.pts!==a.pts) return b.pts-a.pts;
+      return String(a.nick||a.uid).localeCompare(String(b.nick||b.uid), "pl");
+    });
+    const pos = entries.findIndex(x=> x.uid===uid);
+    if(pos>=0 && pos<3){
+      const m = pos+1;
+      medalCounts[m] += 1;
+      medalRounds[m].push(rn);
+    }
+  }
+
+  // === Puchary za miejsca w lidze (TOP3 w tabeli ligi) ===
+  const leagueRows = [...(leagueState.rows||[])];
+  leagueRows.sort((a,b)=>{
+    if(b.points!==a.points) return b.points-a.points;
+    return String(a.nick).localeCompare(String(b.nick), "pl");
+  });
+  const leaguePos = leagueRows.findIndex(x=> x.uid===uid);
+
+  const awards = document.createElement("div");
+  awards.className = "row";
+  awards.style.flexWrap = "wrap";
+  awards.style.gap = "10px";
+
+  const mkAward = (src, label)=>{
+    const d = document.createElement("div");
+    d.className = "chip";
+    d.style.display = "inline-flex";
+    d.style.alignItems = "center";
+    d.style.gap = "8px";
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "award";
+    img.style.width = "22px";
+    img.style.height = "22px";
+    d.appendChild(img);
+    const sp = document.createElement("span");
+    sp.textContent = label;
+    d.appendChild(sp);
+    return d;
+  };
+
+  if(leaguePos>=0 && leaguePos<3){
+    const cupSrc = (leaguePos===0) ? "ui/medale/puchar_1.png" : (leaguePos===1) ? "ui/medale/puchar_2.png" : "ui/medale/puchar_3.png";
+    awards.appendChild(mkAward(cupSrc, (getLang()==="en") ? "League" : "Liga"));
+  }
+
+  if(medalCounts[1]||medalCounts[2]||medalCounts[3]){
+    if(medalCounts[1]) awards.appendChild(mkAward("ui/medale/medal_1.png", `x${medalCounts[1]}`));
+    if(medalCounts[2]) awards.appendChild(mkAward("ui/medale/medal_2.png", `x${medalCounts[2]}`));
+    if(medalCounts[3]) awards.appendChild(mkAward("ui/medale/medal_3.png", `x${medalCounts[3]}`));
+  }
+
+  if(awards.childNodes.length){
+    wrap.appendChild(awards);
+  }
+
+  roundDocs.forEach(rd=>{
     const rn = rd.roundNo ?? 0;
     const pts = rd?.pointsByUid?.[uid];
     const played = (pts !== undefined && pts !== null);
+
+    // Medal for this round (if any)
+    let medalSrc = "";
+    if(medalRounds[1].includes(rn)) medalSrc = "ui/medale/medal_1.png";
+    else if(medalRounds[2].includes(rn)) medalSrc = "ui/medale/medal_2.png";
+    else if(medalRounds[3].includes(rn)) medalSrc = "ui/medale/medal_3.png";
 
     const row = document.createElement("div");
     row.className="matchCard";
@@ -3116,7 +3192,7 @@ async function openPlayerStatsFromLeague(uid, nick){
     left.style.display="flex";
     left.style.flexDirection="column";
     left.style.gap="4px";
-    left.innerHTML = `<div style="font-weight:1000">${t("round")} ${rn}</div>
+    left.innerHTML = `<div style="font-weight:1000">${medalSrc ? `<img alt="medal" src="${medalSrc}" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"/>` : ""}${t("round")} ${rn}</div>
                       <div class="sub">${played ? (getLang()==="en" ? "Played" : "Zagrana") : (getLang()==="en" ? "No picks / incomplete" : "Brak typów / niepełne")}</div>`;
 
     const right = document.createElement("div");
