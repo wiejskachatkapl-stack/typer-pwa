@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 6006)</title>
+  <title>Typer (BUILD 6007)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -495,13 +495,24 @@
     }
     .mqRow{
       display:grid;
-      grid-template-columns: 34px 220px 1fr 44px 1fr;
+      grid-template-columns: 34px 220px 1fr 44px 1fr 210px;
       gap:10px;
       align-items:center;
     }
     .mqIdx{ color:rgba(255,255,255,.85); font-weight:900; text-align:right; padding-right:2px; }
     .mqSep{ color:rgba(255,255,255,.65); font-weight:900; text-align:center; }
     .mqSel{
+      height:34px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:rgba(255,255,255,.92);
+      font-weight:800;
+      padding:0 10px;
+      outline:none;
+    }
+
+    .mqDt{
       height:34px;
       border-radius:12px;
       border:1px solid rgba(255,255,255,.14);
@@ -1318,7 +1329,7 @@
             </div>
           </div>
 
-          <!-- MANUAL QUEUE OVERLAY (BUILD 6006) -->
+          <!-- MANUAL QUEUE OVERLAY (BUILD 6007) -->
           <div id="manualQueueOverlay" aria-hidden="true">
             <div class="mqModal panel" role="dialog" aria-label="Manual queue">
               <div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
@@ -1464,7 +1475,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">6006</div>
+    <div id="buildCornerText">6007</div>
   </div>
 
 </body>

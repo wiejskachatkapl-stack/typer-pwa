@@ -1,4 +1,4 @@
-const BUILD = 6006;
+const BUILD = 6007;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1707,6 +1707,7 @@ function buildManualQueueUI(){
       <select class="mqSel mqHome" data-i="${i}"></select>
       <div class="mqSep">vs</div>
       <select class="mqSel mqAway" data-i="${i}"></select>
+      <input class="mqDt" type="datetime-local" data-i="${i}" />
     `;
     list.appendChild(row);
 
@@ -1767,8 +1768,10 @@ async function saveManualQueueFromUI(){
     const league = row.querySelector(".mqLeague")?.value || "PL";
     const home = row.querySelector(".mqHome")?.value || "";
     const away = row.querySelector(".mqAway")?.value || "";
+    const dtRaw = row.querySelector(".mqDt")?.value || ""; // yyyy-mm-ddThh:mm (local)
+    const kickoff = dtRaw ? new Date(dtRaw).toISOString() : null;
     if(home && away && home !== away){
-      arr.push({ idx, league, home, away });
+      arr.push({ idx, league, home, away, kickoff });
     }
   });
   if(arr.length !== 10){
@@ -1790,6 +1793,7 @@ async function addManualQueue(arr){
       home: m.home,
       away: m.away,
       league: m.league,
+      kickoff: m.kickoff || null,
       createdAt: boot.serverTimestamp()
     });
   }
