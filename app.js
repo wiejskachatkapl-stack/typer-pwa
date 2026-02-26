@@ -1,4 +1,4 @@
-const BUILD = 6009;
+const BUILD = 6008;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2303,55 +2303,6 @@ function renderMatches(){
       ? "No active round. Admin can add a fixture."
       : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
-    updateSaveButtonState();
-    return;
-  }
-
-  // 6009: jeśli czas typowania minął i gracz NIE zapisał typów, chowamy mecze z ekranu typowania.
-  // Admin dalej widzi mecze (żeby mógł wpisać wyniki / zakończyć kolejkę / dodać nową).
-  const hideMatchesForNonSubmitter = !!(typingClosed && !isAdmin() && !iAmSubmitted());
-  if(hideMatchesForNonSubmitter){
-    const info = document.createElement("div");
-    info.className = "sub";
-    info.style.padding = "14px 12px";
-    info.style.border = "1px solid rgba(255,255,255,.12)";
-    info.style.borderRadius = "16px";
-    info.style.background = "rgba(0,0,0,.18)";
-    info.style.textAlign = "center";
-    info.style.fontWeight = "900";
-    info.textContent = (getLang()==="en")
-      ? "Typing time is over. You didn't save your picks."
-      : "Czas typowania minął. Nie zapisano Twoich typów.";
-    list.appendChild(info);
-
-    // nadal pokazujemy pasek licznika (00:00:00), żeby było jasne dlaczego zniknęły mecze
-    const cd = document.createElement("div");
-    cd.className = "typingCountdown";
-    cd.style.marginTop = "auto";
-    cd.style.padding = "10px 12px";
-    cd.style.borderRadius = "16px";
-    cd.style.border = "1px solid rgba(255,255,255,.12)";
-    cd.style.background = "rgba(0,0,0,.18)";
-    cd.style.display = "flex";
-    cd.style.alignItems = "center";
-    cd.style.justifyContent = "center";
-    cd.style.gap = "10px";
-
-    const label = document.createElement("div");
-    label.style.fontWeight = "950";
-    label.style.color = "rgba(255,255,255,.92)";
-    label.textContent = "Do końca typowania pozostało:";
-
-    const val = document.createElement("div");
-    val.id = "typingCountdownValue";
-    val.style.fontWeight = "1000";
-    val.style.letterSpacing = ".5px";
-    val.textContent = "00:00:00";
-
-    cd.appendChild(label);
-    cd.appendChild(val);
-    list.appendChild(cd);
-
     updateSaveButtonState();
     return;
   }
