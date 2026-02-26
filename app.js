@@ -1,4 +1,4 @@
-const BUILD = 6028;
+const BUILD = 6029;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2808,14 +2808,14 @@ function renderPlayers(players){
     const left = document.createElement("div");
     left.style.display = "flex";
     left.style.alignItems = "center";
-    left.style.gap = "10px";
+    left.style.gap = "8px";
     left.style.minWidth = "0";
 
     const dot = document.createElement("div");
     dot.className = "presenceDot";
     const active = isPlayerActive(p);
-    dot.style.width = "10px";
-    dot.style.height = "10px";
+    dot.style.width = "8px";
+    dot.style.height = "8px";
     dot.style.borderRadius = "999px";
     dot.style.flex = "0 0 auto";
     dot.style.background = active ? "#33ff88" : "#ff4d4d";
@@ -2832,7 +2832,7 @@ function renderPlayers(players){
     const ok = !!submittedByUid[p.uid];
     status.textContent = ok ? "✓" : "✗";
     status.style.fontWeight = "1000";
-    status.style.fontSize = "18px";
+    status.style.fontSize = "16px";
     status.style.lineHeight = "1";
     status.style.color = ok ? "#33ff88" : "#ff4d4d";
     status.title = ok ? "Picks saved" : "Missing";
@@ -2844,7 +2844,7 @@ function renderPlayers(players){
 
     const right = document.createElement("div");
     right.className = "row";
-    right.style.gap = "8px";
+    right.style.gap = "6px";
 
     if(resultsOk && isCompletePicksObject(picksDocByUid[p.uid])){
       const pts = pointsByUid[p.uid] ?? 0;

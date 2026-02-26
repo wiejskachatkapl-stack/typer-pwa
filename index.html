@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6028)</title>
+<title>Typer (BUILD 6029)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -388,8 +388,12 @@
       gap:8px;
       min-height:118px;
     }
-    .leftProfileInfo .profileNick{font-weight:1000;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .leftProfileInfo .profileMeta{font-weight:900;font-size:13px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* 6029: większe napisy w profilowym kontenerze */
+    .leftProfileInfo .profileNick{font-weight:1000;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .leftProfileInfo .profileMeta{font-weight:900;font-size:16px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* 6029: większe napisy w kontenerze pokoju (DOM/TESTOWY) */
+    #room .leftBottomStack #roomName{font-size:26px;}
+    #room .leftBottomStack .sub{font-size:15px;}
     .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:12px}
 
     /* 6016: prawy dół - osobny kontener na Wyjście */
@@ -502,22 +506,25 @@
       white-space:nowrap;
     }
 
-    .playersList{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    /* 6029: scroll pojawia się dopiero gdy brakuje miejsca; węższe wiersze graczy */
+    .playersList{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px}
     .playerRow{
-      padding:10px 12px;border-radius:16px;
+      padding:8px 10px;border-radius:14px;
       background:rgba(0,0,0,.16);
       border:1px solid rgba(255,255,255,.12);
-      display:flex;gap:10px;align-items:center;justify-content:space-between;
+      display:flex;gap:8px;align-items:center;justify-content:space-between;
       font-weight:900;
+      font-size:13px;
+      min-width:0;
     }
     .badge{
-      padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.10);
+      padding:5px 8px;border-radius:11px;background:rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.12);
-      font-weight:1000;font-size:12px
+      font-weight:1000;font-size:11px
     }
     .eyeBtn{
-      width:36px;height:28px;
-      border-radius:12px;
+      width:32px;height:26px;
+      border-radius:11px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.08);
       color:rgba(255,255,255,.85);
@@ -1830,7 +1837,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6028" type="module"></script>
+<script src="./app.js?v=6029" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1850,14 +1857,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6028').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=6029').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6028</div>
+<div id="buildCornerText">6029</div>
 </div>
 </body>
 </html>
