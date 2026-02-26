@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 6032)</title>
+  <title>Typer (BUILD 6033)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -421,6 +421,21 @@
     }
     @media (max-width: 560px){
       .matchRow{grid-template-columns: 1fr 92px 128px;gap:8px;padding:6px 8px;}
+
+/* 6033: porządek w oknie „Wpisz wyniki” (admin) */
+.matchCard{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.16);
+  border-radius:14px;
+  padding:10px 12px;
+  display:grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap:12px;
+  align-items:center;
+  min-width:0;
+}
+.matchCard .team{flex:unset;min-width:0;}
+.matchCard .scoreBox{justify-content:center;}
       .team{font-size:13px;}
       .scoreInput{width:34px;height:26px;font-size:13px;}
       .matchResultCol,.matchDateCol{height:30px;font-size:11px;}
@@ -1761,7 +1776,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <div class="row">
 <button class="imgBtn sysBtn" data-btn="btn_cofnij.png" id="btnResBack" type="button"><img alt="btnResBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
-<button class="imgBtn sysBtn" data-btn="btn_zapisz_typy.png" id="btnResSave" type="button"><img alt="btnResSave" data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_save_wynik.png" id="btnResSave" type="button"><img alt="btnResSave" data-btn="btn_save_wynik.png" src="ui/buttons/pl/btn_save_wynik.png"/></button>
 </div>
 </div>
 <div class="panel resultsList" id="resultsList"></div>
@@ -1837,7 +1852,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6032" type="module"></script>
+<script src="./app.js?v=6033" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1857,7 +1872,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6032').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=6033').catch(() => {});
     });
   }
 </script>
