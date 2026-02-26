@@ -1,4 +1,4 @@
-const BUILD = 6026;
+const BUILD = 6027;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3398,17 +3398,89 @@ async function saveResults(){
 }
 
 // ===== ARCHIWUM KOLEJEK (HISTORIA) =====
+
+// Custom confirm modal (instead of system window.confirm) for ending a round.
+// Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
+let _endRoundConfirmModal = null;
+function ensureEndRoundConfirmModal(){
+  if(_endRoundConfirmModal) return _endRoundConfirmModal;
+
+  // styles (once)
+  if(!document.getElementById("endRoundConfirmStyles")){
+    const st = document.createElement('style');
+    st.id = "endRoundConfirmStyles";
+    st.textContent = `
+      .endRoundOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .endRoundBox{width:min(720px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .endRoundTitle{font-weight:800;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .endRoundText{font-weight:600;line-height:1.35;font-size:15px;color:rgba(255,255,255,.88);}
+      .endRoundActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .endRoundBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .endRoundBtnImg:active{transform:translateY(1px);}
+      @media (max-width:520px){.endRoundBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'endRoundOverlay';
+  overlay.innerHTML = `
+    <div class="endRoundBox" role="dialog" aria-modal="true">
+      <div class="endRoundTitle">${getLang()==='en' ? 'End round' : 'Zakończ kolejkę'}</div>
+      <div class="endRoundText" id="endRoundConfirmText"></div>
+      <div class="endRoundActions">
+        <img id="endRoundBtnYes" class="endRoundBtnImg" alt="YES" />
+        <img id="endRoundBtnNo" class="endRoundBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#endRoundConfirmText');
+  const btnYes = overlay.querySelector('#endRoundBtnYes');
+  const btnNo = overlay.querySelector('#endRoundBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{
+    if(e.target === overlay) close(false);
+  });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _endRoundConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+
+  return _endRoundConfirmModal;
+}
+
+async function customConfirmEndRound(){
+  const txt = (getLang()==='en')
+    ? 'End the round? Ending will archive the round and add all points to players.'
+    : 'Czy zakończyć kolejkę? Zakończenie spowoduje przeniesienie do archiwum a wszystkie punkty doliczone do graczy.';
+  return await ensureEndRoundConfirmModal().open(txt);
+}
+
 async function endRoundConfirmAndArchive(){
   if(!currentRoomCode) return;
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
   if(!allResultsComplete()){ showToast(getLang()==="en" ? "Enter all results first" : "Najpierw wpisz komplet wyników"); return; }
 
-  const msg = (getLang()==="en")
-    ? `End ROUND ${currentRoundNo} and save it to history?\n\nAfter ending: matches/picks will be archived and the app moves to ROUND ${currentRoundNo+1}.`
-    : `Zakończyć KOLEJKĘ ${currentRoundNo} i zapisać do historii?\n\nPo zakończeniu: mecze/typy tej kolejki zostaną zarchiwizowane, a aplikacja przejdzie do KOLEJKI ${currentRoundNo+1}.`;
-
-  const ok = confirm(msg);
+  const ok = await customConfirmEndRound();
   if(!ok) return;
 
   await archiveCurrentRound();
