@@ -1,4 +1,4 @@
-const BUILD = 6020;
+const BUILD = 6021;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1574,15 +1574,17 @@ function startMessagesListener(){
   if(!db || !currentRoomCode || !userUid) return;
 
   const col = boot.collection(db, "rooms", currentRoomCode, "messages");
-  const q = boot.query(
-    col,
-    boot.where("toUid","==", userUid),
-    boot.where("read","==", false)
-  );
+  // Unikamy zapytań wymagających indeksów złożonych (2x where). Filtrujemy po stronie klienta.
+  const q = boot.query(col, boot.where("toUid","==", userUid));
 
   unsubMsgsUnread = boot.onSnapshot(q, (qs)=>{
     const prev = unreadMsgsCount;
-    unreadMsgsCount = qs.size || 0;
+    let c = 0;
+    qs.forEach((d)=>{
+      const x = d.data() || {};
+      if(x.read === false) c += 1;
+    });
+    unreadMsgsCount = c;
     updateMessagesBadge();
 
     // delikatny toast przy nowej wiadomości (max raz na 4s)
@@ -1645,50 +1647,39 @@ async function _loadMessages(){
   if(!db || !currentRoomCode || !userUid) return;
 
   const col = boot.collection(db, "rooms", currentRoomCode, "messages");
+  const sortDesc = (a,b)=> _tsToMillis(b.createdAt) - _tsToMillis(a.createdAt);
 
   // Odebrane
   try{
-    const qIn = boot.query(
-      col,
-      boot.where("toUid","==", userUid),
-      boot.orderBy("createdAt","desc"),
-      boot.limit(50)
-    );
+    const qIn = boot.query(col, boot.where("toUid","==", userUid));
     const qs = await boot.getDocs(qIn);
     const arr=[];
     qs.forEach(d=>arr.push({ id:d.id, ...d.data() }));
-    _msgsCache.inbox = arr;
+    arr.sort(sortDesc);
+    _msgsCache.inbox = arr.slice(0,50);
   }catch{ _msgsCache.inbox = []; }
 
   // Wysłane
   try{
-    const qOut = boot.query(
-      col,
-      boot.where("fromUid","==", userUid),
-      boot.orderBy("createdAt","desc"),
-      boot.limit(50)
-    );
+    const qOut = boot.query(col, boot.where("fromUid","==", userUid));
     const qs = await boot.getDocs(qOut);
     const arr=[];
     qs.forEach(d=>arr.push({ id:d.id, ...d.data() }));
-    _msgsCache.sent = arr;
+    arr.sort(sortDesc);
+    _msgsCache.sent = arr.slice(0,50);
   }catch{ _msgsCache.sent = []; }
 
-  // Systemowe (na przyszłość) — filtr po stronie klienta
+  // Systemowe (na przyszłość)
   try{
-    const qSys = boot.query(
-      col,
-      boot.where("type","==","system"),
-      boot.orderBy("createdAt","desc"),
-      boot.limit(50)
-    );
+    const qSys = boot.query(col, boot.where("type","==","system"));
     const qs = await boot.getDocs(qSys);
     const arr=[];
     qs.forEach(d=>{
       const x = { id:d.id, ...d.data() };
       if(x.toUid === "all" || x.toUid === userUid) arr.push(x);
     });
-    _msgsCache.system = arr;
+    arr.sort(sortDesc);
+    _msgsCache.system = arr.slice(0,50);
   }catch{ _msgsCache.system = []; }
 
   renderMessagesLists();
@@ -1907,16 +1898,23 @@ async function sendRoomMessage(){
 async function markAllMyMessagesRead(){
   if(!db || !currentRoomCode || !userUid) return;
   const col = boot.collection(db, "rooms", currentRoomCode, "messages");
-  const q = boot.query(col, boot.where("toUid","==", userUid), boot.where("read","==", false));
+  const q = boot.query(col, boot.where("toUid","==", userUid));
   const qs = await boot.getDocs(q);
   if(qs.empty) { unreadMsgsCount = 0; updateMessagesBadge(); return; }
 
   const batch = boot.writeBatch(db);
+  let any = false;
   qs.forEach(d=>{
-    batch.update(d.ref, { read:true, readAt: boot.serverTimestamp() });
+    const x = d.data() || {};
+    if(x.read === false){
+      any = true;
+      batch.update(d.ref, { read:true, readAt: boot.serverTimestamp() });
+    }
   });
+  if(!any){ unreadMsgsCount = 0; updateMessagesBadge(); return; }
   await batch.commit();
 }
+
 
 // ===== UI =====
 function bindUI(){
