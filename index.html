@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 6010)</title>
+  <title>Typer (BUILD 6011)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -324,7 +324,10 @@
       .rightBar{padding-bottom:18px;}
       .matchesWrap{overflow:auto;}
       .rightFooterBtn{position:static;left:auto;right:auto;bottom:auto;margin-top:10px;}
+      .rightFooterBtn{justify-content:center}
+      .rightFooterBtn .imgBtn img{width:min(300px,80vw);height:auto}
       .matchActionsPanel{flex-wrap:wrap;gap:12px;}
+      .midHead .row{flex-wrap:wrap}
     }
     @media (max-width: 560px){
       .matchRow{grid-template-columns: 1fr 92px 128px;gap:8px;padding:6px 8px;}
@@ -335,10 +338,22 @@
 
 
     /* 6010: MOBILE - dolne przyciski nie mogą wyjeżdżać poza ekran */
-     (max-width: 560px){
+    @media (max-width: 560px){
       .matchActionsPanel{flex-direction:column;gap:10px;min-height:unset;}
       .matchActionsPanel .sysBtn{max-width:92vw;}
       .matchActionsPanel .sysBtn img{height:64px;max-width:92vw;width:auto;}
+
+      /* 6011: MOBILE - górny pasek (kolejka/mecze/punkty) ma się zawijać w ekran */
+      .midHead .row{flex-wrap:wrap;justify-content:flex-start}
+      .midHead .title{font-size:18px}
+      .midHead .chip{padding:6px 10px;border-radius:14px;font-size:12px}
+      .roomTopBtns{margin-left:0}
+      .roomTopBtns .imgBtn img{width:min(210px,58vw);max-height:64px}
+
+      /* 6011: MOBILE - przycisk 'Tabela ligi typerów' nie może wyjeżdżać poza panel */
+      .rightFooterBtn{justify-content:center}
+      .rightFooterBtn .imgBtn img{width:min(260px,78vw);height:auto}
+
     }
 
     .midHead{padding:10px}
@@ -1502,7 +1517,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">6010</div>
+    <div id="buildCornerText">6011</div>
   </div>
 
 </body>
