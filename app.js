@@ -1802,9 +1802,11 @@ async function openRoom(code, opts={}){
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";
   el("btnMyQueue").style.display = adm ? "block" : "none";
+  // 6000: widoczność „Wpisz wyniki” sterowana przez syncActionButtons()
   el("btnEnterResults").style.display = adm ? "block" : "none";
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
+  syncActionButtons();
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
@@ -1817,9 +1819,11 @@ async function openRoom(code, opts={}){
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
     el("btnMyQueue").style.display = adm2 ? "block" : "none";
+    // 6000: widoczność „Wpisz wyniki” sterowana przez syncActionButtons()
     el("btnEnterResults").style.display = adm2 ? "block" : "none";
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
+    syncActionButtons();
   });
 
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
@@ -1857,7 +1861,7 @@ async function openRoom(code, opts={}){
     await loadMyPicks();
     renderMatches();
 
-    if(el("btnEnterResults")) el("btnEnterResults").disabled = !isAdmin() || !matchesCache.length || !iAmSubmitted();
+    syncActionButtons();
     if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
   });
 
@@ -1884,6 +1888,27 @@ function allMyPicksFilled(){
   return isCompletePicksObject(picksCache);
 }
 
+// ===== 6000: ACTION BUTTON VISIBILITY =====
+// Zasada: zanim zapiszesz typy -> widać „Zapisz typy”
+// Po zapisaniu typów -> „Zapisz typy” znika, a adminowi pojawia się „Wpisz wyniki”.
+function syncActionButtons(){
+  const btnSave = el("btnSaveAll");
+  const btnEnter = el("btnEnterResults");
+  const submitted = iAmSubmitted();
+  const adm = isAdmin();
+
+  if(btnSave){
+    btnSave.style.display = submitted ? "none" : "block";
+    // jeśli nie zapisane, pilnujemy kompletności typów
+    btnSave.disabled = submitted ? true : !allMyPicksFilled();
+  }
+
+  if(btnEnter){
+    btnEnter.style.display = (adm && submitted) ? "block" : "none";
+    btnEnter.disabled = !(adm && submitted && matchesCache.length);
+  }
+}
+
 async function saveAllPicks(){
   if(!currentRoomCode) return;
   if(!matchesCache.length){
@@ -1908,6 +1933,7 @@ async function saveAllPicks(){
   recomputeSubmittedMap();
   recomputePoints();
   renderPlayers(lastPlayers);
+  syncActionButtons();
 }
 
 // ===== RENDER =====
@@ -2151,9 +2177,8 @@ function renderMatches(){
 }
 
 function updateSaveButtonState(){
-  const btn = el("btnSaveAll");
-  if(!btn) return;
-  btn.disabled = !allMyPicksFilled();
+  // 6000: aktualizuje też widoczność przycisków akcji
+  syncActionButtons();
 }
 
 // ===== PODGLĄD TYPOW (MODAL) =====
