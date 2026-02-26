@@ -1,4 +1,4 @@
-const BUILD = 6007;
+const BUILD = 6008;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1351,6 +1351,56 @@ let picksDocByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
 
+// ===== 6008: COUNTDOWN DO KOŃCA TYPOWANIA =====
+// Koniec typowania = 1 minuta przed pierwszym (najwcześniejszym) meczem w kolejce.
+let typingDeadlineMs = null; // timestamp ms
+let typingClosed = false;
+
+function parseKickoffMs(m){
+  const raw = m?.kickoff ?? m?.kickoffAt ?? m?.dateTime ?? m?.datetime ?? m?.date ?? null;
+  if(!raw) return null;
+  if(raw instanceof Date) return raw.getTime();
+  if(typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if(typeof raw === "string"){
+    const ms = Date.parse(raw);
+    if(!Number.isNaN(ms)) return ms;
+  }
+  return null;
+}
+
+function recomputeTypingDeadline(){
+  if(!matchesCache || !matchesCache.length){
+    typingDeadlineMs = null;
+    typingClosed = false;
+    return;
+  }
+  let minKick = null;
+  for(const m of matchesCache){
+    const ms = parseKickoffMs(m);
+    if(ms==null) continue;
+    if(minKick==null || ms < minKick) minKick = ms;
+  }
+  if(minKick==null){
+    typingDeadlineMs = null;
+    typingClosed = false;
+    return;
+  }
+  typingDeadlineMs = minKick - 60_000; // 1 minuta przed
+  typingClosed = Date.now() >= typingDeadlineMs;
+}
+
+function formatCountdown(msLeft){
+  const s = Math.max(0, Math.floor(msLeft/1000));
+  const days = Math.floor(s/86400);
+  const hours = Math.floor((s%86400)/3600);
+  const mins = Math.floor((s%3600)/60);
+  const secs = s%60;
+  const pad = (n)=>String(n).padStart(2,"0");
+  if(days>0) return `${days}d ${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+  return `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+}
+
+
 let pointsByUid = {};
 let myPoints = null;
 
@@ -1637,6 +1687,23 @@ function bindUI(){
     if(!leagueState.roomCode) return;
     await openLeagueTable(leagueState.roomCode, {silent:true});
   };
+
+
+  // 6008: odświeżaj licznik co 1s (bez dodatkowych renderów)
+  if(!window.__typingCountdownTimer){
+    window.__typingCountdownTimer = setInterval(()=>{
+      if(typingDeadlineMs == null) return;
+      const left = typingDeadlineMs - Date.now();
+      const v = el("typingCountdownValue");
+      if(v) v.textContent = formatCountdown(left);
+
+      // gdy dojdzie do 0 – blokujemy typowanie i odświeżamy widok (żeby inputy dostały disabled)
+      if(left <= 0 && !typingClosed){
+        typingClosed = true;
+        try{ renderMatches(); syncActionButtons(); }catch(e){}
+      }
+    }, 1000);
+  }
 }
 
 
@@ -2064,7 +2131,8 @@ function syncActionButtons(){
   if(btnSave){
     btnSave.style.display = submitted ? "none" : "block";
     // jeśli nie zapisane, pilnujemy kompletności typów
-    btnSave.disabled = submitted ? true : !allMyPicksFilled();
+    // 6008: po zamknięciu typowania blokujemy dopisywanie/zmianę typów
+    btnSave.disabled = submitted ? true : (typingClosed || !allMyPicksFilled());
   }
 
   if(btnEnter){
@@ -2083,6 +2151,12 @@ function syncActionButtons(){
 
 async function saveAllPicks(){
   if(!currentRoomCode) return;
+
+  if(typingClosed){
+    showToast(getLang()==="en" ? "Typing closed" : "Typowanie zamknięte");
+    return;
+  }
+
   if(!matchesCache.length){
     showToast(getLang()==="en" ? "No matches" : "Brak meczów");
     return;
@@ -2208,6 +2282,8 @@ function renderMatches(){
   if(!list) return;
   list.innerHTML = "";
 
+  recomputeTypingDeadline();
+
   el("matchesCount").textContent = String(matchesCache.length || 0);
 
   if(el("myPointsLabel")){
@@ -2292,6 +2368,7 @@ function renderMatches(){
     inpH.inputMode = "numeric";
     inpH.placeholder = "0";
     inpH.value = (picksCache[m.id]?.h ?? "") === "" ? "" : String(picksCache[m.id]?.h ?? "");
+    inpH.disabled = typingClosed;
     inpH.oninput = () => {
       const v = clampInt(inpH.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
@@ -2308,6 +2385,7 @@ function renderMatches(){
     inpA.inputMode = "numeric";
     inpA.placeholder = "0";
     inpA.value = (picksCache[m.id]?.a ?? "") === "" ? "" : String(picksCache[m.id]?.a ?? "");
+    inpA.disabled = typingClosed;
     inpA.oninput = () => {
       const v = clampInt(inpA.value, 0, 20);
       picksCache[m.id] = picksCache[m.id] || {};
@@ -2345,6 +2423,45 @@ function renderMatches(){
     list.appendChild(row);
   }
 
+
+
+  // ===== 6008: licznik do końca typowania (1 min przed pierwszym meczem) =====
+  const cd = document.createElement("div");
+  cd.className = "typingCountdown";
+  cd.style.marginTop = "auto";
+  cd.style.padding = "10px 12px";
+  cd.style.borderRadius = "16px";
+  cd.style.border = "1px solid rgba(255,255,255,.12)";
+  cd.style.background = "rgba(0,0,0,.18)";
+  cd.style.display = "flex";
+  cd.style.alignItems = "center";
+  cd.style.justifyContent = "center";
+  cd.style.gap = "10px";
+
+  const label = document.createElement("div");
+  label.style.fontWeight = "950";
+  label.style.color = "rgba(255,255,255,.92)";
+  label.textContent = "Do końca typowania pozostało:";
+
+  const val = document.createElement("div");
+  val.id = "typingCountdownValue";
+  val.style.fontWeight = "1000";
+  val.style.letterSpacing = ".5px";
+
+  if(typingDeadlineMs == null){
+    cd.style.display = "none";
+  }else{
+    const left = typingDeadlineMs - Date.now();
+    val.textContent = formatCountdown(left);
+    if(left <= 0){
+      typingClosed = true;
+      val.textContent = "00:00:00";
+    }
+  }
+
+  cd.appendChild(label);
+  cd.appendChild(val);
+  list.appendChild(cd);
   updateSaveButtonState();
 }
 
@@ -2781,6 +2898,12 @@ async function addRandomQueue(){
 
   __shuffle(teams);
 
+  // 6008: testowe daty/godziny (max 5 min od teraz, pierwsze >= 3 min)
+  const nowMs = Date.now();
+  const minOffsetMs = 3 * 60 * 1000;
+  const maxOffsetMs = 5 * 60 * 1000;
+
+
   const b = boot.writeBatch(db);
   for(let i=0;i<10;i++){
     const a = teams[i*2];
@@ -2793,10 +2916,13 @@ async function addRandomQueue(){
 
     const id = `m_${Date.now()}_${i}`;
     const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+    const kickoffMs = nowMs + minOffsetMs + Math.floor(Math.random() * Math.max(1, (maxOffsetMs - minOffsetMs)));
+
     b.set(ref, {
       idx: i,
       home,
       away,
+      kickoff: new Date(kickoffMs).toISOString(),
       createdAt: boot.serverTimestamp()
     });
   }
