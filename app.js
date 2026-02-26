@@ -1,4 +1,4 @@
-const BUILD = 6030;
+const BUILD = 6032;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2196,7 +2196,11 @@ function bindUI(){
   };
 
   const __btnLeave = el("btnLeave");
-  if(__btnLeave) __btnLeave.onclick = async ()=>{ await leaveRoom(); };
+  if(__btnLeave) __btnLeave.onclick = async ()=>{
+    const ok = await customConfirmLeaveRoom();
+    if(!ok) return;
+    await leaveRoom();
+  };
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
@@ -3467,6 +3471,76 @@ async function customConfirmEndRound(){
     ? 'End the round? Ending will archive the round and add all points to players.'
     : 'Czy zakończyć kolejkę? Zakończenie spowoduje przeniesienie do archiwum a wszystkie punkty doliczone do graczy.';
   return await ensureEndRoundConfirmModal().open(txt);
+}
+
+// Custom confirm modal for leaving room (instead of system confirm)
+let _leaveRoomConfirmModal = null;
+function ensureLeaveRoomConfirmModal(){
+  if(_leaveRoomConfirmModal) return _leaveRoomConfirmModal;
+
+  if(!document.getElementById("leaveRoomConfirmStyles")){
+    const st = document.createElement('style');
+    st.id = "leaveRoomConfirmStyles";
+    st.textContent = `
+      .leaveRoomOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .leaveRoomBox{width:min(820px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .leaveRoomTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .leaveRoomText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
+      .leaveRoomActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .leaveRoomBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .leaveRoomBtnImg:active{transform:translateY(1px);} 
+      @media (max-width:520px){.leaveRoomBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'leaveRoomOverlay';
+  overlay.innerHTML = `
+    <div class="leaveRoomBox" role="dialog" aria-modal="true">
+      <div class="leaveRoomTitle">${getLang()==='en' ? 'Leave room' : 'Opuść pokój'}</div>
+      <div class="leaveRoomText" id="leaveRoomConfirmText"></div>
+      <div class="leaveRoomActions">
+        <img id="leaveRoomBtnYes" class="leaveRoomBtnImg" alt="YES" />
+        <img id="leaveRoomBtnNo" class="leaveRoomBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#leaveRoomConfirmText');
+  const btnYes = overlay.querySelector('#leaveRoomBtnYes');
+  const btnNo = overlay.querySelector('#leaveRoomBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _leaveRoomConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+  return _leaveRoomConfirmModal;
+}
+
+async function customConfirmLeaveRoom(){
+  const txt = (getLang()==='en')
+    ? 'When you leave the room, you can return later, but you will need the access code.\nBefore leaving, save the code so you can join again.\nContinue?'
+    : 'Kiedy opuścisz pokój ponownie będziesz mógł do niego powrócić ale trzeba będzie podać kod dostępu do pokoju.\nPrzed opuszczeniem pokoju zapisz sobie kod aby móc do niego ponownie wejść.\nCzy kontynuować?';
+  return await ensureLeaveRoomConfirmModal().open(txt);
 }
 
 async function endRoundConfirmAndArchive(){
