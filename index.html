@@ -1,13 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 6012)</title>
-  <link rel="manifest" href="manifest.json" />
-
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="#08122a" name="theme-color"/>
+<title>Typer (BUILD 6013)</title>
+<link href="manifest.json" rel="manifest"/>
+<style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
 .roomCodeRow .imgBtn{flex:0 0 auto;}
 
@@ -354,6 +354,7 @@
       .rightBar{padding-bottom:18px;}
       .matchesWrap{overflow:auto;}
       .rightFooterBtn{position:static;left:auto;right:auto;bottom:auto;margin-top:10px;}
+      .rightExitContainer{position:static;left:auto;right:auto;bottom:auto;margin-top:10px;display:flex;justify-content:center;}
       .rightFooterBtn{justify-content:center}
       .rightFooterBtn .imgBtn img{width:min(300px,80vw);height:auto}
       .matchActionsPanel{flex-wrap:wrap;gap:12px;}
@@ -484,7 +485,17 @@
     .rightFooterBtn .btn{width:auto}
 
 
-    /* ===== ADD QUEUE MENU (modal) ===== */
+    
+
+    .rightExitContainer{
+      position:absolute;
+      right:14px;
+      bottom:14px;
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+    }
+/* ===== ADD QUEUE MENU (modal) ===== */
     #addQueueOverlay{
       position:absolute;
       inset:0;
@@ -1180,335 +1191,292 @@
 
 </style>
 </head>
-
 <body>
-  <div id="bg"></div>
-
-  <div id="rotateOverlay" aria-live="polite">
-    <div class="rotateCard">
-      <div class="rotateTitle">Obróć telefon poziomo</div>
-      <div class="rotateSub">Ta część gry działa w trybie poziomym.
+<div id="bg"></div>
+<div aria-live="polite" id="rotateOverlay">
+<div class="rotateCard">
+<div class="rotateTitle">Obróć telefon poziomo</div>
+<div class="rotateSub">Ta część gry działa w trybie poziomym.
 Gdy obrócisz ekran, wrócisz do typowania.</div>
-    </div>
-  </div>
-
+</div>
+</div>
 <div id="app">
-    <div class="frame">
-
-      <!-- SPLASH -->
-      <section id="splash" class="screen active">
-        <div class="splashCard">
-          <div style="font-size:22px;font-weight:1000;">Typer</div>
-          <div class="hint" id="splashHint">Ładowanie…</div>
-          <div class="err" id="splashErr"></div>
-          <div class="spinner"></div>
-        </div>
-      </section>
-
-      <!-- HOME -->
-      <section id="home" class="screen">
-        <!-- Language flags (HOME) -->
-        <div class="homeLang" aria-label="Language">
-          <button class="flagBtn" id="btnLangPL" type="button" title="Polski"><img class="flagImg" src="ui/flags/pl.png" alt="PL"></button>
-          <button class="flagBtn" id="btnLangEN" type="button" title="English"><img class="flagImg" src="ui/flags/gb.png" alt="EN"></button>
-        </div>
-        <!-- NOWE: zębatka ustawień -->
-        <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
-          <img class="homeGearImg" src="ui/logo/btn_ustawienia.png" alt="Ustawienia">
-        </div>
-
-        <div class="homeBtns" aria-label="Menu">
-          <button class="imgBtn" id="btnHomeRooms" title="Pokoje typerów" data-btn="btn_tipster_room.png">
-            <img src="ui/buttons/pl/btn_tipster_room.png" alt="Pokoje typerów" data-btn="btn_tipster_room.png">
-          </button>
-          <button class="imgBtn" id="btnHomeStats" title="Statystyki" data-btn="btn_statistics.png">
-            <img src="ui/buttons/pl/btn_statistics.png" alt="Statystyki" data-btn="btn_statistics.png">
-          </button>
-          <button class="imgBtn" id="btnHomeExit" title="Wyjście" data-btn="btn_exit.png">
-            <img src="ui/buttons/pl/btn_exit.png" alt="Wyjście" data-btn="btn_exit.png">
-          </button>
-        </div>
-      </section>
-
-      <!-- CONTINUE -->
-      <section id="continue" class="screen">
-        <div class="continueBox panel">
-          <div class="continueCard">
-            <div class="continueTop">
-              <div>
-                <div class="title" style="margin:0" id="t_continue_title">Kontynuować?</div>
-                <div class="sub" id="t_continue_sub">Wykryto wcześniejszą rozgrywkę</div>
-              </div>
-              <div class="pill">Typer</div>
-            </div>
-
-            <div class="continueGrid">
-              <div class="miniCard">
-                <div class="sub" id="t_continue_hello">Witaj ponownie</div>
-                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contNick">—</div>
-              </div>
-              <div class="miniCard">
-                <div class="sub" id="t_continue_room">Grasz w pokoju</div>
-                <div style="font-size:18px;font-weight:1000;margin-top:6px" id="contRoomName">—</div>
-              </div>
-            </div>
-
-            <div class="bigQ" id="t_continue_q">Czy chcesz kontynuować grę w tym pokoju?</div>
-
-            <div class="continueBtns">
-              <button class="imgBtn sysBtn" id="btnContYes" type="button" data-btn="btn_tak.png"><img data-btn="btn_tak.png" src="ui/buttons/pl/btn_tak.png" alt="btnContYes"></button>
-              <button class="imgBtn sysBtn" id="btnContNo" type="button" data-btn="btn_nie.png"><img data-btn="btn_nie.png" src="ui/buttons/pl/btn_nie.png" alt="btnContNo"></button>
-              <div class="spacer"></div>
-              <button class="imgBtn sysBtn small" id="btnContForget" type="button" data-btn="btn_zamknij_pokoj.png"><img data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_opusc.png" alt="btnContForget"></button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ROOMS -->
-      <section id="rooms" class="screen">
-        <div class="roomsBox panel">
-          <div class="row">
-            <div class="chip" id="t_rooms_title">Pokoje typerów</div>
-            <div class="spacer"></div>
-            <div class="chip"><span id="t_nick">Nick</span>: <span id="nickLabelRooms">—</span></div>
-            <button class="imgBtn sysBtn small" id="btnChangeNickRooms" type="button" data-btn="btn_dodaj_profil.png"><img data-btn="btn_dodaj_profil.png" src="ui/buttons/pl/btn_dodaj_profil.png" alt="btnChangeNickRooms"></button>
-            <button class="imgBtn sysBtn small" id="btnBackHomeFromRooms" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnBackHomeFromRooms"></button>
-          </div>
-
-          <div class="panel block">
-            <h2 id="t_join_title">Dołącz do pokoju</h2>
-            <div class="row" style="margin-top:10px"><input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase" />
-              <button class="imgBtn sysBtn" id="btnJoinRoom" type="button" data-btn="btn_wejdz_pokoj.png"><img data-btn="btn_wejdz_pokoj.png" src="ui/buttons/pl/btn_wejdz_pokoj.png" alt="btnJoinRoom"></button>
-            </div>
-            <div class="help" style="margin-top:8px" id="t_join_help">Wpisz kod od admina.</div>
-          </div>
-
-          <div class="panel block">
-            <h2 id="t_create_title">Utwórz nowy pokój</h2>
-            <div class="row" style="margin-top:10px">
-              <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1" />
-              <button class="imgBtn sysBtn" id="btnCreateRoom" type="button" data-btn="btn_zaloz.png"><img data-btn="btn_zaloz.png" src="ui/buttons/pl/btn_zaloz.png" alt="btnCreateRoom"></button>
-            </div>
-            <div class="help" style="margin-top:8px" id="t_create_help">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
-          </div>
-
-          <div class="panel block">
-            <h2>Debug</h2>
-            <div class="help" id="debugRooms">—</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ROOM -->
-      <section id="room" class="screen">
-        <div id="roomLayout">
-
-          <!-- LEFT -->
-          <div class="leftBar panel">
-            <div class="col" style="gap:10px">
-              <div class="chip" id="t_room_room">Pokój</div>
-              <div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
-            </div>
-
-            <div class="panel" style="padding:14px">
-              <div class="title" id="roomName">—</div>
-              <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
-              <div class="roomCodeBlock" style="margin-top:10px">
-                <div class="row roomCodeRow">
-                  <div class="chip" style="flex:1;justify-content:space-between;">
-                    <span id="t_code">Kod</span>: <span id="roomCode">—</span>
-                  </div>
-                </div>
-                <div class="row roomCodeActions" style="margin-top:10px; gap:12px; justify-content:center;">
-                  <button class="imgBtn sysBtn small" id="btnLeave" type="button" aria-label="Opuść" title="Opuść" data-btn="btn_opusc.png"><img data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png" alt="Opuść"></button>                </div>
-              </div>
-            </div>
-
-            <div class="panel" style="padding:14px">
-              <div class="title" id="t_actions">Akcje</div>
-              <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
-              <div class="col" id="roomActionsCol" style="margin-top:10px">
-                <!-- BUILD 5203: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
-                <button class="imgBtn sysBtn" id="btnExitFromRoomRight" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="btnExitFromRoomRight"></button>
-              </div>
-            </div>
-
-            <div class="spacer"></div>
-            <!-- back button removed (back is now on the right as "Wyjście") -->
-          </div>
-
-          <!-- MIDDLE -->
-          <div class="mid">
-            <div class="panel midHead">
-              <div class="row">
-                <div>
-                  <div class="title" id="t_matches">Spotkania</div>
-                </div>
-
-                <!-- ADMIN: przeniesione z lewego panelu (Akcje) na górę, obok nagłówka Spotkań -->
-                <div class="roomTopBtns">
-                  <button class="imgBtn sysBtn actionSmall" id="btnAddQueue" style="display:none" type="button" data-btn="btn_dodaj_kolejke.png"><img data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png" alt="btnAddQueue"></button>
-                </div>
-                <div class="spacer"></div>
-	                <div class="chip"><span id="t_round">KOLEJKA</span><span class="chipSep" id="sep_round">: </span><span id="roundLabel">—</span></div>
-                <div class="chip"><span id="t_games">Mecze</span>: <span id="matchesCount">0</span></div>
-	                <div class="chip"><span id="t_points_round">PUNKTY</span><span class="chipSep" id="sep_points_round">: </span><span id="myPointsLabel">—</span></div>
-              </div>
-            </div>
-
-            <div class="panel matchesWrap" id="matchesList"></div>
-
-            <!-- 6001: panel pod meczami na przyciski (Wpisz Wyniki / Zakończ kolejkę) -->
-            <div class="panel matchActionsPanel" id="matchActionsPanel">
-              <!-- 6004: przeniesiono "Zapisz typy" (btn_save_picks.png / #btnSaveAll) z lewego panelu do dolnego kontenera -->
-              <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png">
-                <img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll">
-              </button>
-
-
-              <button class="imgBtn sysBtn" id="btnEnterResults" style="display:none" type="button" data-btn="btn_dodaj_wyniki.png">
-                <img data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png" alt="btnEnterResults">
-              </button>
-              <button class="imgBtn sysBtn" id="btnEndRound" style="display:none" disabled type="button" data-btn="btn_zakoncz_kolejke.png">
-                <img data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png" alt="btnEndRound">
-              </button>
-            </div>
-
-          </div>
-
-          <!-- RIGHT -->
-          <div class="rightBar panel">
-            <div>
-              <div class="title" id="t_players">Gracze</div>
-              <div class="sub" id="t_players_sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
-            </div>
-            <div class="playersList" id="playersList"></div>
-
-            <div class="rightFooterBtn">
-	              <button class="imgBtn sysBtn small" id="btnLeagueFromRoom" type="button" data-btn="btn_tabela_typerow.png"><img data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png" alt="btnLeagueFromRoom"></button>
-            </div>
-          </div>
-
-        </div>
-      
-          <!-- ADD QUEUE MENU OVERLAY (BUILD 5204) -->
-          <div id="addQueueOverlay" aria-hidden="true">
-            <div class="aqModal panel" role="dialog" aria-label="Add queue menu">
-              <div class="aqBtns">
-                <button class="imgBtn sysBtn" id="btnAQRandom" type="button" data-btn="btn_random.png">
-                  <img data-btn="btn_random.png" src="ui/buttons/pl/btn_random.png" alt="btn_random">
-                </button>
-                <button class="imgBtn sysBtn" id="btnAQManual" type="button" data-btn="btn_manual.png">
-                  <img data-btn="btn_manual.png" src="ui/buttons/pl/btn_manual.png" alt="btn_manual">
-                </button>
-                <button class="imgBtn sysBtn" id="btnAQBack" type="button" data-btn="btn_back.png">
-                  <img data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png" alt="btn_back">
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- MANUAL QUEUE OVERLAY (BUILD 6008) -->
-          <div id="manualQueueOverlay" aria-hidden="true">
-            <div class="mqModal panel" role="dialog" aria-label="Manual queue">
-              <div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
-              <div class="mqList" id="manualQueueList"></div>
-              <div class="mqFooter">
-                <button class="imgBtn sysBtn" id="btnMQSave" type="button" data-btn="btn_zapisz_typy.png">
-                  <img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnMQSave">
-                </button>
-                <button class="imgBtn sysBtn" id="btnMQBack" type="button" data-btn="btn_back.png">
-                  <img data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png" alt="btnMQBack">
-                </button>
-              </div>
-            </div>
-          </div>
-
+<div class="frame">
+<!-- SPLASH -->
+<section class="screen active" id="splash">
+<div class="splashCard">
+<div style="font-size:22px;font-weight:1000;">Typer</div>
+<div class="hint" id="splashHint">Ładowanie…</div>
+<div class="err" id="splashErr"></div>
+<div class="spinner"></div>
+</div>
 </section>
+<!-- HOME -->
+<section class="screen" id="home">
+<!-- Language flags (HOME) -->
+<div aria-label="Language" class="homeLang">
+<button class="flagBtn" id="btnLangPL" title="Polski" type="button"><img alt="PL" class="flagImg" src="ui/flags/pl.png"/></button>
+<button class="flagBtn" id="btnLangEN" title="English" type="button"><img alt="EN" class="flagImg" src="ui/flags/gb.png"/></button>
+</div>
+<!-- NOWE: zębatka ustawień -->
+<div class="homeGear" id="btnHomeSettings" title="Ustawienia">
+<img alt="Ustawienia" class="homeGearImg" src="ui/logo/btn_ustawienia.png"/>
+</div>
+<div aria-label="Menu" class="homeBtns">
+<button class="imgBtn" data-btn="btn_tipster_room.png" id="btnHomeRooms" title="Pokoje typerów">
+<img alt="Pokoje typerów" data-btn="btn_tipster_room.png" src="ui/buttons/pl/btn_tipster_room.png"/>
+</button>
+<button class="imgBtn" data-btn="btn_statistics.png" id="btnHomeStats" title="Statystyki">
+<img alt="Statystyki" data-btn="btn_statistics.png" src="ui/buttons/pl/btn_statistics.png"/>
+</button>
+<button class="imgBtn" data-btn="btn_exit.png" id="btnHomeExit" title="Wyjście">
+<img alt="Wyjście" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/>
+</button>
+</div>
+</section>
+<!-- CONTINUE -->
+<section class="screen" id="continue">
+<div class="continueBox panel">
+<div class="continueCard">
+<div class="continueTop">
+<div>
+<div class="title" id="t_continue_title" style="margin:0">Kontynuować?</div>
+<div class="sub" id="t_continue_sub">Wykryto wcześniejszą rozgrywkę</div>
+</div>
+<div class="pill">Typer</div>
+</div>
+<div class="continueGrid">
+<div class="miniCard">
+<div class="sub" id="t_continue_hello">Witaj ponownie</div>
+<div id="contNick" style="font-size:18px;font-weight:1000;margin-top:6px">—</div>
+</div>
+<div class="miniCard">
+<div class="sub" id="t_continue_room">Grasz w pokoju</div>
+<div id="contRoomName" style="font-size:18px;font-weight:1000;margin-top:6px">—</div>
+</div>
+</div>
+<div class="bigQ" id="t_continue_q">Czy chcesz kontynuować grę w tym pokoju?</div>
+<div class="continueBtns">
+<button class="imgBtn sysBtn" data-btn="btn_tak.png" id="btnContYes" type="button"><img alt="btnContYes" data-btn="btn_tak.png" src="ui/buttons/pl/btn_tak.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_nie.png" id="btnContNo" type="button"><img alt="btnContNo" data-btn="btn_nie.png" src="ui/buttons/pl/btn_nie.png"/></button>
+<div class="spacer"></div>
+<button class="imgBtn sysBtn small" data-btn="btn_zamknij_pokoj.png" id="btnContForget" type="button"><img alt="btnContForget" data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_opusc.png"/></button>
+</div>
+</div>
+</div>
+</section>
+<!-- ROOMS -->
+<section class="screen" id="rooms">
+<div class="roomsBox panel">
+<div class="row">
+<div class="chip" id="t_rooms_title">Pokoje typerów</div>
+<div class="spacer"></div>
+<div class="chip"><span id="t_nick">Nick</span>: <span id="nickLabelRooms">—</span></div>
+<button class="imgBtn sysBtn small" data-btn="btn_dodaj_profil.png" id="btnChangeNickRooms" type="button"><img alt="btnChangeNickRooms" data-btn="btn_dodaj_profil.png" src="ui/buttons/pl/btn_dodaj_profil.png"/></button>
+<button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnBackHomeFromRooms" type="button"><img alt="btnBackHomeFromRooms" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+</div>
+<div class="panel block">
+<h2 id="t_join_title">Dołącz do pokoju</h2>
+<div class="row" style="margin-top:10px"><input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase"/>
+<button class="imgBtn sysBtn" data-btn="btn_wejdz_pokoj.png" id="btnJoinRoom" type="button"><img alt="btnJoinRoom" data-btn="btn_wejdz_pokoj.png" src="ui/buttons/pl/btn_wejdz_pokoj.png"/></button>
+</div>
+<div class="help" id="t_join_help" style="margin-top:8px">Wpisz kod od admina.</div>
+</div>
+<div class="panel block">
+<h2 id="t_create_title">Utwórz nowy pokój</h2>
+<div class="row" style="margin-top:10px">
+<input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1"/>
+<button class="imgBtn sysBtn" data-btn="btn_zaloz.png" id="btnCreateRoom" type="button"><img alt="btnCreateRoom" data-btn="btn_zaloz.png" src="ui/buttons/pl/btn_zaloz.png"/></button>
+</div>
+<div class="help" id="t_create_help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
+</div>
+<div class="panel block">
+<h2>Debug</h2>
+<div class="help" id="debugRooms">—</div>
+</div>
+</div>
+</section>
+<!-- ROOM -->
+<section class="screen" id="room">
+<div id="roomLayout">
+<!-- LEFT -->
+<div class="leftBar panel">
+<div class="col" style="gap:10px">
+<div class="chip" id="t_room_room">Pokój</div>
+<div class="chip"><span id="t_nick2">Nick</span>: <span id="nickLabelRoom">—</span></div>
+</div>
+<div class="panel" style="padding:14px">
+<div class="title" id="roomName">—</div>
+<div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
+<div class="roomCodeBlock" style="margin-top:10px">
+<div class="row roomCodeRow">
+<div class="chip" style="flex:1;justify-content:space-between;">
+<span id="t_code">Kod</span>: <span id="roomCode">—</span>
+</div>
+</div>
+<div class="row roomCodeActions" style="margin-top:10px; gap:12px; justify-content:center;">
+<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button> </div>
+</div>
+</div>
+<div class="panel" style="padding:14px">
 
-      <!-- RESULTS (ADMIN) -->
-      <section id="results" class="screen">
-        <div class="resultsWrap panel">
-          <div class="resultsTop">
-            <div class="row" style="gap:10px;flex-wrap:wrap">
-              <div class="chip" id="t_results">Wyniki</div>
-              <div class="chip"><span id="t_room">Pokój</span>: <span id="resRoomName">—</span></div>
-              <div class="chip"><span id="t_round2">KOLEJKA</span>: <span id="resRound">—</span></div>
-            </div>
-            <div class="row">
-              <button class="imgBtn sysBtn" id="btnResBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnResBack"></button>
-              <button class="imgBtn sysBtn" id="btnResSave" type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnResSave"></button>
-            </div>
-          </div>
 
-          <div class="panel resultsList" id="resultsList"></div>
-          <div class="sub" style="padding:10px 14px" id="t_results_hint">
+<div class="col" id="roomActionsCol" style="margin-top:10px">
+<!-- BUILD 5203: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
+
+<button class="imgBtn sysBtn small" data-btn="btn_tabela_typerow.png" id="btnLeagueFromRoom" type="button"><img alt="btnLeagueFromRoom" data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png"/></button></div>
+</div>
+<div class="spacer"></div>
+<!-- back button removed (back is now on the right as "Wyjście") -->
+</div>
+<!-- MIDDLE -->
+<div class="mid">
+<div class="panel midHead">
+<div class="row">
+<div>
+<div class="title" id="t_matches">Spotkania</div>
+</div>
+<!-- ADMIN: przeniesione z lewego panelu (Akcje) na górę, obok nagłówka Spotkań -->
+<div class="roomTopBtns">
+<button class="imgBtn sysBtn actionSmall" data-btn="btn_dodaj_kolejke.png" id="btnAddQueue" style="display:none" type="button"><img alt="btnAddQueue" data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_add_queue.png"/></button>
+</div>
+<div class="spacer"></div>
+<div class="chip"><span id="t_round">KOLEJKA</span><span class="chipSep" id="sep_round">: </span><span id="roundLabel">—</span></div>
+<div class="chip"><span id="t_games">Mecze</span>: <span id="matchesCount">0</span></div>
+<div class="chip"><span id="t_points_round">PUNKTY</span><span class="chipSep" id="sep_points_round">: </span><span id="myPointsLabel">—</span></div>
+</div>
+</div>
+<div class="panel matchesWrap" id="matchesList"></div>
+<!-- 6001: panel pod meczami na przyciski (Wpisz Wyniki / Zakończ kolejkę) -->
+<div class="panel matchActionsPanel" id="matchActionsPanel">
+<!-- 6004: przeniesiono "Zapisz typy" (btn_save_picks.png / #btnSaveAll) z lewego panelu do dolnego kontenera -->
+<button class="imgBtn sysBtn" data-btn="btn_zapisz_typy.png" disabled="" id="btnSaveAll" type="button">
+<img alt="btnSaveAll" data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png"/>
+</button>
+<button class="imgBtn sysBtn" data-btn="btn_dodaj_wyniki.png" id="btnEnterResults" style="display:none" type="button">
+<img alt="btnEnterResults" data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_enter_results.png"/>
+</button>
+<button class="imgBtn sysBtn" data-btn="btn_zakoncz_kolejke.png" disabled="" id="btnEndRound" style="display:none" type="button">
+<img alt="btnEndRound" data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png"/>
+</button>
+</div>
+</div>
+<!-- RIGHT -->
+<div class="rightBar panel">
+<div>
+<div class="title" id="t_players">Gracze</div>
+<div class="sub" id="t_players_sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
+</div>
+<div class="playersList" id="playersList"></div>
+<div class="rightExitContainer"><button class="imgBtn sysBtn" data-btn="btn_exit.png" id="btnExitFromRoomRight" type="button"><img alt="btnExitFromRoomRight" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/></button></div>
+</div>
+</div>
+<!-- ADD QUEUE MENU OVERLAY (BUILD 5204) -->
+<div aria-hidden="true" id="addQueueOverlay">
+<div aria-label="Add queue menu" class="aqModal panel" role="dialog">
+<div class="aqBtns">
+<button class="imgBtn sysBtn" data-btn="btn_random.png" id="btnAQRandom" type="button">
+<img alt="btn_random" data-btn="btn_random.png" src="ui/buttons/pl/btn_random.png"/>
+</button>
+<button class="imgBtn sysBtn" data-btn="btn_manual.png" id="btnAQManual" type="button">
+<img alt="btn_manual" data-btn="btn_manual.png" src="ui/buttons/pl/btn_manual.png"/>
+</button>
+<button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnAQBack" type="button">
+<img alt="btn_back" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
+</button>
+</div>
+</div>
+</div>
+<!-- MANUAL QUEUE OVERLAY (BUILD 6008) -->
+<div aria-hidden="true" id="manualQueueOverlay">
+<div aria-label="Manual queue" class="mqModal panel" role="dialog">
+<div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
+<div class="mqList" id="manualQueueList"></div>
+<div class="mqFooter">
+<button class="imgBtn sysBtn" data-btn="btn_zapisz_typy.png" id="btnMQSave" type="button">
+<img alt="btnMQSave" data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png"/>
+</button>
+<button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnMQBack" type="button">
+<img alt="btnMQBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- RESULTS (ADMIN) -->
+<section class="screen" id="results">
+<div class="resultsWrap panel">
+<div class="resultsTop">
+<div class="row" style="gap:10px;flex-wrap:wrap">
+<div class="chip" id="t_results">Wyniki</div>
+<div class="chip"><span id="t_room">Pokój</span>: <span id="resRoomName">—</span></div>
+<div class="chip"><span id="t_round2">KOLEJKA</span>: <span id="resRound">—</span></div>
+</div>
+<div class="row">
+<button class="imgBtn sysBtn" data-btn="btn_cofnij.png" id="btnResBack" type="button"><img alt="btnResBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_zapisz_typy.png" id="btnResSave" type="button"><img alt="btnResSave" data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png"/></button>
+</div>
+</div>
+<div class="panel resultsList" id="resultsList"></div>
+<div class="sub" id="t_results_hint" style="padding:10px 14px">
             Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
           </div>
-        </div>
-      </section>
-
-      <!-- LEAGUE -->
-      <section id="league" class="screen">
-        <div class="leagueWrap panel">
-          <div class="leagueTop">
-            <div class="leagueTopLeft">
-              <div class="chip" id="t_league">Tabela ligi typerów</div>
-              <div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
-              <div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
-              <div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
-            </div>
-            <div class="row">
-              <button class="imgBtn sysBtn small" id="btnLeagueRefresh" type="button" data-btn="btn_odswiez.png"><img data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png" alt="btnLeagueRefresh"></button>
-              <button class="imgBtn sysBtn small" id="btnLeagueBack" type="button" data-btn="btn_cofnij.png"><img data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png" alt="btnLeagueBack"></button>
-            </div>
-          </div>
-
-          <div class="panel" style="padding:14px">
-            <div class="title" style="margin:0 0 10px 0" id="t_ranking">Ranking</div>
-            <div class="sub" style="margin-bottom:10px" id="leagueHint">
+</div>
+</section>
+<!-- LEAGUE -->
+<section class="screen" id="league">
+<div class="leagueWrap panel">
+<div class="leagueTop">
+<div class="leagueTopLeft">
+<div class="chip" id="t_league">Tabela ligi typerów</div>
+<div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
+<div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
+<div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
+</div>
+<div class="row">
+<button class="imgBtn sysBtn small" data-btn="btn_odswiez.png" id="btnLeagueRefresh" type="button"><img alt="btnLeagueRefresh" data-btn="btn_odswiez.png" src="ui/buttons/pl/btn_odswiez.png"/></button>
+<button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnLeagueBack" type="button"><img alt="btnLeagueBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+</div>
+</div>
+<div class="panel" style="padding:14px">
+<div class="title" id="t_ranking" style="margin:0 0 10px 0">Ranking</div>
+<div class="sub" id="leagueHint" style="margin-bottom:10px">
               Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).
             </div>
-
-            <div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
-              <table id="leagueTable">
-                <thead>
-                <tr>
-                  <th style="width:60px">#</th>
-                  <th id="t_player_col">Gracz</th>
-                  <th style="width:120px" id="t_rounds_col">Kolejki</th>
-                  <th style="width:120px" id="t_points_col">Punkty</th>
-                </tr>
-                </thead>
-                <tbody id="leagueBody">
-                <tr><td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <!-- MODAL -->
-      <div class="modal" id="modal">
-        <div class="modalCard">
-          <div class="modalHead">
-            <div class="chip" id="modalTitle">—</div>
-            <div class="spacer"></div>
-            <button class="imgBtn sysBtn small" id="modalClose" type="button" class="imgBtn sysBtn small" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="modalClose"></button>
-          </div>
-          <div class="modalBody" id="modalBody"></div>
-        </div>
-      </div>
-
-      <div class="toast" id="toast"></div>
-      <div class="footerRight" id="footerRight">—</div>
-    </div>
-  </div>
-
-  <script>
+<div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
+<table id="leagueTable">
+<thead>
+<tr>
+<th style="width:60px">#</th>
+<th id="t_player_col">Gracz</th>
+<th id="t_rounds_col" style="width:120px">Kolejki</th>
+<th id="t_points_col" style="width:120px">Punkty</th>
+</tr>
+</thead>
+<tbody id="leagueBody">
+<tr><td colspan="4" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modalCard">
+<div class="modalHead">
+<div class="chip" id="modalTitle">—</div>
+<div class="spacer"></div>
+<button class="imgBtn sysBtn small" data-btn="btn_exit.png" id="modalClose" type="button"><img alt="modalClose" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/></button>
+</div>
+<div class="modalBody" id="modalBody"></div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="footerRight" id="footerRight">—</div>
+</div>
+</div>
+<script>
     const hint = document.getElementById("splashHint");
     const errBox = document.getElementById("splashErr");
     function showErr(title, msg){
@@ -1523,9 +1491,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-
-  <script type="module" src="./app.js?v=3025"></script>
-
+<script src="./app.js?v=3025" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1542,7 +1508,6 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     kill('dummyAdTwo');
   });
 </script>
-
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1550,13 +1515,10 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     });
   }
 </script>
-
-
-  <!-- BUILD corner -->
-  <div id="buildCorner" aria-hidden="true">
-    <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">6012</div>
-  </div>
-
+<!-- BUILD corner -->
+<div aria-hidden="true" id="buildCorner">
+<img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
+<div id="buildCornerText">6013</div>
+</div>
 </body>
 </html>
