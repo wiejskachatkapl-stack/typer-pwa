@@ -1,4 +1,4 @@
-const BUILD = 6025;
+const BUILD = 6026;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -41,7 +41,10 @@ const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage =
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
 // ===== PRESENCE (online dot) =====
-const PRESENCE_ACTIVE_MS = 60000; // green if lastActiveAt within last 60s
+// Uwaga: porównujemy do Date.now() urządzenia. Żeby uniknąć fałszywego "nieaktywny"
+// przy drobnym rozjechaniu czasu między urządzeniami / throttlingu w tle,
+// dajemy bezpieczniejsze okno aktywności.
+const PRESENCE_ACTIVE_MS = 5 * 60 * 1000; // green if lastActiveAt within last 5 min
 let presenceTick = null;
 let presenceBumpTick = null;
 let presenceLastBump = 0;
