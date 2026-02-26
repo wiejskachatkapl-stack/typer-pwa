@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6029)</title>
+<title>Typer (BUILD 6030)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -507,7 +507,7 @@
     }
 
     /* 6029: scroll pojawia się dopiero gdy brakuje miejsca; węższe wiersze graczy */
-    .playersList{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px}
+    .playersList{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px}
     .playerRow{
       padding:8px 10px;border-radius:14px;
       background:rgba(0,0,0,.16);
@@ -1837,7 +1837,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6029" type="module"></script>
+<script src="./app.js?v=6030" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1857,14 +1857,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6029').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=6030').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6029</div>
+<div id="buildCornerText">6030</div>
 </div>
 </body>
 </html>
