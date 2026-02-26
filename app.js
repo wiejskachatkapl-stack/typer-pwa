@@ -1,4 +1,4 @@
-const BUILD = 6024;
+const BUILD = 6025;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -39,6 +39,71 @@ const setBtnLabelSafe = (id, label) => {
 };
 const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
+
+// ===== PRESENCE (online dot) =====
+const PRESENCE_ACTIVE_MS = 60000; // green if lastActiveAt within last 60s
+let presenceTick = null;
+let presenceBumpTick = null;
+let presenceLastBump = 0;
+
+function tsToMs(ts){
+  if(!ts) return 0;
+  if(typeof ts === "number") return ts;
+  if(typeof ts === "string"){
+    const d = Date.parse(ts);
+    return Number.isFinite(d) ? d : 0;
+  }
+  if(typeof ts.toMillis === "function") return ts.toMillis();
+  if(typeof ts.seconds === "number") return ts.seconds * 1000 + Math.floor((ts.nanoseconds||0)/1e6);
+  return 0;
+}
+
+function isPlayerActive(p){
+  const ms = tsToMs(p?.lastActiveAt);
+  if(!ms) return false;
+  return (Date.now() - ms) < PRESENCE_ACTIVE_MS;
+}
+
+async function bumpPresence(force=false){
+  if(!currentRoomCode) return;
+  const now = Date.now();
+  if(!force && (now - presenceLastBump) < 5000) return; // throttle
+  presenceLastBump = now;
+  try{
+    await boot.setDoc(
+      boot.doc(db, "rooms", currentRoomCode, "players", userUid),
+      { lastActiveAt: boot.serverTimestamp() },
+      { merge:true }
+    );
+  }catch{}
+}
+
+function startPresenceHeartbeat(){
+  stopPresenceHeartbeat();
+  bumpPresence(true);
+  presenceBumpTick = setInterval(()=> bumpPresence(false), 20000);
+  // Re-render dots even if snapshots stop updating
+  presenceTick = setInterval(()=> renderPlayers(lastPlayers), 5000);
+
+  // Activity bump
+  const onAct = ()=> bumpPresence(false);
+  window.addEventListener("pointerdown", onAct, { passive:true });
+  window.addEventListener("keydown", onAct, { passive:true });
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) bumpPresence(true); });
+  startPresenceHeartbeat._onAct = onAct;
+}
+
+function stopPresenceHeartbeat(){
+  if(presenceBumpTick){ clearInterval(presenceBumpTick); presenceBumpTick=null; }
+  if(presenceTick){ clearInterval(presenceTick); presenceTick=null; }
+  const onAct = startPresenceHeartbeat._onAct;
+  if(onAct){
+    window.removeEventListener("pointerdown", onAct);
+    window.removeEventListener("keydown", onAct);
+    startPresenceHeartbeat._onAct = null;
+  }
+}
+
 
 function showToast(msg){
   const t = el("toast");
@@ -2447,7 +2512,7 @@ async function createRoom(roomName){
     });
 
     await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-      nick, uid: userUid, joinedAt: boot.serverTimestamp()
+      nick, uid: userUid, joinedAt: boot.serverTimestamp(), lastActiveAt: boot.serverTimestamp()
     });
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -2475,7 +2540,7 @@ async function joinRoom(code){
   }
 
   await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-    nick, uid: userUid, joinedAt: boot.serverTimestamp()
+    nick, uid: userUid, joinedAt: boot.serverTimestamp(), lastActiveAt: boot.serverTimestamp()
   }, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -2630,6 +2695,9 @@ async function openRoom(code, opts={}){
   // Wiadomości (czerwony wykrzyknik na btn_messages)
   startMessagesListener();
 
+  // Presence (online dot)
+  startPresenceHeartbeat();
+
   if(!silent) showToast((getLang()==="en") ? `In room: ${code}` : `W pokoju: ${code}`);
 }
 
@@ -2740,6 +2808,17 @@ function renderPlayers(players){
     left.style.gap = "10px";
     left.style.minWidth = "0";
 
+    const dot = document.createElement("div");
+    dot.className = "presenceDot";
+    const active = isPlayerActive(p);
+    dot.style.width = "10px";
+    dot.style.height = "10px";
+    dot.style.borderRadius = "999px";
+    dot.style.flex = "0 0 auto";
+    dot.style.background = active ? "#33ff88" : "#ff4d4d";
+    dot.style.boxShadow = active ? "0 0 10px rgba(51,255,136,.55)" : "0 0 10px rgba(255,77,77,.45)";
+    dot.title = active ? (getLang()==="en" ? "Active" : "Aktywny") : (getLang()==="en" ? "Inactive" : "Nieaktywny");
+
     const name = document.createElement("div");
     name.textContent = p.nick || "—";
     name.style.whiteSpace = "nowrap";
@@ -2756,6 +2835,7 @@ function renderPlayers(players){
     status.title = ok ? "Picks saved" : "Missing";
     if(getLang()==="pl") status.title = ok ? "Typy zapisane" : "Brak zapisanych typów";
 
+    left.appendChild(dot);
     left.appendChild(name);
     left.appendChild(status);
 
