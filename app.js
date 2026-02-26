@@ -1,4 +1,4 @@
-const BUILD = 6001;
+const BUILD = 6002;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1896,6 +1896,7 @@ function syncActionButtons(){
   const btnEnter = el("btnEnterResults");
   const submitted = iAmSubmitted();
   const adm = isAdmin();
+  const resultsOk = allResultsComplete();
 
   if(btnSave){
     btnSave.style.display = submitted ? "none" : "block";
@@ -1905,7 +1906,9 @@ function syncActionButtons(){
 
   if(btnEnter){
     btnEnter.style.display = (adm && submitted) ? "block" : "none";
-    btnEnter.disabled = !(adm && submitted && matchesCache.length);
+    // Aktywny tylko jeśli są mecze i NIE ma jeszcze kompletu wyników.
+    // Gdy wszystkie wyniki wpisane/zatwierdzone -> przycisk ma być nieaktywny.
+    btnEnter.disabled = !(adm && submitted && matchesCache.length) || resultsOk;
   }
 }
 
@@ -2384,31 +2387,55 @@ async function saveResults(){
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(!matchesCache.length) { showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
 
+  // 6002: pozwalamy wpisywać pojedyncze wyniki (nie wszystkie mecze są równocześnie).
+  // Zapisujemy tylko te mecze, gdzie podano OBA pola wyniku.
+  const updates = [];
   for(const m of matchesCache){
     const d = resultsDraft[m.id];
-    if(!d || !Number.isInteger(d.h) || !Number.isInteger(d.a)){
-      showToast(getLang()==="en" ? "Fill all results (0–20)" : "Uzupełnij wszystkie wyniki (0–20)");
-      return;
+    const hOk = d && Number.isInteger(d.h);
+    const aOk = d && Number.isInteger(d.a);
+
+    // jeśli coś wpisane, wymagamy kompletu dla danego meczu
+    if(hOk || aOk){
+      if(!(hOk && aOk)){
+        showToast(getLang()==="en" ? "Enter both scores for a match" : "Wpisz oba pola wyniku dla meczu");
+        return;
+      }
+      updates.push({ id: m.id, h: d.h, a: d.a });
     }
   }
 
+  if(!updates.length){
+    showToast(getLang()==="en" ? "No results to save" : "Brak wyników do zapisania");
+    return;
+  }
+
   const b = boot.writeBatch(db);
-  for(const m of matchesCache){
-    const d = resultsDraft[m.id];
-    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", m.id);
+  for(const u of updates){
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", u.id);
     b.update(ref, {
-      resultH: d.h,
-      resultA: d.a,
+      resultH: u.h,
+      resultA: u.a,
       resultAt: boot.serverTimestamp(),
       resultBy: userUid
     });
   }
-
   await b.commit();
+
+  // natychmiast odśwież lokalny cache, żeby wyniki od razu pokazały się na ekranie
+  for(const u of updates){
+    const m = matchesCache.find(x=>x.id===u.id);
+    if(m){
+      m.resultH = u.h;
+      m.resultA = u.a;
+    }
+  }
 
   recomputePoints();
   renderPlayers(lastPlayers);
   renderMatches();
+  syncActionButtons();
+  if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
 
   showToast(getLang()==="en" ? "Results saved ✅" : "Zapisano wyniki ✅");
   showScreen("room");
