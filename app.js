@@ -1,4 +1,4 @@
-const BUILD = 6022;
+const BUILD = 6023;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1802,7 +1802,6 @@ function _renderList(kind, nodeId){
 }
 
 function renderMessagesLists(){
-(){
   _renderList("inbox","msgInboxList");
   _renderList("sent","msgSentList");
   _renderList("system","msgSystemList");
