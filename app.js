@@ -1596,6 +1596,237 @@ function startMessagesListener(){
   });
 }
 
+let _msgsCache = { inbox: [], sent: [], system: [] };
+let _msgsActiveTab = "inbox";
+let _msgsOpenKind = null;
+let _msgsOpenId = null;
+
+function _tsToMillis(v){
+  try{
+    if(!v) return 0;
+    if(typeof v === "number") return v;
+    if(typeof v?.toMillis === "function") return v.toMillis();
+    if(typeof v?.toDate === "function") return v.toDate().getTime();
+    if(v?.seconds) return (v.seconds*1000) + Math.floor((v.nanoseconds||0)/1e6);
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  }catch{ return 0; }
+}
+function _fmtMsgTime(v){
+  const ms = _tsToMillis(v);
+  if(!ms) return "—";
+  const d = new Date(ms);
+  const pad = (n)=> String(n).padStart(2,"0");
+  return `${pad(d.getDate())}.${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function _short(s, n=44){
+  s = (s||"").trim();
+  if(s.length<=n) return s;
+  return s.slice(0,n-1) + "…";
+}
+
+function switchMessagesTab(tab){
+  _msgsActiveTab = tab;
+  const tabs = ["inbox","sent","system","compose"];
+  tabs.forEach(t=>{
+    const b = el("tab"+t.charAt(0).toUpperCase()+t.slice(1));
+    if(b) b.classList.toggle("active", t===tab);
+    const p = el("pane"+t.charAt(0).toUpperCase()+t.slice(1));
+    if(p) p.classList.toggle("show", t===tab);
+  });
+
+  // czyścimy znacznik nieprzeczytanych po wejściu do Odebrane
+  if(tab==="inbox"){
+    markAllMyMessagesRead().catch(()=>{});
+  }
+}
+
+async function _loadMessages(){
+  if(!db || !currentRoomCode || !userUid) return;
+
+  const col = boot.collection(db, "rooms", currentRoomCode, "messages");
+
+  // Odebrane
+  try{
+    const qIn = boot.query(
+      col,
+      boot.where("toUid","==", userUid),
+      boot.orderBy("createdAt","desc"),
+      boot.limit(50)
+    );
+    const qs = await boot.getDocs(qIn);
+    const arr=[];
+    qs.forEach(d=>arr.push({ id:d.id, ...d.data() }));
+    _msgsCache.inbox = arr;
+  }catch{ _msgsCache.inbox = []; }
+
+  // Wysłane
+  try{
+    const qOut = boot.query(
+      col,
+      boot.where("fromUid","==", userUid),
+      boot.orderBy("createdAt","desc"),
+      boot.limit(50)
+    );
+    const qs = await boot.getDocs(qOut);
+    const arr=[];
+    qs.forEach(d=>arr.push({ id:d.id, ...d.data() }));
+    _msgsCache.sent = arr;
+  }catch{ _msgsCache.sent = []; }
+
+  // Systemowe (na przyszłość) — filtr po stronie klienta
+  try{
+    const qSys = boot.query(
+      col,
+      boot.where("type","==","system"),
+      boot.orderBy("createdAt","desc"),
+      boot.limit(50)
+    );
+    const qs = await boot.getDocs(qSys);
+    const arr=[];
+    qs.forEach(d=>{
+      const x = { id:d.id, ...d.data() };
+      if(x.toUid === "all" || x.toUid === userUid) arr.push(x);
+    });
+    _msgsCache.system = arr;
+  }catch{ _msgsCache.system = []; }
+
+  renderMessagesLists();
+}
+
+function _renderList(kind, nodeId){
+  const wrap = el(nodeId);
+  if(!wrap) return;
+
+  const arr = _msgsCache[kind] || [];
+  wrap.innerHTML = "";
+  if(arr.length===0){
+    const div = document.createElement("div");
+    div.className = "msgViewEmpty";
+    div.textContent = (getLang()==="en")
+      ? "No messages."
+      : "Brak wiadomości.";
+    wrap.appendChild(div);
+    return;
+  }
+
+  arr.forEach(m=>{
+    const item = document.createElement("div");
+    item.className = "msgItem";
+    item.dataset.kind = kind;
+    item.dataset.id = m.id;
+
+    const top = document.createElement("div");
+    top.className = "msgItemTop";
+
+    const who = document.createElement("div");
+    who.className = "msgItemWho";
+
+    const time = document.createElement("div");
+    time.className = "msgItemTime";
+    time.textContent = _fmtMsgTime(m.createdAt);
+
+    // kto
+    if(kind==="inbox"){
+      const nick = m.fromNick || "—";
+      who.innerHTML = (m.read===false ? `<span class="msgDot"></span>` : "") + nick;
+    }else if(kind==="sent"){
+      const nick = m.toNick || "—";
+      who.textContent = nick;
+    }else{
+      who.textContent = m.title || (getLang()==="en" ? "System" : "System");
+    }
+
+    top.appendChild(who);
+    top.appendChild(time);
+
+    const prev = document.createElement("div");
+    prev.className = "msgItemPrev";
+    prev.textContent = _short(m.text || m.body || "");
+
+    item.appendChild(top);
+    item.appendChild(prev);
+
+    item.onclick = ()=> openMessageView(kind, m.id);
+
+    wrap.appendChild(item);
+  });
+}
+
+function renderMessagesLists(){
+  _renderList("inbox","msgInboxList");
+  _renderList("sent","msgSentList");
+  _renderList("system","msgSystemList");
+
+  // jeśli nie mamy wybranej wiadomości, wyczyść podgląd
+  _clearView("inbox");
+  _clearView("sent");
+  _clearView("system");
+}
+
+function _clearView(kind){
+  const map = {
+    inbox:{ empty:"msgViewEmpty", card:"msgViewCard" },
+    sent:{ empty:"msgSentEmpty", card:"msgSentCard" },
+    system:{ empty:"msgSystemEmpty", card:"msgSystemCard" }
+  };
+  const cfg = map[kind];
+  if(!cfg) return;
+  const empty = el(cfg.empty);
+  const card = el(cfg.card);
+  if(empty) empty.style.display = "";
+  if(card) card.style.display = "none";
+}
+
+async function openMessageView(kind, id){
+  _msgsOpenKind = kind;
+  _msgsOpenId = id;
+
+  const arr = _msgsCache[kind] || [];
+  const m = arr.find(x=>x.id===id);
+  if(!m) return;
+
+  const map = {
+    inbox:{ empty:"msgViewEmpty", card:"msgViewCard", meta:"msgViewMeta", text:"msgViewText" },
+    sent:{ empty:"msgSentEmpty", card:"msgSentCard", meta:"msgSentMeta", text:"msgSentText" },
+    system:{ empty:"msgSystemEmpty", card:"msgSystemCard", meta:"msgSystemMeta", text:"msgSystemText" }
+  };
+  const cfg = map[kind];
+  if(!cfg) return;
+
+  const empty = el(cfg.empty);
+  const card = el(cfg.card);
+  const meta = el(cfg.meta);
+  const text = el(cfg.text);
+
+  if(empty) empty.style.display = "none";
+  if(card) card.style.display = "";
+  if(meta){
+    if(kind==="inbox"){
+      meta.textContent = `${m.fromNick||"—"} → ${getNick()||"—"} • ${_fmtMsgTime(m.createdAt)}`;
+    }else if(kind==="sent"){
+      meta.textContent = `${getNick()||"—"} → ${m.toNick||"—"} • ${_fmtMsgTime(m.createdAt)}`;
+    }else{
+      meta.textContent = `${m.title || (getLang()==="en" ? "System" : "System")} • ${_fmtMsgTime(m.createdAt)}`;
+    }
+  }
+  if(text){
+    text.textContent = (m.text || m.body || "").trim();
+  }
+
+  // oznacz jako przeczytane po otwarciu (tylko odebrane)
+  if(kind==="inbox" && m.read === false){
+    try{
+      const ref = boot.doc(db, "rooms", currentRoomCode, "messages", id);
+      await boot.updateDoc(ref, { read:true, readAt: boot.serverTimestamp() });
+      m.read = true;
+      // odśwież listę żeby zniknęła kropka
+      renderMessagesLists();
+      startMessagesListener(); // przeliczy badge
+    }catch{}
+  }
+}
+
 function openMessagesModal(){
   const ov = el("messagesOverlay");
   if(!ov) return;
@@ -1628,11 +1859,13 @@ function openMessagesModal(){
   const ta = el("msgText");
   if(ta) ta.value = "";
 
-  // po wejściu do okna oznaczamy wiadomości jako przeczytane (czyści wykrzyknik)
-  markAllMyMessagesRead().catch(()=>{});
+  // domyślnie pokaż Odebrane
+  switchMessagesTab("inbox");
 
   ov.classList.add("show");
   ov.setAttribute("aria-hidden","false");
+
+  _loadMessages().catch(()=>{});
 }
 
 function closeMessagesModal(){
@@ -1641,6 +1874,7 @@ function closeMessagesModal(){
   ov.classList.remove("show");
   ov.setAttribute("aria-hidden","true");
 }
+
 
 async function sendRoomMessage(){
   if(!db || !currentRoomCode) return;
@@ -1847,6 +2081,15 @@ function bindUI(){
   if(__msgBack) __msgBack.onclick = ()=> closeMessagesModal();
   const __msgSend = el("btnMsgSend");
   if(__msgSend) __msgSend.onclick = async ()=>{ await sendRoomMessage(); };
+
+  // Wiadomości - zakładki
+  ["inbox","sent","system","compose"].forEach(t=>{
+    const id = "tab"+t.charAt(0).toUpperCase()+t.slice(1);
+    const node = el(id);
+    if(node){
+      node.onclick = ()=> switchMessagesTab(t);
+    }
+  });
 
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
