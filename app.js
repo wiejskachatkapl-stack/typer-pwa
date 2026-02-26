@@ -1,4 +1,4 @@
-const BUILD = 6021;
+const BUILD = 6022;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1603,6 +1603,40 @@ let _msgsActiveTab = "inbox";
 let _msgsOpenKind = null;
 let _msgsOpenId = null;
 
+let _msgsSelected = { inbox: new Set(), sent: new Set(), system: new Set() };
+
+function _updateMsgDeleteBtn(){
+  const btn = el("btnMsgDelete");
+  if(!btn) return;
+  const set = _msgsSelected[_msgsActiveTab];
+  const n = set ? set.size : 0;
+  if(n>0){
+    btn.classList.add("show");
+    btn.textContent = (getLang()==="en") ? `Delete (${n})` : `Usuń (${n})`;
+  }else{
+    btn.classList.remove("show");
+    btn.textContent = (getLang()==="en") ? "Delete" : "Usuń";
+  }
+}
+
+async function _deleteSelectedMessages(){
+  const kind = _msgsActiveTab;
+  const set = _msgsSelected[kind];
+  if(!set || set.size===0) return;
+  const ids = Array.from(set);
+  // usuń definitywnie z firestore
+  for(const id of ids){
+    try{
+      await deleteDoc(doc(db, `rooms/${getRoomCode()}/messages/${id}`));
+    }catch(e){
+      console.warn("delete message failed", id, e);
+    }
+  }
+  set.clear();
+  _updateMsgDeleteBtn();
+}
+
+
 function _tsToMillis(v){
   try{
     if(!v) return 0;
@@ -1636,6 +1670,10 @@ function switchMessagesTab(tab){
     const p = el("pane"+t.charAt(0).toUpperCase()+t.slice(1));
     if(p) p.classList.toggle("show", t===tab);
   });
+
+  // reset zaznaczeń przy zmianie zakładki
+  ["inbox","sent","system"].forEach(k=>{ try{ _msgsSelected[k].clear(); }catch(e){} });
+  _updateMsgDeleteBtn();
 
   // czyścimy znacznik nieprzeczytanych po wejściu do Odebrane
   if(tab==="inbox"){
@@ -1690,13 +1728,12 @@ function _renderList(kind, nodeId){
   if(!wrap) return;
 
   const arr = _msgsCache[kind] || [];
+  const sel = _msgsSelected[kind] || new Set();
   wrap.innerHTML = "";
   if(arr.length===0){
     const div = document.createElement("div");
     div.className = "msgViewEmpty";
-    div.textContent = (getLang()==="en")
-      ? "No messages."
-      : "Brak wiadomości.";
+    div.textContent = (getLang()==="en") ? "No messages." : "Brak wiadomości.";
     wrap.appendChild(div);
     return;
   }
@@ -1704,6 +1741,7 @@ function _renderList(kind, nodeId){
   arr.forEach(m=>{
     const item = document.createElement("div");
     item.className = "msgItem";
+    if(sel.has(m.id)) item.classList.add("msgItemSel");
     item.dataset.kind = kind;
     item.dataset.id = m.id;
 
@@ -1717,26 +1755,45 @@ function _renderList(kind, nodeId){
     time.className = "msgItemTime";
     time.textContent = _fmtMsgTime(m.createdAt);
 
-    // kto
+    // kto (nick) + kropka nieprzeczytanych (tylko odebrane)
     if(kind==="inbox"){
       const nick = m.fromNick || "—";
-      who.innerHTML = (m.read===false ? `<span class="msgDot"></span>` : "") + nick;
-    }else if(kind==="sent"){
-      const nick = m.toNick || "—";
       who.textContent = nick;
+
+      if(m.read === false){
+        const dot = document.createElement("span");
+        dot.className = "msgDot";
+        who.prepend(dot);
+      }
+    }else if(kind==="sent"){
+      who.textContent = (m.toNick || "—");
     }else{
-      who.textContent = m.title || (getLang()==="en" ? "System" : "System");
+      who.textContent = (m.title || (getLang()==="en" ? "System" : "System"));
     }
 
-    top.appendChild(who);
-    top.appendChild(time);
+    const right = document.createElement("div");
+    right.style.display = "flex";
+    right.style.alignItems = "center";
+    right.style.gap = "10px";
 
-    const prev = document.createElement("div");
-    prev.className = "msgItemPrev";
-    prev.textContent = _short(m.text || m.body || "");
+    const chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.className = "msgChk";
+    chk.checked = sel.has(m.id);
+    chk.onclick = (e)=>{
+      e.stopPropagation();
+      if(chk.checked) sel.add(m.id); else sel.delete(m.id);
+      item.classList.toggle("msgItemSel", chk.checked);
+      _updateMsgDeleteBtn();
+    };
+
+    right.appendChild(time);
+    right.appendChild(chk);
+
+    top.appendChild(who);
+    top.appendChild(right);
 
     item.appendChild(top);
-    item.appendChild(prev);
 
     item.onclick = ()=> openMessageView(kind, m.id);
 
@@ -1745,6 +1802,7 @@ function _renderList(kind, nodeId){
 }
 
 function renderMessagesLists(){
+(){
   _renderList("inbox","msgInboxList");
   _renderList("sent","msgSentList");
   _renderList("system","msgSystemList");
@@ -1853,6 +1911,10 @@ function openMessagesModal(){
   // domyślnie pokaż Odebrane
   switchMessagesTab("inbox");
 
+  // reset zaznaczeń i przycisku Usuń
+  ["inbox","sent","system"].forEach(k=>{ try{ _msgsSelected[k].clear(); }catch(e){} });
+  _updateMsgDeleteBtn();
+
   ov.classList.add("show");
   ov.setAttribute("aria-hidden","false");
 
@@ -1860,6 +1922,8 @@ function openMessagesModal(){
 }
 
 function closeMessagesModal(){
+  ["inbox","sent","system"].forEach(k=>{ try{ _msgsSelected[k].clear(); }catch(e){} });
+  _updateMsgDeleteBtn();
   const ov = el("messagesOverlay");
   if(!ov) return;
   ov.classList.remove("show");
@@ -2079,6 +2143,9 @@ function bindUI(){
   if(__msgBack) __msgBack.onclick = ()=> closeMessagesModal();
   const __msgSend = el("btnMsgSend");
   if(__msgSend) __msgSend.onclick = async ()=>{ await sendRoomMessage(); };
+
+  const __msgDel = el("btnMsgDelete");
+  if(__msgDel) __msgDel.onclick = async ()=>{ await _deleteSelectedMessages(); };
 
   // Wiadomości - zakładki
   ["inbox","sent","system","compose"].forEach(t=>{

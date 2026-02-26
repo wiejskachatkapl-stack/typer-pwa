@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-<title>Typer (BUILD 6021)</title>
+<title>Typer (BUILD 6022)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -736,6 +736,32 @@
 
     
     .msgHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 6px;}
+
+    .msgDeleteBtn{
+      height:34px;
+      padding:0 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,90,90,.35);
+      background:rgba(255,40,40,.18);
+      color:rgba(255,255,255,.95);
+      font-weight:1000;
+      cursor:pointer;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+    }
+    .msgDeleteBtn.show{display:inline-flex;}
+    .msgChk{
+      width:18px;height:18px;
+      accent-color:#ff3b3b;
+      cursor:pointer;
+    }
+    .msgItemSel{
+      outline:2px solid rgba(255,80,80,.35);
+      background:rgba(90,10,10,.25) !important;
+    }
+
     .msgTabs{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px;}
     .msgTab{
       height:34px;
@@ -1606,11 +1632,12 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 6021) -->
+<!-- MESSAGES OVERLAY (BUILD 6022) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
       <div class="msgTitle" id="msgTitle">Wiadomości</div>
+      <button class="msgDeleteBtn" id="btnMsgDelete" type="button">Usuń</button>
       <button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnMsgBack" type="button">
         <img alt="btnMsgBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
       </button>
@@ -1767,7 +1794,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6021" type="module"></script>
+<script src="./app.js?v=6022" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1787,14 +1814,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6021').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=6022').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6021</div>
+<div id="buildCornerText">6022</div>
 </div>
 </body>
 </html>
