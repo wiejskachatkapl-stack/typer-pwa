@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#08122a" />
-  <title>Typer (BUILD 6003)</title>
+  <title>Typer (BUILD 6004)</title>
   <link rel="manifest" href="manifest.json" />
 
   <style>
@@ -1159,8 +1159,6 @@
               <div class="title" id="t_actions">Akcje</div>
               <div class="sub" id="t_actions_sub">Zapisz typy dopiero, gdy uzupełnisz wszystkie mecze.</div>
               <div class="col" id="roomActionsCol" style="margin-top:10px">
-                <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png"><img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll"></button>
-
                 <!-- BUILD 5203: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
                 <button class="imgBtn sysBtn" id="btnExitFromRoomRight" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="btnExitFromRoomRight"></button>
               </div>
@@ -1193,6 +1191,11 @@
 
             <!-- 6001: panel pod meczami na przyciski (Wpisz Wyniki / Zakończ kolejkę) -->
             <div class="panel matchActionsPanel" id="matchActionsPanel">
+              <!-- 6004: przeniesiono "Zapisz typy" (btn_save_picks.png / #btnSaveAll) z lewego panelu do dolnego kontenera -->
+              <button class="imgBtn sysBtn" id="btnSaveAll" disabled type="button" data-btn="btn_zapisz_typy.png">
+                <img data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png" alt="btnSaveAll">
+              </button>
+
               <!-- 6003: przeniesiono "Zapisz kolejkę" (btnMyQueue) z lewego panelu do dolnego kontenera -->
               <button class="imgBtn sysBtn" id="btnMyQueue" style="display:none" type="button" data-btn="btn_nowa_kolejka.png">
                 <img data-btn="btn_nowa_kolejka.png" src="ui/buttons/pl/btn_nowa_kolejka.png" alt="btnMyQueue">
@@ -1369,7 +1372,7 @@
   <!-- BUILD corner -->
   <div id="buildCorner" aria-hidden="true">
     <img id="buildCornerLogo" src="ui/logo/logo_RNAPP.png" alt="">
-    <div id="buildCornerText">6003</div>
+    <div id="buildCornerText">6004</div>
   </div>
 
 </body>
