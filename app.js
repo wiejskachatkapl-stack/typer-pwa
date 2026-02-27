@@ -1,4 +1,4 @@
-const BUILD = 7031;
+const BUILD = 7032;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2572,22 +2572,41 @@ function closeManualQueueMenu(){
 
 
 // ===== MANUAL QUEUE DEADLINE (BUILD 7031) =====
-function openMQDeadlineOverlay(){
+function openMQDeadlineOverlay(mode="manual"){
+  // mode: "manual" | "random"
+  window.__deadlineMode = mode;
+
   const ov = el("mqDeadlineOverlay");
   if(!ov) return;
   ov.style.display = "flex";
 
+  // title/desc (same text for now)
+  const t = el("mqDeadlineTitle");
+  const dsc = el("mqDeadlineDesc");
+  if(t) t.textContent = getLang()==="en" ? "Set typing deadline" : "Ustaw czas końca typowania";
+  if(dsc) dsc.textContent = getLang()==="en"
+    ? "Set date and time (with minutes) until which users can submit picks for this round."
+    : "Ustaw datę i godzinę (z minutami), do której będzie można typować tę kolejkę.";
+
   // default value: now + 2h (rounded to 5 minutes)
   const inp = el("mqDeadlineInput");
   if(inp){
-    const st = __getManualState();
-    let ms = st.deadlineMs || null;
+    let ms = null;
+
+    if(mode === "manual"){
+      const st = __getManualState();
+      ms = st.deadlineMs || null;
+    }else if(mode === "random"){
+      const st = window.__randomQueueDraft || null;
+      ms = st?.deadlineMs || null;
+    }
+
     if(ms==null){
-      const d = new Date(Date.now() + 2*60*60*1000);
-      d.setSeconds(0,0);
-      const mm0 = d.getMinutes();
-      d.setMinutes(mm0 - (mm0%5));
-      ms = d.getTime();
+      const dd = new Date(Date.now() + 2*60*60*1000);
+      dd.setSeconds(0,0);
+      const mm0 = dd.getMinutes();
+      dd.setMinutes(mm0 - (mm0%5));
+      ms = dd.getTime();
     }
     inp.value = toDateTimeLocal(ms);
   }
@@ -2596,6 +2615,12 @@ function closeMQDeadlineOverlay(){
   const ov = el("mqDeadlineOverlay");
   if(!ov) return;
   ov.style.display = "none";
+
+  // if user canceled random deadline, discard draft
+  if(window.__deadlineMode === "random"){
+    try{ delete window.__randomQueueDraft; }catch{}
+  }
+  window.__deadlineMode = "manual";
 }
 function toDateTimeLocal(ms){
   const d = new Date(ms);
@@ -2607,7 +2632,7 @@ function toDateTimeLocal(ms){
   const mi = pad(d.getMinutes());
   return `${yyyy}-${MM}-${dd}T${hh}:${mi}`;
 }
-function confirmMQDeadline(){
+async function confirmMQDeadline(){
   const inp = el("mqDeadlineInput");
   if(!inp) return;
   const val = (inp.value||"").trim();
@@ -2616,6 +2641,24 @@ function confirmMQDeadline(){
     showToast(getLang()==="en" ? "Select date & time" : "Wybierz datę i godzinę");
     return;
   }
+
+  const mode = window.__deadlineMode || "manual";
+
+  if(mode === "random"){
+    const draft = window.__randomQueueDraft;
+    if(!draft || !Array.isArray(draft.matches) || draft.matches.length !== 10){
+      closeMQDeadlineOverlay();
+      showToast(getLang()==="en" ? "No draft matches" : "Brak meczów do zapisania");
+      return;
+    }
+    draft.deadlineMs = ms;
+    window.__randomQueueDraft = draft;
+    closeMQDeadlineOverlay();
+    await commitRandomQueueDraft();
+    return;
+  }
+
+  // manual
   const st = __getManualState();
   st.deadlineMs = ms;
   window.__manualQueue = st;
@@ -4635,6 +4678,54 @@ function __shuffle(arr){
   return arr;
 }
 
+
+async function commitRandomQueueDraft(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){
+    showToast(getLang()==="en" ? "Admin only" : "Tylko admin");
+    return;
+  }
+
+  const draft = window.__randomQueueDraft;
+  if(!draft || !Array.isArray(draft.matches) || draft.matches.length !== 10){
+    showToast(getLang()==="en" ? "No draft matches" : "Brak meczów do zapisania");
+    return;
+  }
+
+  // If already have matches in active round, don't overwrite
+  if(matchesCache && matchesCache.length){
+    showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
+    return;
+  }
+
+  const b = boot.writeBatch(db);
+  const now = Date.now();
+  for(let i=0;i<draft.matches.length;i++){
+    const m = draft.matches[i];
+    const id = `m_${now}_${i}`;
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+    b.set(ref, {
+      idx: i,
+      home: m.home,
+      away: m.away,
+      leagueKey: m.leagueKey || "PL",
+      createdAt: boot.serverTimestamp()
+    });
+  }
+
+  // Save typing deadline on room
+  b.set(roomRef(currentRoomCode), {
+    updatedAt: boot.serverTimestamp(),
+    typingDeadlineMs: draft.deadlineMs
+  }, { merge:true });
+
+  await b.commit();
+
+  try{ delete window.__randomQueueDraft; }catch{}
+  showToast(getLang()==="en" ? "Random queue saved ✅" : "Zapisano losową kolejkę ✅");
+  try{ syncActionButtons(); }catch{}
+}
+
 async function addRandomQueue(){
   if(!currentRoomCode) return;
   if(!isAdmin()){
@@ -4642,13 +4733,13 @@ async function addRandomQueue(){
     return;
   }
 
-  // Jeśli już są mecze w aktywnej kolejce – nie dokładamy kolejnych.
+  // If already have matches in active round, do not add another set
   if(matchesCache && matchesCache.length){
     showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
     return;
   }
 
-  // Pool 20 drużyn -> losowe pary 10 meczów.
+  // Pool 20 teams -> 10 random pairs
   const teams = [
     "Jagiellonia","Piast","Lechia","Legia","Wisla Plock","Radomiak","GKS Katowice","Gornik",
     "Arka","Cracovia","Lech","Pogon","Motor","Rakow","Korona","Widzew",
@@ -4657,40 +4748,25 @@ async function addRandomQueue(){
 
   __shuffle(teams);
 
-  // 6008: testowe daty/godziny (max 5 min od teraz, pierwsze >= 3 min)
-  const nowMs = Date.now();
-  const minOffsetMs = 3 * 60 * 1000;
-  const maxOffsetMs = 5 * 60 * 1000;
-
-
-  const b = boot.writeBatch(db);
+  const draftMatches = [];
   for(let i=0;i<10;i++){
     const a = teams[i*2];
-    const d = teams[i*2+1];
-
-    // losowo ustawiamy gospodarza/gościa
+    const b = teams[i*2+1];
     const homeFirst = Math.random() < 0.5;
-    const home = homeFirst ? a : d;
-    const away = homeFirst ? d : a;
-
-    const id = `m_${Date.now()}_${i}`;
-    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
-    const kickoffMs = nowMs + minOffsetMs + Math.floor(Math.random() * Math.max(1, (maxOffsetMs - minOffsetMs)));
-
-    b.set(ref, {
+    draftMatches.push({
       idx: i,
-      home,
-      away,
-      kickoff: new Date(kickoffMs).toISOString(),
-      createdAt: boot.serverTimestamp()
+      home: homeFirst ? a : b,
+      away: homeFirst ? b : a,
+      leagueKey: "PL"
     });
   }
-  await b.commit();
-  showToast(getLang()==="en" ? "Random fixture added" : "Dodano losową kolejkę");
 
-  // 6003: natychmiast blokujemy "Dodaj kolejkę" do czasu zakończenia/wyczyszczenia kolejki
-  syncActionButtons();
+  // Store draft and ask for typing deadline
+  window.__randomQueueDraft = { matches: draftMatches, deadlineMs: null };
+  openMQDeadlineOverlay("random");
+  showToast(getLang()==="en" ? "Set typing deadline" : "Ustaw czas końca typowania");
 }
+
 
 // ===== LEAGUE (prawdziwa) =====
 const leagueState = {
