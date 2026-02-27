@@ -1,4 +1,4 @@
-const BUILD = 7024;
+const BUILD = 7025;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2851,6 +2851,21 @@ function renderManualMatchesList(){
   if(!box) return;
   const st = __getManualState();
   const ms = __getCurrentManualMatches();
+
+  const cnt = el("manualMatchesCount");
+  if(cnt){
+    cnt.textContent = (getLang()==="en")
+      ? `Matches: ${ms.length}/10`
+      : `Mecze: ${ms.length}/10`;
+  }
+
+  const footer = el("manualQueueFooter");
+  if(footer){
+    footer.style.display = (ms.length === 10) ? "flex" : "none";
+    footer.style.justifyContent = "center";
+    footer.style.gap = "20px";
+  }
+
   box.innerHTML = "";
 
   if(!ms.length){
@@ -2864,9 +2879,11 @@ function renderManualMatchesList(){
   ms.forEach((m, idx)=>{
     const row = document.createElement("div");
     row.className = "mqMatchRow";
+
     const txt = document.createElement("div");
     txt.className = "mqMatchTxt";
     txt.textContent = `${idx+1}. ${m.home} — ${m.away}`;
+
     const del = document.createElement("button");
     del.type = "button";
     del.className = "mqDelBtn";
@@ -2877,14 +2894,20 @@ function renderManualMatchesList(){
       __saveManualQueueState(st);
       renderManualMatchesList();
     };
+
     row.appendChild(txt);
     row.appendChild(del);
     box.appendChild(row);
   });
 }
 
-
 async function saveManualQueueFromUI(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()){
+    showToast(getLang()==="en" ? "Admin only" : "Tylko admin");
+    return;
+  }
+
   const sel = el("manualLeagueSelect");
   if(!sel) return;
   const key = sel.value;
@@ -2894,22 +2917,54 @@ async function saveManualQueueFromUI(){
   window.__manualQueue = st;
   __saveManualQueueState(st);
 
-  const label = (MANUAL_LEAGUES.find(x=>x.key===key)?.label) || key;
   const ms = __getCurrentManualMatches();
 
-  if(!ms.length){
-    showToast(getLang()==="en" ? "Add at least one match" : "Dodaj przynajmniej jeden mecz");
+  // wymagamy dokładnie 10 meczów
+  if(ms.length !== 10){
+    showToast(getLang()==="en"
+      ? `Add 10 matches first (${ms.length}/10)`
+      : `Najpierw dodaj 10 meczów (${ms.length}/10)`
+    );
     return;
   }
 
-  // zapis roboczy – w następnym kroku podpinamy zapis do Firestore jako kolejkę
-  window.__manualQueueDraft = { leagueKey: st.leagueKey, matches: JSON.parse(JSON.stringify(ms)) };
+  // Jeśli już są mecze w aktywnej kolejce – nie dokładamy kolejnych.
+  if(matchesCache && matchesCache.length){
+    showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
+    return;
+  }
 
-  showToast(getLang()==="en"
-    ? `Saved draft: ${label} (${ms.length})`
-    : `Zapisano szkic: ${label} (${ms.length})`
-  );
+  // Zapisz do Firestore jako aktywną kolejkę (matches)
+  const b = boot.writeBatch(db);
+  const now = Date.now();
+  for(let i=0;i<ms.length;i++){
+    const m = ms[i];
+    const id = `m_${now}_${i}`;
+    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
+    b.set(ref, {
+      idx: i,
+      home: m.home,
+      away: m.away,
+      leagueKey: key,
+      createdAt: boot.serverTimestamp()
+    });
+  }
+  // aktualizacja pokoju (tylko znacznik czasu)
+  b.set(roomRef(currentRoomCode), { updatedAt: boot.serverTimestamp() }, { merge:true });
+
+  await b.commit();
+
+  // wyczyść szkic tej ligi po zapisie
+  try{
+    if(st.drafts && Array.isArray(st.drafts[key])) st.drafts[key] = [];
+    window.__manualQueue = st;
+    __saveManualQueueState(st);
+  }catch{}
+
+  showToast(getLang()==="en" ? "Queue saved ✅" : "Zapisano kolejkę ✅");
   closeManualQueueMenu();
+
+  try{ syncActionButtons(); }catch{}
 }
 function isAdmin(){
   return currentRoom?.adminUid === userUid;

@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7024)</title>
+  <title>Typer (BUILD 7025)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -728,6 +728,15 @@
       max-height:34vh;
       overflow:auto;
     }
+
+    .mqCount{
+      padding:0 8px;
+      font-weight:1000;
+      color:rgba(255,255,255,.92);
+      text-align:right;
+      letter-spacing:.3px;
+    }
+    .mqFooter{display:none;}
     .mqMatchRow{
       display:flex;
       align-items:center;
@@ -1824,9 +1833,11 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <button class="mqAddMatchBtn" id="btnMQAddMatch" type="button">+ Dodaj mecz</button>
 </div>
 
+<div class="mqCount" id="manualMatchesCount">Mecze: 0/10</div>
+
 <div class="mqMatchesList" id="manualMatchesList"></div>
 
-<div class="mqFooter">
+<div class="mqFooter" id="manualQueueFooter">
 <button class="imgBtn sysBtn" data-btn="btn_save_queue.png" id="btnMQSave" type="button">
 <img alt="btnMQSave" data-btn="btn_save_queue.png" src="ui/buttons/pl/btn_save_queue.png"/>
 </button>
@@ -1999,7 +2010,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7024" type="module"></script>
+<script src="./app.js?v=7025" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2019,14 +2030,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7024').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7025').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7024</div>
+<div id="buildCornerText">7025</div>
 </div>
 </body>
 </html>
