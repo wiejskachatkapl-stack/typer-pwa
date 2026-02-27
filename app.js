@@ -1,4 +1,4 @@
-const BUILD = 7004;
+const BUILD = 7005;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3090,7 +3090,9 @@ function renderMatches(){
     // ===== KOLUMNA 2: WYNIK =====
     const resCol = document.createElement("div");
     resCol.className = "matchResultCol";
-    if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
+    if(m.cancelled){
+      resCol.textContent = (getLang()==="en") ? "Cancelled" : "Odwołano";
+    }else if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
       resCol.textContent = `${m.resultH}:${m.resultA}`;
     }else{
       resCol.textContent = "—";
@@ -3224,15 +3226,17 @@ function openPicksPreview(uid, nick){
     pickPill.textContent = (getLang()==="en") ? `Pick: ${p.h}:${p.a}` : `Typ: ${p.h}:${p.a}`;
     score.appendChild(pickPill);
 
-    const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
+    const resOk = (!m.cancelled) && Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
     const dot = document.createElement("span");
     dot.className = "dot " + (resOk ? dotClassFor(p.h,p.a,m.resultH,m.resultA) : "gray");
 
     const resPill = document.createElement("div");
     resPill.className = "resultPill";
-    resPill.textContent = resOk
-      ? ((getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`)
-      : ((getLang()==="en") ? "Result: —" : "Wynik: —");
+    resPill.textContent = m.cancelled
+      ? ((getLang()==="en") ? "Result: Cancelled" : "Wynik: Odwołano")
+      : (resOk
+          ? ((getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`)
+          : ((getLang()==="en") ? "Result: —" : "Wynik: —"));
 
     const pts = resOk ? scoreOneMatch(p.h,p.a,m.resultH,m.resultA) : null;
     const ptsPill = document.createElement("div");
