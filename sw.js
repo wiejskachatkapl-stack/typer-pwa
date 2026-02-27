@@ -1,8 +1,8 @@
-/* TYPER service worker (BUILD 7006)
+/* TYPER service worker (BUILD 7007)
    Cel: wymusić odświeżenie plików po aktualizacji (index.html/app.js) i utrzymać cache dla assetów.
 */
 
-const BUILD = 7006;
+const BUILD = 7007;
 const CACHE_NAME = `typer-cache-v${BUILD}`;
 
 const CORE_ASSETS = [

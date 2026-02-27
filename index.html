@@ -1635,7 +1635,8 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 <div class="row roomCodeActions" style="margin-top:10px; gap:12px; justify-content:center;">
-<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button> </div>
+<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button>
+<button aria-label="Usuń pokój" class="imgBtn sysBtn small" data-btn="btn_delete_room.png" id="btnDeleteRoom" style="display:none" title="Usuń pokój" type="button"><img alt="Usuń pokój" data-btn="btn_delete_room.png" src="ui/buttons/pl/btn_delete_room.png"/></button> </div>
 </div>
 </div>
   <div class="panel" style="padding:14px">
@@ -1926,14 +1927,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7005').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7007').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7005</div>
+<div id="buildCornerText">7007</div>
 </div>
 </body>
 </html>
