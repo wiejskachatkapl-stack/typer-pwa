@@ -1,4 +1,4 @@
-const BUILD = 7011;
+const BUILD = 7012;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
