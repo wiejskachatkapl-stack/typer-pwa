@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7000)</title>
+  <title>Typer (BUILD 7001)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -908,6 +908,8 @@
       width:min(1100px,100%);
       margin:auto;
       padding:14px;
+      display:flex;
+      flex-direction:column;
     }
     .resultsTop{
       display:flex;
@@ -925,26 +927,33 @@
       gap:10px;
     }
 
-/* ===== RESULTS: CANCEL MATCHES ===== */
-.resultsBottom{
-  display:flex;
-  justify-content:center;
-  padding:10px 14px 4px;
-}
-.matchCard.cancelMode{
-  grid-template-columns: 1fr 120px 1fr 56px;
-}
-.matchCancelBox{
-  display:flex;
-  justify-content:flex-end;
-  align-items:center;
-}
-.matchCancelCheck{
-  width:22px;
-  height:22px;
-  cursor:pointer;
-}
-
+    /* 7001: odwołanie meczu w oknie "Wpisz wyniki" */
+    .resultsBottom{
+      display:flex;
+      justify-content:flex-end;
+      padding:10px 14px 6px;
+    }
+    .matchCard{ position:relative; }
+    .cancelChkWrap{
+      position:absolute;
+      right:-44px;
+      top:50%;
+      transform:translateY(-50%);
+      width:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .cancelChk{
+      width:22px;
+      height:22px;
+      accent-color: #38d24a;
+      cursor:pointer;
+    }
+    @media (max-width: 560px){
+      .cancelChkWrap{ right:-38px; width:34px; }
+      .cancelChk{ width:20px; height:20px; }
+    }
 
     /* ===== LEAGUE ===== */
     #league{
@@ -1818,10 +1827,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="panel resultsList" id="resultsList"></div>
 <div class="sub" id="t_results_hint" style="padding:10px 14px">
             Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
-          
-          <div class="row resultsBottom">
-            <button class="imgBtn sysBtn" data-btn="btn_matches_cancel.png" id="btnResCancel" type="button"><img alt="btnResCancel" data-btn="btn_matches_cancel.png" src="ui/buttons/pl/btn_matches_cancel.png"/></button>
           </div>
+<div class="resultsBottom">
+  <button class="imgBtn sysBtn" data-btn="btn_matches_cancel.png" id="btnResCancelMatches" type="button"><img alt="btnResCancelMatches" data-btn="btn_matches_cancel.png" src="ui/buttons/pl/btn_matches_cancel.png"/></button>
 </div>
 </div>
 </section>
@@ -1892,7 +1900,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7000" type="module"></script>
+<script src="./app.js?v=7001" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1912,14 +1920,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7000').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7001').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7000</div>
+<div id="buildCornerText">7001</div>
 </div>
 </body>
 </html>
