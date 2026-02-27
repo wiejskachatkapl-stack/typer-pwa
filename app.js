@@ -1,4 +1,4 @@
-const BUILD = 7033;
+const BUILD = 7034;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2562,12 +2562,100 @@ function openManualQueueMenu(){
   const ov = el("manualQueueOverlay");
   if(!ov) return;
   ov.style.display = "flex";
+  try{ setMQOverlayMode("manual"); }catch{}
   buildManualQueueUI();
 }
 function closeManualQueueMenu(){
   const ov = el("manualQueueOverlay");
   if(!ov) return;
   ov.style.display = "none";
+}
+
+// ===== RANDOM QUEUE PREVIEW (BUILD 7034) =====
+// Losowe: najpierw pokazujemy wylosowane mecze w tym samym oknie co manualne,
+// a dopiero przy "Zapisz kolejkę" prosimy o czas końca typowania.
+function openRandomQueuePreview(){
+  const ov = el("manualQueueOverlay");
+  if(!ov) return;
+  ov.style.display = "flex";
+  try{ setMQOverlayMode("random"); }catch{}
+  renderRandomPreviewMatches();
+
+  const btnSave = el("btnMQSave");
+  if(btnSave){
+    btnSave.style.display = "inline-flex";
+    btnSave.onclick = ()=>{
+      // ask for deadline on save
+      openMQDeadlineOverlay("random");
+    };
+  }
+  const btnBack = el("btnMQBack");
+  if(btnBack){
+    btnBack.style.display = "inline-flex";
+    btnBack.onclick = ()=>{
+      // cancel random draft
+      try{ delete window.__randomQueueDraft; }catch{}
+      closeManualQueueMenu();
+    };
+  }
+}
+
+function renderRandomPreviewMatches(){
+  const box = el("manualMatchesList");
+  if(!box) return;
+  const cnt = el("manualMatchesCount");
+  const title = el("mqTitle");
+
+  const draft = window.__randomQueueDraft;
+  const ms = (draft && Array.isArray(draft.matches)) ? draft.matches : [];
+  if(title) title.textContent = getLang()==="en" ? "Random queue" : "Losowe dodawanie kolejki";
+
+  if(cnt){
+    cnt.textContent = (getLang()==="en")
+      ? `Matches: ${ms.length}/10`
+      : `Mecze: ${ms.length}/10`;
+  }
+
+  box.innerHTML = "";
+  if(!ms.length){
+    const empty = document.createElement("div");
+    empty.className = "mqEmpty";
+    empty.textContent = getLang()==="en" ? "No matches generated." : "Nie wygenerowano meczów.";
+    box.appendChild(empty);
+    return;
+  }
+
+  ms.forEach((m, idx)=>{
+    const row = document.createElement("div");
+    row.className = "mqMatchRow";
+    const txt = document.createElement("div");
+    txt.className = "mqMatchTxt";
+    const l = MANUAL_LEAGUES.find(x=>x.key===(m.leagueKey||"PL"))?.label || (m.leagueKey||"PL");
+    txt.textContent = `${idx+1}. [${l}] ${m.home} — ${m.away}`;
+    row.appendChild(txt);
+    box.appendChild(row);
+  });
+}
+
+function setMQOverlayMode(mode){
+  // mode: "manual" | "random"
+  window.__mqOverlayMode = mode;
+  const leagueWrap = document.querySelector("#manualQueueOverlay .mqLeagueWrap");
+  const builder = document.querySelector("#manualQueueOverlay .mqBuilder");
+  const btnAdd = el("btnMQAddMatch");
+  const title = el("mqTitle");
+
+  if(mode === "random"){
+    if(title) title.textContent = getLang()==="en" ? "Random queue" : "Losowe dodawanie kolejki";
+    if(leagueWrap) leagueWrap.style.display = "none";
+    if(builder) builder.style.display = "none";
+    if(btnAdd) btnAdd.style.display = "none";
+  }else{
+    if(title) title.textContent = getLang()==="en" ? "Manual queue" : "Ręczne dodawanie kolejki";
+    if(leagueWrap) leagueWrap.style.display = "flex";
+    if(builder) builder.style.display = "block";
+    if(btnAdd) btnAdd.style.display = "block";
+  }
 }
 
 
@@ -2615,11 +2703,6 @@ function closeMQDeadlineOverlay(){
   const ov = el("mqDeadlineOverlay");
   if(!ov) return;
   ov.style.display = "none";
-
-  // if user canceled random deadline, discard draft
-  if(window.__deadlineMode === "random"){
-    try{ delete window.__randomQueueDraft; }catch{}
-  }
   window.__deadlineMode = "manual";
 }
 function toDateTimeLocal(ms){
@@ -2655,6 +2738,8 @@ async function confirmMQDeadline(){
     window.__randomQueueDraft = draft;
     closeMQDeadlineOverlay();
     await commitRandomQueueDraft();
+    // po zapisie zamknij podgląd losowej kolejki
+    try{ closeManualQueueMenu(); }catch{}
     return;
   }
 
@@ -4761,10 +4846,11 @@ async function addRandomQueue(){
     });
   }
 
-  // Store draft and ask for typing deadline
+  // Store draft and show matches first (deadline on save)
   window.__randomQueueDraft = { matches: draftMatches, deadlineMs: null };
-  openMQDeadlineOverlay("random");
-  showToast(getLang()==="en" ? "Set typing deadline" : "Ustaw czas końca typowania");
+  // 7034: najpierw pokaż mecze, deadline dopiero przy zapisie
+  openRandomQueuePreview();
+  showToast(getLang()==="en" ? "Random matches generated" : "Wylosowano mecze");
 }
 
 
