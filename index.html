@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7010)</title>
+  <title>Typer (BUILD 7011)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -69,8 +69,7 @@
     .rotateTitle{font-size:20px;font-weight:1000;margin:0 0 8px 0;}
     .rotateSub{color:var(--muted);font-weight:800;white-space:pre-line;line-height:1.25;}
     body.lockedPortrait #app{filter:blur(6px);pointer-events:none;}
-
-     (max-width: 900px) and (orientation: landscape){
+    @media (max-width: 900px) and (orientation: landscape){
       #app{padding:8px;}
       .frame{width:98vw;height:96vh;border-radius:18px;}
     }
@@ -359,9 +358,14 @@
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
     /* 7010: zwężenie kontenerów i wyrównanie kolumn */
-    .leftBar{width:300px;min-width:280px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .leftBar{width:280px;min-width:260px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;min-width:0}
-    .rightBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
+    .rightBar{width:300px;min-width:280px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
+
+    /* 7011: lewy panel nie moze wyjezdzac poza zakres */
+    .leftBar > .panel{width:100%;max-width:100%;}
+    .leftBar img{max-width:100%;height:auto;}
+
 
     /* 6028: górny kontener - większy avatar; teksty przeniesione do osobnego kontenera poniżej */
     .leftTopProfile{
@@ -1948,7 +1952,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7010</div>
+<div id="buildCornerText">7011</div>
 </div>
 </body>
 </html>
