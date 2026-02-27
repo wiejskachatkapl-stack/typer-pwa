@@ -1,4 +1,4 @@
-const BUILD = 7005;
+const BUILD = 7006;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1545,7 +1545,8 @@ function iAmSubmitted(){
 }
 function allResultsComplete(){
   if(!matchesCache.length) return false;
-  return matchesCache.every(m => Number.isInteger(m.resultH) && Number.isInteger(m.resultA));
+  // Mecze odwołane (cancelled) traktujemy jako „zakończone” mimo braku wyniku
+  return matchesCache.every(m => m?.cancelled === true || (Number.isInteger(m.resultH) && Number.isInteger(m.resultA)));
 }
 
 // scoring: 3 exact, 1 outcome, 0 else
