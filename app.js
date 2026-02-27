@@ -1,4 +1,4 @@
-const BUILD = 7014;
+const BUILD = 7015;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -163,7 +163,6 @@ const I18N = {
     settings: "Ustawienia",
     clearProfile: "Wyczyść profil",
     clearConfirm: "Na pewno wyczyścić profil? To usunie nick, historię, język i cache PWA.",
-    clearConfirmLong: "Czy na pewno chcesz skasować swój profil. Usunięcie go spowoduje utratę wszystkich statystyk i wszystkiego co z tym profilem jest związane. Czy potwierdzasz usunięcie profilu?",
     cleared: "Profil wyczyszczony.",
     clearFailed: "Nie udało się wyczyścić profilu.",
     language: "Język",
@@ -219,14 +218,6 @@ const I18N = {
     hintResults: "Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.",
     saveResults: "Zapisz wyniki",
 
-    
-    
-    cancelMatches: "Cancel matches",
-    cancelConfirmQ: "Was the match cancelled with no final result?",
-    cancelled: "Matches cancelled.",
-    cancelMatches: "Odwołaj mecze",
-    cancelConfirmQ: "Czy mecz został odwołany i nie ma ostatecznego wyniku pojedynku?",
-    cancelled: "Mecze odwołane.",
     league: "Tabela ligi typerów",
     afterRound: "Po kolejce",
     ranking: "Ranking",
@@ -248,7 +239,6 @@ const I18N = {
     settings: "Settings",
     clearProfile: "Clear profile",
     clearConfirm: "Clear profile? This will remove nick, history, language and PWA cache.",
-    clearConfirmLong: "Are you sure you want to delete your profile? Deleting it will remove all statistics and everything associated with this profile. Do you confirm deleting the profile?",
     cleared: "Profile cleared.",
     clearFailed: "Failed to clear profile.",
     language: "Language",
@@ -566,6 +556,18 @@ function openRoomsChoiceModal(){
 
   const actions = document.createElement("div");
   actions.className = "roomsChoiceActions";
+  actions.style.gap = "14px";
+
+  // NEW LOGIN (placeholder for next step)
+  const btnNewLogin = makeSysImgButton("btn_new_login.png", {
+    cls:"sysBtn",
+    alt:"new-login",
+    title:(getLang()==="en") ? "New login" : "Nowe logowanie",
+    onClick: ()=>{
+      // Na razie tylko placeholder. W kolejnym kroku dopracujemy logowanie z innego urządzenia.
+      showToast((getLang()==="en") ? "Coming soon" : "Wkrótce");
+    }
+  });
 
   const btnMenu = makeSysImgButton("btn_menu.png", {
     cls:"sysBtn",
@@ -574,6 +576,7 @@ function openRoomsChoiceModal(){
     onClick: ()=>{ modalClose(); showScreen("home"); }
   });
 
+  actions.appendChild(btnNewLogin);
   actions.appendChild(btnMenu);
   wrap.appendChild(actions);
 
@@ -707,53 +710,8 @@ row.appendChild(btnCreate);
 
 
 // ===== Clear profile (wipe all local data + caches) =====
-async function openResetProfileConfirmModal(){
-  const wrap = document.createElement("div");
-  wrap.style.padding = "16px 18px";
-  wrap.style.maxWidth = "720px";
-
-  const p = document.createElement("div");
-  p.style.whiteSpace = "pre-wrap";
-  p.style.lineHeight = "1.35";
-  p.textContent = t("clearConfirmLong");
-  wrap.appendChild(p);
-
-  const row = document.createElement("div");
-  row.style.display = "flex";
-  row.style.justifyContent = "center";
-  row.style.gap = "16px";
-  row.style.marginTop = "18px";
-
-  const mkImgBtn = (btnKey, aria, onClick) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "imgBtn sysBtn sysBtnBig";
-    b.setAttribute("aria-label", aria);
-    const im = document.createElement("img");
-    im.dataset.btn = btnKey;
-    im.alt = aria;
-    im.src = getBtnDir() + mapBtnName(btnKey);
-    b.appendChild(im);
-    b.onclick = onClick;
-    return b;
-  };
-
-  const yes = mkImgBtn("btn_tak.png", (getLang()==="pl" ? "Tak" : "Yes"), async () => {
-    modalClose();
-    await clearProfileConfirmed();
-  });
-  const no = mkImgBtn("btn_nie.png", (getLang()==="pl" ? "Nie" : "No"), () => {
-    modalClose();
-  });
-
-  row.appendChild(yes);
-  row.appendChild(no);
-  wrap.appendChild(row);
-
-  modalOpen(t("clearProfile"), wrap);
-}
-
-async function clearProfileConfirmed(){
+async function clearProfile(){
+  if(!confirm(t("clearConfirm"))) return;
   try{
     localStorage.clear();
     sessionStorage.clear();
@@ -822,7 +780,7 @@ function openSettings(){
   img.alt = t("clearProfile");
   img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
   btnClear.appendChild(img);
-  btnClear.onclick = () => openResetProfileConfirmModal();
+  btnClear.onclick = () => clearProfile();
   // reset obok Profil
   btnRow.appendChild(btnClear);
 
@@ -1528,7 +1486,6 @@ function recomputeTypingDeadline(){
   }
   let minKick = null;
   for(const m of matchesCache){
-    if(m.cancelled) continue;
     const ms = parseKickoffMs(m);
     if(ms==null) continue;
     if(minKick==null || ms < minKick) minKick = ms;
@@ -1592,8 +1549,7 @@ function iAmSubmitted(){
 }
 function allResultsComplete(){
   if(!matchesCache.length) return false;
-  // Mecze odwołane (cancelled) traktujemy jako „zakończone” mimo braku wyniku
-  return matchesCache.every(m => m?.cancelled === true || (Number.isInteger(m.resultH) && Number.isInteger(m.resultA)));
+  return matchesCache.every(m => Number.isInteger(m.resultH) && Number.isInteger(m.resultA));
 }
 
 // scoring: 3 exact, 1 outcome, 0 else
@@ -2259,12 +2215,6 @@ function bindUI(){
     await leaveRoom();
   };
 
-  // 7009: kasowanie pokoju – handler musi być podpięty niezależnie (wcześniej był omyłkowo zagnieżdżony w btnLeave)
-  const __btnDeleteRoom = el("btnDeleteRoom");
-  if(__btnDeleteRoom) __btnDeleteRoom.onclick = async ()=>{
-    await deleteRoomConfirmAndDelete();
-  };
-
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
   if(__btnExitFromRoomRight) __btnExitFromRoomRight.onclick = __goHomeFromRoom;
@@ -2278,8 +2228,6 @@ function bindUI(){
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
 
   // ADMIN
-  // 7004: Wejście do ekranu "Wpisz wyniki" nie może się blokować błędem ReferenceError.
-  // Potwierdzenie odwołanych meczów jest obsługiwane dopiero przy zapisie wyników (saveResults).
   el("btnEnterResults").onclick = async ()=>{
     if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
     if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
@@ -2346,10 +2294,6 @@ function bindUI(){
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
   el("btnResSave").onclick = async ()=>{ await saveResults(); };
-  el("btnResCancelMatches").onclick = ()=>{
-    if(cancelMatchesMode) return;
-    enterCancelMatchesMode();
-  };
 
   // League from room
   el("btnLeagueFromRoom").onclick = async ()=>{
@@ -2819,24 +2763,15 @@ function syncActionButtons(){
     // Admin powinien mieć dostęp do wpisywania wyników nawet jeśli sam nie zatypował
     // (inaczej po wygaśnięciu czasu typowania admin może utknąć bez akcji).
     btnEnter.style.display = adm ? "block" : "none";
-    // Aktywny jeśli są mecze. (Nie blokujemy admina po wpisaniu wyników –
-    // ma nadal możliwość wejścia do okna i ewentualnej korekty.)
-    btnEnter.disabled = !(adm && matchesCache.length);
+    // Aktywny tylko jeśli są mecze i NIE ma jeszcze kompletu wyników.
+    // Gdy wszystkie wyniki wpisane/zatwierdzone -> przycisk ma być nieaktywny.
+    btnEnter.disabled = !(adm && matchesCache.length) || resultsOk;
   }
 
   // 6003: po dodaniu kolejki (gdy istnieją mecze w aktywnej kolejce) blokujemy "Dodaj kolejkę"
   // aż do zakończenia kolejki (archiwizacja usuwa mecze -> przycisk znów aktywny).
   if(btnAddQueue){
     btnAddQueue.disabled = !!(adm && matchesCache.length);
-  }
-  const btnDel = el("btnDeleteRoom");
-  const delWrap = el("leftDeleteRoomCard");
-  if(delWrap){
-    delWrap.style.display = adm ? "flex" : "none";
-  }
-  if(btnDel){
-    btnDel.style.display = adm ? "inline-flex" : "none";
-    btnDel.disabled = !adm;
   }
 }
 
@@ -3153,9 +3088,7 @@ function renderMatches(){
     // ===== KOLUMNA 2: WYNIK =====
     const resCol = document.createElement("div");
     resCol.className = "matchResultCol";
-    if(m.cancelled){
-      resCol.textContent = (getLang()==="en") ? "Cancelled" : "Odwołano";
-    }else if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
+    if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
       resCol.textContent = `${m.resultH}:${m.resultA}`;
     }else{
       resCol.textContent = "—";
@@ -3289,17 +3222,15 @@ function openPicksPreview(uid, nick){
     pickPill.textContent = (getLang()==="en") ? `Pick: ${p.h}:${p.a}` : `Typ: ${p.h}:${p.a}`;
     score.appendChild(pickPill);
 
-    const resOk = (!m.cancelled) && Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
+    const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
     const dot = document.createElement("span");
     dot.className = "dot " + (resOk ? dotClassFor(p.h,p.a,m.resultH,m.resultA) : "gray");
 
     const resPill = document.createElement("div");
     resPill.className = "resultPill";
-    resPill.textContent = m.cancelled
-      ? ((getLang()==="en") ? "Result: Cancelled" : "Wynik: Odwołano")
-      : (resOk
-          ? ((getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`)
-          : ((getLang()==="en") ? "Result: —" : "Wynik: —"));
+    resPill.textContent = resOk
+      ? ((getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`)
+      : ((getLang()==="en") ? "Result: —" : "Wynik: —");
 
     const pts = resOk ? scoreOneMatch(p.h,p.a,m.resultH,m.resultA) : null;
     const ptsPill = document.createElement("div");
@@ -3335,17 +3266,9 @@ function openPicksPreview(uid, nick){
 // ===== RESULTS SCREEN (ADMIN) =====
 const resultsDraft = {}; // matchId -> {h,a}
 
-let cancelMatchesMode = false;
-const cancelSelected = new Set();
-
 function openResultsScreen(){
   if(!currentRoomCode) return;
   if(!isAdmin()) return;
-
-  cancelMatchesMode = false;
-  cancelSelected.clear();
-  const __cbtn = el("btnResCancelMatches");
-  if(__cbtn){ __cbtn.disabled = false; __cbtn.classList.remove("isDisabled"); }
 
   el("resRoomName").textContent = currentRoom?.name || "—";
   el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
@@ -3368,9 +3291,7 @@ function renderResultsList(){
 
   for(const m of matchesCache){
     const card = document.createElement("div");
-    card.className = "matchCard"
-      + (cancelMatchesMode ? " hasCancel" : "")
-      + (m.cancelled ? " matchCancelled" : "");
+    card.className = "matchCard";
 
     const leftTeam = document.createElement("div");
     leftTeam.className = "team";
@@ -3398,7 +3319,6 @@ function renderResultsList(){
     inpH.inputMode = "numeric";
     inpH.placeholder = "0";
     inpH.value = resultsDraft[m.id]?.h ?? "";
-    inpH.disabled = !!m.cancelled;
     inpH.oninput = () => {
       const v = clampInt(inpH.value, 0, 20);
       resultsDraft[m.id].h = v;
@@ -3413,7 +3333,6 @@ function renderResultsList(){
     inpA.inputMode = "numeric";
     inpA.placeholder = "0";
     inpA.value = resultsDraft[m.id]?.a ?? "";
-    inpA.disabled = !!m.cancelled;
     inpA.oninput = () => {
       const v = clampInt(inpA.value, 0, 20);
       resultsDraft[m.id].a = v;
@@ -3427,149 +3346,14 @@ function renderResultsList(){
     card.appendChild(score);
     card.appendChild(rightTeam);
 
-    // 7002: tryb odwoływania meczów (checkboxy po prawej, bez przewijania)
-    if(cancelMatchesMode && !m.cancelled){
-      const w = document.createElement("div");
-      w.className = "cancelChkWrap";
-      const chk = document.createElement("input");
-      chk.type = "checkbox";
-      chk.className = "cancelChk";
-      chk.checked = cancelSelected.has(m.id);
-      chk.onchange = () => {
-        if(chk.checked) cancelSelected.add(m.id);
-        else cancelSelected.delete(m.id);
-      };
-      w.appendChild(chk);
-      card.appendChild(w);
-    }
-
     list.appendChild(card);
   }
 }
 
-
-function toggleCancelMatches(){
-  // zachowane dla kompatybilności – używamy wejścia/wyjścia
-  if(cancelMatchesMode) exitCancelMatchesMode();
-  else enterCancelMatchesMode();
-}
-
-function enterCancelMatchesMode(){
-  cancelMatchesMode = true;
-  cancelSelected.clear();
-  const btn = el("btnResCancelMatches");
-  if(btn){
-    btn.disabled = true;             // po pierwszym kliknięciu ma być nieaktywny
-    btn.classList.add("isDisabled");
-  }
-  renderResultsList();
-}
-
-function exitCancelMatchesMode(){
-  cancelMatchesMode = false;
-  cancelSelected.clear();
-  const btn = el("btnResCancelMatches");
-  if(btn){
-    btn.disabled = false;
-    btn.classList.remove("isDisabled");
-  }
-  renderResultsList();
-}
-
-function openCancelConfirm(onYes, onNo){
-  const wrap = document.createElement("div");
-  wrap.style.display = "flex";
-  wrap.style.flexDirection = "column";
-  wrap.style.gap = "14px";
-
-  const q = document.createElement("div");
-  q.className = "title";
-  q.style.fontSize = "16px";
-  q.style.margin = "0";
-  q.textContent = (getLang()==="en")
-    ? "Was the match cancelled with no final result?"
-    : "Czy mecz został odwołany i nie ma ostatecznego wyniku pojedynku?";
-  wrap.appendChild(q);
-
-  const row = document.createElement("div");
-  row.className = "row";
-  row.style.justifyContent = "center";
-  row.style.gap = "18px";
-
-  const yes = document.createElement("button");
-  yes.className = "imgBtn sysBtn";
-  yes.type = "button";
-  yes.dataset.btn = (getLang()==="en") ? "btn_yes.png" : "btn_tak.png";
-  yes.innerHTML = `<img data-btn="${yes.dataset.btn}" alt="yes" src="${getBtnDir()}${mapBtnName(yes.dataset.btn)}"/>`;
-
-  const no = document.createElement("button");
-  no.className = "imgBtn sysBtn";
-  no.type = "button";
-  no.dataset.btn = (getLang()==="en") ? "btn_no.png" : "btn_nie.png";
-  no.innerHTML = `<img data-btn="${no.dataset.btn}" alt="no" src="${getBtnDir()}${mapBtnName(no.dataset.btn)}"/>`;
-
-  yes.onclick = () => { if(onYes) onYes(); };
-  no.onclick  = () => { if(onNo) onNo(); };
-
-  row.appendChild(yes);
-  row.appendChild(no);
-  wrap.appendChild(row);
-
-  modalOpen((getLang()==="en") ? "Cancelled matches" : "Mecze odwołane", wrap);
-  refreshAllButtonImages();
-}
-
-async function markSelectedMatchesCancelled(){
-  if(!currentRoomCode) return;
-  if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
-  if(!cancelSelected.size) return;
-
-  const b = boot.writeBatch(db);
-  for(const id of cancelSelected){
-    const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
-    b.update(ref, {
-      cancelled: true,
-      cancelledAt: boot.serverTimestamp(),
-      resultH: null,
-      resultA: null
-    });
-  }
-  await b.commit();
-
-  // lokalnie: oznacz jako odwołane + zablokuj inputy + wyczyść draft
-  for(const m of matchesCache){
-    if(cancelSelected.has(m.id)){
-      m.cancelled = true;
-      if(resultsDraft[m.id]){
-        resultsDraft[m.id].h = null;
-        resultsDraft[m.id].a = null;
-      }
-    }
-  }
-
-  cancelSelected.clear();
-  renderResultsList();
-  showToast((getLang()==="en") ? "Matches marked as cancelled." : "Mecze oznaczone jako odwołane.");
-}
-
-
-async function saveResults(skipCancelConfirm=false){
+async function saveResults(){
   if(!currentRoomCode) return;
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(!matchesCache.length) { showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
-
-  // 7002/7004: potwierdzenie odwołanych meczów pojawia się przy zapisie wyników
-  if(!skipCancelConfirm && cancelMatchesMode && cancelSelected.size){
-    openCancelConfirm(async ()=>{
-      await markSelectedMatchesCancelled();
-      modalClose();
-      exitCancelMatchesMode();
-      await saveResults(true);
-    }, ()=>{
-      modalClose();
-    });
-    return;
-  }
 
   // 6002: pozwalamy wpisywać pojedyncze wyniki (nie wszystkie mecze są równocześnie).
   // Zapisujemy tylko te mecze, gdzie podano OBA pola wyniku.
@@ -3770,140 +3554,6 @@ async function customConfirmLeaveRoom(){
     ? 'When you leave the room, you can return later, but you will need the access code.\nBefore leaving, save the code so you can join again.\nContinue?'
     : 'Kiedy opuścisz pokój ponownie będziesz mógł do niego powrócić ale trzeba będzie podać kod dostępu do pokoju.\nPrzed opuszczeniem pokoju zapisz sobie kod aby móc do niego ponownie wejść.\nCzy kontynuować?';
   return await ensureLeaveRoomConfirmModal().open(txt);
-}
-
-
-// Custom confirm modal for deleting room (ADMIN ONLY) – definitywne usunięcie wszystkich danych.
-let _deleteRoomConfirmModal = null;
-function ensureDeleteRoomConfirmModal(){
-  if(_deleteRoomConfirmModal) return _deleteRoomConfirmModal;
-
-  if(!document.getElementById("deleteRoomConfirmStyles")){
-    const st = document.createElement('style');
-    st.id = "deleteRoomConfirmStyles";
-    st.textContent = `
-      .deleteRoomOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;}
-      .deleteRoomBox{width:min(900px,92vw);background:rgba(6,18,40,.94);border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.6);padding:24px 22px 18px;}
-      .deleteRoomTitle{font-weight:950;font-size:22px;margin:0 0 10px 0;color:#fff;}
-      .deleteRoomText{font-weight:700;line-height:1.35;font-size:15px;color:rgba(255,255,255,.92);white-space:pre-wrap;}
-      .deleteRoomActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .deleteRoomBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-      .deleteRoomBtnImg:active{transform:translateY(1px);} 
-      @media (max-width:520px){.deleteRoomBtnImg{height:52px;}}
-    `;
-    document.head.appendChild(st);
-  }
-
-  const overlay = document.createElement('div');
-  overlay.className = 'deleteRoomOverlay';
-  overlay.innerHTML = `
-    <div class="deleteRoomBox" role="dialog" aria-modal="true">
-      <div class="deleteRoomTitle">${getLang()==='en' ? 'Delete room' : 'Usuń pokój'}</div>
-      <div class="deleteRoomText" id="deleteRoomConfirmText"></div>
-      <div class="deleteRoomActions">
-        <img id="deleteRoomBtnYes" class="deleteRoomBtnImg" alt="YES" />
-        <img id="deleteRoomBtnNo" class="deleteRoomBtnImg" alt="NO" />
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-
-  const elText = overlay.querySelector('#deleteRoomConfirmText');
-  const btnYes = overlay.querySelector('#deleteRoomBtnYes');
-  const btnNo = overlay.querySelector('#deleteRoomBtnNo');
-
-  let _resolver = null;
-  function close(val){
-    overlay.style.display = 'none';
-    const r = _resolver; _resolver = null;
-    if(r) r(val);
-  }
-
-  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
-  btnNo.addEventListener('click', ()=>close(false));
-  btnYes.addEventListener('click', ()=>close(true));
-
-  _deleteRoomConfirmModal = {
-    open: (text)=>{
-      const lang = getLang()==='en' ? 'en' : 'pl';
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
-      elText.textContent = text;
-      overlay.style.display = 'flex';
-      return new Promise(resolve=>{ _resolver = resolve; });
-    }
-  };
-
-  return _deleteRoomConfirmModal;
-}
-
-async function customConfirmDeleteRoom(){
-  const txt = (getLang()==='en')
-    ? 'Are you sure you want to delete this room?\nThis process is permanent and cannot be undone.'
-    : 'Czy na pewno chcesz usunąć ten pokój.\nProces ten jest definitywny i nie ma po nim możliwości cofnięcia procesu.';
-  return await ensureDeleteRoomConfirmModal().open(txt);
-}
-
-async function __deleteAllDocsInCollection(colRef){
-  const snap = await boot.getDocs(colRef);
-  const docs = snap.docs || [];
-  const CHUNK = 400;
-  for(let i=0;i<docs.length;i+=CHUNK){
-    const b = boot.writeBatch(db);
-    docs.slice(i,i+CHUNK).forEach(d=> b.delete(d.ref));
-    await b.commit();
-  }
-}
-
-async function deleteRoomConfirmAndDelete(){
-  if(!currentRoomCode) return;
-  if(!isAdmin()) { showToast(getLang()==='en' ? 'Admin only' : 'Tylko admin'); return; }
-
-  const ok = await customConfirmDeleteRoom();
-  if(!ok) return;
-
-  const code = currentRoomCode;
-
-  try{
-    showToast(getLang()==='en' ? 'Deleting room…' : 'Usuwanie pokoju…');
-
-    // Kolekcje pokoju (w tej aplikacji): players, matches, picks, rounds (archiwum), league, messages.
-    await __deleteAllDocsInCollection(playersCol(code));
-    await __deleteAllDocsInCollection(matchesCol(code));
-    await __deleteAllDocsInCollection(picksCol(code));
-    await __deleteAllDocsInCollection(roundsCol(code));
-    await __deleteAllDocsInCollection(leagueCol(code));
-    await __deleteAllDocsInCollection(boot.collection(db, 'rooms', code, 'messages'));
-
-    // Na końcu dokument pokoju
-    await boot.deleteDoc(roomRef(code));
-
-  }catch(e){
-    console.error(e);
-    showToast(getLang()==='en' ? 'Delete failed' : 'Nie udało się usunąć');
-    return;
-  }
-
-  // lokalny cleanup + wyjście
-  clearSavedRoom();
-  cleanupRoomListeners();
-
-  currentRoomCode = null;
-  currentRoom = null;
-
-  matchesCache = [];
-  picksCache = {};
-  picksDocByUid = {};
-  submittedByUid = {};
-  lastPlayers = [];
-  pointsByUid = {};
-  myPoints = null;
-
-  renderMatches();
-  renderPlayers([]);
-
-  showScreen('home');
-  showToast(getLang()==='en' ? 'Room deleted ✅' : 'Pokój usunięty ✅');
 }
 
 async function endRoundConfirmAndArchive(){

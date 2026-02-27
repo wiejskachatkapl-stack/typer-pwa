@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7014)</title>
+  <title>Typer (BUILD 7015)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -358,10 +358,9 @@
 
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
-    /* 7014: usuń 3 odstępy w lewym panelu (panele mają się stykać) */
-    .leftBar{width:300px;min-width:280px;height:100%;display:flex;flex-direction:column;gap:0;padding:14px}
-    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:0;min-width:0}
-    .rightBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:0;padding:14px;position:relative}
+    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;min-width:0}
+    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     /* 6028: górny kontener - większy avatar; teksty przeniesione do osobnego kontenera poniżej */
     .leftTopProfile{
@@ -395,21 +394,11 @@
     /* 6029: większe napisy w kontenerze pokoju (DOM/TESTOWY) */
     #room .leftBottomStack #roomName{font-size:26px;}
     #room .leftBottomStack .sub{font-size:15px;}
-    .leftMidTools{margin:10px 0 12px 0;display:flex;justify-content:center;align-items:center;min-height:56px}
-    /* 7014: brak przerw nad i pod kontenerem usuwania pokoju */
-    .leftDeleteRoomCard{margin:0;padding:12px;display:flex;justify-content:center;align-items:center;min-height:74px}
-    .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:0}
-
-    /* 7010: wyrównanie dolnych przycisków (żeby ostatni był w tej samej linii co reszta) */
-    #roomActionsCol{margin-top:0 !important;}
-    /* 7014: brak przerwy między "pokój" a dolnymi przyciskami */
-    .leftBottomStack{gap:0 !important;}
-    .leftActionsCard{padding-bottom:10px !important;}
-    .leftActionsCard #roomActionsCol{gap:8px !important;}
+    .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:12px}
 
     /* 6016: prawy dół - osobny kontener na Wyjście */
     .rightBottomExit{padding:14px;display:flex;justify-content:center;align-items:center}
-    .rightBottomStack{display:flex;flex-direction:column;gap:0}
+    .rightBottomStack{display:flex;flex-direction:column;gap:12px}
     .rightBottomMessages{padding:14px;display:flex;justify-content:center;align-items:center}
 
     /* ===== ROOM (RESPONSIVE) =====
@@ -435,16 +424,16 @@
 
 /* 6033: porządek w oknie „Wpisz wyniki” (admin) */
 .matchCard{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.16);
-      border-radius:14px;
-      padding:8px 10px;
-      display:grid;
-      grid-template-columns: 1fr 92px 1fr;
-      gap:8px;
-      align-items:center;
-      min-width:0;
-    }
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.16);
+  border-radius:14px;
+  padding:10px 12px;
+  display:grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap:12px;
+  align-items:center;
+  min-width:0;
+}
 .matchCard .team{flex:unset;min-width:0;}
 .matchCard .scoreBox{justify-content:center;}
       .team{font-size:13px;}
@@ -919,8 +908,6 @@
       width:min(1100px,100%);
       margin:auto;
       padding:14px;
-      display:flex;
-      flex-direction:column;
     }
     .resultsTop{
       display:flex;
@@ -931,45 +918,11 @@
     }
     .resultsList{
       max-height:min(680px,70vh);
-      overflow-y:auto;
-      overflow-x:hidden;
+      overflow:auto;
       padding:14px;
       display:flex;
       flex-direction:column;
       gap:10px;
-    }
-
-    /* 7002: odwołanie meczu w oknie "Wpisz wyniki" */
-    .resultsBottom{
-      display:flex;
-      justify-content:flex-end;
-      padding:10px 14px 6px;
-    }
-    .matchCard{ position:relative; }
-    .cancelChkWrap{
-      position:absolute;
-      right:12px;
-      top:50%;
-      transform:translateY(-50%);
-      width:34px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .matchCard.hasCancel{ padding-right:52px; }
-    .cancelChk{
-      width:22px;
-      height:22px;
-      accent-color: #38d24a;
-      cursor:pointer;
-    }
-    .matchCancelled{ opacity:.45; filter:saturate(.25); }
-    .matchCancelled .scoreInput{ pointer-events:none; }
-    .imgBtn.isDisabled{ opacity:.55; filter:grayscale(.2); }
-    @media (max-width: 560px){
-      .cancelChkWrap{ right:10px; width:32px; }
-      .matchCard.hasCancel{ padding-right:48px; }
-      .cancelChk{ width:20px; height:20px; }
     }
 
     /* ===== LEAGUE ===== */
@@ -1633,16 +1586,10 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     <div class="profileMeta" id="roomProfileCountry">Kraj: —</div>
     <div class="profileMeta" id="roomProfileFav">Klub: —</div>
   </div>
-  <!-- 7009: osobny kontener na przycisk usuwania pokoju (nie rozwala układu) -->
-  <div class="panel leftDeleteRoomCard" id="leftDeleteRoomCard" style="display:none">
-    <button aria-label="Usuń pokój" class="imgBtn sysBtn small" data-btn="btn_delete_room.png" id="btnDeleteRoom" title="Usuń pokój" type="button">
-      <img alt="Usuń pokój" data-btn="btn_delete_room.png" src="ui/buttons/pl/btn_delete_room.png"/>
-    </button>
-  </div>
 
   <!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
   <div class="leftBottomStack">
-  <div class="panel leftRoomCard" style="padding:14px">
+  <div class="panel" style="padding:14px">
 <div class="title" id="roomName">—</div>
 <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
 <div class="roomCodeBlock" style="margin-top:10px">
@@ -1652,10 +1599,10 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 <div class="row roomCodeActions" style="margin-top:10px; gap:12px; justify-content:center;">
-<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button></div>
+<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button> </div>
 </div>
 </div>
-  <div class="panel leftActionsCard" style="padding:14px">
+  <div class="panel" style="padding:14px">
 
 
 <div class="col" id="roomActionsCol" style="margin-top:10px">
@@ -1726,7 +1673,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- ADD QUEUE MENU OVERLAY (BUILD 7014) -->
+<!-- ADD QUEUE MENU OVERLAY (BUILD 6034) -->
 <div aria-hidden="true" id="addQueueOverlay">
 <div aria-label="Add queue menu" class="aqModal panel" role="dialog">
 <div class="aqBtns">
@@ -1742,7 +1689,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- MANUAL QUEUE OVERLAY (BUILD 7014) -->
+<!-- MANUAL QUEUE OVERLAY (BUILD 6034) -->
 <div aria-hidden="true" id="manualQueueOverlay">
 <div aria-label="Manual queue" class="mqModal panel" role="dialog">
 <div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
@@ -1758,7 +1705,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 7014) -->
+<!-- MESSAGES OVERLAY (BUILD 6034) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
@@ -1851,9 +1798,6 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="sub" id="t_results_hint" style="padding:10px 14px">
             Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
           </div>
-<div class="resultsBottom">
-  <button class="imgBtn sysBtn" data-btn="btn_matches_cancel.png" id="btnResCancelMatches" type="button"><img alt="btnResCancelMatches" data-btn="btn_matches_cancel.png" src="ui/buttons/pl/btn_matches_cancel.png"/></button>
-</div>
 </div>
 </section>
 <!-- LEAGUE -->
@@ -1923,7 +1867,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7014" type="module"></script>
+<script src="./app.js?v=6034" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1943,14 +1887,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7014').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=6034').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7010</div>
+<div id="buildCornerText">6034</div>
 </div>
 </body>
 </html>
