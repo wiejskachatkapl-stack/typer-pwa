@@ -3545,7 +3545,7 @@ function syncActionButtons(){
   if(btnEnter){
     // 7028: "Wpisz wyniki" ma pojawić się adminowi po zapisaniu JEGO typów.
     // (inni gracze mogą jeszcze nie mieć zapisanych typów)
-    const canEnter = (adm && matchesCache.length && submitted);
+    const canEnter = (adm && matchesCache.length && (submitted || typingClosed));
     btnEnter.style.display = canEnter ? "block" : "none";
     btnEnter.disabled = !canEnter || resultsOk;
   }

@@ -5,16 +5,16 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7035)</title>
+  <title>Typer (BUILD 7036)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
 .roomCodeRow .imgBtn{flex:0 0 auto;}
 
-/* 7035: nick obok avatara + minimalne odstępy */
+/* 7036: nick obok avatara + minimalne odstępy */
 .leftTopProfile{display:flex;align-items:center;gap:14px;}
-.profileNickTop{font-weight:1000;font-size:34px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
-.substituteRow{display:flex;justify-content:center;align-items:center;margin-top:10px;}
+.profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
 :root{
       --bg:#071229;
@@ -396,7 +396,7 @@
     }
     /* 6029: większe napisy w profilowym kontenerze */
     .leftProfileInfo .profileNick{font-weight:1000;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .leftProfileInfo .profileMeta{font-weight:900;font-size:16px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .leftProfileInfo .profileMeta{display:block;font-weight:900;font-size:16px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     /* 7009/7019: kontener na przycisk usuwania pokoju */
     .leftDeleteRoomCard{padding:12px 0;display:flex;justify-content:center;align-items:center;min-height:74px;width:100%}
     /* 7019: pewne centrowanie samego buttona */
@@ -2114,7 +2114,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7035" type="module"></script>
+<script src="./app.js?v=7036" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2134,14 +2134,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7035').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7036').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7035</div>
+<div id="buildCornerText">7036</div>
 </div>
 </body>
 </html>
