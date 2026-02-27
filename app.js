@@ -1,4 +1,4 @@
-const BUILD = 7008;
+const BUILD = 7009;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2212,7 +2212,7 @@ function bindUI(){
     await leaveRoom();
   };
 
-  // 7008: kasowanie pokoju – handler musi być podpięty niezależnie (wcześniej był omyłkowo zagnieżdżony w btnLeave)
+  // 7009: kasowanie pokoju – handler musi być podpięty niezależnie (wcześniej był omyłkowo zagnieżdżony w btnLeave)
   const __btnDeleteRoom = el("btnDeleteRoom");
   if(__btnDeleteRoom) __btnDeleteRoom.onclick = async ()=>{
     await deleteRoomConfirmAndDelete();
@@ -2782,8 +2782,11 @@ function syncActionButtons(){
   if(btnAddQueue){
     btnAddQueue.disabled = !!(adm && matchesCache.length);
   }
-
   const btnDel = el("btnDeleteRoom");
+  const delWrap = el("leftDeleteRoomCard");
+  if(delWrap){
+    delWrap.style.display = adm ? "flex" : "none";
+  }
   if(btnDel){
     btnDel.style.display = adm ? "inline-flex" : "none";
     btnDel.disabled = !adm;

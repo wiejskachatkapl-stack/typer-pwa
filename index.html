@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7008)</title>
+  <title>Typer (BUILD 7009)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -395,6 +395,7 @@
     #room .leftBottomStack #roomName{font-size:26px;}
     #room .leftBottomStack .sub{font-size:15px;}
     .leftMidTools{margin:10px 0 12px 0;display:flex;justify-content:center;align-items:center;min-height:56px}
+    .leftDeleteRoomCard{margin:10px 0 12px 0;padding:12px;display:flex;justify-content:center;align-items:center;min-height:74px}
     .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:12px}
 
     /* 6016: prawy dół - osobny kontener na Wyjście */
@@ -1623,12 +1624,11 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     <div class="profileMeta" id="roomProfileCountry">Kraj: —</div>
     <div class="profileMeta" id="roomProfileFav">Klub: —</div>
   </div>
-
-  <!-- 7008: przycisk kasowania pokoju przeniesiony w wolne miejsce (jak na zielonym zaznaczeniu) -->
-  <div class="leftMidTools" id="leftMidTools">
-    <button aria-label="Usuń pokój" class="imgBtn sysBtn small" data-btn="btn_delete_room.png" id="btnDeleteRoom" style="display:none" title="Usuń pokój" type="button"><img alt="Usuń pokój" data-btn="btn_delete_room.png" src="ui/buttons/pl/btn_delete_room.png"/></button>
-  </div>
-
+  <!-- 7009: osobny kontener na przycisk usuwania pokoju (nie rozwala układu) -->
+  <div class="panel leftDeleteRoomCard" id="leftDeleteRoomCard" style="display:none">
+    <button aria-label="Usuń pokój" class="imgBtn sysBtn small" data-btn="btn_delete_room.png" id="btnDeleteRoom" title="Usuń pokój" type="button">
+      <img alt="Usuń pokój" data-btn="btn_delete_room.png" src="ui/buttons/pl/btn_delete_room.png"/>
+    </button>
   </div>
 
   <!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
