@@ -1,4 +1,4 @@
-const BUILD = 7027;
+const BUILD = 7028;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3309,10 +3309,11 @@ function syncActionButtons(){
   }
 
   if(btnEnter){
-    // Wpisywanie wyników dopiero po zapisaniu typów przez wszystkich graczy.
-    btnEnter.style.display = (adm && matchesCache.length && everyoneSubmitted) ? "block" : "none";
-    // Aktywny tylko jeśli są mecze, wszyscy zapisali typy i NIE ma jeszcze kompletu wyników.
-    btnEnter.disabled = !(adm && matchesCache.length && everyoneSubmitted) || resultsOk;
+    // 7028: "Wpisz wyniki" ma pojawić się adminowi po zapisaniu JEGO typów.
+    // (inni gracze mogą jeszcze nie mieć zapisanych typów)
+    const canEnter = (adm && matchesCache.length && submitted);
+    btnEnter.style.display = canEnter ? "block" : "none";
+    btnEnter.disabled = !canEnter || resultsOk;
   }
 
   // 6003: po dodaniu kolejki (gdy istnieją mecze w aktywnej kolejce) blokujemy "Dodaj kolejkę"
