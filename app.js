@@ -1,4 +1,4 @@
-const BUILD = 7001;
+const BUILD = 7002;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1481,6 +1481,7 @@ function recomputeTypingDeadline(){
   }
   let minKick = null;
   for(const m of matchesCache){
+    if(m.cancelled) continue;
     const ms = parseKickoffMs(m);
     if(ms==null) continue;
     if(minKick==null || ms < minKick) minKick = ms;
@@ -2226,6 +2227,19 @@ function bindUI(){
   el("btnEnterResults").onclick = async ()=>{
     if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
     if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
+
+  // 7002: potwierdzenie odwołanych meczów pojawia się przy zapisie wyników
+  if(!skipCancelConfirm && cancelMatchesMode && cancelSelected.size){
+    openCancelConfirm(async ()=>{
+      await markSelectedMatchesCancelled();
+      modalClose();
+      exitCancelMatchesMode();
+      await saveResults(true);
+    }, ()=>{
+      modalClose();
+    });
+    return;
+  }
     openResultsScreen();
   };
 
@@ -2290,12 +2304,8 @@ function bindUI(){
   el("btnResBack").onclick = ()=> showScreen("room");
   el("btnResSave").onclick = async ()=>{ await saveResults(); };
   el("btnResCancelMatches").onclick = ()=>{
-    if(!cancelMatchesMode){
-      toggleCancelMatches();
-    }else{
-      if(cancelSelected.size) openCancelConfirm();
-      else toggleCancelMatches();
-    }
+    if(cancelMatchesMode) return;
+    enterCancelMatchesMode();
   };
 
   // League from room
@@ -3278,6 +3288,8 @@ function openResultsScreen(){
 
   cancelMatchesMode = false;
   cancelSelected.clear();
+  const __cbtn = el("btnResCancelMatches");
+  if(__cbtn){ __cbtn.disabled = false; __cbtn.classList.remove("isDisabled"); }
 
   el("resRoomName").textContent = currentRoom?.name || "—";
   el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
@@ -3300,7 +3312,9 @@ function renderResultsList(){
 
   for(const m of matchesCache){
     const card = document.createElement("div");
-    card.className = "matchCard";
+    card.className = "matchCard"
+      + (cancelMatchesMode ? " hasCancel" : "")
+      + (m.cancelled ? " matchCancelled" : "");
 
     const leftTeam = document.createElement("div");
     leftTeam.className = "team";
@@ -3328,6 +3342,7 @@ function renderResultsList(){
     inpH.inputMode = "numeric";
     inpH.placeholder = "0";
     inpH.value = resultsDraft[m.id]?.h ?? "";
+    inpH.disabled = !!m.cancelled;
     inpH.oninput = () => {
       const v = clampInt(inpH.value, 0, 20);
       resultsDraft[m.id].h = v;
@@ -3342,6 +3357,7 @@ function renderResultsList(){
     inpA.inputMode = "numeric";
     inpA.placeholder = "0";
     inpA.value = resultsDraft[m.id]?.a ?? "";
+    inpA.disabled = !!m.cancelled;
     inpA.oninput = () => {
       const v = clampInt(inpA.value, 0, 20);
       resultsDraft[m.id].a = v;
@@ -3355,8 +3371,8 @@ function renderResultsList(){
     card.appendChild(score);
     card.appendChild(rightTeam);
 
-    // 7001: tryb odwoływania meczów (checkboxy po prawej)
-    if(cancelMatchesMode){
+    // 7002: tryb odwoływania meczów (checkboxy po prawej, bez przewijania)
+    if(cancelMatchesMode && !m.cancelled){
       const w = document.createElement("div");
       w.className = "cancelChkWrap";
       const chk = document.createElement("input");
@@ -3375,13 +3391,36 @@ function renderResultsList(){
   }
 }
 
+
 function toggleCancelMatches(){
-  cancelMatchesMode = !cancelMatchesMode;
-  if(!cancelMatchesMode) cancelSelected.clear();
+  // zachowane dla kompatybilności – używamy wejścia/wyjścia
+  if(cancelMatchesMode) exitCancelMatchesMode();
+  else enterCancelMatchesMode();
+}
+
+function enterCancelMatchesMode(){
+  cancelMatchesMode = true;
+  cancelSelected.clear();
+  const btn = el("btnResCancelMatches");
+  if(btn){
+    btn.disabled = true;             // po pierwszym kliknięciu ma być nieaktywny
+    btn.classList.add("isDisabled");
+  }
   renderResultsList();
 }
 
-function openCancelConfirm(){
+function exitCancelMatchesMode(){
+  cancelMatchesMode = false;
+  cancelSelected.clear();
+  const btn = el("btnResCancelMatches");
+  if(btn){
+    btn.disabled = false;
+    btn.classList.remove("isDisabled");
+  }
+  renderResultsList();
+}
+
+function openCancelConfirm(onYes, onNo){
   const wrap = document.createElement("div");
   wrap.style.display = "flex";
   wrap.style.flexDirection = "column";
@@ -3391,7 +3430,9 @@ function openCancelConfirm(){
   q.className = "title";
   q.style.fontSize = "16px";
   q.style.margin = "0";
-  q.textContent = t("cancelConfirmQ");
+  q.textContent = (getLang()==="en")
+    ? "Was the match cancelled with no final result?"
+    : "Czy mecz został odwołany i nie ma ostatecznego wyniku pojedynku?";
   wrap.appendChild(q);
 
   const row = document.createElement("div");
@@ -3402,60 +3443,61 @@ function openCancelConfirm(){
   const yes = document.createElement("button");
   yes.className = "imgBtn sysBtn";
   yes.type = "button";
-  yes.id = "btnCancelYes";
   yes.dataset.btn = (getLang()==="en") ? "btn_yes.png" : "btn_tak.png";
   yes.innerHTML = `<img data-btn="${yes.dataset.btn}" alt="yes" src="${getBtnDir()}${mapBtnName(yes.dataset.btn)}"/>`;
 
   const no = document.createElement("button");
   no.className = "imgBtn sysBtn";
   no.type = "button";
-  no.id = "btnCancelNo";
   no.dataset.btn = (getLang()==="en") ? "btn_no.png" : "btn_nie.png";
   no.innerHTML = `<img data-btn="${no.dataset.btn}" alt="no" src="${getBtnDir()}${mapBtnName(no.dataset.btn)}"/>`;
 
-  yes.onclick = async () => {
-    await cancelSelectedMatches();
-    modalClose();
-  };
-  no.onclick = () => { modalClose(); };
+  yes.onclick = () => { if(onYes) onYes(); };
+  no.onclick  = () => { if(onNo) onNo(); };
 
   row.appendChild(yes);
   row.appendChild(no);
   wrap.appendChild(row);
 
-  modalOpen(t("cancelMatches"), wrap);
+  modalOpen((getLang()==="en") ? "Cancelled matches" : "Mecze odwołane", wrap);
   refreshAllButtonImages();
 }
 
-async function cancelSelectedMatches(){
+async function markSelectedMatchesCancelled(){
   if(!currentRoomCode) return;
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
-  if(!cancelSelected.size){
-    toggleCancelMatches();
-    return;
-  }
+  if(!cancelSelected.size) return;
 
   const b = boot.writeBatch(db);
   for(const id of cancelSelected){
     const ref = boot.doc(db, "rooms", currentRoomCode, "matches", id);
-    b.delete(ref);
+    b.update(ref, {
+      cancelled: true,
+      cancelledAt: boot.serverTimestamp(),
+      resultH: null,
+      resultA: null
+    });
   }
   await b.commit();
 
-  // lokalnie usuń z cache i draftu
-  const ids = new Set(cancelSelected);
-  for(const id of ids){ delete resultsDraft[id]; }
-  for(let i=matchesCache.length-1;i>=0;i--){
-    if(ids.has(matchesCache[i].id)) matchesCache.splice(i,1);
+  // lokalnie: oznacz jako odwołane + zablokuj inputy + wyczyść draft
+  for(const m of matchesCache){
+    if(cancelSelected.has(m.id)){
+      m.cancelled = true;
+      if(resultsDraft[m.id]){
+        resultsDraft[m.id].h = null;
+        resultsDraft[m.id].a = null;
+      }
+    }
   }
 
   cancelSelected.clear();
-  cancelMatchesMode = false;
   renderResultsList();
-  showToast(t("cancelled"));
+  showToast((getLang()==="en") ? "Matches marked as cancelled." : "Mecze oznaczone jako odwołane.");
 }
 
-async function saveResults(){
+
+async function saveResults(skipCancelConfirm=false){
   if(!currentRoomCode) return;
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(!matchesCache.length) { showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
