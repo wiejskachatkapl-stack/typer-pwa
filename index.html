@@ -1195,18 +1195,18 @@
   justify-content:center;
 }
 .roomsChoiceBtns .sysBtn{
-  flex:1 1 280px;
+  flex:1 1 240px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 .roomsChoiceBtns .sysBtn img{
-  height:108px;
+  height:104px;
   width:auto;
 }
 .roomsChoiceActions{
   display:flex;
-  justify-content:flex-start;
+  justify-content:center;
   margin-top:6px;
 }
 .roomsChoiceActions .sysBtn img{ height:72px; }
@@ -1867,7 +1867,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6034" type="module"></script>
+<script src="./app.js?v=7016" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1887,14 +1887,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6034').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7016').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6034</div>
+<div id="buildCornerText">7016</div>
 </div>
 </body>
 </html>

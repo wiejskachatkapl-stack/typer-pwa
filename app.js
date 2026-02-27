@@ -1,4 +1,4 @@
-const BUILD = 7015;
+const BUILD = 7016;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -550,17 +550,9 @@ function openRoomsChoiceModal(){
     onClick: ()=>{ modalClose(); openCreateRoomModal(); }
   });
 
-  row.appendChild(btnJoin);
-  row.appendChild(btnCreate);
-  wrap.appendChild(row);
-
-  const actions = document.createElement("div");
-  actions.className = "roomsChoiceActions";
-  actions.style.gap = "14px";
-
-  // NEW LOGIN (placeholder for next step)
+  // NEW LOGIN (placeholder for next step) — wstawiony na środek (między Join i Create)
   const btnNewLogin = makeSysImgButton("btn_new_login.png", {
-    cls:"sysBtn",
+    cls:"sysBtn sysBtnBig",
     alt:"new-login",
     title:(getLang()==="en") ? "New login" : "Nowe logowanie",
     onClick: ()=>{
@@ -569,6 +561,15 @@ function openRoomsChoiceModal(){
     }
   });
 
+  row.appendChild(btnJoin);
+  row.appendChild(btnNewLogin);
+  row.appendChild(btnCreate);
+  wrap.appendChild(row);
+
+  const actions = document.createElement("div");
+  actions.className = "roomsChoiceActions";
+  actions.style.gap = "14px";
+
   const btnMenu = makeSysImgButton("btn_menu.png", {
     cls:"sysBtn",
     alt:"menu",
@@ -576,7 +577,6 @@ function openRoomsChoiceModal(){
     onClick: ()=>{ modalClose(); showScreen("home"); }
   });
 
-  actions.appendChild(btnNewLogin);
   actions.appendChild(btnMenu);
   wrap.appendChild(actions);
 
