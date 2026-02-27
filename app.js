@@ -1,4 +1,4 @@
-const BUILD = 7007;
+const BUILD = 7008;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2210,12 +2210,13 @@ function bindUI(){
     const ok = await customConfirmLeaveRoom();
     if(!ok) return;
     await leaveRoom();
-    const __btnDeleteRoom = el("btnDeleteRoom");
+  };
+
+  // 7008: kasowanie pokoju – handler musi być podpięty niezależnie (wcześniej był omyłkowo zagnieżdżony w btnLeave)
+  const __btnDeleteRoom = el("btnDeleteRoom");
   if(__btnDeleteRoom) __btnDeleteRoom.onclick = async ()=>{
     await deleteRoomConfirmAndDelete();
   };
-
-};
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");

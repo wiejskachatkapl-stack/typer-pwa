@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7006)</title>
+  <title>Typer (BUILD 7008)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -394,6 +394,7 @@
     /* 6029: większe napisy w kontenerze pokoju (DOM/TESTOWY) */
     #room .leftBottomStack #roomName{font-size:26px;}
     #room .leftBottomStack .sub{font-size:15px;}
+    .leftMidTools{margin:10px 0 12px 0;display:flex;justify-content:center;align-items:center;min-height:56px}
     .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:12px}
 
     /* 6016: prawy dół - osobny kontener na Wyjście */
@@ -1623,6 +1624,13 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     <div class="profileMeta" id="roomProfileFav">Klub: —</div>
   </div>
 
+  <!-- 7008: przycisk kasowania pokoju przeniesiony w wolne miejsce (jak na zielonym zaznaczeniu) -->
+  <div class="leftMidTools" id="leftMidTools">
+    <button aria-label="Usuń pokój" class="imgBtn sysBtn small" data-btn="btn_delete_room.png" id="btnDeleteRoom" style="display:none" title="Usuń pokój" type="button"><img alt="Usuń pokój" data-btn="btn_delete_room.png" src="ui/buttons/pl/btn_delete_room.png"/></button>
+  </div>
+
+  </div>
+
   <!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
   <div class="leftBottomStack">
   <div class="panel" style="padding:14px">
@@ -1635,8 +1643,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 <div class="row roomCodeActions" style="margin-top:10px; gap:12px; justify-content:center;">
-<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button>
-<button aria-label="Usuń pokój" class="imgBtn sysBtn small" data-btn="btn_delete_room.png" id="btnDeleteRoom" style="display:none" title="Usuń pokój" type="button"><img alt="Usuń pokój" data-btn="btn_delete_room.png" src="ui/buttons/pl/btn_delete_room.png"/></button> </div>
+<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button></div>
 </div>
 </div>
   <div class="panel" style="padding:14px">
