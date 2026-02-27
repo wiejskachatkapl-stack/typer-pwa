@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7009)</title>
+  <title>Typer (BUILD 7010)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -358,9 +358,10 @@
 
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
-    .leftBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
+    /* 7010: zwężenie kontenerów i wyrównanie kolumn */
+    .leftBar{width:300px;min-width:280px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:12px;min-width:0}
-    .rightBar{width:340px;min-width:320px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
+    .rightBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;position:relative}
 
     /* 6028: górny kontener - większy avatar; teksty przeniesione do osobnego kontenera poniżej */
     .leftTopProfile{
@@ -397,6 +398,12 @@
     .leftMidTools{margin:10px 0 12px 0;display:flex;justify-content:center;align-items:center;min-height:56px}
     .leftDeleteRoomCard{margin:10px 0 12px 0;padding:12px;display:flex;justify-content:center;align-items:center;min-height:74px}
     .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+
+    /* 7010: wyrównanie dolnych przycisków (żeby ostatni był w tej samej linii co reszta) */
+    #roomActionsCol{margin-top:0 !important;}
+    .leftBottomStack{gap:10px;}
+    .leftActionsCard{padding-bottom:10px !important;}
+    .leftActionsCard #roomActionsCol{gap:8px !important;}
 
     /* 6016: prawy dół - osobny kontener na Wyjście */
     .rightBottomExit{padding:14px;display:flex;justify-content:center;align-items:center}
@@ -1633,7 +1640,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 
   <!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
   <div class="leftBottomStack">
-  <div class="panel" style="padding:14px">
+  <div class="panel leftRoomCard" style="padding:14px">
 <div class="title" id="roomName">—</div>
 <div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
 <div class="roomCodeBlock" style="margin-top:10px">
@@ -1646,7 +1653,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button></div>
 </div>
 </div>
-  <div class="panel" style="padding:14px">
+  <div class="panel leftActionsCard" style="padding:14px">
 
 
 <div class="col" id="roomActionsCol" style="margin-top:10px">
@@ -1941,7 +1948,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7007</div>
+<div id="buildCornerText">7010</div>
 </div>
 </body>
 </html>
