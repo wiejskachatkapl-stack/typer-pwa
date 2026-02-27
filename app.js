@@ -1,4 +1,4 @@
-const BUILD = 7003;
+const BUILD = 7004;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2224,22 +2224,11 @@ function bindUI(){
   el("btnSaveAll").onclick = async ()=>{ await saveAllPicks(); };
 
   // ADMIN
+  // 7004: Wejście do ekranu "Wpisz wyniki" nie może się blokować błędem ReferenceError.
+  // Potwierdzenie odwołanych meczów jest obsługiwane dopiero przy zapisie wyników (saveResults).
   el("btnEnterResults").onclick = async ()=>{
     if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
     if(!matchesCache.length){ showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
-
-  // 7002: potwierdzenie odwołanych meczów pojawia się przy zapisie wyników
-  if(!skipCancelConfirm && cancelMatchesMode && cancelSelected.size){
-    openCancelConfirm(async ()=>{
-      await markSelectedMatchesCancelled();
-      modalClose();
-      exitCancelMatchesMode();
-      await saveResults(true);
-    }, ()=>{
-      modalClose();
-    });
-    return;
-  }
     openResultsScreen();
   };
 
@@ -3501,6 +3490,19 @@ async function saveResults(skipCancelConfirm=false){
   if(!currentRoomCode) return;
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(!matchesCache.length) { showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
+
+  // 7002/7004: potwierdzenie odwołanych meczów pojawia się przy zapisie wyników
+  if(!skipCancelConfirm && cancelMatchesMode && cancelSelected.size){
+    openCancelConfirm(async ()=>{
+      await markSelectedMatchesCancelled();
+      modalClose();
+      exitCancelMatchesMode();
+      await saveResults(true);
+    }, ()=>{
+      modalClose();
+    });
+    return;
+  }
 
   // 6002: pozwalamy wpisywać pojedyncze wyniki (nie wszystkie mecze są równocześnie).
   // Zapisujemy tylko te mecze, gdzie podano OBA pola wyniku.
