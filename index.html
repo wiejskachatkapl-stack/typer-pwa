@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7001)</title>
+  <title>Typer (BUILD 7003)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -424,16 +424,16 @@
 
 /* 6033: porządek w oknie „Wpisz wyniki” (admin) */
 .matchCard{
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(0,0,0,.16);
-  border-radius:14px;
-  padding:10px 12px;
-  display:grid;
-  grid-template-columns: 1fr 120px 1fr;
-  gap:12px;
-  align-items:center;
-  min-width:0;
-}
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:14px;
+      padding:8px 10px;
+      display:grid;
+      grid-template-columns: 1fr 92px 1fr;
+      gap:8px;
+      align-items:center;
+      min-width:0;
+    }
 .matchCard .team{flex:unset;min-width:0;}
 .matchCard .scoreBox{justify-content:center;}
       .team{font-size:13px;}
@@ -920,14 +920,15 @@
     }
     .resultsList{
       max-height:min(680px,70vh);
-      overflow:auto;
+      overflow-y:auto;
+      overflow-x:hidden;
       padding:14px;
       display:flex;
       flex-direction:column;
       gap:10px;
     }
 
-    /* 7001: odwołanie meczu w oknie "Wpisz wyniki" */
+    /* 7002: odwołanie meczu w oknie "Wpisz wyniki" */
     .resultsBottom{
       display:flex;
       justify-content:flex-end;
@@ -936,22 +937,27 @@
     .matchCard{ position:relative; }
     .cancelChkWrap{
       position:absolute;
-      right:-44px;
+      right:12px;
       top:50%;
       transform:translateY(-50%);
-      width:40px;
+      width:34px;
       display:flex;
       align-items:center;
       justify-content:center;
     }
+    .matchCard.hasCancel{ padding-right:52px; }
     .cancelChk{
       width:22px;
       height:22px;
       accent-color: #38d24a;
       cursor:pointer;
     }
+    .matchCancelled{ opacity:.45; filter:saturate(.25); }
+    .matchCancelled .scoreInput{ pointer-events:none; }
+    .imgBtn.isDisabled{ opacity:.55; filter:grayscale(.2); }
     @media (max-width: 560px){
-      .cancelChkWrap{ right:-38px; width:34px; }
+      .cancelChkWrap{ right:10px; width:32px; }
+      .matchCard.hasCancel{ padding-right:48px; }
       .cancelChk{ width:20px; height:20px; }
     }
 
@@ -1900,7 +1906,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7001" type="module"></script>
+<script src="./app.js?v=7003" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1920,14 +1926,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7001').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7003').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7001</div>
+<div id="buildCornerText">7003</div>
 </div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const BUILD = 7002;
+const BUILD = 7003;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2776,9 +2776,9 @@ function syncActionButtons(){
     // Admin powinien mieć dostęp do wpisywania wyników nawet jeśli sam nie zatypował
     // (inaczej po wygaśnięciu czasu typowania admin może utknąć bez akcji).
     btnEnter.style.display = adm ? "block" : "none";
-    // Aktywny tylko jeśli są mecze i NIE ma jeszcze kompletu wyników.
-    // Gdy wszystkie wyniki wpisane/zatwierdzone -> przycisk ma być nieaktywny.
-    btnEnter.disabled = !(adm && matchesCache.length) || resultsOk;
+    // Aktywny jeśli są mecze. (Nie blokujemy admina po wpisaniu wyników –
+    // ma nadal możliwość wejścia do okna i ewentualnej korekty.)
+    btnEnter.disabled = !(adm && matchesCache.length);
   }
 
   // 6003: po dodaniu kolejki (gdy istnieją mecze w aktywnej kolejce) blokujemy "Dodaj kolejkę"
