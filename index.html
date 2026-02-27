@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7036)</title>
+  <title>Typer (BUILD 7037)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -372,10 +372,14 @@
     .leftTopProfile{
       padding:16px;
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:flex-start;
+      gap:14px;
       min-height:170px;
     }
+    .profileTopText{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1;margin-top:6px}
+    .profileTopText .profileNick{font-weight:1000;font-size:20px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    .profileTopText .profileMeta{display:block;font-weight:900;font-size:15px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .leftTopProfile .avatarBox{
       width:132px;height:132px;border-radius:28px;
       border:1px solid rgba(255,255,255,.14);
@@ -388,11 +392,12 @@
 
     /* 6028: nowy kontener na nick/kraj/klub (zielony kwadrat na screenie) */
     .leftProfileInfo{
-      padding:14px 16px;
+      padding:12px 16px;
       display:flex;
       flex-direction:column;
-      gap:8px;
-      min-height:118px;
+      gap:0;
+      min-height:92px;
+      justify-content:center;
     }
     /* 6029: większe napisy w profilowym kontenerze */
     .leftProfileInfo .profileNick{font-weight:1000;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1772,13 +1777,15 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       <img id="roomAvatarImg" alt="avatar" style="display:none" />
       <div id="roomAvatarFallback" style="font-weight:1000;opacity:.75">🙂</div>
     </div>
-    <div class="profileNick profileNickTop" id="roomProfileNick">—</div>
-  </div>
+    <div class="profileTopText">
+      <div class="profileNick profileNickTop" id="roomProfileNick">—</div>
+      <div class="profileMeta" id="roomProfileCountry">—</div>
+      <div class="profileMeta" id="roomProfileFav">—</div>
+    </div>
+</div>
 
   <!-- 6028: osobny kontener na Kraj/Klub + przycisk Podmiana -->
   <div class="panel leftProfileInfo" id="roomProfileInfoCard">
-    <div class="profileMeta" id="roomProfileCountry">Kraj: —</div>
-    <div class="profileMeta" id="roomProfileFav">Klub: —</div>
     <div class="substituteRow" id="roomSubstituteRow">
       <button aria-label="Podmiana" class="imgBtn sysBtn small" data-btn="btn_substitute.png" id="btnSubstitute" title="Podmiana" type="button">
         <img alt="Podmiana" data-btn="btn_substitute.png" src="ui/buttons/pl/btn_substitute.png"/>
@@ -2114,7 +2121,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7036" type="module"></script>
+<script src="./app.js?v=7037" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2134,14 +2141,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7036').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7037').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7036</div>
+<div id="buildCornerText">7037</div>
 </div>
 </body>
 </html>

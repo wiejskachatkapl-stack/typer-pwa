@@ -1,4 +1,4 @@
-const BUILD = 7035;
+const BUILD = 7037;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1576,10 +1576,10 @@ function refreshNickLabels(){
 
     const c = String(p.country || "").trim().toUpperCase();
     const countryName = c ? __getCountryDisplayName(lang, c) : "—";
-    if(el("roomProfileCountry")) el("roomProfileCountry").textContent = (lang==="en"?"Country: ":"Kraj: ") + countryName;
+    if(el("roomProfileCountry")) el("roomProfileCountry").textContent = countryName;
 
     const fav = String(p.favClub || "").trim();
-    if(el("roomProfileFav")) el("roomProfileFav").textContent = (lang==="en"?"Club: ":"Klub: ") + (fav || "—");
+    if(el("roomProfileFav")) el("roomProfileFav").textContent = (fav || "—");
 
     const avatarFile = String(p.avatar || "").trim();
     const avatarImg = el("roomAvatarImg");
