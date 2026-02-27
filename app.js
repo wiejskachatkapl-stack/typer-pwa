@@ -1,4 +1,4 @@
-const BUILD = 7028;
+const BUILD = 7029;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2483,6 +2483,14 @@ function bindUI(){
   // RESULTS
   el("btnResBack").onclick = ()=> showScreen("room");
   el("btnResSave").onclick = async ()=>{ await saveResults(); };
+  const __btnResCancelMatches = el("btnResCancelMatches");
+  if(__btnResCancelMatches){
+    __btnResCancelMatches.onclick = ()=>{
+      resultsCancelMode = !resultsCancelMode;
+      if(!resultsCancelMode) resultsCancelSelected.clear();
+      renderResultsList();
+    };
+  }
 
   // League from room
   el("btnLeagueFromRoom").onclick = async ()=>{
@@ -2884,9 +2892,14 @@ function renderManualMatchesList(){
 
   const footer = el("manualQueueFooter");
   if(footer){
-    footer.style.display = (ms.length === 10) ? "flex" : "none";
+    // 7029: przycisk "Cofnij" ma być zawsze widoczny; "Zapisz kolejkę" tylko przy 10/10
+    footer.style.display = "flex";
     footer.style.justifyContent = "center";
     footer.style.gap = "20px";
+    const btnSave = el("btnMQSave");
+    if(btnSave){
+      btnSave.style.display = (ms.length === 10) ? "inline-flex" : "none";
+    }
   }
 
   box.innerHTML = "";
@@ -3825,9 +3838,80 @@ function openPicksPreview(uid, nick){
 // ===== RESULTS SCREEN (ADMIN) =====
 const resultsDraft = {}; // matchId -> {h,a}
 
+// 7029: odwoływanie meczów z ekranu wpisywania wyników (btn_matches_cancel.png)
+let resultsCancelMode = false;
+const resultsCancelSelected = new Set();
+
+let _cancelMatchConfirmModal = null;
+function ensureCancelMatchConfirmModal(){
+  if(_cancelMatchConfirmModal) return _cancelMatchConfirmModal;
+
+  if(!document.getElementById('cancelMatchConfirmStyles')){
+    const st = document.createElement('style');
+    st.id = 'cancelMatchConfirmStyles';
+    st.textContent = `
+      .cancelMatchOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .cancelMatchBox{width:min(760px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .cancelMatchTitle{font-weight:800;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .cancelMatchText{font-weight:600;line-height:1.35;font-size:15px;color:rgba(255,255,255,.88);}
+      .cancelMatchActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .cancelMatchBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .cancelMatchBtnImg:active{transform:translateY(1px);}
+      @media (max-width:520px){.cancelMatchBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cancelMatchOverlay';
+  overlay.innerHTML = `
+    <div class="cancelMatchBox" role="dialog" aria-modal="true">
+      <div class="cancelMatchTitle">${getLang()==='en' ? 'Cancelled match' : 'Mecz odwołany'}</div>
+      <div class="cancelMatchText" id="cancelMatchConfirmText"></div>
+      <div class="cancelMatchActions">
+        <img id="cancelMatchBtnYes" class="cancelMatchBtnImg" alt="YES" />
+        <img id="cancelMatchBtnNo" class="cancelMatchBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#cancelMatchConfirmText');
+  const btnYes = overlay.querySelector('#cancelMatchBtnYes');
+  const btnNo = overlay.querySelector('#cancelMatchBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _cancelMatchConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+
+  return _cancelMatchConfirmModal;
+}
+
 function openResultsScreen(){
   if(!currentRoomCode) return;
   if(!isAdmin()) return;
+
+  // 7029: reset odwoływania meczów
+  resultsCancelMode = false;
+  resultsCancelSelected.clear();
 
   el("resRoomName").textContent = currentRoom?.name || "—";
   el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
@@ -3905,6 +3989,27 @@ function renderResultsList(){
     card.appendChild(score);
     card.appendChild(rightTeam);
 
+    // 7029: checkboxy do odwoływania meczów
+    if(resultsCancelMode){
+      const wrap = document.createElement('div');
+      wrap.style.display = 'flex';
+      wrap.style.alignItems = 'center';
+      wrap.style.justifyContent = 'center';
+      wrap.style.paddingLeft = '10px';
+
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'cancelChk';
+      chk.checked = resultsCancelSelected.has(m.id);
+      chk.onchange = ()=>{
+        if(chk.checked) resultsCancelSelected.add(m.id);
+        else resultsCancelSelected.delete(m.id);
+      };
+
+      wrap.appendChild(chk);
+      card.appendChild(wrap);
+    }
+
     list.appendChild(card);
   }
 }
@@ -3913,6 +4018,45 @@ async function saveResults(){
   if(!currentRoomCode) return;
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(!matchesCache.length) { showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
+
+  // 7029: jeśli zaznaczono mecze do odwołania – potwierdź i oznacz je jako cancelled
+  if(resultsCancelSelected.size){
+    const txt = (getLang()==='en')
+      ? 'Was the match cancelled and there is no final result?'
+      : 'Czy mecz został odwołany i nie ma ostatecznego wyniku pojedynku?';
+    const ok = await ensureCancelMatchConfirmModal().open(txt);
+    if(!ok) {
+      // nie zmieniamy nic; użytkownik może dalej wpisać wyniki
+    } else {
+      const b0 = boot.writeBatch(db);
+      for(const id of resultsCancelSelected){
+        const ref = boot.doc(db, 'rooms', currentRoomCode, 'matches', id);
+        b0.update(ref, {
+          cancelled: true,
+          cancelledAt: boot.serverTimestamp(),
+          cancelledBy: userUid,
+          resultH: null,
+          resultA: null
+        });
+      }
+      await b0.commit();
+
+      for(const id of resultsCancelSelected){
+        const m = matchesCache.find(x=>x.id===id);
+        if(m){
+          m.cancelled = true;
+          m.resultH = null;
+          m.resultA = null;
+        }
+        if(resultsDraft[id]){ resultsDraft[id].h = null; resultsDraft[id].a = null; }
+      }
+      resultsCancelSelected.clear();
+      resultsCancelMode = false;
+      renderResultsList();
+      renderMatches();
+      syncActionButtons();
+    }
+  }
 
   // 6002: pozwalamy wpisywać pojedyncze wyniki (nie wszystkie mecze są równocześnie).
   // Zapisujemy tylko te mecze, gdzie podano OBA pola wyniku.
