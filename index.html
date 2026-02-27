@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7017)</title>
+  <title>Typer (BUILD 7018)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -391,6 +391,8 @@
     /* 6029: większe napisy w profilowym kontenerze */
     .leftProfileInfo .profileNick{font-weight:1000;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .leftProfileInfo .profileMeta{font-weight:900;font-size:16px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* 7009: kontener na przycisk usuwania pokoju /*
+    .leftDeleteRoomCard{padding:12px;display:flex;justify-content:center;align-items:center;min-height:74px}
     /* 6029: większe napisy w kontenerze pokoju (DOM/TESTOWY) */
     #room .leftBottomStack #roomName{font-size:26px;}
     #room .leftBottomStack .sub{font-size:15px;}
@@ -1587,7 +1589,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     <div class="profileMeta" id="roomProfileFav">Klub: —</div>
   </div>
 
-  <!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
+    <!-- 7009: osobny kontener na przycisk usuwania pokoju (ADMIN) -->
+  <div class="panel leftDeleteRoomCard" id="leftDeleteRoomCard" style="display:none">
+    <button aria-label="Usuń pokój" class="imgBtn sysBtn small" data-btn="btn_delete_room.png" id="btnDeleteRoom" title="Usuń pokój" type="button">
+      <img alt="Usuń pokój" data-btn="btn_delete_room.png" src="ui/buttons/pl/btn_delete_room.png"/>
+    </button>
+  </div>
+
+<!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
   <div class="leftBottomStack">
   <div class="panel" style="padding:14px">
 <div class="title" id="roomName">—</div>
@@ -1867,7 +1876,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7016" type="module"></script>
+<script src="./app.js?v=7018" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1887,14 +1896,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7016').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7018').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7016</div>
+<div id="buildCornerText">7018</div>
 </div>
 </body>
 </html>

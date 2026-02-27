@@ -1,4 +1,4 @@
-const BUILD = 7017;
+const BUILD = 7018;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1308,6 +1308,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       </div>
       <div class="profileFields">
         <div class="profileDesc">${escapeHtml(L.desc)}</div>
+        <label class="profileLabel">${escapeHtml(L.playerNo)}
+          <input id="profilePlayerNo" class="profileInput" type="text" value="${escapeHtml(defaultPlayerNo)}" readonly />
+        </label>
         <label class="profileLabel">${escapeHtml(L.nick)}
           <input id="profileNick" class="profileInput" type="text" maxlength="16" value="${escapeHtml(defaultNick)}" />
         </label>
@@ -1315,9 +1318,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
           <select id="profileCountry" class="profileSelect">
             ${__buildCountryOptionsHtml(lang)}
           </select>
-        </label>
-        <label class="profileLabel">${escapeHtml(L.playerNo)}
-          <input id="profilePlayerNo" class="profileInput" type="text" value="${escapeHtml(defaultPlayerNo)}" readonly />
         </label>
         <label class="profileLabel">${escapeHtml(L.fav)}
           <input id="profileFav" class="profileInput" type="text" maxlength="26" value="${escapeHtml(defaultFav)}" />
@@ -2390,6 +2390,13 @@ function bindUI(){
     await leaveRoom();
   };
 
+  // 7009+: kasowanie pokoju (ADMIN)
+  const __btnDeleteRoom = el("btnDeleteRoom");
+  if(__btnDeleteRoom) __btnDeleteRoom.onclick = async ()=>{
+    await deleteRoomConfirmAndDelete();
+  };
+
+
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
   if(__btnExitFromRoomRight) __btnExitFromRoomRight.onclick = __goHomeFromRoom;
@@ -2991,6 +2998,17 @@ function syncActionButtons(){
   if(btnAddQueue){
     btnAddQueue.disabled = !!(adm && matchesCache.length);
   }
+  // 7009+: przycisk usuwania pokoju widoczny tylko dla admina
+  const btnDel = el("btnDeleteRoom");
+  const delWrap = el("leftDeleteRoomCard");
+  if(delWrap){
+    delWrap.style.display = adm ? "flex" : "none";
+  }
+  if(btnDel){
+    btnDel.style.display = adm ? "inline-flex" : "none";
+    btnDel.disabled = !adm;
+  }
+
 }
 
 async function saveAllPicks(){
