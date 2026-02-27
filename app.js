@@ -1,4 +1,4 @@
-const BUILD = 7018;
+const BUILD = 7019;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3790,6 +3790,130 @@ async function customConfirmLeaveRoom(){
     ? 'When you leave the room, you can return later, but you will need the access code.\nBefore leaving, save the code so you can join again.\nContinue?'
     : 'Kiedy opuścisz pokój ponownie będziesz mógł do niego powrócić ale trzeba będzie podać kod dostępu do pokoju.\nPrzed opuszczeniem pokoju zapisz sobie kod aby móc do niego ponownie wejść.\nCzy kontynuować?';
   return await ensureLeaveRoomConfirmModal().open(txt);
+}
+
+
+// ===== 7009/7019: Custom confirm modal for deleting room (ADMIN ONLY) =====
+// (W v7018 brakowało implementacji – przez to przycisk "Usuwanie pokoju" nie reagował.)
+let _deleteRoomConfirmModal = null;
+function ensureDeleteRoomConfirmModal(){
+  if(_deleteRoomConfirmModal) return _deleteRoomConfirmModal;
+
+  if(!document.getElementById('deleteRoomConfirmStyles')){
+    const st = document.createElement('style');
+    st.id = 'deleteRoomConfirmStyles';
+    st.textContent = `
+      .deleteRoomOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;}
+      .deleteRoomBox{width:min(900px,92vw);background:rgba(6,18,40,.94);border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.6);padding:24px 22px 18px;}
+      .deleteRoomTitle{font-weight:950;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .deleteRoomText{font-weight:700;line-height:1.35;font-size:15px;color:rgba(255,255,255,.92);white-space:pre-wrap;}
+      .deleteRoomActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .deleteRoomBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .deleteRoomBtnImg:active{transform:translateY(1px);} 
+      @media (max-width:520px){.deleteRoomBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'deleteRoomOverlay';
+  overlay.innerHTML = `
+    <div class="deleteRoomBox" role="dialog" aria-modal="true">
+      <div class="deleteRoomTitle">${getLang()==='en' ? 'Delete room' : 'Usuń pokój'}</div>
+      <div class="deleteRoomText" id="deleteRoomConfirmText"></div>
+      <div class="deleteRoomActions">
+        <img id="deleteRoomBtnYes" class="deleteRoomBtnImg" alt="YES" />
+        <img id="deleteRoomBtnNo" class="deleteRoomBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#deleteRoomConfirmText');
+  const btnYes = overlay.querySelector('#deleteRoomBtnYes');
+  const btnNo  = overlay.querySelector('#deleteRoomBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _deleteRoomConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+
+  return _deleteRoomConfirmModal;
+}
+
+async function customConfirmDeleteRoom(){
+  const txt = (getLang()==='en')
+    ? 'Are you sure you want to delete this room?\nThis process is permanent and cannot be undone.'
+    : 'Czy na pewno chcesz usunąć ten pokój.\nProces ten jest definitywny i nie ma po nim możliwości cofnięcia procesu.';
+  return await ensureDeleteRoomConfirmModal().open(txt);
+}
+
+async function __deleteAllDocsInCollection(colRef){
+  const snap = await boot.getDocs(colRef);
+  const docs = snap.docs || [];
+  const CHUNK = 400;
+  for(let i=0;i<docs.length;i+=CHUNK){
+    const b = boot.writeBatch(db);
+    docs.slice(i,i+CHUNK).forEach(d=> b.delete(d.ref));
+    await b.commit();
+  }
+}
+
+async function deleteRoomConfirmAndDelete(){
+  if(!currentRoomCode) return;
+  if(!isAdmin()) { showToast(getLang()==='en' ? 'Admin only' : 'Tylko admin'); return; }
+
+  const ok = await customConfirmDeleteRoom();
+  if(!ok) return;
+
+  const code = currentRoomCode;
+  try{
+    showToast(getLang()==='en' ? 'Deleting room…' : 'Usuwanie pokoju…');
+
+    // Kolekcje pokoju: players, matches, picks, rounds (archiwum), league, messages.
+    await __deleteAllDocsInCollection(playersCol(code));
+    await __deleteAllDocsInCollection(matchesCol(code));
+    await __deleteAllDocsInCollection(picksCol(code));
+    await __deleteAllDocsInCollection(roundsCol(code));
+    await __deleteAllDocsInCollection(leagueCol(code));
+    await __deleteAllDocsInCollection(boot.collection(db, 'rooms', code, 'messages'));
+
+    // Na końcu dokument pokoju
+    await boot.deleteDoc(roomRef(code));
+
+  }catch(e){
+    console.error(e);
+    showToast(getLang()==='en' ? 'Delete failed' : 'Nie udało się usunąć');
+    return;
+  }
+
+  // lokalny cleanup + wyjście
+  clearSavedRoom();
+  cleanupRoomListeners();
+  currentRoomCode = null;
+  currentRoom = null;
+  matchesCache = [];
+  picksCache = {};
+  picksDocByUid = {};
+
+  showScreen('home');
 }
 
 async function endRoundConfirmAndArchive(){
