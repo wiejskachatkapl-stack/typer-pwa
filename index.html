@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7029)</title>
+  <title>Typer (BUILD 7030)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -435,7 +435,7 @@
   border-radius:14px;
   padding:10px 12px;
   display:grid;
-  grid-template-columns: 1fr 120px 1fr;
+  grid-template-columns: 1fr 92px 1fr 36px;
   gap:12px;
   align-items:center;
   min-width:0;
@@ -491,7 +491,7 @@
       border-radius:14px;
       padding:10px 12px;
       display:grid;
-      grid-template-columns: 1fr 120px 1fr;
+      grid-template-columns: 1fr 92px 1fr 36px;
       gap:12px;
       align-items:center;
       min-width:0;
@@ -736,7 +736,7 @@
       text-align:right;
       letter-spacing:.3px;
     }
-    /* 7029: "Cofnij" ma być zawsze widoczny w ręcznym dodawaniu kolejki */
+    /* 7030: "Cofnij" ma być zawsze widoczny w ręcznym dodawaniu kolejki */
     .mqFooter{display:flex;}
     .mqMatchRow{
       display:flex;
@@ -1040,7 +1040,38 @@
       display:flex;
       flex-direction:column;
       gap:10px;
+    
+    /* 7030: porządek w oknie „Wpisz wyniki” (admin) + checkbox po prawej */
+    .matchCard{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:14px;
+      padding:10px 12px;
+      display:grid;
+      grid-template-columns: 1fr 120px 1fr 44px;
+      gap:12px;
+      align-items:center;
+      min-width:0;
     }
+    .matchCard .team{min-width:0;}
+    .matchCard .scoreBox{display:flex;align-items:center;justify-content:center;gap:6px;}
+    .matchCard .cancelCol{display:flex;align-items:center;justify-content:flex-end;}
+    .matchCard.cancelledRow{opacity:.45;filter:saturate(.7);}
+    .cancelledPill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.22);
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
+    .cancelledLabel{font-weight:950;}
+    .matchRow.cancelledRow{opacity:.45;filter:saturate(.7);}
+}
 
     /* ===== LEAGUE ===== */
     #league{
@@ -2012,7 +2043,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7029" type="module"></script>
+<script src="./app.js?v=7030" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2032,14 +2063,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7029').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7030').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7029</div>
+<div id="buildCornerText">7030</div>
 </div>
 </body>
 </html>

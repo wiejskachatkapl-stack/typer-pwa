@@ -1,4 +1,4 @@
-const BUILD = 7029;
+const BUILD = 7030;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1731,7 +1731,7 @@ function allPlayersSubmitted(){
 }
 function allResultsComplete(){
   if(!matchesCache.length) return false;
-  return matchesCache.every(m => Number.isInteger(m.resultH) && Number.isInteger(m.resultA));
+  return matchesCache.every(m => (m && m.cancelled) || (Number.isInteger(m.resultH) && Number.isInteger(m.resultA)));
 }
 
 // scoring: 3 exact, 1 outcome, 0 else
@@ -2892,7 +2892,7 @@ function renderManualMatchesList(){
 
   const footer = el("manualQueueFooter");
   if(footer){
-    // 7029: przycisk "Cofnij" ma być zawsze widoczny; "Zapisz kolejkę" tylko przy 10/10
+    // 7030: przycisk "Cofnij" ma być zawsze widoczny; "Zapisz kolejkę" tylko przy 10/10
     footer.style.display = "flex";
     footer.style.justifyContent = "center";
     footer.style.gap = "20px";
@@ -3589,6 +3589,7 @@ function renderMatches(){
   for(const m of matchesCache){
     const row = document.createElement("div");
     row.className = "matchRow";
+    if(m.cancelled){ row.classList.add("cancelledRow"); }
 
     // ===== KOLUMNA 1: MECZ DO TYPOWANIA =====
     const pickCol = document.createElement("div");
@@ -3660,7 +3661,10 @@ function renderMatches(){
     // ===== KOLUMNA 2: WYNIK =====
     const resCol = document.createElement("div");
     resCol.className = "matchResultCol";
-    if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
+    if(m.cancelled){
+      resCol.textContent = (getLang()==="en") ? "Cancelled" : "Odwołano";
+      resCol.classList.add("cancelledLabel");
+    }else if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
       resCol.textContent = `${m.resultH}:${m.resultA}`;
     }else{
       resCol.textContent = "—";
@@ -3838,7 +3842,7 @@ function openPicksPreview(uid, nick){
 // ===== RESULTS SCREEN (ADMIN) =====
 const resultsDraft = {}; // matchId -> {h,a}
 
-// 7029: odwoływanie meczów z ekranu wpisywania wyników (btn_matches_cancel.png)
+// 7030: odwoływanie meczów z ekranu wpisywania wyników (btn_matches_cancel.png)
 let resultsCancelMode = false;
 const resultsCancelSelected = new Set();
 
@@ -3909,7 +3913,7 @@ function openResultsScreen(){
   if(!currentRoomCode) return;
   if(!isAdmin()) return;
 
-  // 7029: reset odwoływania meczów
+  // 7030: reset odwoływania meczów
   resultsCancelMode = false;
   resultsCancelSelected.clear();
 
@@ -3981,34 +3985,45 @@ function renderResultsList(){
       resultsDraft[m.id].a = v;
     };
 
-    score.appendChild(inpH);
-    score.appendChild(sep);
-    score.appendChild(inpA);
+    // jeśli mecz odwołany – pokazujemy etykietę i blokujemy wpisywanie
+    if(m.cancelled){
+      const lab = document.createElement("div");
+      lab.className = "cancelledPill";
+      lab.textContent = (getLang()==="en") ? "Cancelled" : "Odwołano";
+      score.appendChild(lab);
+      inpH.disabled = true;
+      inpA.disabled = true;
+      inpH.value = "";
+      inpA.value = "";
+    }else{
+      score.appendChild(inpH);
+      score.appendChild(sep);
+      score.appendChild(inpA);
+    }
 
     card.appendChild(leftTeam);
     card.appendChild(score);
     card.appendChild(rightTeam);
 
-    // 7029: checkboxy do odwoływania meczów
-    if(resultsCancelMode){
-      const wrap = document.createElement('div');
-      wrap.style.display = 'flex';
-      wrap.style.alignItems = 'center';
-      wrap.style.justifyContent = 'center';
-      wrap.style.paddingLeft = '10px';
-
-      const chk = document.createElement('input');
-      chk.type = 'checkbox';
-      chk.className = 'cancelChk';
+    // 7030: checkboxy do odwoływania meczów – kolumna po prawej stronie
+    const cancelCol = document.createElement("div");
+    cancelCol.className = "cancelCol";
+    if(resultsCancelMode && !m.cancelled){
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.className = "cancelChk";
       chk.checked = resultsCancelSelected.has(m.id);
-      chk.onchange = ()=>{
+      chk.onchange = () => {
         if(chk.checked) resultsCancelSelected.add(m.id);
         else resultsCancelSelected.delete(m.id);
       };
-
-      wrap.appendChild(chk);
-      card.appendChild(wrap);
+      cancelCol.appendChild(chk);
+    }else{
+      cancelCol.innerHTML = "&nbsp;";
     }
+    card.appendChild(cancelCol);
+
+    if(m.cancelled) card.classList.add("cancelledRow");
 
     list.appendChild(card);
   }
@@ -4019,7 +4034,7 @@ async function saveResults(){
   if(!isAdmin()) { showToast(getLang()==="en" ? "Admin only" : "Tylko admin"); return; }
   if(!matchesCache.length) { showToast(getLang()==="en" ? "No matches" : "Brak meczów"); return; }
 
-  // 7029: jeśli zaznaczono mecze do odwołania – potwierdź i oznacz je jako cancelled
+  // 7030: jeśli zaznaczono mecze do odwołania – potwierdź i oznacz je jako cancelled
   if(resultsCancelSelected.size){
     const txt = (getLang()==='en')
       ? 'Was the match cancelled and there is no final result?'
