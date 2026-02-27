@@ -1,4 +1,4 @@
-const BUILD = 7030;
+const BUILD = 7031;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1659,6 +1659,26 @@ function recomputeTypingDeadline(){
     typingClosed = false;
     return;
   }
+
+  // If room has explicit typing deadline (manual), use it
+  try{
+    const rawDL = currentRoom?.typingDeadlineMs ?? currentRoom?.typingDeadline ?? null;
+    let dlMs = null;
+    if(typeof rawDL === "number" && isFinite(rawDL)) dlMs = rawDL;
+    else if(typeof rawDL === "string"){
+      const p = Date.parse(rawDL);
+      if(isFinite(p)) dlMs = p;
+    }else if(rawDL && typeof rawDL === "object"){
+      // Firestore Timestamp {seconds, nanoseconds}
+      if(typeof rawDL.seconds === "number") dlMs = rawDL.seconds*1000;
+      else if(typeof rawDL._seconds === "number") dlMs = rawDL._seconds*1000;
+    }
+    if(dlMs != null){
+      typingDeadlineMs = dlMs;
+      typingClosed = Date.now() >= typingDeadlineMs;
+      return;
+    }
+  }catch(e){}
   let minKick = null;
   for(const m of matchesCache){
     const ms = parseKickoffMs(m);
@@ -2457,6 +2477,10 @@ function bindUI(){
   if(__btnMQBack) __btnMQBack.onclick = ()=> closeManualQueueMenu();
   const __btnMQSave = el("btnMQSave");
   if(__btnMQSave) __btnMQSave.onclick = async ()=>{ await saveManualQueueFromUI(); };
+  const __btnMQDeadlineYes = el("btnMQDeadlineYes");
+  if(__btnMQDeadlineYes) __btnMQDeadlineYes.onclick = ()=> confirmMQDeadline();
+  const __btnMQDeadlineNo = el("btnMQDeadlineNo");
+  if(__btnMQDeadlineNo) __btnMQDeadlineNo.onclick = ()=> closeMQDeadlineOverlay();
 
   // Messages modal
   const __msgOv = el("messagesOverlay");
@@ -2544,6 +2568,60 @@ function closeManualQueueMenu(){
   const ov = el("manualQueueOverlay");
   if(!ov) return;
   ov.style.display = "none";
+}
+
+
+// ===== MANUAL QUEUE DEADLINE (BUILD 7031) =====
+function openMQDeadlineOverlay(){
+  const ov = el("mqDeadlineOverlay");
+  if(!ov) return;
+  ov.style.display = "flex";
+
+  // default value: now + 2h (rounded to 5 minutes)
+  const inp = el("mqDeadlineInput");
+  if(inp){
+    const st = __getManualState();
+    let ms = st.deadlineMs || null;
+    if(ms==null){
+      const d = new Date(Date.now() + 2*60*60*1000);
+      d.setSeconds(0,0);
+      const mm0 = d.getMinutes();
+      d.setMinutes(mm0 - (mm0%5));
+      ms = d.getTime();
+    }
+    inp.value = toDateTimeLocal(ms);
+  }
+}
+function closeMQDeadlineOverlay(){
+  const ov = el("mqDeadlineOverlay");
+  if(!ov) return;
+  ov.style.display = "none";
+}
+function toDateTimeLocal(ms){
+  const d = new Date(ms);
+  const pad = (n)=> String(n).padStart(2,"0");
+  const yyyy = d.getFullYear();
+  const MM = pad(d.getMonth()+1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  return `${yyyy}-${MM}-${dd}T${hh}:${mi}`;
+}
+function confirmMQDeadline(){
+  const inp = el("mqDeadlineInput");
+  if(!inp) return;
+  const val = (inp.value||"").trim();
+  const ms = Date.parse(val);
+  if(!isFinite(ms)){
+    showToast(getLang()==="en" ? "Select date & time" : "Wybierz datę i godzinę");
+    return;
+  }
+  const st = __getManualState();
+  st.deadlineMs = ms;
+  window.__manualQueue = st;
+  __saveManualQueueState(st);
+  closeMQDeadlineOverlay();
+  renderManualMatchesList();
 }
 
 // Manual: wybór ligi (UI w następnym kroku rozbudujemy o mecze)
@@ -2875,6 +2953,12 @@ function addManualMatchFromUI(){
   window.__manualQueue = st;
   __saveManualQueueState(st);
   renderManualMatchesList();
+
+  // After 10th match: ask for typing deadline
+  if(ms.length === 10){
+    const st2 = __getManualState();
+    if(!st2.deadlineMs) openMQDeadlineOverlay();
+  }
 }
 
 function renderManualMatchesList(){
@@ -2898,7 +2982,7 @@ function renderManualMatchesList(){
     footer.style.gap = "20px";
     const btnSave = el("btnMQSave");
     if(btnSave){
-      btnSave.style.display = (ms.length === 10) ? "inline-flex" : "none";
+      btnSave.style.display = (ms.length === 10 && !!st.deadlineMs) ? "inline-flex" : "none";
     }
   }
 
@@ -2965,6 +3049,14 @@ async function saveManualQueueFromUI(){
     return;
   }
 
+
+  // wymagamy ustawienia czasu końca typowania (deadline)
+  if(!st.deadlineMs){
+    showToast(getLang()==="en" ? "Set typing deadline" : "Ustaw czas końca typowania");
+    openMQDeadlineOverlay();
+    return;
+  }
+
   // Jeśli już są mecze w aktywnej kolejce – nie dokładamy kolejnych.
   if(matchesCache && matchesCache.length){
     showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
@@ -2987,13 +3079,14 @@ async function saveManualQueueFromUI(){
     });
   }
   // aktualizacja pokoju (tylko znacznik czasu)
-  b.set(roomRef(currentRoomCode), { updatedAt: boot.serverTimestamp() }, { merge:true });
+  b.set(roomRef(currentRoomCode), { updatedAt: boot.serverTimestamp(), typingDeadlineMs: st.deadlineMs }, { merge:true });
 
   await b.commit();
 
   // wyczyść szkic po zapisie
   try{
     st.all = [];
+    st.deadlineMs = null;
     window.__manualQueue = st;
     __saveManualQueueState(st);
   }catch{}

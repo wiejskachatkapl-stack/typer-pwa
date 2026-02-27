@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7030)</title>
+  <title>Typer (BUILD 7031)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1608,6 +1608,47 @@
 /* Profile: Avatar + Dodaj profil obok siebie */
 .profileAvatarBtnSlot{ display:flex; gap:14px; align-items:center; justify-content:center; flex-wrap:wrap; }
 
+
+/* ===== Manual queue deadline modal ===== */
+#mqDeadlineOverlay{
+  position:fixed; inset:0;
+  display:none;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+}
+.mqDeadlineModal{
+  width:min(720px, 92vw);
+  padding:22px 26px;
+}
+.mqDeadlineTitle{
+  font-size:22px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+.mqDeadlineDesc{
+  opacity:.9;
+  margin-bottom:14px;
+}
+.mqDeadlineRow{
+  display:flex;
+  justify-content:center;
+  margin-bottom:16px;
+}
+.mqDeadlineInput{
+  width:min(420px, 86vw);
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,.25);
+  background:#fff;
+  color:#000;
+  font-weight:700;
+}
+.mqDeadlineBtns{
+  display:flex;
+  justify-content:center;
+  gap:22px;
+}
 </style>
 </head>
 <body>
@@ -1880,6 +1921,26 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
+
+<!-- MANUAL QUEUE DEADLINE OVERLAY (BUILD 7031) -->
+<div aria-hidden="true" id="mqDeadlineOverlay">
+  <div aria-label="Deadline" class="mqDeadlineModal panel" role="dialog">
+    <div class="mqDeadlineTitle" id="mqDeadlineTitle">Ustaw czas końca typowania</div>
+    <div class="mqDeadlineDesc" id="mqDeadlineDesc">Ustaw datę i godzinę (z minutami), do której będzie można typować tę kolejkę.</div>
+    <div class="mqDeadlineRow">
+      <input class="mqDeadlineInput" id="mqDeadlineInput" type="datetime-local"/>
+    </div>
+    <div class="mqDeadlineBtns">
+      <button class="imgBtn sysBtn" data-btn="btn_yes.png" id="btnMQDeadlineYes" type="button">
+        <img alt="btn_yes" data-btn="btn_yes.png" src="ui/buttons/pl/btn_yes.png"/>
+      </button>
+      <button class="imgBtn sysBtn" data-btn="btn_no.png" id="btnMQDeadlineNo" type="button">
+        <img alt="btn_no" data-btn="btn_no.png" src="ui/buttons/pl/btn_no.png"/>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- MESSAGES OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
@@ -2043,7 +2104,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7030" type="module"></script>
+<script src="./app.js?v=7031" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2063,14 +2124,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7030').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7031').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7030</div>
+<div id="buildCornerText">7031</div>
 </div>
 </body>
 </html>
