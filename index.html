@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 6034)</title>
+  <title>Typer (BUILD 7000)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -925,6 +925,27 @@
       gap:10px;
     }
 
+/* ===== RESULTS: CANCEL MATCHES ===== */
+.resultsBottom{
+  display:flex;
+  justify-content:center;
+  padding:10px 14px 4px;
+}
+.matchCard.cancelMode{
+  grid-template-columns: 1fr 120px 1fr 56px;
+}
+.matchCancelBox{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+}
+.matchCancelCheck{
+  width:22px;
+  height:22px;
+  cursor:pointer;
+}
+
+
     /* ===== LEAGUE ===== */
     #league{
       padding:22px;
@@ -1797,7 +1818,11 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="panel resultsList" id="resultsList"></div>
 <div class="sub" id="t_results_hint" style="padding:10px 14px">
             Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.
+          
+          <div class="row resultsBottom">
+            <button class="imgBtn sysBtn" data-btn="btn_matches_cancel.png" id="btnResCancel" type="button"><img alt="btnResCancel" data-btn="btn_matches_cancel.png" src="ui/buttons/pl/btn_matches_cancel.png"/></button>
           </div>
+</div>
 </div>
 </section>
 <!-- LEAGUE -->
@@ -1867,7 +1892,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=6034" type="module"></script>
+<script src="./app.js?v=7000" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1887,14 +1912,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=6034').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7000').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">6034</div>
+<div id="buildCornerText">7000</div>
 </div>
 </body>
 </html>
