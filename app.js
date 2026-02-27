@@ -1,4 +1,4 @@
-const BUILD = 7034;
+const BUILD = 7035;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2571,7 +2571,7 @@ function closeManualQueueMenu(){
   ov.style.display = "none";
 }
 
-// ===== RANDOM QUEUE PREVIEW (BUILD 7034) =====
+// ===== RANDOM QUEUE PREVIEW (BUILD 7035) =====
 // Losowe: najpierw pokazujemy wylosowane mecze w tym samym oknie co manualne,
 // a dopiero przy "Zapisz kolejkę" prosimy o czas końca typowania.
 function openRandomQueuePreview(){
@@ -4848,7 +4848,7 @@ async function addRandomQueue(){
 
   // Store draft and show matches first (deadline on save)
   window.__randomQueueDraft = { matches: draftMatches, deadlineMs: null };
-  // 7034: najpierw pokaż mecze, deadline dopiero przy zapisie
+  // 7035: najpierw pokaż mecze, deadline dopiero przy zapisie
   openRandomQueuePreview();
   showToast(getLang()==="en" ? "Random matches generated" : "Wylosowano mecze");
 }
