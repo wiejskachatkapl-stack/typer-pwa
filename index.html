@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7023)</title>
+  <title>Typer (BUILD 7024)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -173,10 +173,10 @@
       font-weight:900;
     }
 
-    /* BUILD 5203: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
+    /* BUILD 7024: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
     #t_round, #sep_round{display:none;}
 
-    /* BUILD 5203: usuń debug/placeholder "dummyAdOne"/"dummyAdTwo" (z lewej strony) */
+    /* BUILD 7024: usuń debug/placeholder "dummyAdOne"/"dummyAdTwo" (z lewej strony) */
     #dummyAdOne, #dummyAdTwo,
     img[alt="dummyAdOne"], img[alt="dummyAdTwo"],
     img[src*="dummyAdOne"], img[src*="dummyAdTwo"]{
@@ -1374,7 +1374,7 @@
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
 
-/* --- BUILD 4014 UI FIT tweaks --- */
+/* --- BUILD 7024 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -1407,7 +1407,7 @@
 }
 
 
-/* --- BUILD 4014 tweaks --- */
+/* --- BUILD 7024 tweaks --- */
 .roomTopBtns{
   display:flex;
   gap:10px;
@@ -1720,7 +1720,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 
 
 <div class="col" id="roomActionsCol" style="margin-top:10px">
-<!-- BUILD 5203: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
+<!-- BUILD 7024: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
 
 <button class="imgBtn sysBtn small" data-btn="btn_tabela_typerow.png" id="btnLeagueFromRoom" type="button"><img alt="btnLeagueFromRoom" data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png"/></button>
 
@@ -1787,7 +1787,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- ADD QUEUE MENU OVERLAY (BUILD 6034) -->
+<!-- ADD QUEUE MENU OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="addQueueOverlay">
 <div aria-label="Add queue menu" class="aqModal panel" role="dialog">
 <div class="aqBtns">
@@ -1803,7 +1803,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- MANUAL QUEUE OVERLAY (BUILD 7022) -->
+<!-- MANUAL QUEUE OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="manualQueueOverlay">
 <div aria-label="Manual queue" class="mqModal panel" role="dialog">
 <div class="mqTitle" id="mqTitle">Ręczne dodawanie kolejki</div>
@@ -1837,7 +1837,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 6034) -->
+<!-- MESSAGES OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
@@ -1999,9 +1999,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7023" type="module"></script>
+<script src="./app.js?v=7024" type="module"></script>
 <script>
-  // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
+  // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
     const kill = (key) => {
       const nodes = document.querySelectorAll(
@@ -2019,14 +2019,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7022').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7024').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7021</div>
+<div id="buildCornerText">7024</div>
 </div>
 </body>
 </html>
