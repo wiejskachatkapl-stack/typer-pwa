@@ -1,4 +1,4 @@
-const BUILD = 7022;
+const BUILD = 7023;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2694,9 +2694,44 @@ const CLUBS_BY_LEAGUE = {
 
 
 
+function __loadManualQueueState(){
+  try{
+    const raw = localStorage.getItem("manualQueueState");
+    if(!raw) return null;
+    const st = JSON.parse(raw);
+    return st && typeof st==="object" ? st : null;
+  }catch{ return null; }
+}
+function __saveManualQueueState(st){
+  try{ localStorage.setItem("manualQueueState", JSON.stringify(st)); }catch{}
+}
+function __getManualState(){
+  let st = window.__manualQueue;
+  if(!st){
+    st = __loadManualQueueState() || null;
+  }
+  // migrate old shape {leagueKey, matches}
+  if(st && st.matches && !st.drafts){
+    st.drafts = {};
+    st.drafts[st.leagueKey || "PL"] = Array.isArray(st.matches) ? st.matches : [];
+    delete st.matches;
+  }
+  if(!st || typeof st!=="object") st = { leagueKey:"PL", drafts:{} };
+  if(!st.leagueKey) st.leagueKey = "PL";
+  if(!st.drafts || typeof st.drafts!=="object") st.drafts = {};
+  if(!Array.isArray(st.drafts[st.leagueKey])) st.drafts[st.leagueKey] = [];
+  window.__manualQueue = st;
+  __saveManualQueueState(st);
+  return st;
+}
+function __getCurrentManualMatches(){
+  const st = __getManualState();
+  if(!Array.isArray(st.drafts[st.leagueKey])) st.drafts[st.leagueKey] = [];
+  return st.drafts[st.leagueKey];
+}
+
 function buildManualQueueUI(){
-  // state
-  window.__manualQueue = window.__manualQueue || { leagueKey: "PL", matches: [] };
+  const st = __getManualState();
 
   // league select
   const leagueSel = el("manualLeagueSelect");
@@ -2708,17 +2743,19 @@ function buildManualQueueUI(){
       opt.textContent = l.label;
       leagueSel.appendChild(opt);
     }
-    leagueSel.value = window.__manualQueue.leagueKey || "PL";
+    leagueSel.value = st.leagueKey || "PL";
     leagueSel.onchange = ()=>{
-      window.__manualQueue.leagueKey = leagueSel.value;
-      // reset matches when changing league (czytelniej)
-      window.__manualQueue.matches = [];
+      const nextKey = leagueSel.value;
+      if(!Array.isArray(st.drafts[st.leagueKey])) st.drafts[st.leagueKey] = [];
+      if(!Array.isArray(st.drafts[nextKey])) st.drafts[nextKey] = [];
+      st.leagueKey = nextKey;
+      window.__manualQueue = st;
+      __saveManualQueueState(st);
       rebuildManualClubSelectors();
       renderManualMatchesList();
     };
   }
 
-  // buttons
   const btnAdd = el("btnMQAddMatch");
   if(btnAdd){
     btnAdd.onclick = ()=> addManualMatchFromUI();
@@ -2776,10 +2813,10 @@ function addManualMatchFromUI(){
   const away = (awaySel.value || "").trim();
   if(!home || !away) return;
 
-  const st = window.__manualQueue || { leagueKey:"PL", matches:[] };
-  st.matches = st.matches || [];
+  const st = __getManualState();
+  const ms = __getCurrentManualMatches();
 
-  if(st.matches.length >= 10){
+  if(ms.length >= 10){
     showToast(getLang()==="en" ? "Max 10 matches" : "Maksymalnie 10 meczów");
     return;
   }
@@ -2790,7 +2827,7 @@ function addManualMatchFromUI(){
 
   // no duplicate pair and no repeated team in this round (czytelniej)
   const usedTeams = new Set();
-  for(const m of st.matches){
+  for(const m of ms){
     usedTeams.add(m.home);
     usedTeams.add(m.away);
     if((m.home===home && m.away===away) || (m.home===away && m.away===home)){
@@ -2803,16 +2840,17 @@ function addManualMatchFromUI(){
     return;
   }
 
-  st.matches.push({ home, away });
+  ms.push({ home, away });
   window.__manualQueue = st;
+  __saveManualQueueState(st);
   renderManualMatchesList();
 }
 
 function renderManualMatchesList(){
   const box = el("manualMatchesList");
   if(!box) return;
-  const st = window.__manualQueue || { matches:[] };
-  const ms = st.matches || [];
+  const st = __getManualState();
+  const ms = __getCurrentManualMatches();
   box.innerHTML = "";
 
   if(!ms.length){
@@ -2834,8 +2872,9 @@ function renderManualMatchesList(){
     del.className = "mqDelBtn";
     del.textContent = getLang()==="en" ? "Remove" : "Usuń";
     del.onclick = ()=>{
-      st.matches.splice(idx,1);
+      ms.splice(idx,1);
       window.__manualQueue = st;
+      __saveManualQueueState(st);
       renderManualMatchesList();
     };
     row.appendChild(txt);
@@ -2850,11 +2889,13 @@ async function saveManualQueueFromUI(){
   if(!sel) return;
   const key = sel.value;
 
-  window.__manualQueue = window.__manualQueue || { leagueKey:key, matches:[] };
-  window.__manualQueue.leagueKey = key;
+  const st = __getManualState();
+  st.leagueKey = key;
+  window.__manualQueue = st;
+  __saveManualQueueState(st);
 
   const label = (MANUAL_LEAGUES.find(x=>x.key===key)?.label) || key;
-  const ms = window.__manualQueue.matches || [];
+  const ms = __getCurrentManualMatches();
 
   if(!ms.length){
     showToast(getLang()==="en" ? "Add at least one match" : "Dodaj przynajmniej jeden mecz");
@@ -2862,7 +2903,7 @@ async function saveManualQueueFromUI(){
   }
 
   // zapis roboczy – w następnym kroku podpinamy zapis do Firestore jako kolejkę
-  window.__manualQueueDraft = JSON.parse(JSON.stringify(window.__manualQueue));
+  window.__manualQueueDraft = { leagueKey: st.leagueKey, matches: JSON.parse(JSON.stringify(ms)) };
 
   showToast(getLang()==="en"
     ? `Saved draft: ${label} (${ms.length})`
