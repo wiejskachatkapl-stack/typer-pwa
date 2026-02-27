@@ -1,4 +1,4 @@
-const BUILD = 7016;
+const BUILD = 7017;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -9,6 +9,10 @@ const KEY_ROOMS_HISTORY = "typer_rooms_history_v3";
 
 // Profil (avatar / kraj / ulubiony klub)
 const KEY_PROFILE = "typer_profile_v1"; // JSON
+
+// Id gracza (bezpieczne logowanie na innym urządzeniu)
+// Format: 1 litera kraju + 6 cyfr, np. P123456
+const KEY_PLAYER_NO = "typer_player_no_v1";
 
 // NOWE: język
 const KEY_LANG = "typer_lang_v1"; // "pl" | "en"
@@ -556,8 +560,8 @@ function openRoomsChoiceModal(){
     alt:"new-login",
     title:(getLang()==="en") ? "New login" : "Nowe logowanie",
     onClick: ()=>{
-      // Na razie tylko placeholder. W kolejnym kroku dopracujemy logowanie z innego urządzenia.
-      showToast((getLang()==="en") ? "Coming soon" : "Wkrótce");
+      modalClose();
+      openNewLoginModal();
     }
   });
 
@@ -652,6 +656,128 @@ row.appendChild(btnEnter);
 
   modalOpen((getLang()==="en") ? "JOIN ROOM" : "DOŁĄCZ DO POKOJU", wrap);
   setTimeout(()=>{ inp.focus(); }, 50);
+}
+
+// ===== NEW LOGIN (other device) =====
+// Wymaga: nr gracza + kod pokoju. Szukamy w rooms/{code}/players dokumentu z playerNo.
+function openNewLoginModal(){
+  const wrap = document.createElement("div");
+  wrap.className = "joinRoom";
+
+  const lab1 = document.createElement("div");
+  lab1.className = "muted";
+  lab1.textContent = (getLang()==="en")
+    ? "Enter player number (e.g. P123456):"
+    : "Podaj nr gracza (np. P123456):";
+  wrap.appendChild(lab1);
+
+  const inpNo = document.createElement("input");
+  inpNo.id = "newLoginPlayerNo";
+  inpNo.className = "input";
+  inpNo.maxLength = 7;
+  inpNo.autocomplete = "off";
+  inpNo.placeholder = "P123456";
+  inpNo.style.textTransform = "uppercase";
+  wrap.appendChild(inpNo);
+
+  const lab2 = document.createElement("div");
+  lab2.className = "muted";
+  lab2.style.marginTop = "10px";
+  lab2.textContent = (getLang()==="en")
+    ? "Enter room code (6 characters):"
+    : "Podaj kod pokoju (6 znaków):";
+  wrap.appendChild(lab2);
+
+  const inpCode = document.createElement("input");
+  inpCode.id = "newLoginRoomCode";
+  inpCode.className = "input";
+  inpCode.maxLength = 6;
+  inpCode.autocomplete = "off";
+  inpCode.placeholder = "ABC123";
+  inpCode.style.textTransform = "uppercase";
+  wrap.appendChild(inpCode);
+
+  const row = document.createElement("div");
+  row.className = "rowRight";
+
+  const btnNo = makeSysImgButton("btn_no.png", {
+    cls:"sysBtn",
+    alt:"no",
+    title:(getLang()==="en")?"No":"Nie",
+    onClick: ()=>{ modalClose(); openRoomsChoiceModal(); }
+  });
+
+  const btnYes = makeSysImgButton("btn_yes.png", {
+    cls:"sysBtn",
+    alt:"yes",
+    title:(getLang()==="en")?"Yes":"Tak",
+    onClick: async ()=>{
+      const pn = String(inpNo.value||"").trim().toUpperCase();
+      const code = String(inpCode.value||"").trim().toUpperCase();
+      if(!/^[A-Z]\d{6}$/.test(pn)){
+        showToast(getLang()==="en" ? "Invalid player number" : "Niepoprawny nr gracza");
+        return;
+      }
+      if(code.length !== 6){
+        showToast(getLang()==="en" ? "Invalid room code" : "Niepoprawny kod pokoju");
+        return;
+      }
+      await performNewLogin(pn, code);
+    }
+  });
+
+  row.appendChild(btnNo);
+  row.appendChild(btnYes);
+  wrap.appendChild(row);
+
+  modalOpen((getLang()==="en")?"NEW LOGIN":"NOWE LOGOWANIE", wrap);
+  setTimeout(()=> inpNo.focus(), 50);
+}
+
+async function performNewLogin(playerNo, roomCode){
+  try{
+    const snap = await boot.getDoc(roomRef(roomCode));
+    if(!snap.exists()){
+      showToast(getLang()==="en" ? "Room not found" : "Nie ma takiego pokoju");
+      return;
+    }
+
+    // znajdź gracza w players po playerNo
+    const q = boot.query(playersCol(roomCode), boot.where("playerNo","==", playerNo));
+    const qs = await boot.getDocs(q);
+    if(qs.empty){
+      showToast(getLang()==="en" ? "Player number not found in this room" : "Nie znaleziono nr gracza w tym pokoju");
+      return;
+    }
+
+    const docSnap = qs.docs[0];
+    const data = docSnap.data() || {};
+
+    // Ustawiamy lokalnie nick i profil (jeśli mamy dane)
+    if(data.nick) localStorage.setItem(KEY_NICK, String(data.nick));
+    const prof = getProfile() || {};
+    if(data.country) prof.country = String(data.country);
+    if(data.favClub) prof.favClub = String(data.favClub);
+    if(data.avatar) prof.avatar = String(data.avatar);
+    prof.nick = String(data.nick || prof.nick || "");
+    prof.playerNo = playerNo;
+    setProfile(prof);
+    localStorage.setItem(KEY_PLAYER_NO, playerNo);
+
+    // Zapisz aktywny pokój i otwórz go (doc id gracza zostaje jak w pokoju)
+    localStorage.setItem(KEY_ACTIVE_ROOM, roomCode);
+    pushRoomHistory(roomCode);
+
+    // Najważniejsze: używamy uid z pokoju (id dokumentu gracza) jako bieżącego identyfikatora,
+    // żeby widzieć swoje typy/statystyki na innym urządzeniu.
+    userUid = docSnap.id;
+
+    modalClose();
+    await openRoom(roomCode, {force:true});
+  }catch(e){
+    console.error(e);
+    showToast(getLang()==="en" ? "Cannot login" : "Nie udało się zalogować");
+  }
 }
 
 function openCreateRoomModal(){
@@ -826,6 +952,39 @@ function getProfile(){
 
 function setProfile(p){
   localStorage.setItem(KEY_PROFILE, JSON.stringify(p || {}));
+}
+
+function getPlayerNo(){
+  const p = getProfile() || {};
+  const fromProfile = String(p.playerNo || "").trim();
+  const fromLS = String(localStorage.getItem(KEY_PLAYER_NO) || "").trim();
+  const val = (fromProfile || fromLS).toUpperCase();
+  return /^[A-Z]\d{6}$/.test(val) ? val : "";
+}
+
+function ensurePlayerNoForCountry(countryCode){
+  const c = String(countryCode || "").trim().toUpperCase();
+  const prefix = (c && /^[A-Z]{2}$/.test(c)) ? c[0] : "X";
+
+  // Jeśli jest już poprawny numer — dopasuj tylko literę do kraju
+  const existing = getPlayerNo();
+  if(existing){
+    const digits = existing.slice(1);
+    const next = prefix + digits;
+    localStorage.setItem(KEY_PLAYER_NO, next);
+    const p = getProfile() || {};
+    p.playerNo = next;
+    setProfile(p);
+    return next;
+  }
+
+  const digits = String(Math.floor(Math.random()*1_000_000)).padStart(6, "0");
+  const next = prefix + digits;
+  localStorage.setItem(KEY_PLAYER_NO, next);
+  const p = getProfile() || {};
+  p.playerNo = next;
+  setProfile(p);
+  return next;
 }
 
 function isProfileComplete(p){
@@ -1126,14 +1285,15 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
 function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
-    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back"}
-    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij"};
+    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", playerNo:"Player number", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back"}
+    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", playerNo:"Nr gracza", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij"};
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
   // Start blank when no country is set yet
   const defaultCountry = existing.country || "";
   const defaultFav = (existing.favClub || "").trim();
+  const defaultPlayerNo = getPlayerNo();
 
   const wrap = document.createElement("div");
   wrap.className = "profileModal";
@@ -1155,6 +1315,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
           <select id="profileCountry" class="profileSelect">
             ${__buildCountryOptionsHtml(lang)}
           </select>
+        </label>
+        <label class="profileLabel">${escapeHtml(L.playerNo)}
+          <input id="profilePlayerNo" class="profileInput" type="text" value="${escapeHtml(defaultPlayerNo)}" readonly />
         </label>
         <label class="profileLabel">${escapeHtml(L.fav)}
           <input id="profileFav" class="profileInput" type="text" maxlength="26" value="${escapeHtml(defaultFav)}" />
@@ -1228,13 +1391,19 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       const nick = (document.getElementById("profileNick")?.value || "").trim();
       const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
       const favClub = (document.getElementById("profileFav")?.value || "").trim();
-      const profile = {...existing, nick, country, favClub, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
+      const playerNo = ensurePlayerNoForCountry(country);
+      // pokaż w polu readonly
+      const pnEl = document.getElementById("profilePlayerNo");
+      if(pnEl) pnEl.value = playerNo;
+      const profile = {...existing, nick, country, favClub, playerNo, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
       if(!isProfileComplete(profile)){
         showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
         return;
       }
       localStorage.setItem(KEY_NICK, nick);
       setProfile(profile);
+      // Jeśli jesteśmy w pokoju – uaktualnij dane gracza (playerNo + profil) w rooms/{code}/players/{uid}
+      try{ updatePlayerDocProfile(); }catch{}
       refreshNickLabels();
       modalClose();
       if(typeof onDone === "function") onDone(profile);
@@ -1254,7 +1423,13 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
 async function ensureProfile(){
   const p = getProfile();
-  if(isProfileComplete(p)) return true;
+  if(isProfileComplete(p)){
+    // upewnij się, że nr gracza istnieje
+    if(!getPlayerNo()){
+      ensurePlayerNoForCountry(p.country);
+    }
+    return true;
+  }
   return await new Promise((resolve)=>{
     openProfileModal({required:true, onDone: ()=>resolve(true), onCancel: ()=>resolve(false)});
   });
@@ -2531,8 +2706,17 @@ async function createRoom(roomName){
       currentRoundNo: 1
     });
 
+    const prof = getProfile() || {};
+    const playerNo = prof.playerNo || getPlayerNo() || "";
     await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-      nick, uid: userUid, joinedAt: boot.serverTimestamp(), lastActiveAt: boot.serverTimestamp()
+      nick,
+      uid: userUid,
+      playerNo: String(playerNo||"").toUpperCase() || null,
+      country: (prof.country || null),
+      favClub: (prof.favClub || null),
+      avatar: (prof.avatar || null),
+      joinedAt: boot.serverTimestamp(),
+      lastActiveAt: boot.serverTimestamp()
     });
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -2559,8 +2743,18 @@ async function joinRoom(code){
     return;
   }
 
+  // dopnij dane profilu (w tym nr gracza) do dokumentu gracza w pokoju
+  const prof = getProfile() || {};
+  const playerNo = prof.playerNo || getPlayerNo() || "";
   await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
-    nick, uid: userUid, joinedAt: boot.serverTimestamp(), lastActiveAt: boot.serverTimestamp()
+    nick,
+    uid: userUid,
+    playerNo: String(playerNo||"").toUpperCase() || null,
+    country: (prof.country || null),
+    favClub: (prof.favClub || null),
+    avatar: (prof.avatar || null),
+    joinedAt: boot.serverTimestamp(),
+    lastActiveAt: boot.serverTimestamp()
   }, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -2568,6 +2762,30 @@ async function joinRoom(code){
 
   el("debugRooms").textContent = (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`;
   await openRoom(code);
+}
+
+// Aktualizuj dane profilu gracza w bieżącym pokoju (jeśli jest otwarty)
+async function updatePlayerDocProfile(){
+  if(!currentRoomCode || !userUid) return;
+  const prof = getProfile() || {};
+  const nick = getNick();
+  const playerNo = (prof.playerNo || getPlayerNo() || "").toUpperCase();
+  try{
+    await boot.setDoc(
+      boot.doc(db, "rooms", currentRoomCode, "players", userUid),
+      {
+        nick: nick || null,
+        playerNo: playerNo || null,
+        country: prof.country || null,
+        favClub: prof.favClub || null,
+        avatar: prof.avatar || null,
+        lastActiveAt: boot.serverTimestamp()
+      },
+      { merge:true }
+    );
+  }catch(e){
+    // ignore
+  }
 }
 
 async function leaveRoom(){
