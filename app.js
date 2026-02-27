@@ -1,4 +1,4 @@
-const BUILD = 7026;
+const BUILD = 7027;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1722,6 +1722,13 @@ function recomputeSubmittedMap(){
 function iAmSubmitted(){
   return !!submittedByUid[userUid];
 }
+
+// Admin powinien wpisywać wyniki dopiero gdy WSZYSCY gracze zapisali typy
+function allPlayersSubmitted(){
+  if(!matchesCache.length) return false;
+  if(!Array.isArray(lastPlayers) || !lastPlayers.length) return false;
+  return lastPlayers.every(p => !!submittedByUid[p.uid]);
+}
 function allResultsComplete(){
   if(!matchesCache.length) return false;
   return matchesCache.every(m => Number.isInteger(m.resultH) && Number.isInteger(m.resultA));
@@ -3292,6 +3299,7 @@ function syncActionButtons(){
   const submitted = iAmSubmitted();
   const adm = isAdmin();
   const resultsOk = allResultsComplete();
+  const everyoneSubmitted = allPlayersSubmitted();
 
   if(btnSave){
     btnSave.style.display = submitted ? "none" : "block";
@@ -3301,12 +3309,10 @@ function syncActionButtons(){
   }
 
   if(btnEnter){
-    // Admin powinien mieć dostęp do wpisywania wyników nawet jeśli sam nie zatypował
-    // (inaczej po wygaśnięciu czasu typowania admin może utknąć bez akcji).
-    btnEnter.style.display = adm ? "block" : "none";
-    // Aktywny tylko jeśli są mecze i NIE ma jeszcze kompletu wyników.
-    // Gdy wszystkie wyniki wpisane/zatwierdzone -> przycisk ma być nieaktywny.
-    btnEnter.disabled = !(adm && matchesCache.length) || resultsOk;
+    // Wpisywanie wyników dopiero po zapisaniu typów przez wszystkich graczy.
+    btnEnter.style.display = (adm && matchesCache.length && everyoneSubmitted) ? "block" : "none";
+    // Aktywny tylko jeśli są mecze, wszyscy zapisali typy i NIE ma jeszcze kompletu wyników.
+    btnEnter.disabled = !(adm && matchesCache.length && everyoneSubmitted) || resultsOk;
   }
 
   // 6003: po dodaniu kolejki (gdy istnieją mecze w aktywnej kolejce) blokujemy "Dodaj kolejkę"
