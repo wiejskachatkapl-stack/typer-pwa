@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7019)</title>
+  <title>Typer (BUILD 7021)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -658,6 +658,26 @@
       font-size:18px;
       color:rgba(255,255,255,.95);
       padding:2px 6px;
+    }
+    .mqLeagueWrap{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:6px;
+    }
+    .mqLeagueLabel{
+      font-weight:900;
+      color:rgba(255,255,255,.90);
+    }
+    .mqLeagueSelect{
+      height:40px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,.25);
+      background:#ffffff;
+      color:#000000;
+      font-weight:900;
+      padding:0 12px;
+      outline:none;
     }
     .mqList{
       display:flex;
@@ -1702,14 +1722,17 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- MANUAL QUEUE OVERLAY (BUILD 6034) -->
+<!-- MANUAL QUEUE OVERLAY (BUILD 7021) -->
 <div aria-hidden="true" id="manualQueueOverlay">
 <div aria-label="Manual queue" class="mqModal panel" role="dialog">
-<div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
-<div class="mqList" id="manualQueueList"></div>
+<div class="mqTitle" id="mqTitle">Ręczne dodawanie kolejki</div>
+<div class="mqLeagueWrap">
+  <div class="mqLeagueLabel">Liga:</div>
+  <select class="mqLeagueSelect" id="manualLeagueSelect"></select>
+</div>
 <div class="mqFooter">
-<button class="imgBtn sysBtn" data-btn="btn_zapisz_typy.png" id="btnMQSave" type="button">
-<img alt="btnMQSave" data-btn="btn_zapisz_typy.png" src="ui/buttons/pl/btn_save_picks.png"/>
+<button class="imgBtn sysBtn" data-btn="btn_save_queue.png" id="btnMQSave" type="button">
+<img alt="btnMQSave" data-btn="btn_save_queue.png" src="ui/buttons/pl/btn_save_queue.png"/>
 </button>
 <button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnMQBack" type="button">
 <img alt="btnMQBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
@@ -1880,7 +1903,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7019" type="module"></script>
+<script src="./app.js?v=7021" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1900,14 +1923,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7019').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7021').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">7019</div>
+<div id="buildCornerText">7021</div>
 </div>
 </body>
 </html>
