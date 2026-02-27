@@ -1,4 +1,4 @@
-const BUILD = 7020;
+const BUILD = 7022;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2542,27 +2542,332 @@ const MANUAL_LEAGUES = [
   { key: "EN", label: "Premier League - ANGLIA" }
 ];
 
+// Kluby dla lig (z pliku kluby.docx)
+const CLUBS_BY_LEAGUE = {
+  "FR": [
+    "PSG",
+    "Lens",
+    "Lyon",
+    "Marsylia",
+    "Lille",
+    "Rennes",
+    "Strasbourg",
+    "Monaco",
+    "Lorient",
+    "Toulouse",
+    "Brest",
+    "Angers",
+    "Le Havre",
+    "Nice",
+    "Paris FC",
+    "Auxerre",
+    "Nantes",
+    "Metz"
+  ],
+  "ES": [
+    "Barcelona",
+    "Real Madryt",
+    "Villarreal",
+    "Atl. Madryt",
+    "Betis",
+    "Celta Vigo",
+    "Espanyol",
+    "Ath. Bilbao",
+    "Osasuna",
+    "Real Sociedad",
+    "Girona",
+    "Sevilla",
+    "Getafe",
+    "Alaves",
+    "Vallecano",
+    "Valencia",
+    "Elche",
+    "Mallorca",
+    "Levante",
+    "Oviedo"
+  ],
+  "NL": [
+    "PSV",
+    "Feyenoord",
+    "NEC Nijmegen",
+    "Ajax",
+    "Alkmaar",
+    "Twente",
+    "Sparta Rotterdam",
+    "Utrecht",
+    "Groningen",
+    "Heerenveen",
+    "Fortuna Sittard",
+    "Zwolle",
+    "Go Ahead Eagles",
+    "Exelsior",
+    "FC Volendam",
+    "NAC Breda",
+    "Telstar",
+    "Heracles"
+  ],
+  "DE": [
+    "Bayern Monachium",
+    "Borussia Dortmund",
+    "TSG Hoffenheim",
+    "Vfb Stuttgart",
+    "RB Lipsk",
+    "Bayer Levelkusen",
+    "S.C. Freiburg",
+    "Eintracht Frankfurt",
+    "Union Berlin",
+    "FC Augsburg",
+    "Hamburger SV",
+    "1.FC Koeln",
+    "1.FSV Mainz 05",
+    "Borussia Moencheng.",
+    "Vfl Wolsburg",
+    "St. Pauli",
+    "Werder Brema",
+    "Heidenheim"
+  ],
+  "IT": [
+    "Inter",
+    "AC Milan",
+    "Napoli",
+    "AS Roma",
+    "Juventus",
+    "Como",
+    "Atalanta",
+    "Bologna",
+    "Sassuolo",
+    "Lazio",
+    "Udinese",
+    "Parma",
+    "Cagliari",
+    "Genoa",
+    "Torino",
+    "Fiorentina",
+    "Cremonese",
+    "Lecce",
+    "Pisa",
+    "Verona"
+  ],
+  "PL": [
+    "Jagiellonia",
+    "Zagłębie Lubin",
+    "Lech Poznań",
+    "Górnik Zabrze",
+    "Raków",
+    "Wisła Płock",
+    "Cracovia",
+    "Korona",
+    "Radomiak",
+    "Pogoń",
+    "Lechia",
+    "GKS Katowice",
+    "Motor",
+    "Piast",
+    "Arka Gdynia",
+    "Legia",
+    "Widzew",
+    "Bruk-Bet Termalika"
+  ],
+  "EN": [
+    "Arsenal",
+    "Manchester City",
+    "Aston Villa",
+    "Manchester Utd",
+    "Chelsea",
+    "Liverpool",
+    "Brentford",
+    "Bournemouth",
+    "Everton",
+    "Fulham",
+    "Newcastle",
+    "Sunderland",
+    "Crystal Palace",
+    "Brighton",
+    "Leeds",
+    "Tottenham",
+    "Nottingham",
+    "West Ham",
+    "Burnley",
+    "Wolverhampton"
+  ]
+};
+
+
+
 function buildManualQueueUI(){
-  const sel = el("manualLeagueSelect");
-  if(!sel) return;
-  sel.innerHTML = "";
-  for(const l of MANUAL_LEAGUES){
-    const opt = document.createElement("option");
-    opt.value = l.key;
-    opt.textContent = l.label;
-    sel.appendChild(opt);
+  // state
+  window.__manualQueue = window.__manualQueue || { leagueKey: "PL", matches: [] };
+
+  // league select
+  const leagueSel = el("manualLeagueSelect");
+  if(leagueSel){
+    leagueSel.innerHTML = "";
+    for(const l of MANUAL_LEAGUES){
+      const opt = document.createElement("option");
+      opt.value = l.key;
+      opt.textContent = l.label;
+      leagueSel.appendChild(opt);
+    }
+    leagueSel.value = window.__manualQueue.leagueKey || "PL";
+    leagueSel.onchange = ()=>{
+      window.__manualQueue.leagueKey = leagueSel.value;
+      // reset matches when changing league (czytelniej)
+      window.__manualQueue.matches = [];
+      rebuildManualClubSelectors();
+      renderManualMatchesList();
+    };
   }
-  // default: Ekstraklasa
-  sel.value = "PL";
+
+  // buttons
+  const btnAdd = el("btnMQAddMatch");
+  if(btnAdd){
+    btnAdd.onclick = ()=> addManualMatchFromUI();
+  }
+
+  rebuildManualClubSelectors();
+  renderManualMatchesList();
 }
+
+function getManualLeagueClubs(){
+  const key = (window.__manualQueue?.leagueKey) || "PL";
+  return (CLUBS_BY_LEAGUE[key] || []).slice();
+}
+
+function rebuildManualClubSelectors(){
+  const clubs = getManualLeagueClubs();
+  const homeSel = el("manualHomeSelect");
+  const awaySel = el("manualAwaySelect");
+  if(!homeSel || !awaySel) return;
+
+  const prevHome = homeSel.value;
+  homeSel.innerHTML = "";
+  for(const c of clubs){
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    homeSel.appendChild(opt);
+  }
+  // restore if possible
+  if(prevHome && clubs.includes(prevHome)) homeSel.value = prevHome;
+
+  const fillAway = ()=>{
+    const home = homeSel.value;
+    const prevAway = awaySel.value;
+    awaySel.innerHTML = "";
+    for(const c of clubs){
+      if(c === home) continue;
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      awaySel.appendChild(opt);
+    }
+    if(prevAway && prevAway !== home && clubs.includes(prevAway)) awaySel.value = prevAway;
+  };
+  homeSel.onchange = fillAway;
+  fillAway();
+}
+
+function addManualMatchFromUI(){
+  const homeSel = el("manualHomeSelect");
+  const awaySel = el("manualAwaySelect");
+  if(!homeSel || !awaySel) return;
+
+  const home = (homeSel.value || "").trim();
+  const away = (awaySel.value || "").trim();
+  if(!home || !away) return;
+
+  const st = window.__manualQueue || { leagueKey:"PL", matches:[] };
+  st.matches = st.matches || [];
+
+  if(st.matches.length >= 10){
+    showToast(getLang()==="en" ? "Max 10 matches" : "Maksymalnie 10 meczów");
+    return;
+  }
+  if(home === away){
+    showToast(getLang()==="en" ? "Teams must be different" : "Drużyny muszą być różne");
+    return;
+  }
+
+  // no duplicate pair and no repeated team in this round (czytelniej)
+  const usedTeams = new Set();
+  for(const m of st.matches){
+    usedTeams.add(m.home);
+    usedTeams.add(m.away);
+    if((m.home===home && m.away===away) || (m.home===away && m.away===home)){
+      showToast(getLang()==="en" ? "Match already added" : "Ten mecz już dodano");
+      return;
+    }
+  }
+  if(usedTeams.has(home) || usedTeams.has(away)){
+    showToast(getLang()==="en" ? "Team already used in this round" : "Ta drużyna jest już użyta w tej kolejce");
+    return;
+  }
+
+  st.matches.push({ home, away });
+  window.__manualQueue = st;
+  renderManualMatchesList();
+}
+
+function renderManualMatchesList(){
+  const box = el("manualMatchesList");
+  if(!box) return;
+  const st = window.__manualQueue || { matches:[] };
+  const ms = st.matches || [];
+  box.innerHTML = "";
+
+  if(!ms.length){
+    const empty = document.createElement("div");
+    empty.className = "mqEmpty";
+    empty.textContent = getLang()==="en" ? "No matches added yet." : "Nie dodano jeszcze meczów.";
+    box.appendChild(empty);
+    return;
+  }
+
+  ms.forEach((m, idx)=>{
+    const row = document.createElement("div");
+    row.className = "mqMatchRow";
+    const txt = document.createElement("div");
+    txt.className = "mqMatchTxt";
+    txt.textContent = `${idx+1}. ${m.home} — ${m.away}`;
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "mqDelBtn";
+    del.textContent = getLang()==="en" ? "Remove" : "Usuń";
+    del.onclick = ()=>{
+      st.matches.splice(idx,1);
+      window.__manualQueue = st;
+      renderManualMatchesList();
+    };
+    row.appendChild(txt);
+    row.appendChild(del);
+    box.appendChild(row);
+  });
+}
+
 
 async function saveManualQueueFromUI(){
   const sel = el("manualLeagueSelect");
   if(!sel) return;
   const key = sel.value;
+
+  window.__manualQueue = window.__manualQueue || { leagueKey:key, matches:[] };
+  window.__manualQueue.leagueKey = key;
+
   const label = (MANUAL_LEAGUES.find(x=>x.key===key)?.label) || key;
-  window.__manualSelectedLeague = key;
-  showToast(getLang()==="en" ? `Selected: ${label}` : `Wybrano ligę: ${label}`);
+  const ms = window.__manualQueue.matches || [];
+
+  if(!ms.length){
+    showToast(getLang()==="en" ? "Add at least one match" : "Dodaj przynajmniej jeden mecz");
+    return;
+  }
+
+  // zapis roboczy – w następnym kroku podpinamy zapis do Firestore jako kolejkę
+  window.__manualQueueDraft = JSON.parse(JSON.stringify(window.__manualQueue));
+
+  showToast(getLang()==="en"
+    ? `Saved draft: ${label} (${ms.length})`
+    : `Zapisano szkic: ${label} (${ms.length})`
+  );
   closeManualQueueMenu();
 }
 function isAdmin(){

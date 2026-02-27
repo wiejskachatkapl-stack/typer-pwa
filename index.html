@@ -679,6 +679,87 @@
       padding:0 12px;
       outline:none;
     }
+
+    .mqBuilder{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:6px;
+    }
+    .mqBuilderRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .mqBuilderLabel{
+      width:110px;
+      font-weight:900;
+      color:rgba(255,255,255,.90);
+    }
+    .mqClubSelect{
+      flex:1;
+      height:40px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,.25);
+      background:#ffffff;
+      color:#000000;
+      font-weight:900;
+      padding:0 12px;
+      outline:none;
+    }
+    .mqAddMatchBtn{
+      height:44px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.95);
+      font-weight:900;
+      cursor:pointer;
+    }
+    .mqAddMatchBtn:hover{ background:rgba(255,255,255,.12); }
+    .mqMatchesList{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:6px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      max-height:34vh;
+      overflow:auto;
+    }
+    .mqMatchRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .mqMatchTxt{
+      font-weight:900;
+      color:rgba(255,255,255,.92);
+    }
+    .mqDelBtn{
+      height:34px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.06);
+      color:rgba(255,255,255,.92);
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .mqDelBtn:hover{ background:rgba(255,255,255,.10); }
+    .mqEmpty{
+      padding:10px 12px;
+      color:rgba(255,255,255,.75);
+      font-weight:800;
+    }
+
     .mqList{
       display:flex;
       flex-direction:column;
@@ -1722,7 +1803,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- MANUAL QUEUE OVERLAY (BUILD 7021) -->
+<!-- MANUAL QUEUE OVERLAY (BUILD 7022) -->
 <div aria-hidden="true" id="manualQueueOverlay">
 <div aria-label="Manual queue" class="mqModal panel" role="dialog">
 <div class="mqTitle" id="mqTitle">Ręczne dodawanie kolejki</div>
@@ -1730,6 +1811,21 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <div class="mqLeagueLabel">Liga:</div>
   <select class="mqLeagueSelect" id="manualLeagueSelect"></select>
 </div>
+
+<div class="mqBuilder">
+  <div class="mqBuilderRow">
+    <div class="mqBuilderLabel">Gospodarz:</div>
+    <select class="mqClubSelect" id="manualHomeSelect"></select>
+  </div>
+  <div class="mqBuilderRow">
+    <div class="mqBuilderLabel">Gość:</div>
+    <select class="mqClubSelect" id="manualAwaySelect"></select>
+  </div>
+  <button class="mqAddMatchBtn" id="btnMQAddMatch" type="button">+ Dodaj mecz</button>
+</div>
+
+<div class="mqMatchesList" id="manualMatchesList"></div>
+
 <div class="mqFooter">
 <button class="imgBtn sysBtn" data-btn="btn_save_queue.png" id="btnMQSave" type="button">
 <img alt="btnMQSave" data-btn="btn_save_queue.png" src="ui/buttons/pl/btn_save_queue.png"/>
@@ -1903,7 +1999,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7021" type="module"></script>
+<script src="./app.js?v=7022" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1923,7 +2019,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7021').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7022').catch(() => {});
     });
   }
 </script>
