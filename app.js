@@ -1,4 +1,4 @@
-const BUILD = 7013;
+const BUILD = 7014;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -163,6 +163,7 @@ const I18N = {
     settings: "Ustawienia",
     clearProfile: "Wyczyść profil",
     clearConfirm: "Na pewno wyczyścić profil? To usunie nick, historię, język i cache PWA.",
+    clearConfirmLong: "Czy na pewno chcesz skasować swój profil. Usunięcie go spowoduje utratę wszystkich statystyk i wszystkiego co z tym profilem jest związane. Czy potwierdzasz usunięcie profilu?",
     cleared: "Profil wyczyszczony.",
     clearFailed: "Nie udało się wyczyścić profilu.",
     language: "Język",
@@ -247,6 +248,7 @@ const I18N = {
     settings: "Settings",
     clearProfile: "Clear profile",
     clearConfirm: "Clear profile? This will remove nick, history, language and PWA cache.",
+    clearConfirmLong: "Are you sure you want to delete your profile? Deleting it will remove all statistics and everything associated with this profile. Do you confirm deleting the profile?",
     cleared: "Profile cleared.",
     clearFailed: "Failed to clear profile.",
     language: "Language",
@@ -705,8 +707,53 @@ row.appendChild(btnCreate);
 
 
 // ===== Clear profile (wipe all local data + caches) =====
-async function clearProfile(){
-  if(!confirm(t("clearConfirm"))) return;
+async function openResetProfileConfirmModal(){
+  const wrap = document.createElement("div");
+  wrap.style.padding = "16px 18px";
+  wrap.style.maxWidth = "720px";
+
+  const p = document.createElement("div");
+  p.style.whiteSpace = "pre-wrap";
+  p.style.lineHeight = "1.35";
+  p.textContent = t("clearConfirmLong");
+  wrap.appendChild(p);
+
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.justifyContent = "center";
+  row.style.gap = "16px";
+  row.style.marginTop = "18px";
+
+  const mkImgBtn = (btnKey, aria, onClick) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "imgBtn sysBtn sysBtnBig";
+    b.setAttribute("aria-label", aria);
+    const im = document.createElement("img");
+    im.dataset.btn = btnKey;
+    im.alt = aria;
+    im.src = getBtnDir() + mapBtnName(btnKey);
+    b.appendChild(im);
+    b.onclick = onClick;
+    return b;
+  };
+
+  const yes = mkImgBtn("btn_tak.png", (getLang()==="pl" ? "Tak" : "Yes"), async () => {
+    modalClose();
+    await clearProfileConfirmed();
+  });
+  const no = mkImgBtn("btn_nie.png", (getLang()==="pl" ? "Nie" : "No"), () => {
+    modalClose();
+  });
+
+  row.appendChild(yes);
+  row.appendChild(no);
+  wrap.appendChild(row);
+
+  modalOpen(t("clearProfile"), wrap);
+}
+
+async function clearProfileConfirmed(){
   try{
     localStorage.clear();
     sessionStorage.clear();
@@ -775,7 +822,7 @@ function openSettings(){
   img.alt = t("clearProfile");
   img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
   btnClear.appendChild(img);
-  btnClear.onclick = () => clearProfile();
+  btnClear.onclick = () => openResetProfileConfirmModal();
   // reset obok Profil
   btnRow.appendChild(btnClear);
 

@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7013)</title>
+  <title>Typer (BUILD 7014)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -358,7 +358,7 @@
 
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
-    /* 7013: usuń 3 odstępy w lewym panelu (panele mają się stykać) */
+    /* 7014: usuń 3 odstępy w lewym panelu (panele mają się stykać) */
     .leftBar{width:300px;min-width:280px;height:100%;display:flex;flex-direction:column;gap:0;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:0;min-width:0}
     .rightBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:0;padding:14px;position:relative}
@@ -396,13 +396,13 @@
     #room .leftBottomStack #roomName{font-size:26px;}
     #room .leftBottomStack .sub{font-size:15px;}
     .leftMidTools{margin:10px 0 12px 0;display:flex;justify-content:center;align-items:center;min-height:56px}
-    /* 7013: brak przerw nad i pod kontenerem usuwania pokoju */
+    /* 7014: brak przerw nad i pod kontenerem usuwania pokoju */
     .leftDeleteRoomCard{margin:0;padding:12px;display:flex;justify-content:center;align-items:center;min-height:74px}
     .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:0}
 
     /* 7010: wyrównanie dolnych przycisków (żeby ostatni był w tej samej linii co reszta) */
     #roomActionsCol{margin-top:0 !important;}
-    /* 7013: brak przerwy między "pokój" a dolnymi przyciskami */
+    /* 7014: brak przerwy między "pokój" a dolnymi przyciskami */
     .leftBottomStack{gap:0 !important;}
     .leftActionsCard{padding-bottom:10px !important;}
     .leftActionsCard #roomActionsCol{gap:8px !important;}
@@ -1726,7 +1726,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- ADD QUEUE MENU OVERLAY (BUILD 6034) -->
+<!-- ADD QUEUE MENU OVERLAY (BUILD 7014) -->
 <div aria-hidden="true" id="addQueueOverlay">
 <div aria-label="Add queue menu" class="aqModal panel" role="dialog">
 <div class="aqBtns">
@@ -1742,7 +1742,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- MANUAL QUEUE OVERLAY (BUILD 6034) -->
+<!-- MANUAL QUEUE OVERLAY (BUILD 7014) -->
 <div aria-hidden="true" id="manualQueueOverlay">
 <div aria-label="Manual queue" class="mqModal panel" role="dialog">
 <div class="mqTitle">Ręczne dodawanie 10 meczów (test)</div>
@@ -1758,7 +1758,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 6034) -->
+<!-- MESSAGES OVERLAY (BUILD 7014) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
@@ -1923,7 +1923,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=7006" type="module"></script>
+<script src="./app.js?v=7014" type="module"></script>
 <script>
   // BUILD 5203: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -1943,7 +1943,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=7007').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=7014').catch(() => {});
     });
   }
 </script>
