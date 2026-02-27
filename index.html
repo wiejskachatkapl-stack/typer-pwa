@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 7012)</title>
+  <title>Typer (BUILD 7013)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -358,7 +358,7 @@
 
     /* ===== ROOM ===== */
     #room{padding:22px;gap:14px;align-items:stretch}
-    /* 7012: usuń odstępy między kontenerami (panele mają się stykać) */
+    /* 7013: usuń 3 odstępy w lewym panelu (panele mają się stykać) */
     .leftBar{width:300px;min-width:280px;height:100%;display:flex;flex-direction:column;gap:0;padding:14px}
     .mid{flex:1;height:100%;display:flex;flex-direction:column;gap:0;min-width:0}
     .rightBar{width:320px;min-width:300px;height:100%;display:flex;flex-direction:column;gap:0;padding:14px;position:relative}
@@ -396,12 +396,14 @@
     #room .leftBottomStack #roomName{font-size:26px;}
     #room .leftBottomStack .sub{font-size:15px;}
     .leftMidTools{margin:10px 0 12px 0;display:flex;justify-content:center;align-items:center;min-height:56px}
-    .leftDeleteRoomCard{margin:10px 0 12px 0;padding:12px;display:flex;justify-content:center;align-items:center;min-height:74px}
+    /* 7013: brak przerw nad i pod kontenerem usuwania pokoju */
+    .leftDeleteRoomCard{margin:0;padding:12px;display:flex;justify-content:center;align-items:center;min-height:74px}
     .leftBottomStack{margin-top:auto;display:flex;flex-direction:column;gap:0}
 
     /* 7010: wyrównanie dolnych przycisków (żeby ostatni był w tej samej linii co reszta) */
     #roomActionsCol{margin-top:0 !important;}
-    .leftBottomStack{gap:10px;}
+    /* 7013: brak przerwy między "pokój" a dolnymi przyciskami */
+    .leftBottomStack{gap:0 !important;}
     .leftActionsCard{padding-bottom:10px !important;}
     .leftActionsCard #roomActionsCol{gap:8px !important;}
 
