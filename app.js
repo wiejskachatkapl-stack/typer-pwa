@@ -1,4 +1,4 @@
-const BUILD = 7025;
+const BUILD = 7026;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2710,24 +2710,41 @@ function __getManualState(){
   if(!st){
     st = __loadManualQueueState() || null;
   }
-  // migrate old shape {leagueKey, matches}
-  if(st && st.matches && !st.drafts){
-    st.drafts = {};
-    st.drafts[st.leagueKey || "PL"] = Array.isArray(st.matches) ? st.matches : [];
-    delete st.matches;
+
+  // migrate old shapes:
+  // - {leagueKey, drafts:{...}}  -> {leagueKey, all:[...]}
+  // - {leagueKey, matches:[...]} -> {leagueKey, all:[...]}
+  if(st && typeof st==="object"){
+    if(Array.isArray(st.matches) && !Array.isArray(st.all)){
+      st.all = st.matches.map(m=>({ leagueKey: st.leagueKey || "PL", home:m.home, away:m.away }));
+      delete st.matches;
+    }
+    if(st.drafts && typeof st.drafts==="object" && !Array.isArray(st.all)){
+      const all = [];
+      for(const [k, arr] of Object.entries(st.drafts)){
+        if(!Array.isArray(arr)) continue;
+        for(const m of arr){
+          if(!m || !m.home || !m.away) continue;
+          all.push({ leagueKey:k, home:m.home, away:m.away });
+        }
+      }
+      st.all = all;
+      delete st.drafts;
+    }
   }
-  if(!st || typeof st!=="object") st = { leagueKey:"PL", drafts:{} };
+
+  if(!st || typeof st!=="object") st = { leagueKey:"PL", all:[] };
   if(!st.leagueKey) st.leagueKey = "PL";
-  if(!st.drafts || typeof st.drafts!=="object") st.drafts = {};
-  if(!Array.isArray(st.drafts[st.leagueKey])) st.drafts[st.leagueKey] = [];
+  if(!Array.isArray(st.all)) st.all = [];
+
   window.__manualQueue = st;
   __saveManualQueueState(st);
   return st;
 }
-function __getCurrentManualMatches(){
+function __getAllManualMatches(){
   const st = __getManualState();
-  if(!Array.isArray(st.drafts[st.leagueKey])) st.drafts[st.leagueKey] = [];
-  return st.drafts[st.leagueKey];
+  if(!Array.isArray(st.all)) st.all = [];
+  return st.all;
 }
 
 function buildManualQueueUI(){
@@ -2745,10 +2762,7 @@ function buildManualQueueUI(){
     }
     leagueSel.value = st.leagueKey || "PL";
     leagueSel.onchange = ()=>{
-      const nextKey = leagueSel.value;
-      if(!Array.isArray(st.drafts[st.leagueKey])) st.drafts[st.leagueKey] = [];
-      if(!Array.isArray(st.drafts[nextKey])) st.drafts[nextKey] = [];
-      st.leagueKey = nextKey;
+      st.leagueKey = leagueSel.value;
       window.__manualQueue = st;
       __saveManualQueueState(st);
       rebuildManualClubSelectors();
@@ -2814,7 +2828,7 @@ function addManualMatchFromUI(){
   if(!home || !away) return;
 
   const st = __getManualState();
-  const ms = __getCurrentManualMatches();
+  const ms = __getAllManualMatches();
 
   if(ms.length >= 10){
     showToast(getLang()==="en" ? "Max 10 matches" : "Maksymalnie 10 meczów");
@@ -2825,9 +2839,11 @@ function addManualMatchFromUI(){
     return;
   }
 
-  // no duplicate pair and no repeated team in this round (czytelniej)
+    // no duplicate pair (w obrębie tej samej ligi) + opcjonalnie nie powtarzamy drużyn w tej samej lidze
+  const leagueKey = st.leagueKey || "PL";
   const usedTeams = new Set();
   for(const m of ms){
+    if((m.leagueKey || leagueKey) !== leagueKey) continue;
     usedTeams.add(m.home);
     usedTeams.add(m.away);
     if((m.home===home && m.away===away) || (m.home===away && m.away===home)){
@@ -2836,11 +2852,11 @@ function addManualMatchFromUI(){
     }
   }
   if(usedTeams.has(home) || usedTeams.has(away)){
-    showToast(getLang()==="en" ? "Team already used in this round" : "Ta drużyna jest już użyta w tej kolejce");
+    showToast(getLang()==="en" ? "Team already used in this league" : "Ta drużyna jest już użyta w tej lidze");
     return;
   }
 
-  ms.push({ home, away });
+  ms.push({ leagueKey, home, away });
   window.__manualQueue = st;
   __saveManualQueueState(st);
   renderManualMatchesList();
@@ -2850,7 +2866,7 @@ function renderManualMatchesList(){
   const box = el("manualMatchesList");
   if(!box) return;
   const st = __getManualState();
-  const ms = __getCurrentManualMatches();
+  const ms = __getAllManualMatches();
 
   const cnt = el("manualMatchesCount");
   if(cnt){
@@ -2882,7 +2898,8 @@ function renderManualMatchesList(){
 
     const txt = document.createElement("div");
     txt.className = "mqMatchTxt";
-    txt.textContent = `${idx+1}. ${m.home} — ${m.away}`;
+    const l = MANUAL_LEAGUES.find(x=>x.key===(m.leagueKey||st.leagueKey))?.label || (m.leagueKey||st.leagueKey||"");
+    txt.textContent = `${idx+1}. [${l}] ${m.home} — ${m.away}`;
 
     const del = document.createElement("button");
     del.type = "button";
@@ -2917,7 +2934,7 @@ async function saveManualQueueFromUI(){
   window.__manualQueue = st;
   __saveManualQueueState(st);
 
-  const ms = __getCurrentManualMatches();
+  const ms = __getAllManualMatches();
 
   // wymagamy dokładnie 10 meczów
   if(ms.length !== 10){
@@ -2945,7 +2962,7 @@ async function saveManualQueueFromUI(){
       idx: i,
       home: m.home,
       away: m.away,
-      leagueKey: key,
+      leagueKey: (m.leagueKey || st.leagueKey || "PL"),
       createdAt: boot.serverTimestamp()
     });
   }
@@ -2954,9 +2971,9 @@ async function saveManualQueueFromUI(){
 
   await b.commit();
 
-  // wyczyść szkic tej ligi po zapisie
+  // wyczyść szkic po zapisie
   try{
-    if(st.drafts && Array.isArray(st.drafts[key])) st.drafts[key] = [];
+    st.all = [];
     window.__manualQueue = st;
     __saveManualQueueState(st);
   }catch{}
