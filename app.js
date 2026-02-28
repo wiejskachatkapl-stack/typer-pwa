@@ -1,4 +1,16 @@
-const BUILD = 8016;
+const BUILD = 8017;
+
+// iOS/phones: fix 100vh + allow proper scroll inside modals/panels
+function __setAppVH(){
+  try{
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--app-vh', `${vh}px`);
+  }catch(e){}
+}
+__setAppVH();
+window.addEventListener('resize', __setAppVH, {passive:true});
+window.addEventListener('orientationchange', ()=>{ setTimeout(__setAppVH, 60); }, {passive:true});
+
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";

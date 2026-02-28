@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8016)</title>
+  <title>Typer (BUILD 8017)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -17,6 +17,7 @@
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
 :root{
+      --app-vh: 1vh;
       --bg:#071229;
       --glass: rgba(8, 22, 52, .58);
       --glass2: rgba(8, 22, 52, .42);
@@ -1250,6 +1251,7 @@
     .modalBody{
       padding:22px;
       overflow:auto;
+      -webkit-overflow-scrolling: touch;
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -1732,6 +1734,19 @@
   justify-content:center;
   gap:22px;
 }
+
+/* ===== MOBILE SCROLL FIX (iOS/Android) BUILD 8017 ===== */
+ (max-width: 900px){
+  body{ overflow-x:hidden; }
+  /* allow whole app to scroll if needed (forms/modals) */
+  #app{ overflow:auto; -webkit-overflow-scrolling: touch; align-items:flex-start; }
+  .frame{
+    height:auto;
+    min-height: calc(var(--app-vh) * 100 - 20px);
+    width: min(1580px, 98vw);
+  }
+}
+
 </style>
 </head>
 <body>
