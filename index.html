@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8009)</title>
+  <title>Typer (BUILD 8012)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -75,7 +75,7 @@
     .rotateSub{color:var(--muted);font-weight:800;white-space:pre-line;line-height:1.25;}
     body.lockedPortrait #app{filter:blur(6px);pointer-events:none;}
 
-     (max-width: 900px) and (orientation: landscape){
+    @media (max-width: 900px) and (orientation: landscape){
       #app{padding:8px;}
       .frame{width:98vw;height:96vh;border-radius:18px;}
     }
@@ -1297,7 +1297,8 @@
     }
 
     /* Profile modal */
-    .profileModal{ width:720px; max-width:92vw; }
+    /* Profile (modal) – dopasowane do dużego kontenera jak na screenie */
+    .profileModal{ width:min(1100px,92vw); max-width:92vw; }
     .profileRow{ display:flex; gap:18px; align-items:flex-start; }
     .profileAvatarBox{ width:140px; height:140px; border-radius:18px; background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; }
     .profileAvatarPlaceholder{ font-size:54px; opacity:.9; }
@@ -1636,48 +1637,30 @@
     .footerRight{display:none !important;}
 
 
-    /* Profile modal layout tweaks */
+    /* Profile modal layout – przywrócenie układu jak na screenie (zielone zaznaczenie) */
     .modal.profileMode .modalHead{
-      position: relative;
-      justify-content: center;
-      padding-top: 10px;
-      padding-bottom: 10px;
+      position:relative;
+      justify-content:flex-start !important;
+      padding:16px 18px !important;
+      gap:12px;
     }
     .modal.profileMode #modalTitle{
-      margin: 0 auto;
-      font-size: clamp(44px, 5.0vw, 72px);
-      font-weight: 900;
-      padding: 10px 22px;
+      margin:0 !important;
+      font-size: clamp(52px, 6.2vw, 84px);
+      font-weight: 1000;
+      padding: 12px 22px;
+      border-radius: 20px;
     }
-    .modal.profileMode #modalBack{
-      position: absolute;
-      right: 210px;
-      top: 18px;
-    }
+    .modal.profileMode #modalBack,
     .modal.profileMode #modalClose{
-      position: absolute;
-      right: 28px;
-      top: 18px; /* move to top-right (green box) */
+      position:static !important;
+      top:auto !important;
+      right:auto !important;
     }
-    .modal.profileMode .modalBody{
-      padding-top: 18px;
-    }
-    .modal.profileMode .profileModal{
-      position: relative;
-    }
-    .modal.profileMode .profileModal .profileBtns{
-      position: absolute;
-      right: 44px;  /* move to green box */
-      bottom: 34px;
-      display:flex;
-      justify-content:flex-end;
-      gap: 14px;
-    }
+    .modal.profileMode .modalBody{ padding-top: 18px; }
 
-
-/* Profile modal - place Add Profile button under Avatar */
-.modal.profileMode .profileBtns{ display:none; }
-.modal.profileMode .profileAddBtn{ margin-top: 12px; }
+    /* Przycisk "Dodaj profil" obok Avatara, a "Mam profil" pod spodem */
+    .modal.profileMode .profileAddBtn{ margin-top: 0 !important; }
 
 
 
@@ -2223,7 +2206,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8010" type="module"></script>
+<script src="./app.js?v=8012" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2243,14 +2226,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8005').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8012').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8005</div>
+<div id="buildCornerText">8012</div>
 </div>
 </body>
 </html>
