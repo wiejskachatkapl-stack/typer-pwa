@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8015)</title>
+  <title>Typer (BUILD 8016)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -177,6 +177,18 @@
       border:1px solid rgba(255,255,255,.12);
       font-weight:900;
     }
+
+    /* ===== LEAGUE: dropdown w chipie "Po kolejce" ===== */
+    .chip select{
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--text);
+      font-weight:1000;
+      border-radius:12px;
+      padding:6px 10px;
+      outline:none;
+    }
+    .chip select:focus{border-color:rgba(255,255,255,.24)}
 
     /* ===== PLAYER STATS (BUILD 8009): bez linii statusu + ciaśniejsze kolejki ===== */
     .statsAwardsRow{gap:4px !important;}
@@ -2159,7 +2171,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="chip" id="t_league">Tabela ligi typerów</div>
 <div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
 <div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
-<div class="chip"><span id="t_after_round">Po kolejce</span>: <span id="leagueAfterRound">—</span></div>
+<div class="chip"><span id="t_after_round">Po kolejce</span>: <select id="leagueAfterRound"></select></div>
 </div>
 <div class="row">
 <button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnLeagueBack" type="button"><img alt="btnLeagueBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
@@ -2218,7 +2230,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8015" type="module"></script>
+<script src="./app.js?v=8016" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2238,14 +2250,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8015').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8016').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8015</div>
+<div id="buildCornerText">8016</div>
 </div>
 </body>
 </html>

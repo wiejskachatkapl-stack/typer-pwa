@@ -1,4 +1,4 @@
-const BUILD = 8015;
+const BUILD = 8016;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5306,8 +5306,141 @@ const leagueState = {
   roomCode: null,
   roomName: null,
   afterRound: 0,
-  rows: []
+  rows: [],
+  finishedRounds: [],
+  roundCache: new Map(),
+  viewMode: "TOTAL", // TOTAL | ROUND
+  selectedRound: "ALL" // ALL or roundNo string
 };
+
+async function loadLeagueFinishedRounds(code){
+  leagueState.finishedRounds = [];
+  leagueState.roundCache = new Map();
+  try{
+    const q = boot.query(roundsCol(code), boot.orderBy("roundNo","asc"));
+    const qs = await boot.getDocs(q);
+    const list = [];
+    qs.forEach(d=>{
+      const rd = d.data() || {};
+      const rn = Number(rd.roundNo || 0);
+      if(rn>0){
+        list.push(rn);
+        leagueState.roundCache.set(rn, rd);
+      }
+    });
+    leagueState.finishedRounds = list;
+  }catch(e){
+    console.warn("loadLeagueFinishedRounds failed", e);
+  }
+}
+
+function updateLeagueHintForMode(){
+  const hint = el("leagueHint");
+  if(!hint) return;
+  if(leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL"){
+    const rn = Number(leagueState.selectedRound);
+    hint.textContent = (getLang()==="en")
+      ? `Round preview: choose a player to open picks preview for round ${rn}.`
+      : `Podgląd kolejki: kliknij gracza, aby zobaczyć podgląd typów dla kolejki ${rn}.`;
+  }else{
+    hint.textContent = (getLang()==="en")
+      ? "Click a player to see stats (rounds + picks preview)."
+      : "Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).";
+  }
+}
+
+function buildLeagueRoundDropdown(){
+  const sel = el("leagueAfterRound");
+  if(!sel) return;
+  sel.innerHTML = "";
+
+  const optAll = document.createElement("option");
+  optAll.value = "ALL";
+  optAll.textContent = (getLang()==="en")
+    ? `Total (after ${leagueState.afterRound})`
+    : `Suma (po ${leagueState.afterRound})`;
+  sel.appendChild(optAll);
+
+  for(const rn of leagueState.finishedRounds){
+    const o = document.createElement("option");
+    o.value = String(rn);
+    o.textContent = (getLang()==="en") ? `Round ${rn}` : `Kolejka ${rn}`;
+    sel.appendChild(o);
+  }
+
+  // Domyślnie pokazujemy SUMĘ, tak jak było wcześniej ("Po kolejce: X").
+  leagueState.selectedRound = "ALL";
+  leagueState.viewMode = "TOTAL";
+  sel.value = "ALL";
+
+  sel.onchange = async ()=>{
+    const v = String(sel.value || "ALL");
+    leagueState.selectedRound = v;
+    if(v === "ALL"){
+      leagueState.viewMode = "TOTAL";
+      renderLeagueTable();
+      updateLeagueHintForMode();
+      return;
+    }
+    const rn = Number(v);
+    if(!Number.isFinite(rn) || rn<=0){
+      leagueState.viewMode = "TOTAL";
+      leagueState.selectedRound = "ALL";
+      sel.value = "ALL";
+      renderLeagueTable();
+      updateLeagueHintForMode();
+      return;
+    }
+    leagueState.viewMode = "ROUND";
+    await setLeagueTableForRound(rn);
+    updateLeagueHintForMode();
+  };
+}
+
+async function setLeagueTableForRound(roundNo){
+  if(!leagueState.roomCode) return;
+  let rd = leagueState.roundCache.get(roundNo);
+  if(!rd){
+    try{
+      const snap = await boot.getDoc(roundDocRef(leagueState.roomCode, roundNo));
+      if(snap.exists()){
+        rd = snap.data();
+        leagueState.roundCache.set(roundNo, rd);
+      }
+    }catch(e){
+      console.warn("setLeagueTableForRound getDoc failed", e);
+    }
+  }
+  const ptsMap = rd?.pointsByUid || {};
+  const nickMap = rd?.nickByUid || {};
+
+  const baseUids = new Set();
+  (leagueState.rows||[]).forEach(r=> baseUids.add(r.uid));
+  Object.keys(ptsMap||{}).forEach(uid=> baseUids.add(uid));
+
+  const display = [];
+  baseUids.forEach(uid=>{
+    const pts = ptsMap?.[uid];
+    const played = (pts !== undefined && pts !== null);
+    const base = (leagueState.rows||[]).find(x=> x.uid===uid);
+    display.push({
+      uid,
+      nick: String(nickMap?.[uid] || base?.nick || "—"),
+      rounds: played ? 1 : 0,
+      points: played ? Number(pts) : 0,
+      _played: played
+    });
+  });
+
+  // sort: points desc, then nick
+  display.sort((a,b)=>{
+    if(b.points!==a.points) return b.points-a.points;
+    return String(a.nick).localeCompare(String(b.nick), "pl");
+  });
+
+  leagueState._displayRows = display;
+  renderLeagueTable();
+}
 
 async function openLeagueTable(roomCode, opts={}) {
   const { silent=false } = opts;
@@ -5329,7 +5462,9 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
 
     el("leagueRoomName").textContent = leagueState.roomName;
-    el("leagueAfterRound").textContent = String(leagueState.afterRound);
+    await loadLeagueFinishedRounds(roomCode);
+    buildLeagueRoundDropdown();
+    updateLeagueHintForMode();
 
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
@@ -5346,6 +5481,10 @@ async function openLeagueTable(roomCode, opts={}) {
     });
 
     leagueState.rows = arr;
+    // start as TOTAL
+    leagueState.viewMode = "TOTAL";
+    leagueState.selectedRound = "ALL";
+    leagueState._displayRows = null;
     renderLeagueTable();
     showScreen("league");
     if(!silent) showToast(getLang()==="en" ? "League table" : "Tabela ligi");
@@ -5360,7 +5499,11 @@ function renderLeagueTable(){
   if(!body) return;
   body.innerHTML = "";
 
-  const rows = [...leagueState.rows];
+  const source = (leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL" && Array.isArray(leagueState._displayRows))
+    ? leagueState._displayRows
+    : leagueState.rows;
+
+  const rows = [...(source||[])];
   rows.sort((a,b)=>{
     if(b.points !== a.points) return b.points - a.points;
     return String(a.nick).localeCompare(String(b.nick), "pl");
@@ -5384,7 +5527,12 @@ function renderLeagueTable(){
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
-    tr.onclick = ()=> openPlayerStatsFromLeague(r.uid, r.nick);
+    if(leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL"){
+      const rn = Number(leagueState.selectedRound);
+      tr.onclick = ()=> openArchivedPicksPreview(leagueState.roomCode, rn, r.uid, r.nick);
+    }else{
+      tr.onclick = ()=> openPlayerStatsFromLeague(r.uid, r.nick);
+    }
     body.appendChild(tr);
   });
 }
