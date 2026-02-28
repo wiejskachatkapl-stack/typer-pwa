@@ -1,4 +1,4 @@
-const BUILD = 8014;
+const BUILD = 8015;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1626,11 +1626,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         const langNow = getLang();
         const modal = ensureProfileChangeConfirmModal();
         const text = (langNow === "en")
-          ? "You changed the player profile. Apply changes?
-YES = apply changes
-NO = new profile"
-          : "Dokonałeś zmian w profilu gracza. Czy uwzględnić zmiany.
-Jeśli to zmiany kliknij TAK jeśli nowy profil NIE.";
+          ? "You changed the player profile. Apply changes?\nYES = apply changes\nNO = new profile"
+          : "Dokonałeś zmian w profilu gracza. Czy uwzględnić zmiany.\nJeśli to zmiany kliknij TAK jeśli nowy profil NIE.";
         keepSamePlayerNo = await modal.open({text});
       }
 
