@@ -1,4 +1,4 @@
-const BUILD = 8000;
+const BUILD = 8001;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -837,7 +837,8 @@ row.appendChild(btnCreate);
 
 // ===== Clear profile (wipe all local data + caches) =====
 async function clearProfile(){
-  if(!confirm(t("clearConfirm"))) return;
+  const ok = await customConfirmClearProfile();
+  if(!ok) return;
   try{
     localStorage.clear();
     sessionStorage.clear();
@@ -860,6 +861,78 @@ async function clearProfile(){
     console.error(e);
     alert(t("clearFailed"));
   }
+}
+
+// Custom confirm modal for clearing profile (instead of system confirm)
+// Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
+let _clearProfileConfirmModal = null;
+function ensureClearProfileConfirmModal(){
+  if(_clearProfileConfirmModal) return _clearProfileConfirmModal;
+
+  if(!document.getElementById('clearProfileConfirmStyles')){
+    const st = document.createElement('style');
+    st.id = 'clearProfileConfirmStyles';
+    st.textContent = `
+      .clearProfileOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .clearProfileBox{width:min(860px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .clearProfileTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .clearProfileText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
+      .clearProfileActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .clearProfileBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .clearProfileBtnImg:active{transform:translateY(1px);} 
+      @media (max-width:520px){.clearProfileBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'clearProfileOverlay';
+  overlay.innerHTML = `
+    <div class="clearProfileBox" role="dialog" aria-modal="true">
+      <div class="clearProfileTitle">${getLang()==='en' ? 'Delete profile' : 'Skasuj profil'}</div>
+      <div class="clearProfileText" id="clearProfileConfirmText"></div>
+      <div class="clearProfileActions">
+        <img id="clearProfileBtnYes" class="clearProfileBtnImg" alt="YES" />
+        <img id="clearProfileBtnNo" class="clearProfileBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#clearProfileConfirmText');
+  const btnYes = overlay.querySelector('#clearProfileBtnYes');
+  const btnNo = overlay.querySelector('#clearProfileBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _clearProfileConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+
+  return _clearProfileConfirmModal;
+}
+
+async function customConfirmClearProfile(){
+  const txt = (getLang()==='en')
+    ? 'Are you sure you want to delete your profile? Deleting it will remove all your stats and everything related to this profile. Do you confirm deleting the profile?'
+    : 'Czy na pewno chcesz skasować swój profil. Usunięcie go spowoduje utratę wszystkich statystyk i wszystkiego co z tym profilem jest związane. Czy potwierdzasz usunięcie profilu?';
+  return await ensureClearProfileConfirmModal().open(txt);
 }
 
 // ===== Settings modal =====
