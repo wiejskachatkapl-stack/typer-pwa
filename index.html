@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8005)</title>
+  <title>Typer (BUILD 8006)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -178,17 +178,43 @@
       font-weight:900;
     }
 
-    /* ===== PLAYER STATS (BUILD 8005): węższe chipy punktów i medali ===== */
-    .statsAwardsRow{gap:6px !important;}
+    /* ===== PLAYER STATS (BUILD 8006): wąskie chipy punktów i medali + ciaśniejsze kolejki ===== */
+    .statsAwardsRow{gap:4px !important;}
     .statsRightRow{gap:6px !important; align-items:center;}
+
     .statsChip{
-      flex:0 0 auto;
-      width:fit-content;
-      min-width:0;
-      padding:7px 10px;
-      gap:6px;
-      border-radius:14px;
+      flex:0 0 auto !important;
+      width:fit-content !important;
+      min-width:0 !important;
+      padding:6px 8px !important;
+      gap:6px !important;
+      border-radius:14px !important;
+      white-space:nowrap;
     }
+
+    /* Punkty w formie wąskiego "pionowego" chipu: etykieta + wartość */
+    .statsPointsChip{
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      width:64px !important;
+      padding:6px 6px !important;
+      line-height:1.05;
+      text-align:center;
+    }
+    .statsPtsLabel{font-size:11px;opacity:.85;font-weight:900;}
+    .statsPtsVal{font-size:16px;font-weight:1000;}
+
+    /* Rzędy kolejek w Statystykach nie mogą używać siatki (.matchCard ma grid w innych oknach) */
+    .statsRoundCard{
+      display:flex !important;
+      grid-template-columns:none !important;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px !important;
+      padding:8px 10px !important;
+    }
+
 
     /* BUILD 7024: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
     #t_round, #sep_round{display:none;}
@@ -2197,7 +2223,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8005" type="module"></script>
+<script src="./app.js?v=8006" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {

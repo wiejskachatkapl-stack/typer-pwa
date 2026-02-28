@@ -1,4 +1,4 @@
-const BUILD = 8005;
+const BUILD = 8006;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5146,7 +5146,7 @@ async function openPlayerStatsFromLeague(uid, nick){
   const wrap = document.createElement("div");
   wrap.style.display="flex";
   wrap.style.flexDirection="column";
-  wrap.style.gap="10px";
+  wrap.style.gap="6px";
 
   const head = document.createElement("div");
   head.className="row";
@@ -5251,7 +5251,7 @@ async function openPlayerStatsFromLeague(uid, nick){
     else if(medalRounds[3].includes(rn)) medalSrc = "ui/medale/medal_3.png";
 
     const row = document.createElement("div");
-    row.className="matchCard";
+    row.className="matchCard statsRoundCard";
     row.style.justifyContent="space-between";
 
     const left = document.createElement("div");
@@ -5266,7 +5266,10 @@ async function openPlayerStatsFromLeague(uid, nick){
 
     const ptsChip = document.createElement("div");
     ptsChip.className="chip statsChip statsPointsChip";
-    ptsChip.textContent = (getLang()==="en") ? `Points: ${played ? pts : "—"}` : `Punkty: ${played ? pts : "—"}`;
+    const ptsVal = played ? pts : "—";
+    ptsChip.innerHTML = (getLang()==="en")
+      ? `<span class="statsPtsLabel">Pts</span><span class="statsPtsVal">${ptsVal}</span>`
+      : `<span class="statsPtsLabel">Pkt</span><span class="statsPtsVal">${ptsVal}</span>`;
 
     const btn = document.createElement("button");
     btn.className="btn btnSmall";
@@ -5299,7 +5302,7 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
   const wrap = document.createElement("div");
   wrap.style.display="flex";
   wrap.style.flexDirection="column";
-  wrap.style.gap="10px";
+  wrap.style.gap="6px";
 
   const top = document.createElement("div");
   top.className="row";
