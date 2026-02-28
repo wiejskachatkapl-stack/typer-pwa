@@ -1344,6 +1344,26 @@
     .profileSelect option{ background:#fff; color:#000; }
     .profileBtns{ display:flex; justify-content:center; gap:18px; margin-top:16px; }
 
+    /* PROFILE MOBILE FIT: zwężone pola + przesunięte przyciski (bez scrolla) */
+    @media (max-width: 600px){
+      .modal.profileMode .modalCard{ width:96vw !important; max-height:92vh !important; }
+      .profileRow{ gap:16px; }
+      .profileLeftCol{ min-width:220px; gap:10px; }
+      .profileAvatarBox{ width:120px; height:120px; }
+      .profileAvatarBtn img{ width:128px; height:44px; }
+      .profileFields{ min-width:0; }
+      /* zwężone pola */
+      .profileInput, .profileSelect{ width:min(360px, 62vw) !important; padding:9px 10px; }
+      /* przyciski bliżej siebie */
+      .profileAvatarBtnSlot{ justify-content:flex-start !important; gap:12px; }
+    }
+
+    @media (max-width: 420px){
+      .profileLeftCol{ min-width:200px; }
+      .profileInput, .profileSelect{ width:min(300px, 60vw) !important; }
+      .profileAvatarBtn img{ width:118px; height:42px; }
+    }
+
   
         /* ===== Nick modal (Add player profile) ===== */
     .nickWrap{display:flex; flex-direction:column; gap:14px; padding:6px 2px;}
