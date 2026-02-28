@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8003)</title>
+  <title>Typer (BUILD 8004)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -854,6 +854,34 @@
       padding:16px;
     }
     #messagesOverlay.show{display:flex;}
+
+    /* ===== SUBSTITUTE OVERLAYS (BUILD 8004) ===== */
+    #substituteOverlay, #substitutePickOverlay{
+      position:absolute; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      z-index:80;
+    }
+    #substituteOverlay.show, #substitutePickOverlay.show{display:flex;}
+    .subModal{
+      width:min(560px,92vw);
+      padding:18px 18px 16px;
+      border-radius:22px;
+    }
+    .subTitle{font-size:20px;font-weight:1000;margin:0 0 10px 0;}
+    .subBtns{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;}
+    .subPickRow{margin-top:10px;display:flex;gap:10px;align-items:center;justify-content:center;}
+    .subPickRow select{
+      width:min(420px,86vw);
+      background:#fff;
+      color:#000;
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:900;
+      border:1px solid rgba(0,0,0,.15);
+    }
     .msgModal{
       width:min(780px,94vw);
       padding:16px;
@@ -1958,6 +1986,42 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   </div>
 </div>
 
+<!-- SUBSTITUTE MENU OVERLAY (BUILD 8004) -->
+<div aria-hidden="true" id="substituteOverlay">
+  <div aria-label="Zastępstwo" class="subModal panel" role="dialog">
+    <div class="subTitle" id="subTitle">Zastępstwo</div>
+    <div class="subBtns">
+      <button class="imgBtn sysBtn" data-btn="btn_admin.png" id="btnSubAdmin" type="button">
+        <img alt="btn_admin" data-btn="btn_admin.png" src="ui/buttons/pl/btn_admin.png"/>
+      </button>
+      <button class="imgBtn sysBtn" data-btn="btn_player.png" id="btnSubPlayer" type="button">
+        <img alt="btn_player" data-btn="btn_player.png" src="ui/buttons/pl/btn_player.png"/>
+      </button>
+      <button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnSubBack" type="button">
+        <img alt="btn_back" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBSTITUTE PICK OVERLAY (BUILD 8004) -->
+<div aria-hidden="true" id="substitutePickOverlay">
+  <div aria-label="Wybierz zastępcę" class="subModal panel" role="dialog">
+    <div class="subTitle" id="subPickTitle">Wybierz gracza, który będzie mógł Cię zastąpić</div>
+    <div class="subPickRow">
+      <select id="substitutePlayerSelect"></select>
+    </div>
+    <div class="subBtns" style="margin-top:14px">
+      <button class="imgBtn sysBtn" data-btn="btn_yes.png" id="btnSubYes" type="button">
+        <img alt="btn_yes" data-btn="btn_yes.png" src="ui/buttons/pl/btn_yes.png"/>
+      </button>
+      <button class="imgBtn sysBtn" data-btn="btn_no.png" id="btnSubNo" type="button">
+        <img alt="btn_no" data-btn="btn_no.png" src="ui/buttons/pl/btn_no.png"/>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- MESSAGES OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
@@ -2121,7 +2185,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8003" type="module"></script>
+<script src="./app.js?v=8004" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2141,14 +2205,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8003').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8004').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8003</div>
+<div id="buildCornerText">8004</div>
 </div>
 </body>
 </html>

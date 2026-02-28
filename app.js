@@ -1,4 +1,4 @@
-const BUILD = 8003;
+const BUILD = 8004;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2349,6 +2349,79 @@ function closeMessagesModal(){
   ov.setAttribute("aria-hidden","true");
 }
 
+// ===== SUBSTITUTE (Zastępstwo) – BUILD 8004 =====
+let _subMode = "player"; // "player" | "admin"
+
+function openSubstituteMenu(){
+  const ov = el("substituteOverlay");
+  if(!ov) return;
+
+  // Admin button active only for admin
+  const bAdmin = el("btnSubAdmin");
+  if(bAdmin){
+    bAdmin.disabled = !isAdmin();
+    bAdmin.style.opacity = isAdmin() ? "" : "0.45";
+  }
+
+  ov.classList.add("show");
+  ov.setAttribute("aria-hidden","false");
+}
+
+function closeSubstituteMenu(){
+  const ov = el("substituteOverlay");
+  if(!ov) return;
+  ov.classList.remove("show");
+  ov.setAttribute("aria-hidden","true");
+}
+
+function openSubstitutePick(mode){
+  _subMode = mode || "player";
+  const ov = el("substitutePickOverlay");
+  if(!ov) return;
+
+  // Fill players list
+  const sel = el("substitutePlayerSelect");
+  if(sel){
+    sel.innerHTML = "";
+    const opts = (lastPlayers||[])
+      .filter(p=>p && p.uid && p.uid !== userUid)
+      .map(p=>({ uid:p.uid, nick:(p.nick||"—") }));
+
+    if(opts.length === 0){
+      const o = document.createElement("option");
+      o.value = "";
+      o.textContent = getLang()==="en" ? "No other players" : "Brak innych graczy";
+      sel.appendChild(o);
+      sel.disabled = true;
+    }else{
+      sel.disabled = false;
+      opts.forEach(p=>{
+        const o = document.createElement("option");
+        o.value = p.uid;
+        o.textContent = p.nick;
+        sel.appendChild(o);
+      });
+    }
+  }
+
+  // YES is intentionally inactive for now
+  const bYes = el("btnSubYes");
+  if(bYes){ bYes.disabled = true; bYes.style.opacity = "0.45"; }
+  const bNo = el("btnSubNo");
+  if(bNo){ bNo.disabled = false; bNo.style.opacity = ""; }
+
+  // Show
+  ov.classList.add("show");
+  ov.setAttribute("aria-hidden","false");
+}
+
+function closeSubstitutePick(){
+  const ov = el("substitutePickOverlay");
+  if(!ov) return;
+  ov.classList.remove("show");
+  ov.setAttribute("aria-hidden","true");
+}
+
 
 async function sendRoomMessage(){
   if(!db || !currentRoomCode) return;
@@ -2508,6 +2581,30 @@ function bindUI(){
   if(__btnDeleteRoom) __btnDeleteRoom.onclick = async ()=>{
     await deleteRoomConfirmAndDelete();
   };
+
+  // 8004: zastępstwo
+  const __btnSubstitute = el("btnSubstitute");
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSubstituteMenu();
+
+  const __subOv = el("substituteOverlay");
+  if(__subOv){
+    __subOv.addEventListener("click", (e)=>{ if(e.target === __subOv) closeSubstituteMenu(); });
+  }
+  const __subPickOv = el("substitutePickOverlay");
+  if(__subPickOv){
+    __subPickOv.addEventListener("click", (e)=>{ if(e.target === __subPickOv) { closeSubstitutePick(); openSubstituteMenu(); } });
+  }
+
+  const __btnSubBack = el("btnSubBack");
+  if(__btnSubBack) __btnSubBack.onclick = ()=> closeSubstituteMenu();
+  const __btnSubPlayer = el("btnSubPlayer");
+  if(__btnSubPlayer) __btnSubPlayer.onclick = ()=>{ closeSubstituteMenu(); openSubstitutePick("player"); };
+  const __btnSubAdmin = el("btnSubAdmin");
+  if(__btnSubAdmin) __btnSubAdmin.onclick = ()=>{ if(!isAdmin()) return; closeSubstituteMenu(); openSubstitutePick("admin"); };
+  const __btnSubNo = el("btnSubNo");
+  if(__btnSubNo) __btnSubNo.onclick = ()=>{ closeSubstitutePick(); openSubstituteMenu(); };
+  const __btnSubYes = el("btnSubYes");
+  if(__btnSubYes) __btnSubYes.onclick = ()=>{ /* intentionally inactive for now */ };
 
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
