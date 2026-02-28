@@ -1,4 +1,4 @@
-const BUILD = 8002;
+const BUILD = 8003;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1385,8 +1385,8 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   wrap.innerHTML = `
     <div class="profileRow">
       <div class="profileLeftCol" aria-label="Avatar">
-        <div class="profileAvatarBox">
-          <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" style="display:none;" />
+        <div class="profileAvatarBox" style="width:180px;height:180px;overflow:hidden;border-radius:18px;display:flex;align-items:center;justify-content:center;">
+          <img id="profileAvatarImg" class="profileAvatarImg" alt="avatar" style="display:none;width:100%;height:100%;object-fit:contain;display:block;" />
           <div class="profileAvatarPlaceholder" id="profileAvatarPlaceholder">🙂</div>
         </div>
         <div id="profileAvatarBtnSlot" class="profileAvatarBtnSlot"></div>
@@ -1438,6 +1438,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     if(path){
       if(avatarImgEl){
         avatarImgEl.src = path + __avatarCacheBust();
+        avatarImgEl.onload = ()=>{ try{ avatarImgEl.style.width="100%"; avatarImgEl.style.height="100%"; avatarImgEl.style.objectFit="contain"; }catch(e){} };
         avatarImgEl.style.display = "block";
       }
       if(avatarPlaceholderEl) avatarPlaceholderEl.style.display = "none";
@@ -5303,16 +5304,8 @@ function escapeHtml(s){
 // ===== ORIENTATION (phones: landscape-first) =====
 function updateLandscapeLock(){
   const overlay = el("rotateOverlay");
-  if(!overlay) return;
-  const isPhone = window.matchMedia("(max-width: 900px)").matches;
-  if(!isPhone){
-    overlay.style.display = "none";
-    document.body.classList.remove("lockedPortrait");
-    return;
-  }
-  const portrait = window.matchMedia("(orientation: portrait)").matches;
-  overlay.style.display = portrait ? "flex" : "none";
-  document.body.classList.toggle("lockedPortrait", portrait);
+  if(overlay) overlay.style.display = "none";
+  document.body.classList.remove("lockedPortrait");
 }
 
 window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); }catch(e){} }, {passive:true});
