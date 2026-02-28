@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8022)</title>
+  <title>Typer (BUILD 8023)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1332,9 +1332,9 @@
 
     /* Profile (modal) – rozmiar jak na przykładzie + węższe pola */
     .modal.profileMode .modalCard{
-      /* mniejsze okno Profil */
-      width:min(980px, 88vw) !important;
-      max-height:min(760px, 90vh) !important;
+      /* węższe okno Profil (jak na przykładzie) */
+      width:min(840px, 78vw) !important;
+      max-height:min(700px, 88vh) !important;
     }
     .modal.profileMode .modalBody{
       overflow:hidden !important; /* bez scrolli na desktop */
@@ -1346,13 +1346,13 @@
     .profileAvatarBtn img{ width:140px; height:48px; object-fit:contain; }
 
     /* Prawa kolumna bliżej środka + węższe pola (zielone zaznaczenia) */
-    .profileFields{ flex:0 0 520px; min-width:0; }
+    .profileFields{ flex:0 0 420px; min-width:0; }
     .profileDesc{ opacity:.9; margin:2px 0 10px; }
     .profileLabel{ display:block; font-weight:700; margin:10px 0 6px; }
 
     .profileInput{
-      width:320px;
-      max-width:320px;
+      width:280px;
+      max-width:280px;
       box-sizing:border-box;
       padding:10px 12px;
       border-radius:12px;
@@ -1362,10 +1362,10 @@
       outline:none;
     }
 
-    /* Kraj może być minimalnie szerszy, ale nadal nie pełna szerokość */
+    /* Kraj: taka sama szerokość jak pozostałe pola (równe i krótsze) */
     .profileSelect{
-      width:380px;
-      max-width:380px;
+      width:280px;
+      max-width:280px;
       box-sizing:border-box;
       padding:10px 12px;
       border-radius:12px;
@@ -1720,7 +1720,7 @@
     .modal.profileMode #modalTitle{
       margin:0 !important;
       /* mniejszy napis "Profil" */
-      font-size: clamp(40px, 5.0vw, 64px);
+      font-size: clamp(34px, 4.2vw, 54px);
       font-weight: 1000;
       padding: 10px 18px;
       border-radius: 18px;
@@ -1732,10 +1732,11 @@
       right:auto !important;
     }
 
-    /* Przesuń przyciski Cofnij/Wyjście bardziej do środka, żeby mieściły się w oknie */
-    .modal.profileMode .modalHead{ padding-right: 28px !important; }
+    /* Przesuń przyciski Cofnij/Wyjście bliżej napisu "Profil" */
+    .modal.profileMode .modalHead{ padding-right: 18px !important; }
+    .modal.profileMode .spacer{ flex: 0 0 18px !important; }
     .modal.profileMode #modalBack,
-    .modal.profileMode #modalClose{ margin-left: 10px !important; }
+    .modal.profileMode #modalClose{ margin-left: 6px !important; }
     .modal.profileMode .modalBody{ padding-top: 18px; }
 
     /* Przycisk "Dodaj profil" obok Avatara, a "Mam profil" pod spodem */
@@ -2300,7 +2301,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8022" type="module"></script>
+<script src="./app.js?v=8023" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
