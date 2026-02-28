@@ -1,4 +1,4 @@
-const BUILD = 8007;
+const BUILD = 8008;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5349,13 +5349,21 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
       : ((getLang()==="en") ? "Pick: —" : "Typ: —");
     score.appendChild(pickPill);
 
-    const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA) && p;
+    const isCancelled = !!m.cancelled;
+    const hasResult = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
+    const resOk = !isCancelled && hasResult && p;
     const dot = document.createElement("span");
     dot.className = "dot " + (resOk ? dotClassFor(p.h,p.a,m.resultH,m.resultA) : "gray");
 
     const resPill = document.createElement("div");
     resPill.className="resultPill";
-    resPill.textContent = (getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`;
+    if(isCancelled){
+      resPill.textContent = (getLang()==="en") ? "Cancelled" : "Odwołany";
+    }else if(hasResult){
+      resPill.textContent = (getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`;
+    }else{
+      resPill.textContent = (getLang()==="en") ? "Result: —" : "Wynik: —";
+    }
 
     const ptsOne = resOk ? scoreOneMatch(p.h,p.a,m.resultH,m.resultA) : null;
     const ptsPill = document.createElement("div");
