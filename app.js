@@ -590,6 +590,12 @@ function openRoomsChoiceModal(){
 }
 
 async function handleJoinFlow(){
+  // If user just entered player number via "Mój profil" and wants to re-join an existing room,
+  // do NOT auto-enter saved room. Ask for code and use playerNo login.
+  if(window.__pendingPlayerNoLogin === true){
+    openJoinRoomModal();
+    return;
+  }
   const saved = getSavedRoom();
   // If user has a saved active room (admin or member), enter immediately.
   if(saved && saved.length===6){
@@ -645,7 +651,17 @@ const btnEnter = makeSysImgButton("btn_wejdz_pokoj.png", {
       return;
     }
     modalClose();
-    await joinRoom(code);
+    // If the user provided player number via "Mój profil" then we treat join as "New login"
+    // (it restores profile + uses existing player doc in the room).
+    const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
+    const usePlayerNoLogin = (window.__pendingPlayerNoLogin === true) && /^[A-Z]\d{6}$/.test(pn);
+    if(usePlayerNoLogin){
+      // clear flag so next joins behave normally
+      window.__pendingPlayerNoLogin = false;
+      await performNewLogin(pn, code);
+    }else{
+      await joinRoom(code);
+    }
   }
 });
 
@@ -1038,6 +1054,11 @@ async function askAndSetPlayerNoFromMyProfile(){
 
   try{ updatePlayerDocProfile(); }catch{}
   showToast(lang==='en' ? 'Player number saved.' : 'Nr gracza zapisany.');
+
+  // After entering player number, go straight to room join/create window.
+  // Next join action will use playerNo-based login (restore profile from room).
+  window.__pendingPlayerNoLogin = true;
+  try{ openRoomsChoiceModal(); }catch{}
 }
 
 // ===== Settings modal =====
