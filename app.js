@@ -1,4 +1,4 @@
-const BUILD = 8008;
+const BUILD = 8009;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5349,20 +5349,21 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
       : ((getLang()==="en") ? "Pick: —" : "Typ: —");
     score.appendChild(pickPill);
 
-    const isCancelled = !!m.cancelled;
-    const hasResult = Number.isInteger(m.resultH) && Number.isInteger(m.resultA);
-    const resOk = !isCancelled && hasResult && p;
+    const resOk = Number.isInteger(m.resultH) && Number.isInteger(m.resultA) && p;
     const dot = document.createElement("span");
     dot.className = "dot " + (resOk ? dotClassFor(p.h,p.a,m.resultH,m.resultA) : "gray");
 
+    const isCancelled = (m.cancelled === true) || (m.canceled === true) || (m.odwolany === true) || (String(m.status||'').toUpperCase() === 'CANCELLED');
+
     const resPill = document.createElement("div");
     resPill.className="resultPill";
-    if(isCancelled){
-      resPill.textContent = (getLang()==="en") ? "Cancelled" : "Odwołany";
-    }else if(hasResult){
-      resPill.textContent = (getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`;
+    // Jeśli mecz był odwołany, nie pokazuj "Wynik: null:null" tylko "Odwołany".
+    if(isCancelled && (m.resultH==null) && (m.resultA==null)){
+      resPill.textContent = (getLang()==="en") ? 'Cancelled' : 'Odwołany';
+    }else if((m.resultH==null) || (m.resultA==null)){
+      resPill.textContent = (getLang()==="en") ? 'Result: —' : 'Wynik: —';
     }else{
-      resPill.textContent = (getLang()==="en") ? "Result: —" : "Wynik: —";
+      resPill.textContent = (getLang()==="en") ? `Result: ${m.resultH}:${m.resultA}` : `Wynik: ${m.resultH}:${m.resultA}`;
     }
 
     const ptsOne = resOk ? scoreOneMatch(p.h,p.a,m.resultH,m.resultA) : null;
