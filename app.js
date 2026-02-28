@@ -1,4 +1,4 @@
-const BUILD = 7037;
+const BUILD = 8000;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3186,8 +3186,17 @@ async function saveManualQueueFromUI(){
   }
 
   // Jeśli już są mecze w aktywnej kolejce – nie dokładamy kolejnych.
-  if(matchesCache && matchesCache.length){
-    showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
+  // UWAGA: matchesCache bywa niezsynchronizowane (np. po przejściu między kolejkami),
+  // więc sprawdzamy bezpośrednio w Firestore.
+  try{
+    const snap = await boot.getDocs(matchesCol(currentRoomCode));
+    if(snap && !snap.empty){
+      showToast(getLang()==="en" ? "Matches already exist" : "Mecze już istnieją w tej kolejce");
+      return;
+    }
+  }catch(e){
+    // Jeśli nie udało się sprawdzić – nie ryzykujemy nadpisania.
+    showToast(getLang()==="en" ? "Cannot check existing matches" : "Nie można sprawdzić czy mecze już istnieją");
     return;
   }
 
