@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8012)</title>
+  <title>Typer (BUILD 8013)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1296,18 +1296,23 @@
       filter:grayscale(100%);
     }
 
-    /* Profile modal */
-    /* Profile (modal) – dopasowane do dużego kontenera jak na screenie */
-    .profileModal{ width:min(1100px,92vw); max-width:92vw; }
-    .profileRow{ display:flex; gap:18px; align-items:flex-start; }
+    /* Profile (modal) – szeroki kontener, bez scrolli (jak na screenie) */
+    .modal.profileMode .modalCard{
+      width:min(1200px, 96vw) !important;
+      max-height:min(820px, 92vh) !important; /* zachowaj limit ekranu, ale bez przewijania w środku */
+    }
+    .modal.profileMode .modalBody{
+      overflow:hidden !important; /* brak scrolli */
+    }
+    .profileRow{ display:flex; gap:26px; align-items:flex-start; }
     .profileAvatarBox{ width:140px; height:140px; border-radius:18px; background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; }
     .profileAvatarPlaceholder{ font-size:54px; opacity:.9; }
-    .profileLeftCol{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+    .profileLeftCol{ display:flex; flex-direction:column; align-items:center; gap:12px; min-width:340px; }
     .profileAvatarBtn img{ width:140px; height:48px; object-fit:contain; }
-    .profileFields{ flex:1; }
+    .profileFields{ flex:1; min-width:520px; }
     .profileDesc{ opacity:.9; margin:2px 0 10px; }
     .profileLabel{ display:block; font-weight:700; margin:10px 0 6px; }
-    .profileInput, .profileSelect{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.18); color:#fff; outline:none; }
+    .profileInput, .profileSelect{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.18); color:#fff; outline:none; max-width:100%; }
     /* Country dropdown: white background + black text */
     .profileSelect{ background:#fff !important; color:#000 !important; }
     .profileSelect option{ background:#fff; color:#000; }
@@ -1491,6 +1496,13 @@
 .nickBtns{display:flex;gap:14px;justify-content:flex-end;align-items:center;}
 .nickImgBtn img{height:64px;width:auto;display:block;}
 @media (max-width:700px){.nickImgBtn img{height:56px;}}
+
+    /* Na mniejszych ekranach profil przechodzi w układ pionowy (bez poziomego scrolla) */
+    @media (max-width: 980px){
+      .profileRow{ flex-direction:column; }
+      .profileLeftCol{ min-width:0; width:100%; }
+      .profileFields{ min-width:0; width:100%; }
+    }
 
 /* --- BUILD 7024 UI FIT tweaks --- */
 .roomHeaderActionsRow{
@@ -2206,7 +2218,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8012" type="module"></script>
+<script src="./app.js?v=8013" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2233,7 +2245,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8012</div>
+<div id="buildCornerText">8013</div>
 </div>
 </body>
 </html>
