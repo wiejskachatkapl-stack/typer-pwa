@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8017)</title>
+  <title>Typer (BUILD 8020)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -30,9 +30,10 @@
     }
     *{box-sizing:border-box}
     /*
-      MOBILE SCROLL FIX (Android+iOS)
-      - nie blokujemy przewijania na body
-      - #app nie moze byc fixed z overflow (na mobile czesto zamraza scroll po obrocie)
+      MOBILE SCROLL FIX (Android+iOS) - BUILD 8020
+      Cel: po obrocie i na małych ekranach MUSI dać się przewijać (profil/okna nie mogą być ucinane).
+      Najczęstszy powód blokady: .frame { overflow:hidden } + stała wysokość.
+      Rozwiązanie: na mobile przewijamy WNĘTRZE ramki.
     */
     html, body{height:100%;}
     body{
@@ -62,6 +63,11 @@
       overflow-x:hidden;
       overflow-y:auto;
       -webkit-overflow-scrolling: touch;
+    }
+
+    /* Na telefonach: nie centruj pionowo, żeby widok miał gdzie „płynąć” */
+    @media (max-width: 900px){
+      #app{align-items:flex-start;}
     }
 
     #rotateOverlay{
@@ -105,6 +111,19 @@
       -webkit-backdrop-filter:blur(10px);
       overflow:hidden;
       position:relative;
+    }
+
+    /* KLUCZOWE: na telefonach przewijamy ramkę, bo w przeciwnym razie wszystko jest ucinane */
+    @media (max-width: 900px){
+      .frame{
+        height: calc(var(--app-vh) * 100 - 28px);
+        width: 96vw;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      .screen{min-height:100%;}
+      .screen.active{min-height:100%;}
     }
 
     .screen{display:none;height:100%;width:100%}
@@ -2277,7 +2296,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8018" type="module"></script>
+<script src="./app.js?v=8020" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2297,14 +2316,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8016').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8020').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8016</div>
+<div id="buildCornerText">8020</div>
 </div>
 </body>
 </html>
