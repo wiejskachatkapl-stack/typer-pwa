@@ -1,4 +1,4 @@
-const BUILD = 8017;
+const BUILD = 8018;
 
 // iOS/phones: fix 100vh + allow proper scroll inside modals/panels
 function __setAppVH(){
