@@ -1,4 +1,4 @@
-const BUILD = 8024;
+const BUILD = 8023;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3593,11 +3593,7 @@ async function saveManualQueueFromUI(){
   try{ syncActionButtons(); }catch{}
 }
 function isAdmin(){
-  // Admin fallback: czasem na mobile resetuje się anon-UID; wtedy po nicku traktujemy jako admina UI+akcje.
-  if(currentRoom?.adminUid && userUid && currentRoom.adminUid === userUid) return true;
-  const myNick = (currentProfile?.nick || '').trim().toLowerCase();
-  const adminNick = (currentRoom?.adminNick || '').trim().toLowerCase();
-  return !!(myNick && adminNick && myNick === adminNick);
+  return currentRoom?.adminUid === userUid;
 }
 
 // ===== CONTINUE FLOW =====
