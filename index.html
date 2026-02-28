@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8004)</title>
+  <title>Typer (BUILD 8005)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -176,6 +176,18 @@
       background:rgba(0,0,0,.20);
       border:1px solid rgba(255,255,255,.12);
       font-weight:900;
+    }
+
+    /* ===== PLAYER STATS (BUILD 8005): węższe chipy punktów i medali ===== */
+    .statsAwardsRow{gap:6px !important;}
+    .statsRightRow{gap:6px !important; align-items:center;}
+    .statsChip{
+      flex:0 0 auto;
+      width:fit-content;
+      min-width:0;
+      padding:7px 10px;
+      gap:6px;
+      border-radius:14px;
     }
 
     /* BUILD 7024: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
@@ -2185,7 +2197,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8004" type="module"></script>
+<script src="./app.js?v=8005" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2205,14 +2217,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8004').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8005').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8004</div>
+<div id="buildCornerText">8005</div>
 </div>
 </body>
 </html>

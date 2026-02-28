@@ -1,4 +1,4 @@
-const BUILD = 8004;
+const BUILD = 8005;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5202,16 +5202,16 @@ async function openPlayerStatsFromLeague(uid, nick){
   const leaguePos = leagueRows.findIndex(x=> x.uid===uid);
 
   const awards = document.createElement("div");
-  awards.className = "row";
+  awards.className = "row statsAwardsRow";
   awards.style.flexWrap = "wrap";
-  awards.style.gap = "10px";
+  awards.style.gap = "6px";
 
   const mkAward = (src, label)=>{
     const d = document.createElement("div");
-    d.className = "chip";
+    d.className = "chip statsChip";
     d.style.display = "inline-flex";
     d.style.alignItems = "center";
-    d.style.gap = "8px";
+    d.style.gap = "6px";
     const img = document.createElement("img");
     img.src = src;
     img.alt = "award";
@@ -5262,10 +5262,10 @@ async function openPlayerStatsFromLeague(uid, nick){
                       <div class="sub">${played ? (getLang()==="en" ? "Played" : "Zagrana") : (getLang()==="en" ? "No picks / incomplete" : "Brak typów / niepełne")}</div>`;
 
     const right = document.createElement("div");
-    right.className="row";
+    right.className="row statsRightRow";
 
     const ptsChip = document.createElement("div");
-    ptsChip.className="chip";
+    ptsChip.className="chip statsChip statsPointsChip";
     ptsChip.textContent = (getLang()==="en") ? `Points: ${played ? pts : "—"}` : `Punkty: ${played ? pts : "—"}`;
 
     const btn = document.createElement("button");
