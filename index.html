@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8020)</title>
+  <title>Typer (BUILD 8021)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -17,7 +17,6 @@
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
 :root{
-      --app-vh: 1vh;
       --bg:#071229;
       --glass: rgba(8, 22, 52, .58);
       --glass2: rgba(8, 22, 52, .42);
@@ -29,21 +28,12 @@
       --r: 22px;
     }
     *{box-sizing:border-box}
-    /*
-      MOBILE SCROLL FIX (Android+iOS) - BUILD 8020
-      Cel: po obrocie i na małych ekranach MUSI dać się przewijać (profil/okna nie mogą być ucinane).
-      Najczęstszy powód blokady: .frame { overflow:hidden } + stała wysokość.
-      Rozwiązanie: na mobile przewijamy WNĘTRZE ramki.
-    */
-    html, body{height:100%;}
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--text);
       background:var(--bg);
-      overflow-x:hidden;
-      overflow-y:auto;
-      -webkit-overflow-scrolling: touch;
+      overflow:hidden;
     }
 
     #bg{
@@ -53,21 +43,12 @@
     }
 
     #app{
-      position:relative;
-      min-height: calc(var(--app-vh) * 100);
+      position:fixed; inset:0;
       display:flex;
       align-items:center;
       justify-content:center;
       padding:14px;
       z-index:1;
-      overflow-x:hidden;
-      overflow-y:auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Na telefonach: nie centruj pionowo, żeby widok miał gdzie „płynąć” */
-    @media (max-width: 900px){
-      #app{align-items:flex-start;}
     }
 
     #rotateOverlay{
@@ -94,6 +75,28 @@
     .rotateSub{color:var(--muted);font-weight:800;white-space:pre-line;line-height:1.25;}
     body.lockedPortrait #app{filter:blur(6px);pointer-events:none;}
 
+    /* ===== MOBILE SCROLL FIX (BUILD 8021) =====
+       Na telefonach pozwalamy przewijać zawartość (np. Profil),
+       bo stałe overflow:hidden + fixed potrafi blokować scroll po obrocie. */
+    @media (max-width: 900px){
+      body{ overflow:auto; }
+      #app{
+        position:relative;
+        inset:auto;
+        min-height:100vh;
+        height:auto;
+        align-items:flex-start;
+        justify-content:center;
+      }
+      .frame{
+        height:auto;
+        min-height:94vh;
+        overflow-y:auto;
+        overflow-x:hidden;
+        -webkit-overflow-scrolling:touch;
+      }
+    }
+
     @media (max-width: 900px) and (orientation: landscape){
       #app{padding:8px;}
       .frame{width:98vw;height:96vh;border-radius:18px;}
@@ -111,19 +114,6 @@
       -webkit-backdrop-filter:blur(10px);
       overflow:hidden;
       position:relative;
-    }
-
-    /* KLUCZOWE: na telefonach przewijamy ramkę, bo w przeciwnym razie wszystko jest ucinane */
-    @media (max-width: 900px){
-      .frame{
-        height: calc(var(--app-vh) * 100 - 28px);
-        width: 96vw;
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-      }
-      .screen{min-height:100%;}
-      .screen.active{min-height:100%;}
     }
 
     .screen{display:none;height:100%;width:100%}
@@ -1282,7 +1272,6 @@
     .modalBody{
       padding:22px;
       overflow:auto;
-      -webkit-overflow-scrolling: touch;
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -1341,47 +1330,53 @@
       filter:grayscale(100%);
     }
 
-    /* Profile (modal) – szeroki kontener, bez scrolli (jak na screenie) */
+    /* Profile (modal) – rozmiar jak na przykładzie + węższe pola */
     .modal.profileMode .modalCard{
-      width:min(1200px, 96vw) !important;
-      max-height:min(820px, 92vh) !important; /* zachowaj limit ekranu, ale bez przewijania w środku */
+      width:min(1120px, 92vw) !important;   /* wężej niż pełna szerokość */
+      max-height:min(820px, 92vh) !important;
     }
     .modal.profileMode .modalBody{
-      overflow:hidden !important; /* brak scrolli */
+      overflow:hidden !important; /* bez scrolli na desktop */
     }
     .profileRow{ display:flex; gap:26px; align-items:flex-start; }
     .profileAvatarBox{ width:140px; height:140px; border-radius:18px; background:rgba(0,0,0,.20); border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; }
     .profileAvatarPlaceholder{ font-size:54px; opacity:.9; }
     .profileLeftCol{ display:flex; flex-direction:column; align-items:center; gap:12px; min-width:340px; }
     .profileAvatarBtn img{ width:140px; height:48px; object-fit:contain; }
-    .profileFields{ flex:1; min-width:520px; }
+
+    /* Prawa kolumna bliżej środka + węższe pola (zielone zaznaczenia) */
+    .profileFields{ flex:0 0 560px; min-width:0; }
     .profileDesc{ opacity:.9; margin:2px 0 10px; }
     .profileLabel{ display:block; font-weight:700; margin:10px 0 6px; }
-    .profileInput, .profileSelect{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.18); color:#fff; outline:none; max-width:100%; }
-    /* Country dropdown: white background + black text */
-    .profileSelect{ background:#fff !important; color:#000 !important; }
+
+    .profileInput{
+      width:320px;
+      max-width:320px;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18);
+      color:#fff;
+      outline:none;
+    }
+
+    /* Kraj może być minimalnie szerszy, ale nadal nie pełna szerokość */
+    .profileSelect{
+      width:380px;
+      max-width:380px;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:#fff !important;
+      color:#000 !important;
+      outline:none;
+    }
     .profileSelect option{ background:#fff; color:#000; }
+
     .profileBtns{ display:flex; justify-content:center; gap:18px; margin-top:16px; }
 
-    /* PROFILE MOBILE FIT: zwężone pola + przesunięte przyciski (bez scrolla) */
-    @media (max-width: 600px){
-      .modal.profileMode .modalCard{ width:96vw !important; max-height:92vh !important; }
-      .profileRow{ gap:16px; }
-      .profileLeftCol{ min-width:220px; gap:10px; }
-      .profileAvatarBox{ width:120px; height:120px; }
-      .profileAvatarBtn img{ width:128px; height:44px; }
-      .profileFields{ min-width:0; }
-      /* zwężone pola */
-      .profileInput, .profileSelect{ width:min(360px, 62vw) !important; padding:9px 10px; }
-      /* przyciski bliżej siebie */
-      .profileAvatarBtnSlot{ justify-content:flex-start !important; gap:12px; }
-    }
-
-    @media (max-width: 420px){
-      .profileLeftCol{ min-width:200px; }
-      .profileInput, .profileSelect{ width:min(300px, 60vw) !important; }
-      .profileAvatarBtn img{ width:118px; height:42px; }
-    }
 
   
         /* ===== Nick modal (Add player profile) ===== */
@@ -1734,6 +1729,11 @@
       top:auto !important;
       right:auto !important;
     }
+
+    /* Przesuń przyciski Cofnij/Wyjście bardziej do środka, żeby mieściły się w oknie */
+    .modal.profileMode .modalHead{ padding-right: 28px !important; }
+    .modal.profileMode #modalBack,
+    .modal.profileMode #modalClose{ margin-left: 10px !important; }
     .modal.profileMode .modalBody{ padding-top: 18px; }
 
     /* Przycisk "Dodaj profil" obok Avatara, a "Mam profil" pod spodem */
@@ -1786,18 +1786,20 @@
   gap:22px;
 }
 
-/* ===== MOBILE SCROLL FIX (iOS/Android) BUILD 8017 ===== */
- (max-width: 900px){
-  body{ overflow-x:hidden; }
-  /* allow whole app to scroll if needed (forms/modals) */
-  #app{ overflow:auto; -webkit-overflow-scrolling: touch; align-items:flex-start; }
-  .frame{
-    height:auto;
-    min-height: calc(var(--app-vh) * 100 - 20px);
-    width: min(1580px, 98vw);
-  }
-}
-
+    /* ===== PROFILE MOBILE FIT (BUILD 8021) ===== */
+    @media (max-width: 900px){
+      .modal.profileMode .modalCard{
+        width: min(96vw, 980px) !important;
+        max-height: 92vh !important;
+      }
+      .modal.profileMode .modalBody{
+        overflow-y:auto !important;
+        -webkit-overflow-scrolling:touch;
+      }
+      .profileFields{ flex: 1 1 auto; }
+      .profileInput{ width: min(86vw, 340px); max-width: min(86vw, 340px); }
+      .profileSelect{ width: min(86vw, 380px); max-width: min(86vw, 380px); }
+    }
 </style>
 </head>
 <body>
@@ -2296,7 +2298,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8020" type="module"></script>
+<script src="./app.js?v=8021" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2316,14 +2318,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8020').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8021').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8020</div>
+<div id="buildCornerText">8021</div>
 </div>
 </body>
 </html>
