@@ -935,6 +935,111 @@ async function customConfirmClearProfile(){
   return await ensureClearProfileConfirmModal().open(txt);
 }
 
+// ===== "My profile" – enter player number modal (YES/NO) =====
+// Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
+let _myProfileNoModal = null;
+function ensureMyProfileNoModal(){
+  if(_myProfileNoModal) return _myProfileNoModal;
+
+  if(!document.getElementById('myProfileNoStyles')){
+    const st = document.createElement('style');
+    st.id = 'myProfileNoStyles';
+    st.textContent = `
+      .myProfileNoOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .myProfileNoBox{width:min(780px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .myProfileNoTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .myProfileNoText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;margin-bottom:12px;}
+      .myProfileNoRow{display:flex;justify-content:center;margin:12px 0 6px;}
+      .myProfileNoInput{width:min(420px,86vw);padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.25);background:#fff;color:#000;font-weight:800;letter-spacing:.5px;text-transform:uppercase;}
+      .myProfileNoActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:16px;}
+      .myProfileNoBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .myProfileNoBtnImg:active{transform:translateY(1px);} 
+      @media (max-width:520px){.myProfileNoBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'myProfileNoOverlay';
+  overlay.innerHTML = `
+    <div class="myProfileNoBox" role="dialog" aria-modal="true">
+      <div class="myProfileNoTitle">${getLang()==='en' ? 'My profile' : 'Mój profil'}</div>
+      <div class="myProfileNoText" id="myProfileNoText">${getLang()==='en' ? 'Enter player number' : 'Wpisz nr gracza'}</div>
+      <div class="myProfileNoRow">
+        <input id="myProfileNoInput" class="myProfileNoInput" type="text" maxlength="7" placeholder="A123456" />
+      </div>
+      <div class="myProfileNoActions">
+        <img id="myProfileNoYes" class="myProfileNoBtnImg" alt="YES" />
+        <img id="myProfileNoNo" class="myProfileNoBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const inp = overlay.querySelector('#myProfileNoInput');
+  const btnYes = overlay.querySelector('#myProfileNoYes');
+  const btnNo = overlay.querySelector('#myProfileNoNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(null); });
+  btnNo.addEventListener('click', ()=>close(null));
+  btnYes.addEventListener('click', ()=>{
+    const raw = String(inp.value || '').trim().toUpperCase();
+    close(raw);
+  });
+
+  _myProfileNoModal = {
+    open: ()=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      inp.value = "";
+      overlay.style.display = 'flex';
+      setTimeout(()=>{ try{ inp.focus(); }catch(e){} }, 50);
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+
+  return _myProfileNoModal;
+}
+
+async function askAndSetPlayerNoFromMyProfile(){
+  const lang = getLang();
+  const raw = await ensureMyProfileNoModal().open();
+  if(!raw) return;
+
+  // Accept formats: A123456 or just 123456 (then prefix from profile/country or X)
+  let val = raw;
+  if(/^[0-9]{6}$/.test(val)){
+    const p = getProfile() || {};
+    const c = String(p.country || "").trim().toUpperCase();
+    const prefix = (c && /^[A-Z]{2}$/.test(c)) ? c[0] : "X";
+    val = prefix + val;
+  }
+  if(!/^[A-Z][0-9]{6}$/.test(val)){
+    showToast(lang==='en' ? 'Invalid player number. Use A123456.' : 'Niepoprawny nr gracza. Użyj formatu A123456.');
+    return;
+  }
+
+  localStorage.setItem(KEY_PLAYER_NO, val);
+  const p = getProfile() || {};
+  p.playerNo = val;
+  setProfile(p);
+
+  // Update readonly field if profile modal is open
+  const pnEl = document.getElementById("profilePlayerNo");
+  if(pnEl) pnEl.value = val;
+
+  try{ updatePlayerDocProfile(); }catch{}
+  showToast(lang==='en' ? 'Player number saved.' : 'Nr gracza zapisany.');
+}
+
 // ===== Settings modal =====
 function openSettings(){
   const wrap = document.createElement("div");
@@ -1495,6 +1600,20 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       if(typeof onDone === "function") onDone(profile);
     };
     avatarSlot.appendChild(btnAddProfile);
+
+    // NOWE: btn_my_profil.png (pod Avatar + Dodaj profil) – wpisanie nr gracza ręcznie
+    const br = document.createElement('div');
+    br.style.flexBasis = '100%';
+    br.style.height = '0';
+    avatarSlot.appendChild(br);
+
+    const btnMyProfil = makeSysImgButton("btn_my_profil.png", {
+      cls:"sysBtn profileAvatarBtn",
+      alt:(lang === "en" ? "My profile" : "Mój profil"),
+      title:(lang === "en" ? "My profile" : "Mój profil")
+    });
+    btnMyProfil.onclick = ()=>{ askAndSetPlayerNoFromMyProfile(); };
+    avatarSlot.appendChild(btnMyProfil);
   }
 
   requestAnimationFrame(()=>{
