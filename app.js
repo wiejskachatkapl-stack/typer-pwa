@@ -1,4 +1,4 @@
-const BUILD = 8013;
+const BUILD = 8014;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1599,23 +1599,62 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       alt:(lang === "en" ? "Add profile" : "Dodaj profil"),
       title:(lang === "en" ? "Add profile" : "Dodaj profil")
     });
-    btnAddProfile.onclick = ()=>{
+    btnAddProfile.onclick = async ()=>{
       const nick = (document.getElementById("profileNick")?.value || "").trim();
       const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
       const favClub = (document.getElementById("profileFav")?.value || "").trim();
-      const playerNo = ensurePlayerNoForCountry(country);
+      const avatarVal = __avatarValueToStore(chosenAvatar);
+
+      // Czy mamy już zapisany kompletny profil + numer gracza?
+      const existingOk = isProfileComplete(existing) && !!getPlayerNo();
+
+      // Czy użytkownik coś zmienił?
+      const hasChanges = existingOk && (
+        (String(nick||"") !== String(existing.nick||"")) ||
+        (String(country||"") !== String(existing.country||"")) ||
+        (String(favClub||"") !== String(existing.favClub||"")) ||
+        (String(avatarVal||"") !== String(existing.avatar||""))
+      );
+
+      // Domyślnie: aktualizujemy istniejący profil (ten sam nr gracza)
+      let keepSamePlayerNo = true;
+
+      // Jeśli są zmiany w profilu, pokaż okno potwierdzenia:
+      // TAK = uwzględnij zmiany (ten sam nr gracza)
+      // NIE = nowy profil (nowy nr gracza)
+      if(hasChanges){
+        const langNow = getLang();
+        const modal = ensureProfileChangeConfirmModal();
+        const text = (langNow === "en")
+          ? "You changed the player profile. Apply changes?
+YES = apply changes
+NO = new profile"
+          : "Dokonałeś zmian w profilu gracza. Czy uwzględnić zmiany.
+Jeśli to zmiany kliknij TAK jeśli nowy profil NIE.";
+        keepSamePlayerNo = await modal.open({text});
+      }
+
+      const playerNo = keepSamePlayerNo
+        ? ensurePlayerNoForCountry(country)
+        : generateFreshPlayerNo(country);
+
       // pokaż w polu readonly
       const pnEl = document.getElementById("profilePlayerNo");
       if(pnEl) pnEl.value = playerNo;
-      const profile = {...existing, nick, country, favClub, playerNo, avatar: __avatarValueToStore(chosenAvatar), updatedAt: Date.now()};
+
+      const profile = {...existing, nick, country, favClub, playerNo, avatar: avatarVal, updatedAt: Date.now()};
       if(!isProfileComplete(profile)){
         showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
         return;
       }
       localStorage.setItem(KEY_NICK, nick);
       setProfile(profile);
-      // Jeśli jesteśmy w pokoju – uaktualnij dane gracza (playerNo + profil) w rooms/{code}/players/{uid}
-      try{ updatePlayerDocProfile(); }catch{}
+
+      // Jeśli jesteśmy w pokoju – uaktualnij dane gracza tylko gdy aktualizujemy istniejący profil (TAK)
+      if(keepSamePlayerNo){
+        try{ updatePlayerDocProfile(); }catch{}
+      }
+
       refreshNickLabels();
       modalClose();
       if(typeof onDone === "function") onDone(profile);
@@ -4685,6 +4724,85 @@ async function saveResults(){
 // Custom confirm modal (instead of system window.confirm) for ending a round.
 // Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
 let _endRoundConfirmModal = null;
+
+// ===== POTWIERDZENIE ZMIAN W PROFILU =====
+let _profileChangeConfirmModal = null;
+function ensureProfileChangeConfirmModal(){
+  if(_profileChangeConfirmModal) return _profileChangeConfirmModal;
+
+  if(!document.getElementById("profileChangeConfirmStyles")){
+    const st = document.createElement('style');
+    st.id = "profileChangeConfirmStyles";
+    st.textContent = `
+      .profileChangeOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .profileChangeBox{width:min(760px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .profileChangeTitle{font-weight:800;font-size:20px;margin:0 0 10px 0;color:#fff;}
+      .profileChangeText{font-weight:600;line-height:1.35;font-size:15px;color:rgba(255,255,255,.88);}
+      .profileChangeActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .profileChangeBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .profileChangeBtnImg:active{transform:translateY(1px);}
+      @media (max-width:520px){.profileChangeBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'profileChangeOverlay';
+  overlay.innerHTML = `
+    <div class="profileChangeBox" role="dialog" aria-modal="true">
+      <div class="profileChangeTitle" id="profileChangeTitle"></div>
+      <div class="profileChangeText" id="profileChangeText"></div>
+      <div class="profileChangeActions">
+        <img id="profileChangeYes" class="profileChangeBtnImg" alt="Yes" />
+        <img id="profileChangeNo" class="profileChangeBtnImg" alt="No" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elTitle = overlay.querySelector('#profileChangeTitle');
+  const elText  = overlay.querySelector('#profileChangeText');
+  const btnYes  = overlay.querySelector('#profileChangeYes');
+  const btnNo   = overlay.querySelector('#profileChangeNo');
+
+  let _resolver = null;
+
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  btnYes.addEventListener('click', ()=>close(true));
+  btnNo.addEventListener('click', ()=>close(false));
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+
+  _profileChangeConfirmModal = {
+    open: ({title, text}={})=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elTitle.textContent = title || (lang==='en' ? 'Profile changes' : 'Zmiany profilu');
+      elText.textContent  = text  || '';
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+  return _profileChangeConfirmModal;
+}
+
+function generateFreshPlayerNo(countryCode){
+  const c = String(countryCode || "").trim().toUpperCase();
+  const prefix = (c && /^[A-Z]{2}$/.test(c)) ? c[0] : "X";
+  const digits = String(Math.floor(Math.random()*1_000_000)).padStart(6, "0");
+  const next = prefix + digits;
+  localStorage.setItem(KEY_PLAYER_NO, next);
+  const p = getProfile() || {};
+  p.playerNo = next;
+  setProfile(p);
+  return next;
+}
+
 function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
 
