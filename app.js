@@ -1,4 +1,4 @@
-const BUILD = 8001;
+const BUILD = 8002;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1204,6 +1204,18 @@ function __injectAvatarPickerStyles(){
     object-fit: contain;
     border-radius: 16px;
     display: block;
+  }
+  /* Profil: stały rozmiar boksu avatara, aby obraz nie rozjeżdżał układu przy pierwszym wejściu */
+  .profileAvatarBox{
+    width: 180px;
+    height: 180px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   `;
   document.head.appendChild(st);
