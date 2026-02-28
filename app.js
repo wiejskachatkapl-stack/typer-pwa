@@ -1,4 +1,4 @@
-const BUILD = 8006;
+const BUILD = 8007;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5146,7 +5146,8 @@ async function openPlayerStatsFromLeague(uid, nick){
   const wrap = document.createElement("div");
   wrap.style.display="flex";
   wrap.style.flexDirection="column";
-  wrap.style.gap="6px";
+  // ciaśniej, aby weszło więcej kolejek bez scrolla
+  wrap.style.gap="4px";
 
   const head = document.createElement("div");
   head.className="row";
@@ -5257,9 +5258,10 @@ async function openPlayerStatsFromLeague(uid, nick){
     const left = document.createElement("div");
     left.style.display="flex";
     left.style.flexDirection="column";
-    left.style.gap="4px";
-    left.innerHTML = `<div style="font-weight:1000">${medalSrc ? `<img alt="medal" src="${medalSrc}" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"/>` : ""}${t("round")} ${rn}</div>
-                      <div class="sub">${played ? (getLang()==="en" ? "Played" : "Zagrana") : (getLang()==="en" ? "No picks / incomplete" : "Brak typów / niepełne")}</div>`;
+    left.style.gap="0px";
+    // W Statystykach gracza nie pokazujemy linii statusu (Zagrana / Brak typów / niepełne),
+    // aby wiersze były niższe i mieściło się więcej kolejek.
+    left.innerHTML = `<div style="font-weight:1000">${medalSrc ? `<img alt="medal" src="${medalSrc}" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"/>` : ""}${t("round")} ${rn}</div>`;
 
     const right = document.createElement("div");
     right.className="row statsRightRow";
