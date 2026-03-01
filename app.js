@@ -3119,7 +3119,9 @@ const MANUAL_LEAGUES = [
   { key: "DE", label: "Bundesliga - NIEMCY" },
   { key: "IT", label: "Serie A - WŁOCHY" },
   { key: "PL", label: "Ekstraklasa - POLSKA" },
-  { key: "EN", label: "Premier League - ANGLIA" }
+  { key: "EN", label: "Premier League - ANGLIA" },
+  { key: "EL", label: "Liga Europy - UEFA" },
+  { key: "ECL", label: "Liga Konferencji - UEFA" }
 
 ];
 
@@ -3272,6 +3274,22 @@ const CLUBS_BY_LEAGUE = {
     "Wolverhampton"
   ]
 };
+
+// UEFA: Liga Europy / Liga Konferencji (manual) – lista klubów zbiorcza (z lig krajowych)
+(function(){
+  const all = Array.from(new Set([
+    ...(CLUBS_BY_LEAGUE.FR||[]),
+    ...(CLUBS_BY_LEAGUE.ES||[]),
+    ...(CLUBS_BY_LEAGUE.NL||[]),
+    ...(CLUBS_BY_LEAGUE.DE||[]),
+    ...(CLUBS_BY_LEAGUE.IT||[]),
+    ...(CLUBS_BY_LEAGUE.PL||[]),
+    ...(CLUBS_BY_LEAGUE.EN||[])
+  ]));
+  CLUBS_BY_LEAGUE.EL = all.slice();
+  CLUBS_BY_LEAGUE.ECL = all.slice();
+})();
+
 
 
 
