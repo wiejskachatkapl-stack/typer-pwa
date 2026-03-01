@@ -3120,7 +3120,7 @@ const MANUAL_LEAGUES = [
   { key: "IT", label: "Serie A - WŁOCHY" },
   { key: "PL", label: "Ekstraklasa - POLSKA" },
   { key: "EN", label: "Premier League - ANGLIA" }
-  { key: "PT", label: "Liga Portugal - PORTUGALIA" }
+
 ];
 
 // Kluby dla lig (z pliku kluby.docx)
@@ -3249,27 +3249,7 @@ const CLUBS_BY_LEAGUE = {
     "Widzew",
     "Bruk-Bet Termalika"
   ],
-  "PL": [
-    "FC Porto",
-    "Sporting",
-    "Benfica",
-    "Braga",
-    "Gil Vincente",
-    "Famalicao",
-    "Estoril",
-    "Moreirense",
-    "Guimaraes",
-    "Alverca",
-    "Arouca",
-    "Estrela",
-    "Casa Pia",
-    "Nacional",
-    "Rio Ave",
-    "Santa Clara",
-    "Tondela",
-    "AFS"
-  ],
-  "EN": [
+    "EN": [
     "Arsenal",
     "Manchester City",
     "Aston Villa",
