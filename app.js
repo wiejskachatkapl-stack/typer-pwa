@@ -3113,16 +3113,18 @@ async function confirmMQDeadline(){
 
 // Manual: wybór ligi (UI w następnym kroku rozbudujemy o mecze)
 const MANUAL_LEAGUES = [
-  { key: "FR", label: "Ligue 1 - FRANCJA" },
+{ key: "FR", label: "Ligue 1 - FRANCJA" },
   { key: "ES", label: "LaLiga - HISZPANIA" },
   { key: "NL", label: "Eredivisie - HOLANDIA" },
   { key: "DE", label: "Bundesliga - NIEMCY" },
   { key: "IT", label: "Serie A - WŁOCHY" },
   { key: "PL", label: "Ekstraklasa - POLSKA" },
   { key: "EN", label: "Premier League - ANGLIA" },
+  { key: "CL", label: "Liga Mistrzów - UEFA" },
+  { key: "EL", label: "Liga Europy - UEFA" },
+  { key: "ECL", label: "Liga Konferencji - UEFA" },
   { key: "PT", label: "Liga Portugal - PORTUGALIA" },
   { key: "BE", label: "Jupiler League - BELGIA" }
-
 ];
 
 // Kluby dla lig (z pliku kluby.docx)
@@ -3273,6 +3275,60 @@ const CLUBS_BY_LEAGUE = {
     "Burnley",
     "Wolverhampton"
   ],
+  "CL": [
+    "Galatasaray",
+    "Liverpool",
+    "Atalanta",
+    "Bayern Monachium",
+    "Atl. Madryt",
+    "Tottenham",
+    "Newcastle",
+    "Barcelona",
+    "Bayer Leverkusen",
+    "Arsenal",
+    "Bodo/Glimt",
+    "Sporting",
+    "PSG",
+    "Chelsea",
+    "Real Madryt",
+    "Manchester City"
+  ],
+  "EL": [
+    "Bologna",
+    "AS Roma",
+    "Lille",
+    "Aston Villa",
+    "Panathinaikos",
+    "Betis Sevilla",
+    "VFB Stuttgart",
+    "FC Porto",
+    "Celta Vigo",
+    "Lyon",
+    "Ferencvaros",
+    "Braga",
+    "Genk",
+    "S.C. Freiburg",
+    "Nottingham",
+    "Midtjylland"
+  ],
+  "ECL": [
+    "Alkmaaar",
+    "Sparta Praga",
+    "Lech Poznań",
+    "Szachtar Donieck",
+    "Rijeka",
+    "Strasbourg",
+    "Samsunspor",
+    "Vallecano",
+    "Celje",
+    "AEK",
+    "Crystal Palace",
+    "AEK Larnaka",
+    "Fiorentina",
+    "Raków Częstochowa",
+    "Sigma Ołomuniec",
+    "1 FC Mainz 05"
+  ],
   "PT": [
     "FC Porto",
     "Sporting",
@@ -3311,6 +3367,7 @@ const CLUBS_BY_LEAGUE = {
     "RAAL La Louviere",
     "Dender"
   ]
+
 };
 
 
@@ -5875,21 +5932,6 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
 
     await initFirebase();
     bindUI();
-
-    // ===== UX: hide scrollbar in players list (keep scrolling) =====
-    // User request: remove the visible scrollbar on the right side.
-    // Works on iOS/Android/desktop (scroll still works via touch/wheel).
-    try{
-      if(!document.getElementById('hidePlayersScrollbarStyle')){
-        const st = document.createElement('style');
-        st.id = 'hidePlayersScrollbarStyle';
-        st.textContent = `
-          #playersList{ scrollbar-width:none; -ms-overflow-style:none; }
-          #playersList::-webkit-scrollbar{ width:0; height:0; display:none; }
-        `;
-        document.head.appendChild(st);
-      }
-    }catch(e){}
 
     if(getNick()) refreshNickLabels();
 
