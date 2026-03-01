@@ -5876,6 +5876,21 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
     await initFirebase();
     bindUI();
 
+    // ===== UX: hide scrollbar in players list (keep scrolling) =====
+    // User request: remove the visible scrollbar on the right side.
+    // Works on iOS/Android/desktop (scroll still works via touch/wheel).
+    try{
+      if(!document.getElementById('hidePlayersScrollbarStyle')){
+        const st = document.createElement('style');
+        st.id = 'hidePlayersScrollbarStyle';
+        st.textContent = `
+          #playersList{ scrollbar-width:none; -ms-overflow-style:none; }
+          #playersList::-webkit-scrollbar{ width:0; height:0; display:none; }
+        `;
+        document.head.appendChild(st);
+      }
+    }catch(e){}
+
     if(getNick()) refreshNickLabels();
 
     // zastosuj język od razu
