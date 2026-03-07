@@ -266,9 +266,6 @@
     .row{display:flex;gap:10px;align-items:center}
     .col{display:flex;flex-direction:column;gap:10px}
     .spacer{flex:1}
-/* 8036: w panelu Gracze lista ma dochodzić do przycisków na dole; scroll dopiero przy przepełnieniu */
-.rightBar .spacer{display:none !important;}
-
 
     input{
       border:1px solid rgba(255,255,255,.15);
@@ -629,6 +626,12 @@
 
     /* 6029: scroll pojawia się dopiero gdy brakuje miejsca; węższe wiersze graczy */
     .playersList{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px}
+
+    .playersHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .playersHeader .sub{max-width:260px}
+    .playersHeader #btnDeletePlayer{flex:0 0 auto}
+    .delChk{width:18px;height:18px;accent-color:#ff4d4d;cursor:pointer}
+
     .playerRow{
       padding:8px 10px;border-radius:14px;
       background:rgba(0,0,0,.16);
@@ -1205,8 +1208,6 @@
       margin-bottom:10px;
     }
     .leagueTopLeft{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    /* Desktop: keep league back button on the right side of the top bar */
-    #league #btnLeagueBack{margin-left:auto;}
     table{
       width:100%;
       border-collapse:collapse;
@@ -1712,24 +1713,7 @@
       text-shadow:0 2px 6px rgba(0,0,0,.55);
       letter-spacing:.5px;
     }
-    
-/* MOBILE: RN APP logo smaller + top-right (phones only) */
-@media (max-width: 900px){
-  #buildCorner{
-    top: 10px !important;
-    bottom: auto !important;
-    right: 10px !important;
-    left: auto !important;
-    gap: 4px !important;
-  }
-  #buildCornerLogo{
-    width: 90px !important;
-  }
-  #buildCornerText{
-    font-size: 12px !important;
-  }
-}
-.footerRight{display:none !important;}
+    .footerRight{display:none !important;}
 
 
     /* Profile modal layout – przywrócenie układu jak na screenie (zielone zaznaczenie) */
@@ -1825,52 +1809,6 @@
       .profileInput{ width: min(86vw, 340px); max-width: min(86vw, 340px); }
       .profileSelect{ width: min(86vw, 380px); max-width: min(86vw, 380px); }
     }
-
-/* v8033 MOBILE FIX: enable scrolling in League (Tabela ligi typerów) screen */
-@media (max-width: 900px){
-  /* allow the league screen to start at top and scroll */
-  #league{
-    align-items:flex-start !important;
-    justify-content:flex-start !important;
-    padding:14px !important;
-  }
-  /* make the league card scroll within the frame */
-  #league .leagueWrap{
-    max-height: calc(var(--app-vh, 1vh) * 100 - 28px) !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* ensure ranking table wrapper can scroll on iOS */
-  #league .leagueWrap > .panel > div[style*="overflow:auto"]{
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* v8034: on phones move and shrink the Back button next to the Nick chip */
-  #league .leagueTopLeft{width:100%;}
-  #league #t_league{order:1;}
-  #league #leagueRoomChip{order:2;}
-  #league #leagueNickChip{order:3;}
-  #league #btnLeagueBack{
-    order:4;
-    margin-left:0 !important;
-    transform: scale(.86);
-    transform-origin: left center;
-  }
-  #league #btnLeagueBack img{height:36px; width:auto;}
-  #league #leagueAfterChip{order:5;}
-}
-
-
-/* v8035: hide scrollbar in players panel (keep scrolling) */
-#playersList, .playersList{
-  scrollbar-width: none;           /* Firefox */
-  -ms-overflow-style: none;        /* IE/Edge legacy */
-}
-#playersList::-webkit-scrollbar, .playersList::-webkit-scrollbar{
-  width: 0 !important;
-  height: 0 !important;
-  display: none !important;
-}
 </style>
 </head>
 <body>
@@ -2076,9 +2014,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <!-- RIGHT -->
 <div class="rightBar panel">
-<div>
-<div class="title" id="t_players">Gracze</div>
-<div class="sub" id="t_players_sub">Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.</div>
+<div class="playersHeader">
+  <div>
+    <div class="title" id="t_players">Gracze</div>
+    <div class="sub" id="t_players_sub"></div>
+  </div>
+  <button class="imgBtn sysBtn actionSmall" data-btn="btn_delete_player.png" id="btnDeletePlayer" style="display:none" type="button">
+    <img alt="btnDeletePlayer" data-btn="btn_delete_player.png" src="ui/buttons/pl/btn_delete_player.png"/>
+  </button>
 </div>
 <div class="playersList" id="playersList"></div>
 <div class="spacer"></div>
@@ -2308,10 +2251,12 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="leagueTop">
 <div class="leagueTopLeft">
 <div class="chip" id="t_league">Tabela ligi typerów</div>
-<div class="chip" id="leagueRoomChip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
-<div class="chip" id="leagueNickChip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
+<div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
+<div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
+<div class="chip"><span id="t_after_round">Po kolejce</span>: <select id="leagueAfterRound"></select></div>
+</div>
+<div class="row">
 <button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnLeagueBack" type="button"><img alt="btnLeagueBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
-<div class="chip" id="leagueAfterChip"><span id="t_after_round">Po kolejce</span>: <select id="leagueAfterRound"></select></div>
 </div>
 </div>
 <div class="panel" style="padding:14px">
