@@ -1804,8 +1804,52 @@
       .profileSelect{ width: min(86vw, 380px); max-width: min(86vw, 380px); }
     }
 
-    /* 8028: prawa lista graczy rośnie do kontenera Wiadomości; scroll dopiero gdy brak miejsca */
-    .rightBar .spacer{display:none !important;}
+/* ===== MOBILE FIX: League (Tabela ligi typerów) scroll + visible back button ===== */
+@media (max-width: 900px) {
+  /* allow page content to scroll inside the league panel */
+  #league .leagueWrap{
+    max-height: calc(var(--app-vh, 1vh) * 100);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* make top bar sticky so controls stay visible */
+  #league .leagueTop{
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding-right: 92px; /* space for back button */
+    background: rgba(6, 18, 44, 0.55);
+    backdrop-filter: blur(6px);
+  }
+
+  /* ensure the back button is always visible on phones */
+  #league .leagueTop{ position: sticky; }
+  #league .leagueTop > .row{
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    margin: 0;
+  }
+
+  /* dropdown and chips should wrap nicely without pushing the back button away */
+  #league .leagueTopLeft{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-right: 0;
+  }
+
+  #league .leagueTopLeft .chip{
+    max-width: 100%;
+  }
+
+  #league #leagueAfterRound{
+    max-width: 52vw;
+  }
+}
+
 </style>
 </head>
 <body>
