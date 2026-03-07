@@ -944,6 +944,25 @@ function ensureClearProfileConfirmModal(){
   return _clearProfileConfirmModal;
 }
 
+// ===== RIGHT PANEL: players list should fill space until buttons, scroll only on overflow =====
+function ensurePlayersPanelFillFix(){
+  if(document.getElementById('playersPanelFillFix')) return;
+  const st = document.createElement('style');
+  st.id = 'playersPanelFillFix';
+  st.textContent = `
+    /* Right panel layout: allow playersList to grow to bottom stack */
+    .rightBar{display:flex;flex-direction:column;}
+    .rightBar .playersList{flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+    .rightBar .rightBottomStack{flex:0 0 auto;}
+    /* remove spacer that was stealing space */
+    .rightBar > .spacer{display:none !important;}
+    /* optional: hide scrollbar visuals but keep scroll */
+    .rightBar .playersList{scrollbar-width:none;}
+    .rightBar .playersList::-webkit-scrollbar{width:0;height:0;}
+  `;
+  document.head.appendChild(st);
+}
+
 async function customConfirmClearProfile(){
   const txt = (getLang()==='en')
     ? 'Are you sure you want to delete your profile? Deleting it will remove all your stats and everything related to this profile. Do you confirm deleting the profile?'
@@ -5965,6 +5984,7 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
 
     await initFirebase();
     bindUI();
+    ensurePlayersPanelFillFix();
 
     if(getNick()) refreshNickLabels();
 
