@@ -1,4 +1,4 @@
-const BUILD = 8040;
+const BUILD = 8023;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1890,10 +1890,6 @@ let unsubPicks = null;
 
 let currentRoomCode = null;
 let currentRoom = null;
-
-// 8037+: admin delete player
-let deletePlayerMode = false;
-let deletePlayerSelectedUid = null;
 let currentRoundNo = 1;
 
 let matchesCache = [];
@@ -2762,23 +2758,6 @@ function bindUI(){
     await deleteRoomConfirmAndDelete();
   };
 
-  // 8040: Players panel layout + admin delete-player button
-  ensurePlayersPanelFix();
-  ensureDeletePlayerButton();
-
-  // 8037: usuwanie gracza (ADMIN)
-  const __btnDeletePlayer = el("btnDeletePlayer");
-  if(__btnDeletePlayer) __btnDeletePlayer.onclick = ()=>{
-    if(!isAdmin()) return;
-    deletePlayerMode = !deletePlayerMode;
-    deletePlayerSelectedUid = null;
-    renderPlayers(lastPlayers);
-    showToast(getLang()==="en"
-      ? (deletePlayerMode ? "Select a player to delete" : "Delete mode off")
-      : (deletePlayerMode ? "Zaznacz gracza do usunięcia" : "Tryb usuwania wyłączony"));
-  };
-
-
   // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
   if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSubstituteMenu();
@@ -2900,20 +2879,6 @@ function bindUI(){
   el("btnLeagueFromRoom").onclick = async ()=>{
     if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
-  };
-
-
-  // All-time ranking from room
-  el("btnAllRankingFromRoom").onclick = async ()=>{
-    if(!currentRoomCode) return;
-    await openLeagueTable(currentRoomCode, { silent:true });
-    leagueState.totalKind = "ALLTIME";
-    if(el("t_league")) el("t_league").textContent = (getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów";
-    buildLeagueRoundDropdown();
-    renderLeagueTable();
-    updateLeagueHintForMode();
-    showScreen("league");
-    showToast((getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów");
   };
 
   // League
@@ -3970,13 +3935,6 @@ function syncActionButtons(){
     btnDel.disabled = !adm;
   }
 
-  // 8040: przycisk usuwania gracza widoczny tylko dla admina
-  const btnDelPlayer = el("btnDeletePlayer");
-  if(btnDelPlayer){
-    btnDelPlayer.style.display = adm ? "inline-flex" : "none";
-    btnDelPlayer.disabled = !adm;
-  }
-
 }
 
 async function saveAllPicks(){
@@ -4019,6 +3977,7 @@ function renderPlayers(players){
   box.innerHTML = "";
 
   const adminUid = currentRoom?.adminUid;
+  const showPlayerNo = isAdmin(); // tylko admin widzi numery graczy przy nickach
   const myOk = iAmSubmitted();
   const resultsOk = allResultsComplete();
 
@@ -4048,6 +4007,19 @@ function renderPlayers(players){
     name.style.whiteSpace = "nowrap";
     name.style.overflow = "hidden";
     name.style.textOverflow = "ellipsis";
+
+    if(showPlayerNo){
+      const pn = String(p.playerNo || "").trim().toUpperCase();
+      if(pn){
+        const no = document.createElement("span");
+        no.textContent = ` ${pn}`;
+        no.style.fontWeight = "800";
+        no.style.fontSize = "12px";
+        no.style.opacity = "0.75";
+        no.style.marginLeft = "6px";
+        name.appendChild(no);
+      }
+    }
 
     const status = document.createElement("div");
     const ok = !!submittedByUid[p.uid];
@@ -4091,54 +4063,12 @@ function renderPlayers(players){
       b.textContent = "ADMIN";
       right.appendChild(b);
     }
-
-    // 8040: admin delete mode - pokaż checkboxy przy graczach
-    if(deletePlayerMode && isAdmin()){
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.className = "delPlayerChk";
-      cb.checked = (deletePlayerSelectedUid === p.uid);
-      // nie pozwalaj usuwać admina
-      cb.disabled = (p.uid === adminUid);
-      cb.title = (getLang()==="en") ? "Delete player" : "Usuń gracza";
-      cb.onchange = async ()=>{
-        if(cb.disabled) return;
-        if(!cb.checked){
-          deletePlayerSelectedUid = null;
-          renderPlayers(lastPlayers);
-          return;
-        }
-        deletePlayerSelectedUid = p.uid;
-        renderPlayers(lastPlayers);
-
-        const ok = await ensureDeletePlayerConfirmModal().open(p.nick || "—");
-        if(ok){
-          await deletePlayerByUid(p.uid, p.nick || "—");
-        }
-        deletePlayerSelectedUid = null;
-        deletePlayerMode = false;
-        renderPlayers(lastPlayers);
-      };
-      right.appendChild(cb);
-    }
-
     // 6028: usunięto etykietę "TY"/"YOU" w panelu Gracze (zajmowała miejsce)
 
     row.appendChild(left);
     row.appendChild(right);
     box.appendChild(row);
   });
-
-  // 8040: scroll pojawia się dopiero gdy lista faktycznie nie mieści się w kontenerze
-  requestAnimationFrame(()=>{
-    try{
-      const b = el("playersList");
-      if(!b) return;
-      const need = b.scrollHeight > (b.clientHeight + 2);
-      b.style.overflowY = need ? "auto" : "hidden";
-    }catch(e){}
-  });
-
 }
 
 function createLogoImg(teamName){
@@ -5390,70 +5320,13 @@ async function addRandomQueue(){
 const leagueState = {
   roomCode: null,
   roomName: null,
-  afterRound: 0,              // global finished rounds (room.currentRoundNo-1)
-  seasonRounds: 10,           // stałe: 10 kolejek = 1 liga
-  seasonStart: 1,
-  seasonEnd: 10,
-  afterRoundSeason: 0,        // 0..10 (ile kolejek rozegranych w aktualnej lidze)
-  totalKind: "SEASON",        // "SEASON" | "ALLTIME"
-  rowsAllTime: [],            // z /league (totalPoints)
-  rowsSeason: [],             // wyliczane z historii zakończonych kolejek w sezonie
-  rows: [],                   // (compat) – zostawione, ale render używa rowsSeason/rowsAllTime
+  afterRound: 0,
+  rows: [],
   finishedRounds: [],
   roundCache: new Map(),
-  viewMode: "TOTAL",          // TOTAL | ROUND
-  selectedRound: "ALL"        // ALL lub numer kolejki
+  viewMode: "TOTAL", // TOTAL | ROUND
+  selectedRound: "ALL" // ALL or roundNo string
 };
-
-
-function computeSeasonRange(afterRound){
-  const n = leagueState.seasonRounds || 10;
-  const ar = Number(afterRound||0);
-  if(!ar || ar<=0){
-    leagueState.seasonStart = 1;
-    leagueState.seasonEnd = n;
-    leagueState.afterRoundSeason = 0;
-    return;
-  }
-  const start = Math.floor((ar - 1) / n) * n + 1;
-  const end = start + n - 1;
-  leagueState.seasonStart = start;
-  leagueState.seasonEnd = end;
-  leagueState.afterRoundSeason = Math.min(n, Math.max(0, ar - start + 1));
-}
-
-function computeSeasonRows(){
-  // bazujemy na players z rowsAllTime (żeby mieć listę graczy + nicki)
-  const base = Array.isArray(leagueState.rowsAllTime) ? leagueState.rowsAllTime : [];
-  const map = new Map();
-  base.forEach(r=>{
-    map.set(r.uid, { uid:r.uid, nick:r.nick||"—", rounds:0, points:0 });
-  });
-
-  const start = leagueState.seasonStart;
-  const end = Math.min(leagueState.seasonEnd, leagueState.afterRound || 0);
-
-  for(let rn=start; rn<=end; rn++){
-    const rd = leagueState.roundCache.get(rn);
-    if(!rd) continue;
-    const ptsMap = rd?.pointsByUid || {};
-    const nickMap = rd?.nickByUid || {};
-    Object.keys(ptsMap||{}).forEach(uid=>{
-      if(!map.has(uid)){
-        map.set(uid, { uid, nick: String(nickMap?.[uid]||"—"), rounds:0, points:0 });
-      }
-      const v = ptsMap[uid];
-      if(v===undefined || v===null || !Number.isFinite(Number(v))) return;
-      const row = map.get(uid);
-      row.points += Number(v);
-      row.rounds += 1;
-      // aktualizuj nick jeśli brak
-      if((!row.nick || row.nick==="—") && nickMap?.[uid]) row.nick = String(nickMap[uid]);
-    });
-  }
-
-  leagueState.rowsSeason = Array.from(map.values());
-}
 
 async function loadLeagueFinishedRounds(code){
   leagueState.finishedRounds = [];
@@ -5498,9 +5371,9 @@ function buildLeagueRoundDropdown(){
 
   const optAll = document.createElement("option");
   optAll.value = "ALL";
-  optAll.textContent = (leagueState.totalKind==="ALLTIME")
-    ? ((getLang()==="en") ? "All‑time total" : "Suma (wszechczasów)")
-    : ((getLang()==="en") ? `Season total (after ${leagueState.afterRoundSeason})` : `Suma (po ${leagueState.afterRoundSeason})`);
+  optAll.textContent = (getLang()==="en")
+    ? `Total (after ${leagueState.afterRound})`
+    : `Suma (po ${leagueState.afterRound})`;
   sel.appendChild(optAll);
 
   for(const rn of leagueState.finishedRounds){
@@ -5602,10 +5475,8 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
-    computeSeasonRange(leagueState.afterRound);
 
     el("leagueRoomName").textContent = leagueState.roomName;
-    if(el("t_league")) el("t_league").textContent = (getLang()==="en") ? "League table" : "Tabela ligi typerów";
     await loadLeagueFinishedRounds(roomCode);
     buildLeagueRoundDropdown();
     updateLeagueHintForMode();
@@ -5624,9 +5495,6 @@ async function openLeagueTable(roomCode, opts={}) {
       });
     });
 
-    leagueState.rowsAllTime = arr;
-    leagueState.totalKind = "SEASON";
-    computeSeasonRows();
     leagueState.rows = arr;
     // start as TOTAL
     leagueState.viewMode = "TOTAL";
@@ -5648,7 +5516,7 @@ function renderLeagueTable(){
 
   const source = (leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL" && Array.isArray(leagueState._displayRows))
     ? leagueState._displayRows
-    : (leagueState.totalKind === "ALLTIME" ? leagueState.rowsAllTime : leagueState.rowsSeason);
+    : leagueState.rows;
 
   const rows = [...(source||[])];
   rows.sort((a,b)=>{
@@ -5999,170 +5867,3 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
 window.closeModal = function(){
   try{ document.querySelectorAll('.modal.active').forEach(m=>m.classList.remove('active')); }catch(e){}
 };
-
-
-// ===== 8040: Players panel layout + delete player =====
-function ensurePlayersPanelFix(){
-  if(document.getElementById("playersPanelFix8040")) return;
-  const st = document.createElement("style");
-  st.id = "playersPanelFix8040";
-  st.textContent = `
-    /* ukryj opis (czerwony tekst) nad listą graczy */
-    #t_players_sub{display:none !important;}
-
-    /* w prawym panelu nie może być dodatkowego "spacer" między listą graczy a dolnymi przyciskami,
-       bo skraca listę i pokazuje scroll mimo że jest dużo miejsca */
-    .rightBar > .spacer{display:none !important;}
-
-    /* lista graczy ma wypełniać przestrzeń do dolnych kontenerów */
-    #playersList{flex: 1 1 auto !important; min-height: 0 !important; overflow-x:hidden; overflow-y:hidden;}
-
-    /* checkbox do usuwania graczy */
-    .delPlayerChk{
-      width:18px;height:18px;
-      margin-left:6px;
-      cursor:pointer;
-      accent-color:#ff3b3b;
-      transform: translateY(1px);
-    }
-    .delPlayerChk:disabled{opacity:.35;cursor:not-allowed;}
-
-    /* przycisk usuwania gracza w prawym górnym rogu panelu "Gracze" */
-    #btnDeletePlayer{
-      position:absolute;
-      top: 14px;
-      right: 14px;
-      display:none;
-      background:transparent;
-      border:none;
-      padding:0;
-      cursor:pointer;
-      z-index:10;
-    }
-    #btnDeletePlayer img{
-      height:54px;
-      width:auto;
-      user-select:none;
-      -webkit-user-drag:none;
-      filter: drop-shadow(0 8px 14px rgba(0,0,0,.35));
-    }
-    #btnDeletePlayer:active img{transform:translateY(1px);}
-  `;
-  document.head.appendChild(st);
-}
-
-function ensureDeletePlayerButton(){
-  ensurePlayersPanelFix();
-  if(el("btnDeletePlayer")) return;
-
-  const rightBar = document.querySelector(".rightBar");
-  if(!rightBar) return;
-
-  const btn = document.createElement("button");
-  btn.id = "btnDeletePlayer";
-  btn.type = "button";
-  btn.className = "imgBtn";
-
-  const img = document.createElement("img");
-  img.alt = "delete player";
-  img.dataset.btn = "btn_delete_player.png"; // żeby refreshAllButtonImages podmieniło folder języka
-  // src ustawimy od razu, ale i tak będzie odświeżane przez refreshAllButtonImages()
-  const lang = getLang()==="en" ? "en" : "pl";
-  img.src = `ui/buttons/${lang}/btn_delete_player.png`;
-
-  btn.appendChild(img);
-  rightBar.appendChild(btn);
-
-  // od razu dostosuj widoczność (admin/non-admin)
-  try{ syncActionButtons(); }catch(e){}
-}
-
-let _deletePlayerConfirmModal = null;
-function ensureDeletePlayerConfirmModal(){
-  if(_deletePlayerConfirmModal) return _deletePlayerConfirmModal;
-
-  if(!document.getElementById("deletePlayerConfirmStyles")){
-    const st = document.createElement("style");
-    st.id = "deletePlayerConfirmStyles";
-    st.textContent = `
-      .deletePlayerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,55);display:none;align-items:center;justify-content:center;}
-      .deletePlayerBox{width:min(900px,92vw);background:rgba(6,18,40,92);border:1px solid rgba(255,255,255,12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,55);padding:22px 22px 18px;}
-      .deletePlayerTitle{font-weight:1000;font-size:22px;margin:0 0 10px 0;color:#fff;}
-      .deletePlayerText{font-weight:750;line-height:1.35;font-size:15px;color:rgba(255,255,255,92);white-space:pre-wrap;}
-      .deletePlayerActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .deletePlayerBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,35));}
-      .deletePlayerBtnImg:active{transform:translateY(1px);}
-      @media (max-width:520px){.deletePlayerBtnImg{height:52px;}}
-    `;
-    document.head.appendChild(st);
-  }
-
-  const overlay = document.createElement("div");
-  overlay.className = "deletePlayerOverlay";
-  overlay.innerHTML = `
-    <div class="deletePlayerBox" role="dialog" aria-modal="true">
-      <div class="deletePlayerTitle">${getLang()==="en" ? "Delete player" : "Usuń gracza"}</div>
-      <div class="deletePlayerText" id="deletePlayerConfirmText"></div>
-      <div class="deletePlayerActions">
-        <img id="deletePlayerBtnYes" class="deletePlayerBtnImg" alt="YES" />
-        <img id="deletePlayerBtnNo" class="deletePlayerBtnImg" alt="NO" />
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-
-  const elText = overlay.querySelector("#deletePlayerConfirmText");
-  const btnYes = overlay.querySelector("#deletePlayerBtnYes");
-  const btnNo = overlay.querySelector("#deletePlayerBtnNo");
-
-  let _resolver = null;
-  function close(val){
-    overlay.style.display = "none";
-    const r = _resolver; _resolver = null;
-    if(r) r(val);
-  }
-
-  overlay.addEventListener("click", (e)=>{ if(e.target === overlay) close(false); });
-  btnNo.addEventListener("click", ()=>close(false));
-  btnYes.addEventListener("click", ()=>close(true));
-
-  _deletePlayerConfirmModal = {
-    open: (nick)=>{
-      const lang = getLang()==="en" ? "en" : "pl";
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
-      const txt = (getLang()==="en")
-        ? `Delete the player permanently?\n\nPlayer: ${nick}`
-        : `Czy skasować i bezpowrotnie usunąć gracza?\n\nGracz: ${nick}`;
-      elText.textContent = txt;
-      overlay.style.display = "flex";
-      return new Promise(resolve=>{ _resolver = resolve; });
-    }
-  };
-
-  return _deletePlayerConfirmModal;
-}
-
-async function deletePlayerByUid(uid, nick){
-  if(!db || !currentRoomCode) return;
-  if(!isAdmin()) return;
-  if(!uid) return;
-
-  try{
-    // usuń dokument gracza z kolekcji players
-    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", uid));
-
-    // usuń jego typy (jeśli istnieją) - żeby nie zostawały śmieci
-    try{
-      await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "picks", uid));
-    }catch(e){}
-
-    // jeśli skasowano gracza, a jest w trybie usuwania, czyść stan
-    if(deletePlayerSelectedUid === uid) deletePlayerSelectedUid = null;
-
-    showToast(getLang()==="en" ? "Player deleted" : "Usunięto gracza");
-  }catch(e){
-    console.error(e);
-    showToast(getLang()==="en" ? "Cannot delete player" : "Nie udało się usunąć gracza");
-  }
-}
