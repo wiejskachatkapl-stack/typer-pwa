@@ -1708,24 +1708,6 @@
       letter-spacing:.5px;
     }
     
-
-    /* MOBILE: move RNAPP logo to top-right + smaller (phones only) */
-    @media (max-width: 900px){
-      #buildCorner{
-        top: 10px !important;
-        right: 10px !important;
-        bottom: auto !important;
-        left: auto !important;
-        gap: 3px !important;
-      }
-      #buildCornerLogo{
-        width: 88px !important;
-      }
-      #buildCornerText{
-        font-size: 20px !important;
-        line-height: 1 !important;
-      }
-    }
 /* MOBILE: RN APP logo smaller + top-right (phones only) */
 @media (max-width: 900px){
   #buildCorner{
@@ -1838,6 +1820,27 @@
       .profileInput{ width: min(86vw, 340px); max-width: min(86vw, 340px); }
       .profileSelect{ width: min(86vw, 380px); max-width: min(86vw, 380px); }
     }
+
+/* v8033 MOBILE FIX: enable scrolling in League (Tabela ligi typerów) screen */
+@media (max-width: 900px){
+  /* allow the league screen to start at top and scroll */
+  #league{
+    align-items:flex-start !important;
+    justify-content:flex-start !important;
+    padding:14px !important;
+  }
+  /* make the league card scroll within the frame */
+  #league .leagueWrap{
+    max-height: calc(var(--app-vh, 1vh) * 100 - 28px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* ensure ranking table wrapper can scroll on iOS */
+  #league .leagueWrap > .panel > div[style*="overflow:auto"]{
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 </style>
 </head>
 <body>
