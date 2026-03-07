@@ -1202,6 +1202,8 @@
       margin-bottom:10px;
     }
     .leagueTopLeft{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    /* Desktop: keep league back button on the right side of the top bar */
+    #league #btnLeagueBack{margin-left:auto;}
     table{
       width:100%;
       border-collapse:collapse;
@@ -1839,6 +1841,20 @@
   #league .leagueWrap > .panel > div[style*="overflow:auto"]{
     -webkit-overflow-scrolling: touch;
   }
+
+  /* v8034: on phones move and shrink the Back button next to the Nick chip */
+  #league .leagueTopLeft{width:100%;}
+  #league #t_league{order:1;}
+  #league #leagueRoomChip{order:2;}
+  #league #leagueNickChip{order:3;}
+  #league #btnLeagueBack{
+    order:4;
+    margin-left:0 !important;
+    transform: scale(.86);
+    transform-origin: left center;
+  }
+  #league #btnLeagueBack img{height:36px; width:auto;}
+  #league #leagueAfterChip{order:5;}
 }
 
 </style>
@@ -2278,12 +2294,10 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="leagueTop">
 <div class="leagueTopLeft">
 <div class="chip" id="t_league">Tabela ligi typerów</div>
-<div class="chip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
-<div class="chip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
-<div class="chip"><span id="t_after_round">Po kolejce</span>: <select id="leagueAfterRound"></select></div>
-</div>
-<div class="row">
+<div class="chip" id="leagueRoomChip"><span id="t_room3">Pokój</span>: <span id="leagueRoomName">—</span></div>
+<div class="chip" id="leagueNickChip"><span id="t_nick3">Nick</span>: <span id="leagueNick">—</span></div>
 <button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnLeagueBack" type="button"><img alt="btnLeagueBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+<div class="chip" id="leagueAfterChip"><span id="t_after_round">Po kolejce</span>: <select id="leagueAfterRound"></select></div>
 </div>
 </div>
 <div class="panel" style="padding:14px">
