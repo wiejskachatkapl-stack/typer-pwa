@@ -1857,6 +1857,17 @@
   #league #leagueAfterChip{order:5;}
 }
 
+
+/* v8035: hide scrollbar in players panel (keep scrolling) */
+#playersList, .playersList{
+  scrollbar-width: none;           /* Firefox */
+  -ms-overflow-style: none;        /* IE/Edge legacy */
+}
+#playersList::-webkit-scrollbar, .playersList::-webkit-scrollbar{
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
 </style>
 </head>
 <body>
