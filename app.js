@@ -1,4 +1,4 @@
-const BUILD = 8023;
+const BUILD = 8040;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1890,6 +1890,10 @@ let unsubPicks = null;
 
 let currentRoomCode = null;
 let currentRoom = null;
+
+// 8037+: admin delete player
+let deletePlayerMode = false;
+let deletePlayerSelectedUid = null;
 let currentRoundNo = 1;
 
 let matchesCache = [];
@@ -2757,6 +2761,23 @@ function bindUI(){
   if(__btnDeleteRoom) __btnDeleteRoom.onclick = async ()=>{
     await deleteRoomConfirmAndDelete();
   };
+
+  // 8040: Players panel layout + admin delete-player button
+  ensurePlayersPanelFix();
+  ensureDeletePlayerButton();
+
+  // 8037: usuwanie gracza (ADMIN)
+  const __btnDeletePlayer = el("btnDeletePlayer");
+  if(__btnDeletePlayer) __btnDeletePlayer.onclick = ()=>{
+    if(!isAdmin()) return;
+    deletePlayerMode = !deletePlayerMode;
+    deletePlayerSelectedUid = null;
+    renderPlayers(lastPlayers);
+    showToast(getLang()==="en"
+      ? (deletePlayerMode ? "Select a player to delete" : "Delete mode off")
+      : (deletePlayerMode ? "Zaznacz gracza do usunięcia" : "Tryb usuwania wyłączony"));
+  };
+
 
   // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
@@ -3949,6 +3970,13 @@ function syncActionButtons(){
     btnDel.disabled = !adm;
   }
 
+  // 8040: przycisk usuwania gracza widoczny tylko dla admina
+  const btnDelPlayer = el("btnDeletePlayer");
+  if(btnDelPlayer){
+    btnDelPlayer.style.display = adm ? "inline-flex" : "none";
+    btnDelPlayer.disabled = !adm;
+  }
+
 }
 
 async function saveAllPicks(){
@@ -4063,12 +4091,54 @@ function renderPlayers(players){
       b.textContent = "ADMIN";
       right.appendChild(b);
     }
+
+    // 8040: admin delete mode - pokaż checkboxy przy graczach
+    if(deletePlayerMode && isAdmin()){
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "delPlayerChk";
+      cb.checked = (deletePlayerSelectedUid === p.uid);
+      // nie pozwalaj usuwać admina
+      cb.disabled = (p.uid === adminUid);
+      cb.title = (getLang()==="en") ? "Delete player" : "Usuń gracza";
+      cb.onchange = async ()=>{
+        if(cb.disabled) return;
+        if(!cb.checked){
+          deletePlayerSelectedUid = null;
+          renderPlayers(lastPlayers);
+          return;
+        }
+        deletePlayerSelectedUid = p.uid;
+        renderPlayers(lastPlayers);
+
+        const ok = await ensureDeletePlayerConfirmModal().open(p.nick || "—");
+        if(ok){
+          await deletePlayerByUid(p.uid, p.nick || "—");
+        }
+        deletePlayerSelectedUid = null;
+        deletePlayerMode = false;
+        renderPlayers(lastPlayers);
+      };
+      right.appendChild(cb);
+    }
+
     // 6028: usunięto etykietę "TY"/"YOU" w panelu Gracze (zajmowała miejsce)
 
     row.appendChild(left);
     row.appendChild(right);
     box.appendChild(row);
   });
+
+  // 8040: scroll pojawia się dopiero gdy lista faktycznie nie mieści się w kontenerze
+  requestAnimationFrame(()=>{
+    try{
+      const b = el("playersList");
+      if(!b) return;
+      const need = b.scrollHeight > (b.clientHeight + 2);
+      b.style.overflowY = need ? "auto" : "hidden";
+    }catch(e){}
+  });
+
 }
 
 function createLogoImg(teamName){
@@ -5929,3 +5999,170 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
 window.closeModal = function(){
   try{ document.querySelectorAll('.modal.active').forEach(m=>m.classList.remove('active')); }catch(e){}
 };
+
+
+// ===== 8040: Players panel layout + delete player =====
+function ensurePlayersPanelFix(){
+  if(document.getElementById("playersPanelFix8040")) return;
+  const st = document.createElement("style");
+  st.id = "playersPanelFix8040";
+  st.textContent = `
+    /* ukryj opis (czerwony tekst) nad listą graczy */
+    #t_players_sub{display:none !important;}
+
+    /* w prawym panelu nie może być dodatkowego "spacer" między listą graczy a dolnymi przyciskami,
+       bo skraca listę i pokazuje scroll mimo że jest dużo miejsca */
+    .rightBar > .spacer{display:none !important;}
+
+    /* lista graczy ma wypełniać przestrzeń do dolnych kontenerów */
+    #playersList{flex: 1 1 auto !important; min-height: 0 !important; overflow-x:hidden; overflow-y:hidden;}
+
+    /* checkbox do usuwania graczy */
+    .delPlayerChk{
+      width:18px;height:18px;
+      margin-left:6px;
+      cursor:pointer;
+      accent-color:#ff3b3b;
+      transform: translateY(1px);
+    }
+    .delPlayerChk:disabled{opacity:.35;cursor:not-allowed;}
+
+    /* przycisk usuwania gracza w prawym górnym rogu panelu "Gracze" */
+    #btnDeletePlayer{
+      position:absolute;
+      top: 14px;
+      right: 14px;
+      display:none;
+      background:transparent;
+      border:none;
+      padding:0;
+      cursor:pointer;
+      z-index:10;
+    }
+    #btnDeletePlayer img{
+      height:54px;
+      width:auto;
+      user-select:none;
+      -webkit-user-drag:none;
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.35));
+    }
+    #btnDeletePlayer:active img{transform:translateY(1px);}
+  `;
+  document.head.appendChild(st);
+}
+
+function ensureDeletePlayerButton(){
+  ensurePlayersPanelFix();
+  if(el("btnDeletePlayer")) return;
+
+  const rightBar = document.querySelector(".rightBar");
+  if(!rightBar) return;
+
+  const btn = document.createElement("button");
+  btn.id = "btnDeletePlayer";
+  btn.type = "button";
+  btn.className = "imgBtn";
+
+  const img = document.createElement("img");
+  img.alt = "delete player";
+  img.dataset.btn = "btn_delete_player.png"; // żeby refreshAllButtonImages podmieniło folder języka
+  // src ustawimy od razu, ale i tak będzie odświeżane przez refreshAllButtonImages()
+  const lang = getLang()==="en" ? "en" : "pl";
+  img.src = `ui/buttons/${lang}/btn_delete_player.png`;
+
+  btn.appendChild(img);
+  rightBar.appendChild(btn);
+
+  // od razu dostosuj widoczność (admin/non-admin)
+  try{ syncActionButtons(); }catch(e){}
+}
+
+let _deletePlayerConfirmModal = null;
+function ensureDeletePlayerConfirmModal(){
+  if(_deletePlayerConfirmModal) return _deletePlayerConfirmModal;
+
+  if(!document.getElementById("deletePlayerConfirmStyles")){
+    const st = document.createElement("style");
+    st.id = "deletePlayerConfirmStyles";
+    st.textContent = `
+      .deletePlayerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,55);display:none;align-items:center;justify-content:center;}
+      .deletePlayerBox{width:min(900px,92vw);background:rgba(6,18,40,92);border:1px solid rgba(255,255,255,12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,55);padding:22px 22px 18px;}
+      .deletePlayerTitle{font-weight:1000;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .deletePlayerText{font-weight:750;line-height:1.35;font-size:15px;color:rgba(255,255,255,92);white-space:pre-wrap;}
+      .deletePlayerActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .deletePlayerBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,35));}
+      .deletePlayerBtnImg:active{transform:translateY(1px);}
+      @media (max-width:520px){.deletePlayerBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "deletePlayerOverlay";
+  overlay.innerHTML = `
+    <div class="deletePlayerBox" role="dialog" aria-modal="true">
+      <div class="deletePlayerTitle">${getLang()==="en" ? "Delete player" : "Usuń gracza"}</div>
+      <div class="deletePlayerText" id="deletePlayerConfirmText"></div>
+      <div class="deletePlayerActions">
+        <img id="deletePlayerBtnYes" class="deletePlayerBtnImg" alt="YES" />
+        <img id="deletePlayerBtnNo" class="deletePlayerBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector("#deletePlayerConfirmText");
+  const btnYes = overlay.querySelector("#deletePlayerBtnYes");
+  const btnNo = overlay.querySelector("#deletePlayerBtnNo");
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = "none";
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener("click", (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener("click", ()=>close(false));
+  btnYes.addEventListener("click", ()=>close(true));
+
+  _deletePlayerConfirmModal = {
+    open: (nick)=>{
+      const lang = getLang()==="en" ? "en" : "pl";
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      const txt = (getLang()==="en")
+        ? `Delete the player permanently?\n\nPlayer: ${nick}`
+        : `Czy skasować i bezpowrotnie usunąć gracza?\n\nGracz: ${nick}`;
+      elText.textContent = txt;
+      overlay.style.display = "flex";
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+
+  return _deletePlayerConfirmModal;
+}
+
+async function deletePlayerByUid(uid, nick){
+  if(!db || !currentRoomCode) return;
+  if(!isAdmin()) return;
+  if(!uid) return;
+
+  try{
+    // usuń dokument gracza z kolekcji players
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", uid));
+
+    // usuń jego typy (jeśli istnieją) - żeby nie zostawały śmieci
+    try{
+      await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "picks", uid));
+    }catch(e){}
+
+    // jeśli skasowano gracza, a jest w trybie usuwania, czyść stan
+    if(deletePlayerSelectedUid === uid) deletePlayerSelectedUid = null;
+
+    showToast(getLang()==="en" ? "Player deleted" : "Usunięto gracza");
+  }catch(e){
+    console.error(e);
+    showToast(getLang()==="en" ? "Cannot delete player" : "Nie udało się usunąć gracza");
+  }
+}
