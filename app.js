@@ -4148,9 +4148,9 @@ function renderPlayers(players){
       chk.onchange = async ()=>{
         if(!chk.checked) return;
         // confirm and delete
-        const ok = await confirmDeletePlayer(p.nick || \"—\");
+        const ok = await confirmDeletePlayer(p.nick || "—");
         if(!ok){ chk.checked = false; return; }
-        await adminDeletePlayer(p.uid, p.nick || \"—\");
+        await adminDeletePlayer(p.uid, p.nick || "—");
       };
       right.appendChild(chk);
     }
