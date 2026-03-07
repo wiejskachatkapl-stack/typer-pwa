@@ -1631,9 +1631,22 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         keepSamePlayerNo = await modal.open({text});
       }
 
-      const playerNo = keepSamePlayerNo
-        ? ensurePlayerNoForCountry(country)
-        : generateFreshPlayerNo(country);
+let playerNo = keepSamePlayerNo
+  ? ensurePlayerNoForCountry(country)
+  : generateFreshPlayerNo(country);
+
+// Guard: no duplicate player number in the same room (if we are in a room)
+if(currentRoomCode){
+  if(keepSamePlayerNo){
+    const dup = await roomHasPlayerNo(currentRoomCode, playerNo, userUid);
+    if(dup){
+      showToast(getLang()==="en" ? "This player number is already used in this room." : "Ten nr gracza jest już zajęty w tym pokoju.");
+      return;
+    }
+  }else{
+    playerNo = await generateUniquePlayerNoForRoom(country, currentRoomCode);
+  }
+}
 
       // pokaż w polu readonly
       const pnEl = document.getElementById("profilePlayerNo");
@@ -3972,6 +3985,8 @@ async function saveAllPicks(){
 
 // ===== RENDER =====
 function renderPlayers(players){
+  ensurePlayersPanelFixes();
+  ensureDeletePlayerButton();
   const box = el("playersList");
   if(!box) return;
   box.innerHTML = "";
@@ -4047,6 +4062,36 @@ function renderPlayers(players){
       right.appendChild(ptsBadge);
     }
 
+
+// Admin: delete player mode (checkbox)
+if(_deletePlayerMode && isAdmin() && p.uid !== adminUid){
+  const chkWrap = document.createElement("label");
+  chkWrap.style.display = "inline-flex";
+  chkWrap.style.alignItems = "center";
+  chkWrap.style.gap = "6px";
+  chkWrap.style.marginRight = "6px";
+  const chk = document.createElement("input");
+  chk.type = "checkbox";
+  chk.className = "delPlayerChk";
+  chk.title = (getLang()==="en" ? "Select to delete" : "Zaznacz do usunięcia");
+  chk.addEventListener("change", async ()=>{
+    if(!chk.checked) return;
+    chk.checked = false;
+    const nick = p.nick || "—";
+    const txt = (getLang()==="en")
+      ? `Delete player "${nick}" permanently?`
+      : `Czy skasować i bezpowrotnie usunąć gracza "${nick}"?`;
+    const ok = await ensureDeletePlayerConfirmModal().open(txt);
+    if(ok){
+      await deletePlayerFromRoom(p.uid);
+      _deletePlayerMode = false;
+      showToast(getLang()==="en" ? "Player deleted" : "Usunięto gracza");
+    }
+  });
+  chkWrap.appendChild(chk);
+  right.appendChild(chkWrap);
+}
+
     const eye = document.createElement("button");
     eye.className = "eyeBtn";
     eye.textContent = "👁";
@@ -4071,6 +4116,195 @@ function renderPlayers(players){
   });
 }
 
+
+/* ===== ADMIN: delete player + players panel layout fixes ===== */
+let _deletePlayerMode = false;
+
+function ensurePlayersPanelFixes(){
+  try{
+    // hide help text under "Gracze"
+    const sub = el("t_players_sub");
+    if(sub) sub.style.display = "none";
+
+    // remove the spacer that steals height (so list fills to bottom buttons)
+    const rb = document.querySelector(".rightBar.panel");
+    if(rb){
+      rb.querySelectorAll(":scope > .spacer").forEach(s=>{ s.style.display = "none"; });
+    }
+
+    // ensure players list can take full height and only scroll on overflow
+    const list = el("playersList");
+    if(list){
+      list.style.flex = "1 1 auto";
+      list.style.minHeight = "0";
+      list.style.overflowY = "auto";
+      list.style.overflowX = "hidden";
+      // hide scrollbar (scroll still works)
+      list.style.scrollbarWidth = "none";
+      list.style.msOverflowStyle = "none";
+    }
+
+    if(!document.getElementById("playersListScrollbarHide")){
+      const st = document.createElement("style");
+      st.id = "playersListScrollbarHide";
+      st.textContent = `
+        #playersList::-webkit-scrollbar{width:0 !important;height:0 !important;display:none !important;}
+      `;
+      document.head.appendChild(st);
+    }
+  }catch(e){}
+}
+
+let _deletePlayerConfirmModal = null;
+function ensureDeletePlayerConfirmModal(){
+  if(_deletePlayerConfirmModal) return _deletePlayerConfirmModal;
+
+  if(!document.getElementById('deletePlayerConfirmStyles')){
+    const st = document.createElement('style');
+    st.id = 'deletePlayerConfirmStyles';
+    st.textContent = `
+      .delPlayerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .delPlayerBox{width:min(860px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .delPlayerTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .delPlayerText{font-weight:750;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
+      .delPlayerActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .delPlayerBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .delPlayerBtnImg:active{transform:translateY(1px);} 
+      @media (max-width:520px){.delPlayerBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'delPlayerOverlay';
+  overlay.innerHTML = `
+    <div class="delPlayerBox" role="dialog" aria-modal="true">
+      <div class="delPlayerTitle">${getLang()==='en' ? 'Delete player' : 'Usuń gracza'}</div>
+      <div class="delPlayerText" id="delPlayerConfirmText"></div>
+      <div class="delPlayerActions">
+        <img id="delPlayerBtnYes" class="delPlayerBtnImg" alt="YES" />
+        <img id="delPlayerBtnNo" class="delPlayerBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#delPlayerConfirmText');
+  const btnYes = overlay.querySelector('#delPlayerBtnYes');
+  const btnNo = overlay.querySelector('#delPlayerBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _deletePlayerConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+  return _deletePlayerConfirmModal;
+}
+
+function ensureDeletePlayerButton(){
+  try{
+    const rb = document.querySelector(".rightBar.panel");
+    if(!rb) return;
+
+    // header is the first div inside rightBar
+    const header = rb.querySelector(":scope > div");
+    if(!header) return;
+
+    let btn = document.getElementById("btnDeletePlayer");
+    if(!isAdmin()){
+      if(btn) btn.remove();
+      _deletePlayerMode = false;
+      return;
+    }
+
+    if(!btn){
+      btn = makeSysImgButton("btn_delete_player.png", {
+        cls: "sysBtn small",
+        alt: (getLang()==="en" ? "Delete player" : "Usuń gracza"),
+        title: (getLang()==="en" ? "Delete player" : "Usuń gracza")
+      });
+      btn.id = "btnDeletePlayer";
+      // position in top-right of header
+      header.style.position = "relative";
+      btn.style.position = "absolute";
+      btn.style.right = "0px";
+      btn.style.top = "0px";
+      btn.style.transform = "scale(0.9)";
+      btn.onclick = ()=>{
+        _deletePlayerMode = !_deletePlayerMode;
+        renderPlayers(lastPlayers || []);
+      };
+      header.appendChild(btn);
+    }else{
+      // refresh image after language change
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      const img = btn.querySelector("img");
+      if(img) img.src = `ui/buttons/${lang}/btn_delete_player.png`;
+      btn.style.display = "inline-flex";
+    }
+  }catch(e){}
+}
+
+async function deletePlayerFromRoom(uid){
+  if(!currentRoomCode || !uid) return;
+  // never delete admin
+  if(uid === currentRoom?.adminUid) return;
+  try{
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", uid));
+  }catch(e){}
+  try{
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "picks", uid));
+  }catch(e){}
+  // clean local caches (will be recomputed on next snapshot)
+  try{
+    delete picksDocByUid[uid];
+    delete submittedByUid[uid];
+    delete pointsByUid[uid];
+  }catch(e){}
+}
+
+/* ===== playerNo uniqueness guard (no duplicates) ===== */
+async function roomHasPlayerNo(roomCode, playerNo, excludeUid){
+  try{
+    if(!roomCode || !playerNo) return false;
+    const q = boot.query(playersCol(roomCode), boot.where("playerNo","==", String(playerNo).toUpperCase()));
+    const snap = await boot.getDocs(q);
+    let found = false;
+    snap.forEach(doc=>{
+      const d = doc.data();
+      if(!excludeUid || d.uid !== excludeUid) found = true;
+    });
+    return found;
+  }catch(e){
+    return false;
+  }
+}
+
+async function generateUniquePlayerNoForRoom(country, roomCode){
+  // try a few times to avoid collision
+  for(let i=0;i<25;i++){
+    const pn = generateFreshPlayerNo(country);
+    const taken = await roomHasPlayerNo(roomCode, pn, null);
+    if(!taken) return pn;
+  }
+  return generateFreshPlayerNo(country);
+}
 function createLogoImg(teamName){
   const slug = normalizeSlug(teamName);
   const img = document.createElement("img");
