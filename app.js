@@ -5675,6 +5675,7 @@ async function setLeagueTableForRound(roundNo){
     display.push({
       uid,
       nick: String(nickMap?.[uid] || base?.nick || "—"),
+      playerNo: String(base?.playerNo || "").trim().toUpperCase(),
       rounds: played ? 1 : 0,
       points: played ? Number(pts) : 0,
       _played: played
@@ -5718,12 +5719,24 @@ async function openLeagueTable(roomCode, opts={}) {
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
 
+    // map uid -> playerNo (for admin view in rankings)
+    const playerNoByUid = {};
+    try{
+      const pqs = await boot.getDocs(playersCol(roomCode));
+      pqs.forEach(pd=>{
+        const p = pd.data() || {};
+        const uid = p.uid || pd.id;
+        if(uid) playerNoByUid[uid] = String(p.playerNo || "").trim().toUpperCase();
+      });
+    }catch(_e){}
+
     const arr = [];
     qs.forEach(d=>{
       const x = d.data();
       arr.push({
         uid: x.uid || d.id,
         nick: x.nick || "—",
+        playerNo: playerNoByUid[(x.uid || d.id)] || "",
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
       });
@@ -5772,7 +5785,7 @@ function renderLeagueTable(){
     tr.className = "linkRow";
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${cupHtml}${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
+      <td>${cupHtml}${escapeHtml(r.nick)}${(isAdmin() && r.playerNo) ? ` <span style="opacity:.8;font-size:12px">[${escapeHtml(r.playerNo)}]</span>` : ""}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
