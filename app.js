@@ -175,6 +175,16 @@ const I18N = {
     stats: "Statystyki",
     exit: "Wyjście",
 
+    msg_title: "Wiadomości",
+    msg_delete: "Usuń",
+    msg_tab_inbox: "Odebrane",
+    msg_tab_sent: "Wysłane",
+    msg_tab_system: "Systemowe",
+    msg_tab_new: "Nowa",
+    msg_select_from_list: "Wybierz wiadomość z listy.",
+    msg_no_other_players: "Brak innych graczy",
+
+
     contTitle: "Kontynuować?",
     contSub: "Wykryto wcześniejszą rozgrywkę",
     contHello: "Witaj ponownie",
@@ -250,6 +260,16 @@ const I18N = {
     roomsTitle: "Typer rooms",
     stats: "Stats",
     exit: "Exit",
+
+    msg_title: "Messages",
+    msg_delete: "Delete",
+    msg_tab_inbox: "Inbox",
+    msg_tab_sent: "Sent",
+    msg_tab_system: "System",
+    msg_tab_new: "New",
+    msg_select_from_list: "Select a message from the list.",
+    msg_no_other_players: "No other players",
+
 
     contTitle: "Continue?",
     contSub: "Previous room detected",
@@ -399,6 +419,25 @@ function updateLangButtonsVisual(){
   en.classList.toggle("inactive", lang !== "en");
 }
 
+
+function applyMessagesI18n(){
+  const setTxt = (id, v)=>{ const e = el(id); if(e) e.textContent = v; };
+
+  setTxt("msgTitle", t("msg_title"));
+
+  const delBtn = el("btnMsgDelete");
+  if(delBtn) delBtn.textContent = t("msg_delete");
+
+  setTxt("tabInbox", t("msg_tab_inbox"));
+  setTxt("tabSent", t("msg_tab_sent"));
+  setTxt("tabSystem", t("msg_tab_system"));
+  setTxt("tabCompose", t("msg_tab_new"));
+
+  setTxt("msgViewEmpty", t("msg_select_from_list"));
+  setTxt("msgSentEmpty", t("msg_select_from_list"));
+  setTxt("msgSystemEmpty", t("msg_select_from_list"));
+}
+
 function applyLangToUI(){
   // HOME titles (tooltipy)
   const hs = el("btnHomeSettings");
@@ -483,6 +522,7 @@ function applyLangToUI(){
   if(el("t_player_col")) el("t_player_col").textContent = t("playerCol");
   if(el("t_rounds_col")) el("t_rounds_col").textContent = t("roundsCol");
   if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
+  applyMessagesI18n();
 }
 
 // ===== Modal =====
@@ -1631,9 +1671,22 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         keepSamePlayerNo = await modal.open({text});
       }
 
-      const playerNo = keepSamePlayerNo
-        ? ensurePlayerNoForCountry(country)
-        : generateFreshPlayerNo(country);
+let playerNo = keepSamePlayerNo
+  ? ensurePlayerNoForCountry(country)
+  : generateFreshPlayerNo(country);
+
+// Guard: no duplicate player number in the same room (if we are in a room)
+if(currentRoomCode){
+  if(keepSamePlayerNo){
+    const dup = await roomHasPlayerNo(currentRoomCode, playerNo, userUid);
+    if(dup){
+      showToast(getLang()==="en" ? "This player number is already used in this room." : "Ten nr gracza jest już zajęty w tym pokoju.");
+      return;
+    }
+  }else{
+    playerNo = await generateUniquePlayerNoForRoom(country, currentRoomCode);
+  }
+}
 
       // pokaż w polu readonly
       const pnEl = document.getElementById("profilePlayerNo");
@@ -2483,7 +2536,7 @@ function openMessagesModal(){
     if(opts.length === 0){
       const o = document.createElement("option");
       o.value = "";
-      o.textContent = getLang()==="en" ? "No other players" : "Brak innych graczy";
+      o.textContent = t("msg_no_other_players");
       sel.appendChild(o);
       sel.disabled = true;
     }else{
@@ -2566,7 +2619,7 @@ function openSubstitutePick(mode){
     if(opts.length === 0){
       const o = document.createElement("option");
       o.value = "";
-      o.textContent = getLang()==="en" ? "No other players" : "Brak innych graczy";
+      o.textContent = t("msg_no_other_players");
       sel.appendChild(o);
       sel.disabled = true;
     }else{
@@ -2879,20 +2932,6 @@ function bindUI(){
   el("btnLeagueFromRoom").onclick = async ()=>{
     if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
-  };
-
-
-  // All-time ranking from room
-  el("btnAllRankingFromRoom").onclick = async ()=>{
-    if(!currentRoomCode) return;
-    await openLeagueTable(currentRoomCode, { silent:true });
-    leagueState.totalKind = "ALLTIME";
-    if(el("t_league")) el("t_league").textContent = (getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów";
-    buildLeagueRoundDropdown();
-    renderLeagueTable();
-    updateLeagueHintForMode();
-    showScreen("league");
-    showToast((getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów");
   };
 
   // League
@@ -3986,11 +4025,14 @@ async function saveAllPicks(){
 
 // ===== RENDER =====
 function renderPlayers(players){
+  ensurePlayersPanelFixes();
+  ensureDeletePlayerButton();
   const box = el("playersList");
   if(!box) return;
   box.innerHTML = "";
 
   const adminUid = currentRoom?.adminUid;
+  const showPlayerNo = isAdmin(); // tylko admin widzi numery graczy przy nickach
   const myOk = iAmSubmitted();
   const resultsOk = allResultsComplete();
 
@@ -4021,6 +4063,19 @@ function renderPlayers(players){
     name.style.overflow = "hidden";
     name.style.textOverflow = "ellipsis";
 
+    if(showPlayerNo){
+      const pn = String(p.playerNo || "").trim().toUpperCase();
+      if(pn){
+        const no = document.createElement("span");
+        no.textContent = ` ${pn}`;
+        no.style.fontWeight = "800";
+        no.style.fontSize = "12px";
+        no.style.opacity = "0.75";
+        no.style.marginLeft = "6px";
+        name.appendChild(no);
+      }
+    }
+
     const status = document.createElement("div");
     const ok = !!submittedByUid[p.uid];
     status.textContent = ok ? "✓" : "✗";
@@ -4047,6 +4102,36 @@ function renderPlayers(players){
       right.appendChild(ptsBadge);
     }
 
+
+// Admin: delete player mode (checkbox)
+if(_deletePlayerMode && isAdmin() && p.uid !== adminUid){
+  const chkWrap = document.createElement("label");
+  chkWrap.style.display = "inline-flex";
+  chkWrap.style.alignItems = "center";
+  chkWrap.style.gap = "6px";
+  chkWrap.style.marginRight = "6px";
+  const chk = document.createElement("input");
+  chk.type = "checkbox";
+  chk.className = "delPlayerChk";
+  chk.title = (getLang()==="en" ? "Select to delete" : "Zaznacz do usunięcia");
+  chk.addEventListener("change", async ()=>{
+    if(!chk.checked) return;
+    chk.checked = false;
+    const nick = p.nick || "—";
+    const txt = (getLang()==="en")
+      ? `Delete player "${nick}" permanently?`
+      : `Czy skasować i bezpowrotnie usunąć gracza "${nick}"?`;
+    const ok = await ensureDeletePlayerConfirmModal().open(txt);
+    if(ok){
+      await deletePlayerFromRoom(p.uid);
+      _deletePlayerMode = false;
+      showToast(getLang()==="en" ? "Player deleted" : "Usunięto gracza");
+    }
+  });
+  chkWrap.appendChild(chk);
+  right.appendChild(chkWrap);
+}
+
     const eye = document.createElement("button");
     eye.className = "eyeBtn";
     eye.textContent = "👁";
@@ -4071,6 +4156,195 @@ function renderPlayers(players){
   });
 }
 
+
+/* ===== ADMIN: delete player + players panel layout fixes ===== */
+let _deletePlayerMode = false;
+
+function ensurePlayersPanelFixes(){
+  try{
+    // hide help text under "Gracze"
+    const sub = el("t_players_sub");
+    if(sub) sub.style.display = "none";
+
+    // remove the spacer that steals height (so list fills to bottom buttons)
+    const rb = document.querySelector(".rightBar.panel");
+    if(rb){
+      rb.querySelectorAll(":scope > .spacer").forEach(s=>{ s.style.display = "none"; });
+    }
+
+    // ensure players list can take full height and only scroll on overflow
+    const list = el("playersList");
+    if(list){
+      list.style.flex = "1 1 auto";
+      list.style.minHeight = "0";
+      list.style.overflowY = "auto";
+      list.style.overflowX = "hidden";
+      // hide scrollbar (scroll still works)
+      list.style.scrollbarWidth = "none";
+      list.style.msOverflowStyle = "none";
+    }
+
+    if(!document.getElementById("playersListScrollbarHide")){
+      const st = document.createElement("style");
+      st.id = "playersListScrollbarHide";
+      st.textContent = `
+        #playersList::-webkit-scrollbar{width:0 !important;height:0 !important;display:none !important;}
+      `;
+      document.head.appendChild(st);
+    }
+  }catch(e){}
+}
+
+let _deletePlayerConfirmModal = null;
+function ensureDeletePlayerConfirmModal(){
+  if(_deletePlayerConfirmModal) return _deletePlayerConfirmModal;
+
+  if(!document.getElementById('deletePlayerConfirmStyles')){
+    const st = document.createElement('style');
+    st.id = 'deletePlayerConfirmStyles';
+    st.textContent = `
+      .delPlayerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .delPlayerBox{width:min(860px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .delPlayerTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .delPlayerText{font-weight:750;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
+      .delPlayerActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .delPlayerBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .delPlayerBtnImg:active{transform:translateY(1px);} 
+      @media (max-width:520px){.delPlayerBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'delPlayerOverlay';
+  overlay.innerHTML = `
+    <div class="delPlayerBox" role="dialog" aria-modal="true">
+      <div class="delPlayerTitle">${getLang()==='en' ? 'Delete player' : 'Usuń gracza'}</div>
+      <div class="delPlayerText" id="delPlayerConfirmText"></div>
+      <div class="delPlayerActions">
+        <img id="delPlayerBtnYes" class="delPlayerBtnImg" alt="YES" />
+        <img id="delPlayerBtnNo" class="delPlayerBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#delPlayerConfirmText');
+  const btnYes = overlay.querySelector('#delPlayerBtnYes');
+  const btnNo = overlay.querySelector('#delPlayerBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _deletePlayerConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+  return _deletePlayerConfirmModal;
+}
+
+function ensureDeletePlayerButton(){
+  try{
+    const rb = document.querySelector(".rightBar.panel");
+    if(!rb) return;
+
+    // header is the first div inside rightBar
+    const header = rb.querySelector(":scope > div");
+    if(!header) return;
+
+    let btn = document.getElementById("btnDeletePlayer");
+    if(!isAdmin()){
+      if(btn) btn.remove();
+      _deletePlayerMode = false;
+      return;
+    }
+
+    if(!btn){
+      btn = makeSysImgButton("btn_delete_player.png", {
+        cls: "sysBtn small",
+        alt: (getLang()==="en" ? "Delete player" : "Usuń gracza"),
+        title: (getLang()==="en" ? "Delete player" : "Usuń gracza")
+      });
+      btn.id = "btnDeletePlayer";
+      // position in top-right of header
+      header.style.position = "relative";
+      btn.style.position = "absolute";
+      btn.style.right = "0px";
+      btn.style.top = "0px";
+      btn.style.transform = "scale(0.9)";
+      btn.onclick = ()=>{
+        _deletePlayerMode = !_deletePlayerMode;
+        renderPlayers(lastPlayers || []);
+      };
+      header.appendChild(btn);
+    }else{
+      // refresh image after language change
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      const img = btn.querySelector("img");
+      if(img) img.src = `ui/buttons/${lang}/btn_delete_player.png`;
+      btn.style.display = "inline-flex";
+    }
+  }catch(e){}
+}
+
+async function deletePlayerFromRoom(uid){
+  if(!currentRoomCode || !uid) return;
+  // never delete admin
+  if(uid === currentRoom?.adminUid) return;
+  try{
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", uid));
+  }catch(e){}
+  try{
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "picks", uid));
+  }catch(e){}
+  // clean local caches (will be recomputed on next snapshot)
+  try{
+    delete picksDocByUid[uid];
+    delete submittedByUid[uid];
+    delete pointsByUid[uid];
+  }catch(e){}
+}
+
+/* ===== playerNo uniqueness guard (no duplicates) ===== */
+async function roomHasPlayerNo(roomCode, playerNo, excludeUid){
+  try{
+    if(!roomCode || !playerNo) return false;
+    const q = boot.query(playersCol(roomCode), boot.where("playerNo","==", String(playerNo).toUpperCase()));
+    const snap = await boot.getDocs(q);
+    let found = false;
+    snap.forEach(doc=>{
+      const d = doc.data();
+      if(!excludeUid || d.uid !== excludeUid) found = true;
+    });
+    return found;
+  }catch(e){
+    return false;
+  }
+}
+
+async function generateUniquePlayerNoForRoom(country, roomCode){
+  // try a few times to avoid collision
+  for(let i=0;i<25;i++){
+    const pn = generateFreshPlayerNo(country);
+    const taken = await roomHasPlayerNo(roomCode, pn, null);
+    if(!taken) return pn;
+  }
+  return generateFreshPlayerNo(country);
+}
 function createLogoImg(teamName){
   const slug = normalizeSlug(teamName);
   const img = document.createElement("img");
@@ -5320,70 +5594,13 @@ async function addRandomQueue(){
 const leagueState = {
   roomCode: null,
   roomName: null,
-  afterRound: 0,              // global finished rounds (room.currentRoundNo-1)
-  seasonRounds: 10,           // stałe: 10 kolejek = 1 liga
-  seasonStart: 1,
-  seasonEnd: 10,
-  afterRoundSeason: 0,        // 0..10 (ile kolejek rozegranych w aktualnej lidze)
-  totalKind: "SEASON",        // "SEASON" | "ALLTIME"
-  rowsAllTime: [],            // z /league (totalPoints)
-  rowsSeason: [],             // wyliczane z historii zakończonych kolejek w sezonie
-  rows: [],                   // (compat) – zostawione, ale render używa rowsSeason/rowsAllTime
+  afterRound: 0,
+  rows: [],
   finishedRounds: [],
   roundCache: new Map(),
-  viewMode: "TOTAL",          // TOTAL | ROUND
-  selectedRound: "ALL"        // ALL lub numer kolejki
+  viewMode: "TOTAL", // TOTAL | ROUND
+  selectedRound: "ALL" // ALL or roundNo string
 };
-
-
-function computeSeasonRange(afterRound){
-  const n = leagueState.seasonRounds || 10;
-  const ar = Number(afterRound||0);
-  if(!ar || ar<=0){
-    leagueState.seasonStart = 1;
-    leagueState.seasonEnd = n;
-    leagueState.afterRoundSeason = 0;
-    return;
-  }
-  const start = Math.floor((ar - 1) / n) * n + 1;
-  const end = start + n - 1;
-  leagueState.seasonStart = start;
-  leagueState.seasonEnd = end;
-  leagueState.afterRoundSeason = Math.min(n, Math.max(0, ar - start + 1));
-}
-
-function computeSeasonRows(){
-  // bazujemy na players z rowsAllTime (żeby mieć listę graczy + nicki)
-  const base = Array.isArray(leagueState.rowsAllTime) ? leagueState.rowsAllTime : [];
-  const map = new Map();
-  base.forEach(r=>{
-    map.set(r.uid, { uid:r.uid, nick:r.nick||"—", rounds:0, points:0 });
-  });
-
-  const start = leagueState.seasonStart;
-  const end = Math.min(leagueState.seasonEnd, leagueState.afterRound || 0);
-
-  for(let rn=start; rn<=end; rn++){
-    const rd = leagueState.roundCache.get(rn);
-    if(!rd) continue;
-    const ptsMap = rd?.pointsByUid || {};
-    const nickMap = rd?.nickByUid || {};
-    Object.keys(ptsMap||{}).forEach(uid=>{
-      if(!map.has(uid)){
-        map.set(uid, { uid, nick: String(nickMap?.[uid]||"—"), rounds:0, points:0 });
-      }
-      const v = ptsMap[uid];
-      if(v===undefined || v===null || !Number.isFinite(Number(v))) return;
-      const row = map.get(uid);
-      row.points += Number(v);
-      row.rounds += 1;
-      // aktualizuj nick jeśli brak
-      if((!row.nick || row.nick==="—") && nickMap?.[uid]) row.nick = String(nickMap[uid]);
-    });
-  }
-
-  leagueState.rowsSeason = Array.from(map.values());
-}
 
 async function loadLeagueFinishedRounds(code){
   leagueState.finishedRounds = [];
@@ -5428,9 +5645,9 @@ function buildLeagueRoundDropdown(){
 
   const optAll = document.createElement("option");
   optAll.value = "ALL";
-  optAll.textContent = (leagueState.totalKind==="ALLTIME")
-    ? ((getLang()==="en") ? "All‑time total" : "Suma (wszechczasów)")
-    : ((getLang()==="en") ? `Season total (after ${leagueState.afterRoundSeason})` : `Suma (po ${leagueState.afterRoundSeason})`);
+  optAll.textContent = (getLang()==="en")
+    ? `Total (after ${leagueState.afterRound})`
+    : `Suma (po ${leagueState.afterRound})`;
   sel.appendChild(optAll);
 
   for(const rn of leagueState.finishedRounds){
@@ -5498,6 +5715,7 @@ async function setLeagueTableForRound(roundNo){
     display.push({
       uid,
       nick: String(nickMap?.[uid] || base?.nick || "—"),
+      playerNo: String(base?.playerNo || "").trim().toUpperCase(),
       rounds: played ? 1 : 0,
       points: played ? Number(pts) : 0,
       _played: played
@@ -5532,10 +5750,8 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
-    computeSeasonRange(leagueState.afterRound);
 
     el("leagueRoomName").textContent = leagueState.roomName;
-    if(el("t_league")) el("t_league").textContent = (getLang()==="en") ? "League table" : "Tabela ligi typerów";
     await loadLeagueFinishedRounds(roomCode);
     buildLeagueRoundDropdown();
     updateLeagueHintForMode();
@@ -5543,20 +5759,29 @@ async function openLeagueTable(roomCode, opts={}) {
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
 
+    // map uid -> playerNo (for admin view in rankings)
+    const playerNoByUid = {};
+    try{
+      const pqs = await boot.getDocs(playersCol(roomCode));
+      pqs.forEach(pd=>{
+        const p = pd.data() || {};
+        const uid = p.uid || pd.id;
+        if(uid) playerNoByUid[uid] = String(p.playerNo || "").trim().toUpperCase();
+      });
+    }catch(_e){}
+
     const arr = [];
     qs.forEach(d=>{
       const x = d.data();
       arr.push({
         uid: x.uid || d.id,
         nick: x.nick || "—",
+        playerNo: playerNoByUid[(x.uid || d.id)] || "",
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
       });
     });
 
-    leagueState.rowsAllTime = arr;
-    leagueState.totalKind = "SEASON";
-    computeSeasonRows();
     leagueState.rows = arr;
     // start as TOTAL
     leagueState.viewMode = "TOTAL";
@@ -5578,7 +5803,7 @@ function renderLeagueTable(){
 
   const source = (leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL" && Array.isArray(leagueState._displayRows))
     ? leagueState._displayRows
-    : (leagueState.totalKind === "ALLTIME" ? leagueState.rowsAllTime : leagueState.rowsSeason);
+    : leagueState.rows;
 
   const rows = [...(source||[])];
   rows.sort((a,b)=>{
@@ -5600,7 +5825,7 @@ function renderLeagueTable(){
     tr.className = "linkRow";
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${cupHtml}${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
+      <td>${cupHtml}${escapeHtml(r.nick)}${(isAdmin() && r.playerNo) ? ` <span style="opacity:.8;font-size:12px">[${escapeHtml(r.playerNo)}]</span>` : ""}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
