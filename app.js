@@ -1947,6 +1947,7 @@ let currentRoundNo = 1;
 
 let matchesCache = [];
 let picksCache = {};
+let rawPicksDataByUid = {};
 let picksDocByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
@@ -2047,6 +2048,58 @@ function isCompletePicksObject(picksObj){
     if(!Number.isInteger(p.h) || !Number.isInteger(p.a)) return false;
   }
   return true;
+}
+
+// ===== PICKS DOC FORMAT (supports per-round storage) =====
+function looksLikeFlatPicks(obj){
+  if(!obj || typeof obj !== "object") return false;
+  // if any current match id exists as key => likely flat picks map
+  try{
+    for(const m of matchesCache){
+      if(Object.prototype.hasOwnProperty.call(obj, m.id)) return true;
+    }
+  }catch(e){}
+  // or if any value looks like {h,a}
+  for(const v of Object.values(obj)){
+    if(v && typeof v === "object" && Number.isInteger(v.h) && Number.isInteger(v.a)) return true;
+  }
+  return false;
+}
+
+function extractPicksForRound(raw){
+  if(!raw) return {};
+  // common places
+  const candidates = [
+    raw.picks,
+    raw.picksCache,
+    raw.picksByMatch,
+  ].filter(Boolean);
+
+  const rkey = `round_${currentRoundNo}`;
+  // direct round keys on root
+  if(raw[rkey] && typeof raw[rkey] === "object") return raw[rkey];
+  if(raw[currentRoundNo] && typeof raw[currentRoundNo] === "object") return raw[currentRoundNo];
+  if(raw.rounds && raw.rounds[currentRoundNo]) return raw.rounds[currentRoundNo];
+  if(raw.byRound && raw.byRound[rkey]) return raw.byRound[rkey];
+  if(raw.picksByRound && raw.picksByRound[currentRoundNo]) return raw.picksByRound[currentRoundNo];
+
+  for(const c of candidates){
+    if(looksLikeFlatPicks(c)) return c;
+    if(c && typeof c === "object"){
+      if(c[rkey] && typeof c[rkey] === "object") return c[rkey];
+      if(c[currentRoundNo] && typeof c[currentRoundNo] === "object") return c[currentRoundNo];
+      if(c.rounds && c.rounds[currentRoundNo]) return c.rounds[currentRoundNo];
+    }
+  }
+  return {};
+}
+
+function refreshPicksDocsForCurrentRound(){
+  picksDocByUid = {};
+  for(const [uid, raw] of Object.entries(rawPicksDataByUid)){
+    picksDocByUid[uid] = extractPicksForRound(raw) || {};
+  }
+  recomputeSubmittedMap();
 }
 function recomputeSubmittedMap(){
   submittedByUid = {};
@@ -3842,6 +3895,10 @@ async function openRoom(code, opts={}){
   currentRoom = snap.data();
 
   currentRoundNo = currentRoom?.currentRoundNo || 1;
+    refreshPicksDocsForCurrentRound();
+    recomputePoints();
+    renderPlayers(lastPlayers);
+    syncActionButtons();
   el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
   el("roomName").textContent = currentRoom.name || "—";
@@ -3886,12 +3943,16 @@ async function openRoom(code, opts={}){
   });
 
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
-    picksDocByUid = {};
+    rawPicksDataByUid = {};
     qs.forEach(d=>{
-      const data = d.data();
-      picksDocByUid[d.id] = data?.picks || {};
+      rawPicksDataByUid[d.id] = d.data() || {};
     });
-    recomputeSubmittedMap();
+    refreshPicksDocsForCurrentRound();
+    recomputePoints();
+    renderPlayers(lastPlayers);
+    syncActionButtons();
+  });
+    refreshPicksDocsForCurrentRound();
     recomputePoints();
     renderPlayers(lastPlayers);
   });
@@ -3935,7 +3996,7 @@ async function loadMyPicks(){
       return;
     }
     const data = snap.data();
-    picksCache = data?.picks || {};
+    picksCache = extractPicksForRound(data) || {};
   }catch{
     picksCache = {};
   }
@@ -4008,11 +4069,13 @@ async function saveAllPicks(){
   }
 
   const ref = boot.doc(db, "rooms", currentRoomCode, "picks", userUid);
+  const rkey = `round_${currentRoundNo}`;
   await boot.setDoc(ref, {
     uid: userUid,
     nick: getNick(),
     updatedAt: boot.serverTimestamp(),
-    picks: picksCache
+    picks: picksCache,
+    [rkey]: picksCache
   }, { merge:true });
 
   showToast(getLang()==="en" ? "Picks saved ✅" : "Zapisano typy ✅");
@@ -4138,7 +4201,7 @@ if(_deletePlayerMode && isAdmin() && p.uid !== adminUid){
     eye.title = myOk
       ? (getLang()==="en" ? "Preview picks" : "Podgląd typów")
       : (getLang()==="en" ? "Save your picks to preview others" : "Zapisz swoje typy, aby podglądać innych");
-    eye.disabled = !myOk;
+    eye.disabled = !(myOk && !!submittedByUid[p.uid]);
     eye.onclick = ()=> openPicksPreview(p.uid, p.nick || "—");
     right.appendChild(eye);
 
