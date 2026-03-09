@@ -4156,7 +4156,7 @@ function renderPlayers(players){
     dot.title = active ? (getLang()==="en" ? "Active" : "Aktywny") : (getLang()==="en" ? "Inactive" : "Nieaktywny");
 
     const name = document.createElement("div");
-    name.textContent = p.nick || "—";
+    name.textContent = (p.nick || "—") + ((isAdmin() && p.playerNo) ? (" " + p.playerNo) : "");
     name.style.whiteSpace = "nowrap";
     name.style.overflow = "hidden";
     name.style.textOverflow = "ellipsis";
@@ -5598,6 +5598,7 @@ async function setLeagueTableForRound(roundNo){
     display.push({
       uid,
       nick: String(nickMap?.[uid] || base?.nick || "—"),
+      playerNo: base?.playerNo || "",
       rounds: played ? 1 : 0,
       points: played ? Number(pts) : 0,
       _played: played
@@ -5642,11 +5643,13 @@ async function openLeagueTable(roomCode, opts={}) {
     const qs = await boot.getDocs(q);
 
     const arr = [];
+    const noByUid = new Map((Array.isArray(lastPlayers)? lastPlayers: []).map(p=>[p.uid, p.playerNo]));
     qs.forEach(d=>{
       const x = d.data();
       arr.push({
         uid: x.uid || d.id,
         nick: x.nick || "—",
+        playerNo: noByUid.get(x.uid || d.id) || "",
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
       });
@@ -5701,7 +5704,7 @@ function renderLeagueTable(){
     tr.className = "linkRow";
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${cupHtml}${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
+      <td>${cupHtml}${escapeHtml(r.nick)}${(isAdmin() && r.playerNo) ? (" <span style=\"opacity:.75;font-size:12px\">"+escapeHtml(r.playerNo)+"</span>") : ""}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
