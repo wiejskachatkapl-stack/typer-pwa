@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8048)</title>
+  <title>Typer (BUILD 8023)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -75,7 +75,7 @@
     .rotateSub{color:var(--muted);font-weight:800;white-space:pre-line;line-height:1.25;}
     body.lockedPortrait #app{filter:blur(6px);pointer-events:none;}
 
-    /* ===== MOBILE SCROLL FIX (BUILD 8048) =====
+    /* ===== MOBILE SCROLL FIX (BUILD 8022) =====
        Na telefonach pozwalamy przewijać zawartość (np. Profil),
        bo stałe overflow:hidden + fixed potrafi blokować scroll po obrocie. */
     @media (max-width: 900px){
@@ -212,7 +212,7 @@
     }
     .chip select:focus{border-color:rgba(255,255,255,.24)}
 
-    /* ===== PLAYER STATS (BUILD 8048): bez linii statusu + ciaśniejsze kolejki ===== */
+    /* ===== PLAYER STATS (BUILD 8009): bez linii statusu + ciaśniejsze kolejki ===== */
     .statsAwardsRow{gap:4px !important;}
     .statsRightRow{gap:4px !important; align-items:center;}
 
@@ -250,10 +250,10 @@
     }
 
 
-    /* BUILD 8048: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
+    /* BUILD 7024: usuń napisy "KOLEJKA" i "PUNKTY (kolejka)" w chipach (zostaje sama wartość) */
     #t_round, #sep_round{display:none;}
 
-    /* BUILD 8048: usuń debug/placeholder "dummyAdOne"/"dummyAdTwo" (z lewej strony) */
+    /* BUILD 7024: usuń debug/placeholder "dummyAdOne"/"dummyAdTwo" (z lewej strony) */
     #dummyAdOne, #dummyAdTwo,
     img[alt="dummyAdOne"], img[alt="dummyAdTwo"],
     img[src*="dummyAdOne"], img[src*="dummyAdTwo"]{
@@ -933,7 +933,7 @@
     }
     #messagesOverlay.show{display:flex;}
 
-    /* ===== SUBSTITUTE OVERLAYS (BUILD 8048) ===== */
+    /* ===== SUBSTITUTE OVERLAYS (BUILD 8004) ===== */
     #substituteOverlay, #substitutePickOverlay{
       position:absolute; inset:0;
       display:none;
@@ -1571,7 +1571,7 @@
       .profileFields{ min-width:0; width:100%; }
     }
 
-/* --- BUILD 8048 UI FIT tweaks --- */
+/* --- BUILD 7024 UI FIT tweaks --- */
 .roomHeaderActionsRow{
   display:flex;
   gap:12px;
@@ -1604,7 +1604,7 @@
 }
 
 
-/* --- BUILD 8048 tweaks --- */
+/* --- BUILD 7024 tweaks --- */
 .roomTopBtns{
   display:flex;
   gap:10px;
@@ -1795,7 +1795,7 @@
   gap:22px;
 }
 
-    /* ===== PROFILE MOBILE FIT (BUILD 8048) ===== */
+    /* ===== PROFILE MOBILE FIT (BUILD 8022) ===== */
     @media (max-width: 900px){
       .modal.profileMode .modalCard{
         width: min(96vw, 980px) !important;
@@ -1969,7 +1969,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 
 
 <div class="col" id="roomActionsCol" style="margin-top:10px">
-<!-- BUILD 8048: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
+<!-- BUILD 7024: przeniesiono "Wyjście" z prawej strony do sekcji Akcje -->
 
 <button class="imgBtn sysBtn small" data-btn="btn_tabela_typerow.png" id="btnLeagueFromRoom" type="button"><img alt="btnLeagueFromRoom" data-btn="btn_tabela_typerow.png" src="ui/buttons/pl/btn_tabela_typerow.png"/></button>
 
@@ -2041,7 +2041,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- ADD QUEUE MENU OVERLAY (BUILD 8048) -->
+<!-- ADD QUEUE MENU OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="addQueueOverlay">
 <div aria-label="Add queue menu" class="aqModal panel" role="dialog">
 <div class="aqBtns">
@@ -2057,7 +2057,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </div>
-<!-- MANUAL QUEUE OVERLAY (BUILD 8048) -->
+<!-- MANUAL QUEUE OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="manualQueueOverlay">
 <div aria-label="Manual queue" class="mqModal panel" role="dialog">
 <div class="mqTitle" id="mqTitle">Ręczne dodawanie kolejki</div>
@@ -2094,7 +2094,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 
 
-<!-- MANUAL QUEUE DEADLINE OVERLAY (BUILD 8048) -->
+<!-- MANUAL QUEUE DEADLINE OVERLAY (BUILD 7033) -->
 <div aria-hidden="true" id="mqDeadlineOverlay">
   <div aria-label="Deadline" class="mqDeadlineModal panel" role="dialog">
     <div class="mqDeadlineTitle" id="mqDeadlineTitle">Ustaw czas końca typowania</div>
@@ -2113,7 +2113,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   </div>
 </div>
 
-<!-- SUBSTITUTE MENU OVERLAY (BUILD 8048) -->
+<!-- SUBSTITUTE MENU OVERLAY (BUILD 8004) -->
 <div aria-hidden="true" id="substituteOverlay">
   <div aria-label="Zastępstwo" class="subModal panel" role="dialog">
     <div class="subTitle" id="subTitle">Zastępstwo</div>
@@ -2131,7 +2131,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   </div>
 </div>
 
-<!-- SUBSTITUTE PICK OVERLAY (BUILD 8048) -->
+<!-- SUBSTITUTE PICK OVERLAY (BUILD 8004) -->
 <div aria-hidden="true" id="substitutePickOverlay">
   <div aria-label="Wybierz zastępcę" class="subModal panel" role="dialog">
     <div class="subTitle" id="subPickTitle">Wybierz gracza, który będzie mógł Cię zastąpić</div>
@@ -2149,7 +2149,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   </div>
 </div>
 
-<!-- MESSAGES OVERLAY (BUILD 8048) -->
+<!-- MESSAGES OVERLAY (BUILD 7024) -->
 <div aria-hidden="true" id="messagesOverlay">
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
@@ -2312,9 +2312,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8048" type="module"></script>
+<script src="./app.js?v=8023" type="module"></script>
 <script>
-  // BUILD 8048: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
+  // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
     const kill = (key) => {
       const nodes = document.querySelectorAll(
