@@ -3032,6 +3032,15 @@ function bindUI(){
     await openLeagueTable(currentRoomCode);
   };
 
+  // All-time ranking from room
+  const __btnAll = el("btnAllRankingFromRoom");
+  if(__btnAll){
+    __btnAll.onclick = async ()=>{
+      if(!currentRoomCode) return;
+      await openLeagueTable(currentRoomCode, { mode: "ALLTIME" });
+    };
+  }
+
   // League
   el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
   // btnLeagueRefresh removed (BUILD 6014)
@@ -3270,8 +3279,14 @@ const MANUAL_LEAGUES = [
   { key: "DE", label: "Bundesliga - NIEMCY" },
   { key: "IT", label: "Serie A - WŁOCHY" },
   { key: "PL", label: "Ekstraklasa - POLSKA" },
-  { key: "EN", label: "Premier League - ANGLIA" }
+  { key: "EN", label: "Premier League - ANGLIA" },
 
+  { key: "PT", label: "Liga Portugal - PORTUGALIA" },
+  { key: "BE", label: "Jupiler League - BELGIA" },
+
+  { key: "CL", label: "Liga Mistrzów - UEFA" },
+  { key: "EL", label: "Liga Europy - UEFA" },
+  { key: "ECL", label: "Liga Konferencji - UEFA" }
 ];
 
 // Kluby dla lig (z pliku kluby.docx)
@@ -3421,6 +3436,99 @@ const CLUBS_BY_LEAGUE = {
     "West Ham",
     "Burnley",
     "Wolverhampton"
+  ]
+
+  ,"PT": [
+    "FC Porto",
+    "Sporting",
+    "Benfica",
+    "Braga",
+    "Gil Vincente",
+    "Famalicao",
+    "Estoril",
+    "Moreirense",
+    "Guimaraes",
+    "Alverca",
+    "Arouca",
+    "Estrela",
+    "Casa Pia",
+    "Nacional",
+    "Rio Ave",
+    "Santa Clara",
+    "Tondela",
+    "AFS"
+  ],
+  "BE": [
+    "Royale Union SG",
+    "St. Truiden",
+    "Club Brugge",
+    "Anderlecht",
+    "KV Mechelen",
+    "Genk",
+    "Gent",
+    "Standard Liege",
+    "Wasterlo",
+    "Charleroi",
+    "Antwerp",
+    "Zulte Waregem",
+    "OH Leuven",
+    "Cercle Brugge",
+    "RAAL La Louviere",
+    "Dender"
+  ],
+  "CL": [
+    "Galatasaray",
+    "Liverpool",
+    "Atalanta",
+    "Bayern Monachium",
+    "Atl. Madryt",
+    "Tottenham",
+    "Newcastle",
+    "Barcelona",
+    "Bayer Leverkusen",
+    "Arsenal",
+    "Bodo/Glimt",
+    "Sporting",
+    "PSG",
+    "Chelsea",
+    "Real Madryt",
+    "Manchester City"
+  ],
+  "EL": [
+    "Bologna",
+    "AS Roma",
+    "Lille",
+    "Aston Villa",
+    "Panathinaikos",
+    "Betis Sevilla",
+    "VFB Stuttgart",
+    "FC Porto",
+    "Celta Vigo",
+    "Lyon",
+    "Ferencvaros",
+    "Braga",
+    "Genk",
+    "S.C. Freiburg",
+    "Nottingham",
+    "Midtjylland"
+  ],
+  "ECL": [
+    "Alkmaaar",
+    "Sparta Praga",
+    "Lech Poznań",
+    "Szachtar Donieck",
+    "Rijeka",
+    "Strasbourg",
+    "Samsunspor",
+    "Vallecano",
+    "Celje",
+    "AEK",
+    "Crystal Palace",
+    "AEK Larnaka",
+    "Fiorentina",
+    "Raków Częstochowa",
+    "Sigma Ołomuniec",
+    "1 FC Mainz 05"
   ]
 };
 
@@ -5515,9 +5623,15 @@ function updateLeagueHintForMode(){
       ? `Round preview: choose a player to open picks preview for round ${rn}.`
       : `Podgląd kolejki: kliknij gracza, aby zobaczyć podgląd typów dla kolejki ${rn}.`;
   }else{
-    hint.textContent = (getLang()==="en")
-      ? "Click a player to see stats (rounds + picks preview)."
-      : "Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).";
+    if(leagueState.rankMode === "ALLTIME"){
+      hint.textContent = (getLang()==="en")
+        ? "All-time ranking: includes players who played in this room in the past."
+        : "Ranking wszechczasów: zawiera wszystkich graczy, którzy grali w tym pokoju także w przeszłości.";
+    }else{
+      hint.textContent = (getLang()==="en")
+        ? "Click a player to see stats (rounds + picks preview)."
+        : "Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).";
+    }
   }
 }
 
@@ -5616,7 +5730,7 @@ async function setLeagueTableForRound(roundNo){
 }
 
 async function openLeagueTable(roomCode, opts={}) {
-  const { silent=false } = opts;
+  const { silent=false, mode="LEAGUE" } = opts;
   roomCode = (roomCode||"").trim().toUpperCase();
   if(roomCode.length !== 6){
     showToast(getLang()==="en" ? "No room" : "Brak pokoju");
@@ -5654,13 +5768,27 @@ async function openLeagueTable(roomCode, opts={}) {
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
       });
     });
-
-
-    // v8051: w tabeli ligowej pokazujemy tylko graczy AKTUALNIE będących w pokoju (bez archiwalnych)
+    // v8051+: w tabeli ligowej (LEAGUE) pokazujemy tylko graczy AKTUALNIE będących w pokoju (bez archiwalnych).
+    // W rankingu wszechczasów (ALLTIME) pokazujemy wszystkich, którzy kiedykolwiek grali w tym pokoju.
     const activeUids = new Set((Array.isArray(lastPlayers)? lastPlayers: []).map(p=>p.uid).filter(Boolean));
-    const arrActive = arr.filter(r=> activeUids.has(r.uid));
+    const rowsFinal = (mode === "ALLTIME") ? arr : arr.filter(r=> activeUids.has(r.uid));
 
-    leagueState.rows = arrActive;
+    leagueState.rows = rowsFinal;
+    leagueState.rankMode = mode;
+
+    // tytuł ekranu
+    const titleChip = el("t_league");
+    if(titleChip){
+      if(mode === "ALLTIME"){
+        titleChip.textContent = (getLang()==="en")
+          ? "All-time ranking (room)"
+          : "Ranking wszechczasów (pokój)";
+      }else{
+        titleChip.textContent = (getLang()==="en")
+          ? "League table"
+          : "Tabela ligi typerów";
+      }
+    }
 
     // start as TOTAL
     leagueState.viewMode = "TOTAL";
