@@ -5331,7 +5331,7 @@ const leagueState = {
   finishedRounds: [],
   roundCache: new Map(),
   viewMode: "TOTAL",          // TOTAL | ROUND
-  selectedRound: "ALL"        // ALL lub numer kolejki
+  selectedRound: "ALL",       // ALL lub numer kolejki
   activeUids: null,          // Set(uid) aktualnych graczy w pokoju (dla filtrowania tabeli ligi)
 };
 
