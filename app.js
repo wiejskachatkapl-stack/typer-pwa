@@ -1,4 +1,4 @@
-const BUILD = 8049;
+const BUILD = 8051;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -215,7 +215,7 @@ const I18N = {
     pointsRound: "PUNKTY (kolejka)",
 
     players: "Gracze",
-    playersSub: "Zielone ✓ = typy zapisane, czerwone ✗ = brak. Oko aktywne po zapisaniu Twoich typów.",
+    playersSub: "",
     leagueBtn: "Tabela ligi typerów",
 
     results: "Wyniki",
@@ -291,7 +291,7 @@ const I18N = {
     pointsRound: "POINTS (round)",
 
     players: "Players",
-    playersSub: "Green ✓ = picks saved, red ✗ = missing. Eye active after you save your picks.",
+    playersSub: "",
     leagueBtn: "League table",
 
     results: "Results",
@@ -461,7 +461,7 @@ function applyLangToUI(){
   if(el("t_points_round")) el("t_points_round").textContent = t("pointsRound");
 
   if(el("t_players")) el("t_players").textContent = t("players");
-  if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
+  if(el("t_players_sub")) el("t_players_sub").textContent = "";
   setBtnLabelSafe("btnLeagueFromRoom", t("leagueBtn"));
 
   // Results
@@ -944,12 +944,128 @@ function ensureClearProfileConfirmModal(){
   return _clearProfileConfirmModal;
 }
 
+// ===== RIGHT PANEL: players list should fill space until buttons, scroll only on overflow =====
+function ensurePlayersPanelFillFix(){
+  if(document.getElementById('playersPanelFillFix')) return;
+  const st = document.createElement('style');
+  st.id = 'playersPanelFillFix';
+  st.textContent = `
+    /* Right panel layout: allow playersList to grow to bottom stack */
+    .rightBar{display:flex;flex-direction:column;}
+    .rightBar .playersList{flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+    .rightBar .rightBottomStack{flex:0 0 auto;}
+    /* remove spacer that was stealing space */
+    .rightBar > .spacer{display:none !important;}
+    /* optional: hide scrollbar visuals but keep scroll */
+    .rightBar .playersList{scrollbar-width:none;}
+    .rightBar .playersList::-webkit-scrollbar{width:0;height:0;}
+  `;
+  document.head.appendChild(st);
+}
+
 async function customConfirmClearProfile(){
   const txt = (getLang()==='en')
     ? 'Are you sure you want to delete your profile? Deleting it will remove all your stats and everything related to this profile. Do you confirm deleting the profile?'
     : 'Czy na pewno chcesz skasować swój profil. Usunięcie go spowoduje utratę wszystkich statystyk i wszystkiego co z tym profilem jest związane. Czy potwierdzasz usunięcie profilu?';
   return await ensureClearProfileConfirmModal().open(txt);
 }
+
+
+// ===== Delete player (admin) confirm modal (YES/NO) =====
+// Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
+let _deletePlayerConfirmModal = null;
+function ensureDeletePlayerConfirmModal(){
+  if(_deletePlayerConfirmModal) return _deletePlayerConfirmModal;
+
+  if(!document.getElementById('deletePlayerConfirmStyles')){
+    const st = document.createElement('style');
+    st.id = 'deletePlayerConfirmStyles';
+    st.textContent = `
+      .deletePlayerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .deletePlayerBox{width:min(820px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .deletePlayerTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .deletePlayerText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
+      .deletePlayerActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
+      .deletePlayerBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+      .deletePlayerBtnImg:active{transform:translateY(1px);} 
+      @media (max-width:520px){.deletePlayerBtnImg{height:52px;}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'deletePlayerOverlay';
+  overlay.innerHTML = `
+    <div class="deletePlayerBox" role="dialog" aria-modal="true">
+      <div class="deletePlayerTitle">${getLang()==='en' ? 'Delete player' : 'Usuń gracza'}</div>
+      <div class="deletePlayerText" id="deletePlayerConfirmText"></div>
+      <div class="deletePlayerActions">
+        <img id="deletePlayerBtnYes" class="deletePlayerBtnImg" alt="YES" />
+        <img id="deletePlayerBtnNo" class="deletePlayerBtnImg" alt="NO" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const elText = overlay.querySelector('#deletePlayerConfirmText');
+  const btnYes = overlay.querySelector('#deletePlayerBtnYes');
+  const btnNo = overlay.querySelector('#deletePlayerBtnNo');
+
+  let _resolver = null;
+  function close(val){
+    overlay.style.display = 'none';
+    const r = _resolver; _resolver = null;
+    if(r) r(val);
+  }
+
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(false); });
+  btnNo.addEventListener('click', ()=>close(false));
+  btnYes.addEventListener('click', ()=>close(true));
+
+  _deletePlayerConfirmModal = {
+    open: (text)=>{
+      const lang = getLang()==='en' ? 'en' : 'pl';
+      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
+      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      elText.textContent = text;
+      overlay.style.display = 'flex';
+      return new Promise(resolve=>{ _resolver = resolve; });
+    }
+  };
+
+  return _deletePlayerConfirmModal;
+}
+
+async function confirmDeletePlayer(nick){
+  const txt = (getLang()==='en')
+    ? `Delete player and permanently remove them?\n\nPlayer: ${nick}`
+    : `Czy skasować i bezpowrotnie usunąć gracza?\n\nGracz: ${nick}`;
+  return await ensureDeletePlayerConfirmModal().open(txt);
+}
+
+async function adminDeletePlayer(uid, nick){
+  if(!isAdmin()) return;
+  if(!currentRoomCode) return;
+  if(uid === currentRoom?.adminUid) { showToast(getLang()==='en' ? "Can't delete admin" : "Nie można usunąć admina"); return; }
+  if(uid === userUid) { showToast(getLang()==='en' ? "Can't delete yourself" : "Nie można usunąć siebie"); return; }
+
+  const ok = await confirmDeletePlayer(nick || "—");
+  if(!ok) return;
+
+  try{
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "picks", uid));
+  }catch{}
+  try{
+    await boot.deleteDoc(boot.doc(db, "rooms", currentRoomCode, "players", uid));
+  }catch(e){
+    console.error(e);
+  }
+
+  // Exit delete mode after action
+  deletePlayerMode = false;
+  renderPlayers(lastPlayers);
+}
+
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
 // Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
@@ -1897,6 +2013,8 @@ let picksCache = {};
 let picksDocByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
+let deletePlayerMode = false;
+
 
 // ===== 6008: COUNTDOWN DO KOŃCA TYPOWANIA =====
 // Koniec typowania = 1 minuta przed pierwszym (najwcześniejszym) meczem w kolejce.
@@ -1985,11 +2103,33 @@ function leagueDocRef(code, uid){
   return boot.doc(db, "rooms", code, "league", uid);
 }
 
-function isCompletePicksObject(picksObj){
+function getPicksForRound(picksObj, roundNo){
+  if(!picksObj || typeof picksObj!=="object") return null;
+  // 1) flat format: {matchId:{h,a}, ...}
+  if(Object.prototype.hasOwnProperty.call(picksObj, (matchesCache[0]||{}).id)){
+    return picksObj;
+  }
+  // 2) round_3 format
+  const k1 = "round_" + String(roundNo);
+  if(picksObj[k1] && typeof picksObj[k1]==="object") return picksObj[k1];
+  // 3) rounds format: {rounds:{3:{...}}} or {rounds:{'3':{...}}}
+  if(picksObj.rounds && typeof picksObj.rounds==="object"){
+    const r = picksObj.rounds[String(roundNo)] || picksObj.rounds[roundNo];
+    if(r && typeof r==="object") return r;
+  }
+  // 4) picksByRound format
+  if(picksObj.picksByRound && typeof picksObj.picksByRound==="object"){
+    const r = picksObj.picksByRound[String(roundNo)] || picksObj.picksByRound[roundNo];
+    if(r && typeof r==="object") return r;
+  }
+  return null;
+}
+function isCompletePicksObject(picksObj, roundNo=currentRoundNo){
   if(!matchesCache.length) return false;
-  if(!picksObj || typeof picksObj !== "object") return false;
+  const obj = getPicksForRound(picksObj, roundNo);
+  if(!obj) return false;
   for(const m of matchesCache){
-    const p = picksObj[m.id];
+    const p = obj[m.id];
     if(!p) return false;
     if(!Number.isInteger(p.h) || !Number.isInteger(p.a)) return false;
   }
@@ -1998,7 +2138,7 @@ function isCompletePicksObject(picksObj){
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
-    submittedByUid[uid] = isCompletePicksObject(picksObj);
+    submittedByUid[uid] = isCompletePicksObject(picksObj, currentRoundNo);
   }
 }
 function iAmSubmitted(){
@@ -2758,6 +2898,17 @@ function bindUI(){
     await deleteRoomConfirmAndDelete();
   };
 
+  // 8037: usuwanie gracza (ADMIN)
+  const __btnDeletePlayer = el("btnDeletePlayer");
+  if(__btnDeletePlayer) __btnDeletePlayer.onclick = ()=>{
+    if(!isAdmin()) return;
+    deletePlayerMode = !deletePlayerMode;
+    renderPlayers(lastPlayers);
+    showToast(getLang()==="en"
+      ? (deletePlayerMode ? "Select a player to delete" : "Delete mode off")
+      : (deletePlayerMode ? "Zaznacz gracza do usunięcia" : "Tryb usuwania wyłączony"));
+  };
+
   // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
   if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSubstituteMenu();
@@ -2879,19 +3030,6 @@ function bindUI(){
   el("btnLeagueFromRoom").onclick = async ()=>{
     if(!currentRoomCode) return;
     await openLeagueTable(currentRoomCode);
-  };
-
-
-  // All-time ranking from room
-  el("btnAllRankingFromRoom").onclick = async ()=>{
-    if(!currentRoomCode) return;
-    await openLeagueTable(currentRoomCode, { silent:true, kind:"ALLTIME" });
-    if(el("t_league")) el("t_league").textContent = (getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów";
-    buildLeagueRoundDropdown();
-    renderLeagueTable();
-    updateLeagueHintForMode();
-    showScreen("league");
-    showToast((getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów");
   };
 
   // League
@@ -3989,6 +4127,9 @@ function renderPlayers(players){
   if(!box) return;
   box.innerHTML = "";
 
+  const delBtn = el("btnDeletePlayer");
+  if(delBtn) delBtn.style.display = isAdmin() ? "" : "none";
+
   const adminUid = currentRoom?.adminUid;
   const myOk = iAmSubmitted();
   const resultsOk = allResultsComplete();
@@ -4037,6 +4178,23 @@ function renderPlayers(players){
     const right = document.createElement("div");
     right.className = "row";
     right.style.gap = "6px";
+
+
+    // Delete player mode (admin) – show checkbox
+    if(isAdmin() && deletePlayerMode && p.uid !== adminUid && p.uid !== userUid){
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.className = "delChk";
+      chk.title = (getLang()==="en") ? "Delete player" : "Usuń gracza";
+      chk.onchange = async ()=>{
+        if(!chk.checked) return;
+        // confirm and delete
+        const ok = await confirmDeletePlayer(p.nick || "—");
+        if(!ok){ chk.checked = false; return; }
+        await adminDeletePlayer(p.uid, p.nick || "—");
+      };
+      right.appendChild(chk);
+    }
 
     if(resultsOk && isCompletePicksObject(picksDocByUid[p.uid])){
       const pts = pointsByUid[p.uid] ?? 0;
@@ -5319,87 +5477,13 @@ async function addRandomQueue(){
 const leagueState = {
   roomCode: null,
   roomName: null,
-  afterRound: 0,              // global finished rounds (room.currentRoundNo-1)
-  seasonRounds: 10,           // stałe: 10 kolejek = 1 liga
-  seasonStart: 1,
-  seasonEnd: 10,
-  afterRoundSeason: 0,        // 0..10 (ile kolejek rozegranych w aktualnej lidze)
-  totalKind: "SEASON",        // "SEASON" | "ALLTIME"
-  rowsAllTime: [],            // z /league (totalPoints)
-  rowsSeason: [],             // wyliczane z historii zakończonych kolejek w sezonie
-  rows: [],                   // (compat) – zostawione, ale render używa rowsSeason/rowsAllTime
+  afterRound: 0,
+  rows: [],
   finishedRounds: [],
   roundCache: new Map(),
-  viewMode: "TOTAL",          // TOTAL | ROUND
-  selectedRound: "ALL",       // ALL lub numer kolejki
-  activeUids: null,          // Set(uid) aktualnych graczy w pokoju (dla filtrowania tabeli ligi)
+  viewMode: "TOTAL", // TOTAL | ROUND
+  selectedRound: "ALL" // ALL or roundNo string
 };
-
-
-
-function _leagueActiveUidSet(){
-  const s = leagueState.activeUids;
-  return (s && typeof s.has === "function") ? s : null;
-}
-function _leagueFilterSeasonRows(rows){
-  const s = _leagueActiveUidSet();
-  if(!s) return rows || [];
-  return (rows||[]).filter(r=> s.has(r.uid));
-}
-function _leagueCurrentTotalRows(){
-  if(leagueState.totalKind === "ALLTIME") return Array.isArray(leagueState.rowsAllTime) ? leagueState.rowsAllTime : [];
-  // SEASON
-  return _leagueFilterSeasonRows(Array.isArray(leagueState.rowsSeason) ? leagueState.rowsSeason : []);
-}
-
-function computeSeasonRange(afterRound){
-  const n = leagueState.seasonRounds || 10;
-  const ar = Number(afterRound||0);
-  if(!ar || ar<=0){
-    leagueState.seasonStart = 1;
-    leagueState.seasonEnd = n;
-    leagueState.afterRoundSeason = 0;
-    return;
-  }
-  const start = Math.floor((ar - 1) / n) * n + 1;
-  const end = start + n - 1;
-  leagueState.seasonStart = start;
-  leagueState.seasonEnd = end;
-  leagueState.afterRoundSeason = Math.min(n, Math.max(0, ar - start + 1));
-}
-
-function computeSeasonRows(){
-  // bazujemy na players z rowsAllTime (żeby mieć listę graczy + nicki)
-  const base = Array.isArray(leagueState.rowsAllTime) ? leagueState.rowsAllTime : [];
-  const map = new Map();
-  base.forEach(r=>{
-    map.set(r.uid, { uid:r.uid, nick:r.nick||"—", rounds:0, points:0 });
-  });
-
-  const start = leagueState.seasonStart;
-  const end = Math.min(leagueState.seasonEnd, leagueState.afterRound || 0);
-
-  for(let rn=start; rn<=end; rn++){
-    const rd = leagueState.roundCache.get(rn);
-    if(!rd) continue;
-    const ptsMap = rd?.pointsByUid || {};
-    const nickMap = rd?.nickByUid || {};
-    Object.keys(ptsMap||{}).forEach(uid=>{
-      if(!map.has(uid)){
-        map.set(uid, { uid, nick: String(nickMap?.[uid]||"—"), rounds:0, points:0 });
-      }
-      const v = ptsMap[uid];
-      if(v===undefined || v===null || !Number.isFinite(Number(v))) return;
-      const row = map.get(uid);
-      row.points += Number(v);
-      row.rounds += 1;
-      // aktualizuj nick jeśli brak
-      if((!row.nick || row.nick==="—") && nickMap?.[uid]) row.nick = String(nickMap[uid]);
-    });
-  }
-
-  leagueState.rowsSeason = Array.from(map.values());
-}
 
 async function loadLeagueFinishedRounds(code){
   leagueState.finishedRounds = [];
@@ -5444,9 +5528,9 @@ function buildLeagueRoundDropdown(){
 
   const optAll = document.createElement("option");
   optAll.value = "ALL";
-  optAll.textContent = (leagueState.totalKind==="ALLTIME")
-    ? ((getLang()==="en") ? "All‑time total" : "Suma (wszechczasów)")
-    : ((getLang()==="en") ? `Season total (after ${leagueState.afterRoundSeason})` : `Suma (po ${leagueState.afterRoundSeason})`);
+  optAll.textContent = (getLang()==="en")
+    ? `Total (after ${leagueState.afterRound})`
+    : `Suma (po ${leagueState.afterRound})`;
   sel.appendChild(optAll);
 
   for(const rn of leagueState.finishedRounds){
@@ -5531,7 +5615,7 @@ async function setLeagueTableForRound(roundNo){
 }
 
 async function openLeagueTable(roomCode, opts={}) {
-  const { silent=false, kind=null } = opts;
+  const { silent=false } = opts;
   roomCode = (roomCode||"").trim().toUpperCase();
   if(roomCode.length !== 6){
     showToast(getLang()==="en" ? "No room" : "Brak pokoju");
@@ -5548,24 +5632,8 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
     leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
-    computeSeasonRange(leagueState.afterRound);
-
-    // aktywni gracze w pokoju (do filtrowania tabeli ligi – bez archiwalnych w bieżącej lidze)
-    try{
-      const pqs = await boot.getDocs(playersCol(roomCode));
-      const s = new Set();
-      pqs.forEach(d=>{
-        const x = d.data() || {};
-        const uid = x.uid || d.id;
-        if(uid) s.add(uid);
-      });
-      leagueState.activeUids = s;
-    }catch(e){
-      leagueState.activeUids = null;
-    }
 
     el("leagueRoomName").textContent = leagueState.roomName;
-    if(el("t_league")) el("t_league").textContent = (leagueState.totalKind==="ALLTIME") ? ((getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów") : ((getLang()==="en") ? "League table" : "Tabela ligi typerów");
     await loadLeagueFinishedRounds(roomCode);
     buildLeagueRoundDropdown();
     updateLeagueHintForMode();
@@ -5584,11 +5652,13 @@ async function openLeagueTable(roomCode, opts={}) {
       });
     });
 
-    leagueState.rowsAllTime = arr;
-    // wybór trybu: SEASON (tabela ligi – tylko aktualni gracze) albo ALLTIME (ranking wszechczasów – wszyscy, którzy kiedykolwiek grali)
-    leagueState.totalKind = (kind === "ALLTIME") ? "ALLTIME" : "SEASON";
-    computeSeasonRows();
-    leagueState.rows = (leagueState.totalKind === "ALLTIME") ? leagueState.rowsAllTime : _leagueFilterSeasonRows(leagueState.rowsSeason);
+
+    // v8051: w tabeli ligowej pokazujemy tylko graczy AKTUALNIE będących w pokoju (bez archiwalnych)
+    const activeUids = new Set((Array.isArray(lastPlayers)? lastPlayers: []).map(p=>p.uid).filter(Boolean));
+    const arrActive = arr.filter(r=> activeUids.has(r.uid));
+
+    leagueState.rows = arrActive;
+
     // start as TOTAL
     leagueState.viewMode = "TOTAL";
     leagueState.selectedRound = "ALL";
@@ -5609,7 +5679,7 @@ function renderLeagueTable(){
 
   const source = (leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL" && Array.isArray(leagueState._displayRows))
     ? leagueState._displayRows
-    : (leagueState.totalKind === "ALLTIME" ? leagueState.rowsAllTime : leagueState.rowsSeason);
+    : leagueState.rows;
 
   const rows = [...(source||[])];
   rows.sort((a,b)=>{
@@ -5942,6 +6012,7 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
 
     await initFirebase();
     bindUI();
+    ensurePlayersPanelFillFix();
 
     if(getNick()) refreshNickLabels();
 
