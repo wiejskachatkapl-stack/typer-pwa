@@ -627,18 +627,7 @@
     /* 6029: scroll pojawia się dopiero gdy brakuje miejsca; węższe wiersze graczy */
     .playersList{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px}
 
-    
-
-/* v8051: players panel fills to bottom; show scrollbar only on overflow; hide bar itself */
-.rightBar .spacer{display:none !important;}
-#playersList{flex:1;min-height:0;}
-#playersList::-webkit-scrollbar{width:0;height:0;}
-#playersList{scrollbar-width:none;-ms-overflow-style:none;}
-#playersList::-webkit-scrollbar-thumb{background:transparent;}
-/* hide players hint text (t_players_sub) */
-#t_players_sub{display:none !important;}
-
-.playersHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .playersHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .playersHeader .sub{max-width:260px}
     .playersHeader #btnDeletePlayer{flex:0 0 auto}
     .delChk{width:18px;height:18px;accent-color:#ff4d4d;cursor:pointer}
@@ -1211,6 +1200,37 @@
       margin:auto;
       padding:14px;
     }
+    /* ===== MOBILE FIX: allow scrolling in league/rankings ===== */
+    @media (max-width: 900px){
+      /* league screen must scroll on phones */
+      #league{
+        display:block !important;
+        height:calc(var(--app-vh, 1vh) * 100) !important;
+        overflow-y:auto !important;
+        -webkit-overflow-scrolling:touch;
+        padding:12px 10px !important;
+        align-items:unset !important;
+        justify-content:unset !important;
+      }
+      .leagueWrap{
+        width:100% !important;
+        margin:0 auto !important;
+        padding:10px !important;
+      }
+      /* keep top bar visible while scrolling */
+      .leagueTop{
+        position:sticky;
+        top:0;
+        z-index:10;
+        background:rgba(8, 22, 52, .86);
+        backdrop-filter: blur(6px);
+        padding:6px;
+        border-radius:16px;
+      }
+      /* prevent flex min-height issues */
+      .leagueTopLeft{min-width:0}
+    }
+
     .leagueTop{
       display:flex;
       align-items:center;
@@ -2323,7 +2343,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8051" type="module"></script>
+<script src="./app.js?v=8023" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2343,14 +2363,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8051').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8022').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8051</div>
+<div id="buildCornerText">8022</div>
 </div>
 </body>
 </html>
