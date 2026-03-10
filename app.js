@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8055;
+const BUILD = 8056;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1178,6 +1178,52 @@ async function askAndSetPlayerNoFromMyProfile(){
   try{ openRoomsChoiceModal(); }catch{}
 }
 
+function openProfileStartChoice(){
+  const lang = getLang();
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.flexDirection = "column";
+  wrap.style.alignItems = "center";
+  wrap.style.justifyContent = "center";
+  wrap.style.gap = "18px";
+  wrap.style.padding = "18px 10px";
+
+  const btnRow = document.createElement("div");
+  btnRow.style.display = "flex";
+  btnRow.style.flexWrap = "wrap";
+  btnRow.style.gap = "18px";
+  btnRow.style.justifyContent = "center";
+
+  const btnAdd = makeSysImgButton("btn_add_profil.png", {
+    cls:"sysBtn sysBtnBig",
+    alt:(lang==="en"?"Add profile":"Dodaj profil"),
+    title:(lang==="en"?"Add profile":"Dodaj profil")
+  });
+  btnAdd.onclick = ()=>{
+    modalClose();
+    openProfileModal({required:true, onDone:()=> openRoomsChoiceModal()});
+  };
+
+  const btnMy = makeSysImgButton("btn_my_profil.png", {
+    cls:"sysBtn sysBtnBig",
+    alt:(lang==="en"?"My profile":"Mój profil"),
+    title:(lang==="en"?"My profile":"Mój profil")
+  });
+  btnMy.onclick = async ()=>{
+    modalClose();
+    const ok = await ensurePinLogin();
+    if(ok){
+      window.__pendingPlayerNoLogin = true;
+      openRoomsChoiceModal();
+    }
+  };
+
+  btnRow.appendChild(btnAdd);
+  btnRow.appendChild(btnMy);
+  wrap.appendChild(btnRow);
+  modalOpen((lang==="en") ? "PROFILE" : "PROFIL", wrap);
+}
+
 // ===== Settings modal =====
 function openSettings(){
   const wrap = document.createElement("div");
@@ -1808,6 +1854,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         <label class="profileLabel">${escapeHtml(L.playerNo)}
           <input id="profilePlayerNo" class="profileInput" type="text" value="${escapeHtml(defaultPlayerNo)}" readonly />
         </label>
+        <label class="profileLabel">PIN (4 cyfry)
+          <input id="profilePin" class="profileInput" type="password" inputmode="numeric" maxlength="4" value="" />
+        </label>
         <label class="profileLabel">${escapeHtml(L.nick)}
           <input id="profileNick" class="profileInput" type="text" maxlength="16" value="${escapeHtml(defaultNick)}" />
         </label>
@@ -1887,9 +1936,14 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     });
     btnAddProfile.onclick = async ()=>{
       const nick = (document.getElementById("profileNick")?.value || "").trim();
+      const pin = (document.getElementById("profilePin")?.value || "").trim();
       const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
       const favClub = (document.getElementById("profileFav")?.value || "").trim();
       const avatarVal = __avatarValueToStore(chosenAvatar);
+      if(!/^\d{4}$/.test(pin)){
+        showToast(lang === "en" ? "Enter a 4-digit PIN." : "Wpisz 4-cyfrowy PIN.");
+        return;
+      }
 
       // Czy mamy już zapisany kompletny profil + numer gracza?
       const existingOk = isProfileComplete(existing) && !!getPlayerNo();
@@ -1932,6 +1986,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       }
       localStorage.setItem(KEY_NICK, nick);
       setProfile(profile);
+      await __setStoredPinHash(playerNo, pin);
+      try{ localStorage.setItem(KEY_LAST_PLAYERNO, playerNo); }catch(e){}
+      __setAuthedThisSession(playerNo);
 
       // Jeśli jesteśmy w pokoju – uaktualnij dane gracza tylko gdy aktualizujemy istniejący profil (TAK)
       if(keepSamePlayerNo){
@@ -6198,11 +6255,8 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
     // zastosuj język od razu
     applyLangToUI();
 
-    // wymagane logowanie PIN przed wejściem
-    const okLogin = await ensurePinLogin();
-    if(!okLogin) return;
-
     showScreen("home");
+    openProfileStartChoice();
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
