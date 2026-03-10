@@ -1,4 +1,5 @@
-const BUILD = 8023;
+// BUILD number shown under the logo (cache-bust + version label)
+const BUILD = 8055;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3179,6 +3180,15 @@ function bindUI(){
     await openLeagueTable(currentRoomCode);
   };
 
+  // All‑time ranking from room (btn_all_ranking.png)
+  const __btnAllRanking = el("btnAllRankingFromRoom");
+  if(__btnAllRanking){
+    __btnAllRanking.onclick = async ()=>{
+      if(!currentRoomCode) return;
+      await openAllTimeRanking(currentRoomCode);
+    };
+  }
+
   // League
   el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
   // btnLeagueRefresh removed (BUILD 6014)
@@ -4303,7 +4313,10 @@ function renderPlayers(players){
     dot.title = active ? (getLang()==="en" ? "Active" : "Aktywny") : (getLang()==="en" ? "Inactive" : "Nieaktywny");
 
     const name = document.createElement("div");
-    name.textContent = p.nick || "—";
+    // Admin: show player number next to nick
+    const baseNick = p.nick || "—";
+    const pn = (isAdmin() && p.playerNo) ? String(p.playerNo).trim().toUpperCase() : "";
+    name.textContent = pn ? `${baseNick} [${pn}]` : baseNick;
     name.style.whiteSpace = "nowrap";
     name.style.overflow = "hidden";
     name.style.textOverflow = "ellipsis";
@@ -5785,6 +5798,20 @@ async function openLeagueTable(roomCode, opts={}) {
     buildLeagueRoundDropdown();
     updateLeagueHintForMode();
 
+    // Player numbers (admin only display): build uid -> playerNo map from current room players
+    const pnMap = {};
+    try{
+      const pqs = await boot.getDocs(playersCol(roomCode));
+      pqs.forEach(pd=>{
+        const d = pd.data() || {};
+        const uid = d.uid || pd.id;
+        const pn = String(d.playerNo || "").trim().toUpperCase();
+        if(uid && pn) pnMap[uid] = pn;
+      });
+    }catch(e){
+      // ignore (player numbers are optional)
+    }
+
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
 
@@ -5794,6 +5821,7 @@ async function openLeagueTable(roomCode, opts={}) {
       arr.push({
         uid: x.uid || d.id,
         nick: x.nick || "—",
+        playerNo: pnMap[x.uid || d.id] || "",
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
       });
@@ -5811,6 +5839,15 @@ async function openLeagueTable(roomCode, opts={}) {
     console.error(e);
     showToast(getLang()==="en" ? "Cannot open league table" : "Nie udało się otworzyć tabeli");
   }
+}
+
+// Wrapper for the dedicated "all‑time" button.
+// Currently it shows the same totals table, but with a different header.
+async function openAllTimeRanking(roomCode){
+  await openLeagueTable(roomCode, {silent:true});
+  const header = el("t_league");
+  if(header) header.textContent = (getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów";
+  showToast(getLang()==="en" ? "All‑time ranking" : "Ranking wszechczasów");
 }
 
 function renderLeagueTable(){
@@ -5838,11 +5875,12 @@ function renderLeagueTable(){
   rows.forEach((r, idx)=>{
     const cupSrc = (idx===0) ? "ui/medale/puchar_1.png" : (idx===1) ? "ui/medale/puchar_2.png" : (idx===2) ? "ui/medale/puchar_3.png" : "";
     const cupHtml = cupSrc ? `<img alt="cup" src="${cupSrc}" style="width:22px;height:22px;vertical-align:middle;margin-right:6px"/>` : "";
+    const pn = (isAdmin() && r.playerNo) ? ` <span style="opacity:.75;font-weight:800">[${escapeHtml(String(r.playerNo))}]</span>` : "";
     const tr = document.createElement("tr");
     tr.className = "linkRow";
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${cupHtml}${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
+      <td>${cupHtml}${escapeHtml(r.nick)}${pn}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
