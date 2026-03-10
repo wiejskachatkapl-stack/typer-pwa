@@ -1,4 +1,4 @@
-const BUILD = 8051;
+const BUILD = 8023;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -461,7 +461,7 @@ function applyLangToUI(){
   if(el("t_points_round")) el("t_points_round").textContent = t("pointsRound");
 
   if(el("t_players")) el("t_players").textContent = t("players");
-  if(el("t_players_sub")) el("t_players_sub").textContent = "";
+  if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
   setBtnLabelSafe("btnLeagueFromRoom", t("leagueBtn"));
 
   // Results
@@ -1275,6 +1275,175 @@ function getPlayerNo(){
   const fromLS = String(localStorage.getItem(KEY_PLAYER_NO) || "").trim();
   const val = (fromProfile || fromLS).toUpperCase();
   return /^[A-Z]\d{6}$/.test(val) ? val : "";
+}
+
+// ===== PIN LOGIN (local per device) =====
+const KEY_SESSION_AUTH = "typer_session_auth_v1";
+const KEY_LAST_PLAYERNO = "typer_last_playerno_v1";
+const KEY_PINHASH_PREFIX = "typer_pinhash_"; // + playerNo
+
+function __pinKey(playerNo){
+  return KEY_PINHASH_PREFIX + String(playerNo||"").trim().toUpperCase();
+}
+
+// Simple SHA-256 hash (browser native)
+async function __sha256(text){
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function __getStoredPinHash(playerNo){
+  try{ return (localStorage.getItem(__pinKey(playerNo)) || "").trim(); }catch(e){ return ""; }
+}
+
+async function __setStoredPinHash(playerNo, pin){
+  const pno = String(playerNo||"").trim().toUpperCase();
+  const hash = await __sha256(pno + "|" + String(pin));
+  localStorage.setItem(__pinKey(pno), hash);
+  return hash;
+}
+
+function __isAuthedThisSession(playerNo){
+  try{
+    const v = (sessionStorage.getItem(KEY_SESSION_AUTH) || "").trim().toUpperCase();
+    return v && v === String(playerNo||"").trim().toUpperCase();
+  }catch(e){ return false; }
+}
+
+function __setAuthedThisSession(playerNo){
+  try{ sessionStorage.setItem(KEY_SESSION_AUTH, String(playerNo||"").trim().toUpperCase()); }catch(e){}
+}
+
+function __makeLoginModal(){
+  const existing = document.getElementById("pinLoginModal");
+  if(existing) return existing;
+
+  const wrap = document.createElement("div");
+  wrap.id = "pinLoginModal";
+  wrap.className = "modal active";
+  wrap.innerHTML = `
+    <div class="modalBox" style="max-width:560px; width:min(92vw,560px);">
+      <div class="modalTitle" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div style="font-size:22px;font-weight:800;">${(getLang()==="en")?"Login":"Logowanie"}</div>
+      </div>
+
+      <div style="margin-top:10px;opacity:.9;font-size:14px;">
+        ${(getLang()==="en")?"Enter your Player No and 4-digit PIN.":"Wpisz nr gracza i 4-cyfrowy PIN."}
+      </div>
+
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr;gap:10px;">
+        <label style="display:grid;gap:6px;">
+          <span style="font-weight:700;">${(getLang()==="en")?"Player No":"Nr gracza"}</span>
+          <input id="pinLoginPlayerNo" class="inp" autocomplete="username" inputmode="text" placeholder="P123456" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;"/>
+        </label>
+
+        <label style="display:grid;gap:6px;">
+          <span style="font-weight:700;">${(getLang()==="en")?"PIN (4 digits)":"PIN (4 cyfry)"}</span>
+          <input id="pinLoginPin" class="inp" autocomplete="current-password" inputmode="numeric" maxlength="4" placeholder="1234" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;"/>
+        </label>
+
+        <div id="pinLoginSetArea" style="display:none;gap:10px;">
+          <div style="margin-top:2px;opacity:.9;font-size:13px;">
+            ${(getLang()==="en")?"No PIN set for this Player No on this device. Set a new PIN now.":"Brak PIN dla tego nr gracza na tym urządzeniu. Ustaw nowy PIN."}
+          </div>
+          <label style="display:grid;gap:6px;">
+            <span style="font-weight:700;">${(getLang()==="en")?"Repeat PIN":"Powtórz PIN"}</span>
+            <input id="pinLoginPin2" class="inp" autocomplete="new-password" inputmode="numeric" maxlength="4" placeholder="1234" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;"/>
+          </label>
+        </div>
+
+        <div id="pinLoginError" style="display:none;color:#ff9b9b;font-weight:700;"></div>
+
+        <div style="display:flex;gap:14px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
+          <img id="pinLoginYes" class="imgBtn" alt="YES" src="${getBtnDir()}/btn_yes.png" style="height:54px;cursor:pointer;"/>
+          <img id="pinLoginNo" class="imgBtn" alt="NO" src="${getBtnDir()}/btn_no.png" style="height:54px;cursor:pointer;"/>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
+async function ensurePinLogin(){
+  // If already authenticated in this tab session, skip
+  const last = (localStorage.getItem(KEY_LAST_PLAYERNO) || "").trim();
+  if(last && __isAuthedThisSession(last)) return true;
+
+  return await new Promise((resolve)=>{
+    const modal = __makeLoginModal();
+    const inpNo = modal.querySelector("#pinLoginPlayerNo");
+    const inpPin = modal.querySelector("#pinLoginPin");
+    const setArea = modal.querySelector("#pinLoginSetArea");
+    const inpPin2 = modal.querySelector("#pinLoginPin2");
+    const err = modal.querySelector("#pinLoginError");
+
+    const showErr = (msg)=>{
+      err.textContent = msg;
+      err.style.display = "block";
+    };
+    const clearErr = ()=>{ err.style.display="none"; err.textContent=""; };
+
+    // prefill last playerNo
+    if(last) inpNo.value = last;
+
+    const refreshSetArea = ()=>{
+      const pno = String(inpNo.value||"").trim().toUpperCase();
+      if(!pno){ setArea.style.display="none"; return; }
+      const has = !!__getStoredPinHash(pno);
+      setArea.style.display = has ? "none" : "grid";
+    };
+
+    inpNo.addEventListener("input", refreshSetArea);
+    refreshSetArea();
+
+    modal.querySelector("#pinLoginNo").onclick = ()=>{ 
+      // do not allow continue without login
+      showErr((getLang()==="en")?"Login required.":"Logowanie wymagane.");
+    };
+
+    modal.querySelector("#pinLoginYes").onclick = async ()=>{
+      clearErr();
+      const pno = String(inpNo.value||"").trim().toUpperCase();
+      const pin = String(inpPin.value||"").trim();
+      if(!pno){ showErr((getLang()==="en")?"Enter Player No.":"Wpisz nr gracza."); return; }
+      if(!/^[A-Z]\d{6}$/.test(pno) && !/^\d{6,8}$/.test(pno)){
+        // allow older formats, just require something non-empty
+      }
+
+      const stored = __getStoredPinHash(pno);
+
+      if(stored){
+        if(!/^\d{4}$/.test(pin)){ showErr((getLang()==="en")?"Enter 4-digit PIN.":"Wpisz 4-cyfrowy PIN."); return; }
+        const hash = await __sha256(pno + "|" + pin);
+        if(hash !== stored){
+          showErr((getLang()==="en")?"Wrong PIN.":"Błędny PIN.");
+          return;
+        }
+      }else{
+        // first time on this device: set PIN
+        const pin2 = String(inpPin2.value||"").trim();
+        if(!/^\d{4}$/.test(pin)){ showErr((getLang()==="en")?"Set a 4-digit PIN.":"Ustaw 4-cyfrowy PIN."); return; }
+        if(pin !== pin2){ showErr((getLang()==="en")?"PINs do not match.":"PIN-y nie są takie same."); return; }
+        await __setStoredPinHash(pno, pin);
+      }
+
+      // success
+      try{ localStorage.setItem(KEY_LAST_PLAYERNO, pno); }catch(e){}
+      __setAuthedThisSession(pno);
+
+      // also store in profile if available (so join-room by playerNo works)
+      try{
+        const prof = getProfile() || {};
+        prof.playerNo = pno;
+        setProfile(prof);
+      }catch(e){}
+
+      modal.classList.remove("active");
+      resolve(true);
+    };
+  });
 }
 
 function ensurePlayerNoForCountry(countryCode){
@@ -2103,33 +2272,11 @@ function leagueDocRef(code, uid){
   return boot.doc(db, "rooms", code, "league", uid);
 }
 
-function getPicksForRound(picksObj, roundNo){
-  if(!picksObj || typeof picksObj!=="object") return null;
-  // 1) flat format: {matchId:{h,a}, ...}
-  if(Object.prototype.hasOwnProperty.call(picksObj, (matchesCache[0]||{}).id)){
-    return picksObj;
-  }
-  // 2) round_3 format
-  const k1 = "round_" + String(roundNo);
-  if(picksObj[k1] && typeof picksObj[k1]==="object") return picksObj[k1];
-  // 3) rounds format: {rounds:{3:{...}}} or {rounds:{'3':{...}}}
-  if(picksObj.rounds && typeof picksObj.rounds==="object"){
-    const r = picksObj.rounds[String(roundNo)] || picksObj.rounds[roundNo];
-    if(r && typeof r==="object") return r;
-  }
-  // 4) picksByRound format
-  if(picksObj.picksByRound && typeof picksObj.picksByRound==="object"){
-    const r = picksObj.picksByRound[String(roundNo)] || picksObj.picksByRound[roundNo];
-    if(r && typeof r==="object") return r;
-  }
-  return null;
-}
-function isCompletePicksObject(picksObj, roundNo=currentRoundNo){
+function isCompletePicksObject(picksObj){
   if(!matchesCache.length) return false;
-  const obj = getPicksForRound(picksObj, roundNo);
-  if(!obj) return false;
+  if(!picksObj || typeof picksObj !== "object") return false;
   for(const m of matchesCache){
-    const p = obj[m.id];
+    const p = picksObj[m.id];
     if(!p) return false;
     if(!Number.isInteger(p.h) || !Number.isInteger(p.a)) return false;
   }
@@ -2138,7 +2285,7 @@ function isCompletePicksObject(picksObj, roundNo=currentRoundNo){
 function recomputeSubmittedMap(){
   submittedByUid = {};
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
-    submittedByUid[uid] = isCompletePicksObject(picksObj, currentRoundNo);
+    submittedByUid[uid] = isCompletePicksObject(picksObj);
   }
 }
 function iAmSubmitted(){
@@ -3032,15 +3179,6 @@ function bindUI(){
     await openLeagueTable(currentRoomCode);
   };
 
-  // All-time ranking from room
-  const __btnAll = el("btnAllRankingFromRoom");
-  if(__btnAll){
-    __btnAll.onclick = async ()=>{
-      if(!currentRoomCode) return;
-      await openLeagueTable(currentRoomCode, { mode: "ALLTIME" });
-    };
-  }
-
   // League
   el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
   // btnLeagueRefresh removed (BUILD 6014)
@@ -3279,14 +3417,8 @@ const MANUAL_LEAGUES = [
   { key: "DE", label: "Bundesliga - NIEMCY" },
   { key: "IT", label: "Serie A - WŁOCHY" },
   { key: "PL", label: "Ekstraklasa - POLSKA" },
-  { key: "EN", label: "Premier League - ANGLIA" },
+  { key: "EN", label: "Premier League - ANGLIA" }
 
-  { key: "PT", label: "Liga Portugal - PORTUGALIA" },
-  { key: "BE", label: "Jupiler League - BELGIA" },
-
-  { key: "CL", label: "Liga Mistrzów - UEFA" },
-  { key: "EL", label: "Liga Europy - UEFA" },
-  { key: "ECL", label: "Liga Konferencji - UEFA" }
 ];
 
 // Kluby dla lig (z pliku kluby.docx)
@@ -3436,99 +3568,6 @@ const CLUBS_BY_LEAGUE = {
     "West Ham",
     "Burnley",
     "Wolverhampton"
-  ]
-
-  ,"PT": [
-    "FC Porto",
-    "Sporting",
-    "Benfica",
-    "Braga",
-    "Gil Vincente",
-    "Famalicao",
-    "Estoril",
-    "Moreirense",
-    "Guimaraes",
-    "Alverca",
-    "Arouca",
-    "Estrela",
-    "Casa Pia",
-    "Nacional",
-    "Rio Ave",
-    "Santa Clara",
-    "Tondela",
-    "AFS"
-  ],
-  "BE": [
-    "Royale Union SG",
-    "St. Truiden",
-    "Club Brugge",
-    "Anderlecht",
-    "KV Mechelen",
-    "Genk",
-    "Gent",
-    "Standard Liege",
-    "Wasterlo",
-    "Charleroi",
-    "Antwerp",
-    "Zulte Waregem",
-    "OH Leuven",
-    "Cercle Brugge",
-    "RAAL La Louviere",
-    "Dender"
-  ],
-  "CL": [
-    "Galatasaray",
-    "Liverpool",
-    "Atalanta",
-    "Bayern Monachium",
-    "Atl. Madryt",
-    "Tottenham",
-    "Newcastle",
-    "Barcelona",
-    "Bayer Leverkusen",
-    "Arsenal",
-    "Bodo/Glimt",
-    "Sporting",
-    "PSG",
-    "Chelsea",
-    "Real Madryt",
-    "Manchester City"
-  ],
-  "EL": [
-    "Bologna",
-    "AS Roma",
-    "Lille",
-    "Aston Villa",
-    "Panathinaikos",
-    "Betis Sevilla",
-    "VFB Stuttgart",
-    "FC Porto",
-    "Celta Vigo",
-    "Lyon",
-    "Ferencvaros",
-    "Braga",
-    "Genk",
-    "S.C. Freiburg",
-    "Nottingham",
-    "Midtjylland"
-  ],
-  "ECL": [
-    "Alkmaaar",
-    "Sparta Praga",
-    "Lech Poznań",
-    "Szachtar Donieck",
-    "Rijeka",
-    "Strasbourg",
-    "Samsunspor",
-    "Vallecano",
-    "Celje",
-    "AEK",
-    "Crystal Palace",
-    "AEK Larnaka",
-    "Fiorentina",
-    "Raków Częstochowa",
-    "Sigma Ołomuniec",
-    "1 FC Mainz 05"
   ]
 };
 
@@ -4264,7 +4303,7 @@ function renderPlayers(players){
     dot.title = active ? (getLang()==="en" ? "Active" : "Aktywny") : (getLang()==="en" ? "Inactive" : "Nieaktywny");
 
     const name = document.createElement("div");
-    name.textContent = (p.nick || "—") + ((isAdmin() && p.playerNo) ? (" " + p.playerNo) : "");
+    name.textContent = p.nick || "—";
     name.style.whiteSpace = "nowrap";
     name.style.overflow = "hidden";
     name.style.textOverflow = "ellipsis";
@@ -5623,15 +5662,9 @@ function updateLeagueHintForMode(){
       ? `Round preview: choose a player to open picks preview for round ${rn}.`
       : `Podgląd kolejki: kliknij gracza, aby zobaczyć podgląd typów dla kolejki ${rn}.`;
   }else{
-    if(leagueState.rankMode === "ALLTIME"){
-      hint.textContent = (getLang()==="en")
-        ? "All-time ranking: includes players who played in this room in the past."
-        : "Ranking wszechczasów: zawiera wszystkich graczy, którzy grali w tym pokoju także w przeszłości.";
-    }else{
-      hint.textContent = (getLang()==="en")
-        ? "Click a player to see stats (rounds + picks preview)."
-        : "Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).";
-    }
+    hint.textContent = (getLang()==="en")
+      ? "Click a player to see stats (rounds + picks preview)."
+      : "Kliknij gracza, aby zobaczyć statystyki (kolejki + podgląd typów).";
   }
 }
 
@@ -5712,7 +5745,6 @@ async function setLeagueTableForRound(roundNo){
     display.push({
       uid,
       nick: String(nickMap?.[uid] || base?.nick || "—"),
-      playerNo: base?.playerNo || "",
       rounds: played ? 1 : 0,
       points: played ? Number(pts) : 0,
       _played: played
@@ -5730,7 +5762,7 @@ async function setLeagueTableForRound(roundNo){
 }
 
 async function openLeagueTable(roomCode, opts={}) {
-  const { silent=false, mode="LEAGUE" } = opts;
+  const { silent=false } = opts;
   roomCode = (roomCode||"").trim().toUpperCase();
   if(roomCode.length !== 6){
     showToast(getLang()==="en" ? "No room" : "Brak pokoju");
@@ -5757,39 +5789,17 @@ async function openLeagueTable(roomCode, opts={}) {
     const qs = await boot.getDocs(q);
 
     const arr = [];
-    const noByUid = new Map((Array.isArray(lastPlayers)? lastPlayers: []).map(p=>[p.uid, p.playerNo]));
     qs.forEach(d=>{
       const x = d.data();
       arr.push({
         uid: x.uid || d.id,
         nick: x.nick || "—",
-        playerNo: noByUid.get(x.uid || d.id) || "",
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
       });
     });
-    // v8051+: w tabeli ligowej (LEAGUE) pokazujemy tylko graczy AKTUALNIE będących w pokoju (bez archiwalnych).
-    // W rankingu wszechczasów (ALLTIME) pokazujemy wszystkich, którzy kiedykolwiek grali w tym pokoju.
-    const activeUids = new Set((Array.isArray(lastPlayers)? lastPlayers: []).map(p=>p.uid).filter(Boolean));
-    const rowsFinal = (mode === "ALLTIME") ? arr : arr.filter(r=> activeUids.has(r.uid));
 
-    leagueState.rows = rowsFinal;
-    leagueState.rankMode = mode;
-
-    // tytuł ekranu
-    const titleChip = el("t_league");
-    if(titleChip){
-      if(mode === "ALLTIME"){
-        titleChip.textContent = (getLang()==="en")
-          ? "All-time ranking (room)"
-          : "Ranking wszechczasów (pokój)";
-      }else{
-        titleChip.textContent = (getLang()==="en")
-          ? "League table"
-          : "Tabela ligi typerów";
-      }
-    }
-
+    leagueState.rows = arr;
     // start as TOTAL
     leagueState.viewMode = "TOTAL";
     leagueState.selectedRound = "ALL";
@@ -5832,7 +5842,7 @@ function renderLeagueTable(){
     tr.className = "linkRow";
     tr.innerHTML = `
       <td>${idx+1}</td>
-      <td>${cupHtml}${escapeHtml(r.nick)}${(isAdmin() && r.playerNo) ? (" <span style=\"opacity:.75;font-size:12px\">"+escapeHtml(r.playerNo)+"</span>") : ""}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
+      <td>${cupHtml}${escapeHtml(r.nick)}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
@@ -6149,6 +6159,10 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
 
     // zastosuj język od razu
     applyLangToUI();
+
+    // wymagane logowanie PIN przed wejściem
+    const okLogin = await ensurePinLogin();
+    if(!okLogin) return;
 
     showScreen("home");
   }catch(e){
