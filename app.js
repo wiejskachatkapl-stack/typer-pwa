@@ -2982,15 +2982,7 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  el("btnHomeExit").onclick = ()=>{
-    try{ window.open("", "_self"); }catch(e){}
-    try{ window.close(); }catch(e){}
-    setTimeout(()=>{
-      if(!document.hidden){
-        showToast(getLang()==="en" ? "The browser blocked closing the tab/window." : "Przeglądarka zablokowała zamknięcie karty/okna.");
-      }
-    }, 200);
-  };
+  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
 
   // CONTINUE
   el("btnContYes").onclick = async ()=>{
