@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8057;
+const BUILD = 8058;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1360,6 +1360,58 @@ function __setAuthedThisSession(playerNo){
   try{ sessionStorage.setItem(KEY_SESSION_AUTH, String(playerNo||"").trim().toUpperCase()); }catch(e){}
 }
 
+function __accountUidFromPlayerNo(playerNo){
+  return `acct_${String(playerNo||"").trim().toUpperCase()}`;
+}
+function playerAccountRef(playerNo){
+  return boot.doc(db, "playerAccounts", String(playerNo||"").trim().toUpperCase());
+}
+async function __getRemoteAccount(playerNo){
+  const pno = String(playerNo||"").trim().toUpperCase();
+  if(!pno) return null;
+  try{
+    const snap = await boot.getDoc(playerAccountRef(pno));
+    return snap.exists() ? (snap.data() || null) : null;
+  }catch(e){
+    console.warn("remote account load failed", e);
+    return null;
+  }
+}
+async function __saveRemoteAccount(profile, pinHash){
+  const p = profile || {};
+  const pno = String(p.playerNo || "").trim().toUpperCase();
+  if(!pno) throw new Error("Brak nr gracza");
+  const data = {
+    playerNo: pno,
+    accountUid: __accountUidFromPlayerNo(pno),
+    nick: String(p.nick || "").trim(),
+    country: String(p.country || "").trim().toLowerCase(),
+    favClub: String(p.favClub || "").trim(),
+    avatar: String(p.avatar || "").trim(),
+    updatedAt: boot.serverTimestamp(),
+    updatedAtClient: Date.now()
+  };
+  if(pinHash) data.pinHash = pinHash;
+  await boot.setDoc(playerAccountRef(pno), data, { merge:true });
+  return data;
+}
+async function __hydrateLocalProfileFromAccount(playerNo, remote){
+  const pno = String(playerNo||"").trim().toUpperCase();
+  const prof = getProfile() || {};
+  const src = remote || {};
+  prof.playerNo = pno;
+  if(src.nick) prof.nick = String(src.nick);
+  if(src.country) prof.country = String(src.country).toLowerCase();
+  if(src.favClub) prof.favClub = String(src.favClub);
+  if(src.avatar) prof.avatar = String(src.avatar);
+  setProfile(prof);
+  if(prof.nick) localStorage.setItem(KEY_NICK, String(prof.nick));
+  localStorage.setItem(KEY_PLAYER_NO, pno);
+  try{ localStorage.setItem(KEY_LAST_PLAYERNO, pno); }catch(e){}
+  userUid = String((src && src.accountUid) || __accountUidFromPlayerNo(pno));
+  return prof;
+}
+
 function __makeLoginModal(){
   const existing = document.getElementById("pinLoginModal");
   if(existing) return existing;
@@ -1388,16 +1440,6 @@ function __makeLoginModal(){
           <input id="pinLoginPin" class="inp" autocomplete="current-password" inputmode="numeric" maxlength="4" placeholder="1234" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;"/>
         </label>
 
-        <div id="pinLoginSetArea" style="display:none;gap:10px;">
-          <div style="margin-top:2px;opacity:.9;font-size:13px;">
-            ${(getLang()==="en")?"No PIN set for this Player No on this device. Set a new PIN now.":"Brak PIN dla tego nr gracza na tym urządzeniu. Ustaw nowy PIN."}
-          </div>
-          <label style="display:grid;gap:6px;">
-            <span style="font-weight:700;">${(getLang()==="en")?"Repeat PIN":"Powtórz PIN"}</span>
-            <input id="pinLoginPin2" class="inp" autocomplete="new-password" inputmode="numeric" maxlength="4" placeholder="1234" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;"/>
-          </label>
-        </div>
-
         <div id="pinLoginError" style="display:none;color:#ff9b9b;font-weight:700;"></div>
 
         <div style="display:flex;gap:14px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
@@ -1412,16 +1454,16 @@ function __makeLoginModal(){
 }
 
 async function ensurePinLogin(){
-  // If already authenticated in this tab session, skip
   const last = (localStorage.getItem(KEY_LAST_PLAYERNO) || "").trim();
-  if(last && __isAuthedThisSession(last)) return true;
+  if(last && __isAuthedThisSession(last)){
+    userUid = __accountUidFromPlayerNo(last);
+    return true;
+  }
 
   return await new Promise((resolve)=>{
     const modal = __makeLoginModal();
     const inpNo = modal.querySelector("#pinLoginPlayerNo");
     const inpPin = modal.querySelector("#pinLoginPin");
-    const setArea = modal.querySelector("#pinLoginSetArea");
-    const inpPin2 = modal.querySelector("#pinLoginPin2");
     const err = modal.querySelector("#pinLoginError");
 
     const showErr = (msg)=>{
@@ -1430,21 +1472,9 @@ async function ensurePinLogin(){
     };
     const clearErr = ()=>{ err.style.display="none"; err.textContent=""; };
 
-    // prefill last playerNo
     if(last) inpNo.value = last;
 
-    const refreshSetArea = ()=>{
-      const pno = String(inpNo.value||"").trim().toUpperCase();
-      if(!pno){ setArea.style.display="none"; return; }
-      const has = !!__getStoredPinHash(pno);
-      setArea.style.display = has ? "none" : "grid";
-    };
-
-    inpNo.addEventListener("input", refreshSetArea);
-    refreshSetArea();
-
-    modal.querySelector("#pinLoginNo").onclick = ()=>{ 
-      // do not allow continue without login
+    modal.querySelector("#pinLoginNo").onclick = ()=>{
       showErr((getLang()==="en")?"Login required.":"Logowanie wymagane.");
     };
 
@@ -1453,43 +1483,52 @@ async function ensurePinLogin(){
       const pno = String(inpNo.value||"").trim().toUpperCase();
       const pin = String(inpPin.value||"").trim();
       if(!pno){ showErr((getLang()==="en")?"Enter Player No.":"Wpisz nr gracza."); return; }
-      if(!/^[A-Z]\d{6}$/.test(pno) && !/^\d{6,8}$/.test(pno)){
-        // allow older formats, just require something non-empty
-      }
+      if(!/^\d{4}$/.test(pin)){ showErr((getLang()==="en")?"Enter 4-digit PIN.":"Wpisz 4-cyfrowy PIN."); return; }
 
-      const stored = __getStoredPinHash(pno);
+      let remote = await __getRemoteAccount(pno);
+      let remoteHash = String(remote?.pinHash || "").trim();
 
-      if(stored){
-        if(!/^\d{4}$/.test(pin)){ showErr((getLang()==="en")?"Enter 4-digit PIN.":"Wpisz 4-cyfrowy PIN."); return; }
-        const hash = await __sha256(pno + "|" + pin);
-        if(hash !== stored){
-          showErr((getLang()==="en")?"Wrong PIN.":"Błędny PIN.");
-          return;
+      // migration for older local-only profiles/accounts
+      if(!remoteHash){
+        const localHash = __getStoredPinHash(pno);
+        if(localHash){
+          const prof = getProfile() || {};
+          const fallback = {
+            ...prof,
+            playerNo: pno,
+            nick: String(prof.nick || localStorage.getItem(KEY_NICK) || "").trim(),
+            country: String(prof.country || "").trim().toLowerCase(),
+            favClub: String(prof.favClub || "").trim(),
+            avatar: String(prof.avatar || "").trim()
+          };
+          await __saveRemoteAccount(fallback, localHash);
+          remote = await __getRemoteAccount(pno);
+          remoteHash = String(remote?.pinHash || "").trim();
         }
-      }else{
-        // first time on this device: set PIN
-        const pin2 = String(inpPin2.value||"").trim();
-        if(!/^\d{4}$/.test(pin)){ showErr((getLang()==="en")?"Set a 4-digit PIN.":"Ustaw 4-cyfrowy PIN."); return; }
-        if(pin !== pin2){ showErr((getLang()==="en")?"PINs do not match.":"PIN-y nie są takie same."); return; }
-        await __setStoredPinHash(pno, pin);
       }
 
-      // success
-      try{ localStorage.setItem(KEY_LAST_PLAYERNO, pno); }catch(e){}
-      __setAuthedThisSession(pno);
+      if(!remoteHash){
+        showErr((getLang()==="en")?"Account not found. Create profile first.":"Nie znaleziono konta. Najpierw dodaj profil.");
+        return;
+      }
 
-      // also store in profile if available (so join-room by playerNo works)
-      try{
-        const prof = getProfile() || {};
-        prof.playerNo = pno;
-        setProfile(prof);
-      }catch(e){}
+      const hash = await __sha256(pno + "|" + pin);
+      if(hash !== remoteHash){
+        showErr((getLang()==="en")?"Wrong PIN.":"Błędny PIN.");
+        return;
+      }
+
+      await __hydrateLocalProfileFromAccount(pno, remote);
+      __setAuthedThisSession(pno);
+      try{ localStorage.setItem(KEY_LAST_PLAYERNO, pno); }catch(e){}
+      try{ localStorage.setItem(__pinKey(pno), remoteHash); }catch(e){}
 
       modal.classList.remove("active");
       resolve(true);
     };
   });
 }
+
 
 function ensurePlayerNoForCountry(countryCode){
   const c = String(countryCode || "").trim().toUpperCase();
@@ -1852,6 +1891,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         <label class="profileLabel">${escapeHtml(L.playerNo)}
           <input id="profilePlayerNo" class="profileInput" type="text" value="${escapeHtml(defaultPlayerNo)}" readonly />
         </label>
+        <label class="profileLabel">PIN (4 cyfry)
+          <input id="profilePin" class="profileInput" type="password" inputmode="numeric" maxlength="4" value="" />
+        </label>
         <label class="profileLabel">${escapeHtml(L.nick)}
           <input id="profileNick" class="profileInput" type="text" maxlength="16" value="${escapeHtml(defaultNick)}" />
         </label>
@@ -1931,6 +1973,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     });
     btnAddProfile.onclick = async ()=>{
       const nick = (document.getElementById("profileNick")?.value || "").trim();
+      const pin = (document.getElementById("profilePin")?.value || "").trim();
       const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
       const favClub = (document.getElementById("profileFav")?.value || "").trim();
       const avatarVal = __avatarValueToStore(chosenAvatar);
@@ -1974,8 +2017,27 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
         return;
       }
+      let remote = await __getRemoteAccount(playerNo);
+      let pinHash = String(remote?.pinHash || __getStoredPinHash(playerNo) || "").trim();
+      const mustSetPin = !pinHash;
+      if(mustSetPin && !/^\d{4}$/.test(pin)){
+        showToast(lang === "en" ? "Enter a 4-digit PIN." : "Wpisz 4-cyfrowy PIN.");
+        return;
+      }
+      if(/^\d{4}$/.test(pin)){
+        pinHash = await __setStoredPinHash(playerNo, pin);
+      }
+      if(!pinHash){
+        showToast(lang === "en" ? "PIN is required for first account setup." : "PIN jest wymagany przy pierwszym założeniu konta.");
+        return;
+      }
+
       localStorage.setItem(KEY_NICK, nick);
       setProfile(profile);
+      await __saveRemoteAccount(profile, pinHash);
+      userUid = __accountUidFromPlayerNo(playerNo);
+      __setAuthedThisSession(playerNo);
+      try{ localStorage.setItem(KEY_LAST_PLAYERNO, playerNo); }catch(e){}
 
       // Jeśli jesteśmy w pokoju – uaktualnij dane gracza tylko gdy aktualizujemy istniejący profil (TAK)
       if(keepSamePlayerNo){
@@ -2210,6 +2272,7 @@ function pushRoomHistory(code){
 
 // Firebase boot
 let app, auth, db;
+let authUid = null;
 let userUid = null;
 const boot = {};
 
@@ -2416,7 +2479,8 @@ async function initFirebase(){
     const unsub = onAuthStateChanged(auth, async(u)=>{
       try{
         if(u){
-          userUid = u.uid;
+          authUid = u.uid;
+        userUid = u.uid;
           unsub();
           resolve();
           return;
@@ -6226,6 +6290,10 @@ function updateLandscapeLock(){
 
 window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); }catch(e){} }, {passive:true});
 window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 60); });
+
+window.addEventListener("pagehide", ()=>{
+  try{ sessionStorage.removeItem(KEY_SESSION_AUTH); }catch(e){}
+});
 
 // ===== START =====
 (async()=>{
