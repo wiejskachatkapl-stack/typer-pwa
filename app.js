@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8058;
+const BUILD = 8059;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -4093,19 +4093,49 @@ async function joinRoom(code){
     return;
   }
 
-  // dopnij dane profilu (w tym nr gracza) do dokumentu gracza w pokoju
+  // Najważniejsze: jeśli w tym pokoju istnieje już gracz z tym samym nr gracza,
+  // to MUSIMY użyć dokładnie tego samego dokumentu players/{uid},
+  // żeby zachować typy, status admina i pełny profil na każdym urządzeniu.
   const prof = getProfile() || {};
-  const playerNo = prof.playerNo || getPlayerNo() || "";
-  await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
+  const playerNo = String(prof.playerNo || getPlayerNo() || "").trim().toUpperCase();
+
+  let targetUid = String(userUid || "");
+  let existingData = null;
+
+  if(playerNo){
+    try{
+      const q = boot.query(playersCol(code), boot.where("playerNo", "==", playerNo));
+      const qs = await boot.getDocs(q);
+      if(!qs.empty){
+        const existing = qs.docs[0];
+        targetUid = existing.id;
+        existingData = existing.data() || {};
+        userUid = targetUid;
+      }
+    }catch(e){
+      console.warn("joinRoom playerNo lookup warning:", e);
+    }
+  }
+
+  const payload = {
     nick,
-    uid: userUid,
-    playerNo: String(playerNo||"").toUpperCase() || null,
+    uid: targetUid,
+    playerNo: playerNo || null,
     country: (prof.country || null),
     favClub: (prof.favClub || null),
     avatar: (prof.avatar || null),
-    joinedAt: boot.serverTimestamp(),
     lastActiveAt: boot.serverTimestamp()
-  }, { merge:true });
+  };
+
+  // joinedAt ustawiamy tylko dla nowego wpisu, żeby nie nadpisywać starego konta
+  if(!existingData) payload.joinedAt = boot.serverTimestamp();
+
+  // Zachowujemy istniejące pole admin, jeśli to już był ten sam gracz w pokoju.
+  if(existingData && Object.prototype.hasOwnProperty.call(existingData, "admin")){
+    payload.admin = !!existingData.admin;
+  }
+
+  await boot.setDoc(boot.doc(db, "rooms", code, "players", targetUid), payload, { merge:true });
 
   localStorage.setItem(KEY_ACTIVE_ROOM, code);
   pushRoomHistory(code);
