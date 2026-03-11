@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8056;
+const BUILD = 8057;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -408,8 +408,6 @@ function applyLangToUI(){
   if(hr) hr.title = t("roomsTitle");
   const ht = el("btnHomeStats");
   if(ht) ht.title = t("stats");
-  const he = el("btnHomeExit");
-  if(he) he.title = t("exit");
 
   // HOME images + flag visuals
   updateHomeButtonsImages();
@@ -3028,7 +3026,8 @@ function bindUI(){
     showScreen("rooms");
   };
 
-  el("btnHomeExit").onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
+  const btnHomeExit = el("btnHomeExit");
+  if(btnHomeExit) btnHomeExit.onclick = ()=> showToast(getLang()==="en" ? "You can close the browser tab." : "Możesz zamknąć kartę przeglądarki.");
 
   // CONTINUE
   el("btnContYes").onclick = async ()=>{
