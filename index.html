@@ -5,13 +5,12 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8023)</title>
+  <title>Typer (BUILD 8056)</title>
 <link href="manifest.json" rel="manifest"/>
-<link rel="icon" type="image/png" href="icons/icon-192.png"/>
-<link rel="apple-touch-icon" href="icons/icon-192.png"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-
+<link href="favicon.png" rel="icon" type="image/png"/>
+<link href="icons/icon-192.png" rel="apple-touch-icon"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
 .roomCodeRow .imgBtn{flex:0 0 auto;}
@@ -2328,7 +2327,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8051" type="module"></script>
+<script src="./app.js?v=8056" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2348,14 +2347,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8051').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8056').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8051</div>
+<div id="buildCornerText">8056</div>
 </div>
 </body>
 </html>

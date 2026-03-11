@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8055;
+const BUILD = 8056;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -655,7 +655,7 @@ const btnEnter = makeSysImgButton("btn_wejdz_pokoj.png", {
     // If the user provided player number via "Mój profil" then we treat join as "New login"
     // (it restores profile + uses existing player doc in the room).
     const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
-    const usePlayerNoLogin = (window.__pendingPlayerNoLogin === true) && /^[A-Z]\d{6}$/.test(pn);
+    const usePlayerNoLogin = (window.__pendingPlayerNoLogin === true) && isValidPlayerNo(pn);
     if(usePlayerNoLogin){
       // clear flag so next joins behave normally
       window.__pendingPlayerNoLogin = false;
@@ -731,7 +731,7 @@ function openNewLoginModal(){
     onClick: async ()=>{
       const pn = String(inpNo.value||"").trim().toUpperCase();
       const code = String(inpCode.value||"").trim().toUpperCase();
-      if(!/^[A-Z]\d{6}$/.test(pn)){
+      if(!isValidPlayerNo(pn)){
         showToast(getLang()==="en" ? "Invalid player number" : "Niepoprawny nr gracza");
         return;
       }
@@ -1147,16 +1147,9 @@ async function askAndSetPlayerNoFromMyProfile(){
   const raw = await ensureMyProfileNoModal().open();
   if(!raw) return;
 
-  // Accept formats: A123456 or just 123456 (then prefix from profile/country or X)
-  let val = raw;
-  if(/^[0-9]{6}$/.test(val)){
-    const p = getProfile() || {};
-    const c = String(p.country || "").trim().toUpperCase();
-    const prefix = (c && /^[A-Z]{2}$/.test(c)) ? c[0] : "X";
-    val = prefix + val;
-  }
-  if(!/^[A-Z][0-9]{6}$/.test(val)){
-    showToast(lang==='en' ? 'Invalid player number. Use A123456.' : 'Niepoprawny nr gracza. Użyj formatu A123456.');
+  const val = String(raw || "").trim().toUpperCase();
+  if(!isValidPlayerNo(val)){
+    showToast(lang==='en' ? 'Invalid player number. Use 7 letters/digits.' : 'Niepoprawny nr gracza. Użyj 7 liter lub cyfr.');
     return;
   }
 
@@ -1176,6 +1169,52 @@ async function askAndSetPlayerNoFromMyProfile(){
   // Next join action will use playerNo-based login (restore profile from room).
   window.__pendingPlayerNoLogin = true;
   try{ openRoomsChoiceModal(); }catch{}
+}
+
+async function openStartProfileChoice(){
+  return await new Promise((resolve)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "createRoom";
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.gap = "14px";
+    wrap.style.alignItems = "center";
+
+    const info = document.createElement("div");
+    info.className = "muted";
+    info.style.textAlign = "center";
+    info.textContent = (getLang()==="en")
+      ? "Choose profile option"
+      : "Wybierz opcję profilu";
+    wrap.appendChild(info);
+
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.gap = "16px";
+    row.style.flexWrap = "wrap";
+    row.style.justifyContent = "center";
+
+    const btnAdd = makeSysImgButton("btn_add_profil.png", {
+      cls:"sysBtn sysBtnBig",
+      alt:(getLang()==="en") ? "Add profile" : "Dodaj profil",
+      title:(getLang()==="en") ? "Add profile" : "Dodaj profil",
+      onClick: ()=>{ modalClose(); resolve("add"); }
+    });
+
+    const btnMy = makeSysImgButton("btn_my_profil.png", {
+      cls:"sysBtn sysBtnBig",
+      alt:(getLang()==="en") ? "My profile" : "Mój profil",
+      title:(getLang()==="en") ? "My profile" : "Mój profil",
+      onClick: ()=>{ modalClose(); resolve("my"); }
+    });
+
+    row.appendChild(btnAdd);
+    row.appendChild(btnMy);
+    wrap.appendChild(row);
+
+    modalOpen((getLang()==="en") ? "PROFILE" : "PROFIL", wrap);
+    refreshAllButtonImages();
+  });
 }
 
 // ===== Settings modal =====
@@ -1270,12 +1309,17 @@ function setProfile(p){
   localStorage.setItem(KEY_PROFILE, JSON.stringify(p || {}));
 }
 
+function isValidPlayerNo(val){
+  const v = String(val || "").trim().toUpperCase();
+  return /^[A-Z0-9]{7}$/.test(v) || /^[A-Z]\d{6}$/.test(v);
+}
+
 function getPlayerNo(){
   const p = getProfile() || {};
   const fromProfile = String(p.playerNo || "").trim();
   const fromLS = String(localStorage.getItem(KEY_PLAYER_NO) || "").trim();
   const val = (fromProfile || fromLS).toUpperCase();
-  return /^[A-Z]\d{6}$/.test(val) ? val : "";
+  return isValidPlayerNo(val) ? val : "";
 }
 
 // ===== PIN LOGIN (local per device) =====
@@ -1336,7 +1380,7 @@ function __makeLoginModal(){
       <div style="margin-top:14px;display:grid;grid-template-columns:1fr;gap:10px;">
         <label style="display:grid;gap:6px;">
           <span style="font-weight:700;">${(getLang()==="en")?"Player No":"Nr gracza"}</span>
-          <input id="pinLoginPlayerNo" class="inp" autocomplete="username" inputmode="text" placeholder="P123456" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;"/>
+          <input id="pinLoginPlayerNo" class="inp" autocomplete="username" inputmode="text" maxlength="7" placeholder="A1B2C3D" style="padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;text-transform:uppercase;"/>
         </label>
 
         <label style="display:grid;gap:6px;">
@@ -1409,8 +1453,9 @@ async function ensurePinLogin(){
       const pno = String(inpNo.value||"").trim().toUpperCase();
       const pin = String(inpPin.value||"").trim();
       if(!pno){ showErr((getLang()==="en")?"Enter Player No.":"Wpisz nr gracza."); return; }
-      if(!/^[A-Z]\d{6}$/.test(pno) && !/^\d{6,8}$/.test(pno)){
-        // allow older formats, just require something non-empty
+      if(!isValidPlayerNo(pno)){
+        showErr((getLang()==="en")?"Enter valid Player No.":"Wpisz poprawny nr gracza.");
+        return;
       }
 
       const stored = __getStoredPinHash(pno);
@@ -1447,24 +1492,18 @@ async function ensurePinLogin(){
   });
 }
 
+function generateRandomPlayerNo(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for(let i=0;i<7;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+
 function ensurePlayerNoForCountry(countryCode){
-  const c = String(countryCode || "").trim().toUpperCase();
-  const prefix = (c && /^[A-Z]{2}$/.test(c)) ? c[0] : "X";
-
-  // Jeśli jest już poprawny numer — dopasuj tylko literę do kraju
   const existing = getPlayerNo();
-  if(existing){
-    const digits = existing.slice(1);
-    const next = prefix + digits;
-    localStorage.setItem(KEY_PLAYER_NO, next);
-    const p = getProfile() || {};
-    p.playerNo = next;
-    setProfile(p);
-    return next;
-  }
+  if(existing) return existing;
 
-  const digits = String(Math.floor(Math.random()*1_000_000)).padStart(6, "0");
-  const next = prefix + digits;
+  const next = generateRandomPlayerNo();
   localStorage.setItem(KEY_PLAYER_NO, next);
   const p = getProfile() || {};
   p.playerNo = next;
@@ -1782,15 +1821,15 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
 function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
-    ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", playerNo:"Player number", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back"}
-    : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", playerNo:"Nr gracza", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij"};
+    ? {title:"Profile", desc: required?"Add your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", playerNo:"Player number", pin:"PIN (4 digits)", fav:"Favorite club", saveBtn:"Add profile", cancelBtn:"Back"}
+    : {title:"Profil", desc: required?"Dodaj profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", playerNo:"Nr gracza", pin:"PIN (4 cyfry)", fav:"Ulubiony klub", saveBtn:"Dodaj profil", cancelBtn:"Cofnij"};
 
   const existing = getProfile() || {};
   const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
   // Start blank when no country is set yet
   const defaultCountry = existing.country || "";
   const defaultFav = (existing.favClub || "").trim();
-  const defaultPlayerNo = getPlayerNo();
+  const defaultPlayerNo = getPlayerNo() || generateRandomPlayerNo();
 
   const wrap = document.createElement("div");
   wrap.className = "profileModal";
@@ -1807,6 +1846,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         <div class="profileDesc">${escapeHtml(L.desc)}</div>
         <label class="profileLabel">${escapeHtml(L.playerNo)}
           <input id="profilePlayerNo" class="profileInput" type="text" value="${escapeHtml(defaultPlayerNo)}" readonly />
+        </label>
+        <label class="profileLabel">${escapeHtml(L.pin)}
+          <input id="profilePin" class="profileInput" type="text" inputmode="numeric" maxlength="4" value="" />
         </label>
         <label class="profileLabel">${escapeHtml(L.nick)}
           <input id="profileNick" class="profileInput" type="text" maxlength="16" value="${escapeHtml(defaultNick)}" />
@@ -1887,41 +1929,21 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     });
     btnAddProfile.onclick = async ()=>{
       const nick = (document.getElementById("profileNick")?.value || "").trim();
+      const pin = String((document.getElementById("profilePin")?.value || "")).trim();
       const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
       const favClub = (document.getElementById("profileFav")?.value || "").trim();
       const avatarVal = __avatarValueToStore(chosenAvatar);
+      const playerNo = String((document.getElementById("profilePlayerNo")?.value || defaultPlayerNo || "")).trim().toUpperCase();
 
-      // Czy mamy już zapisany kompletny profil + numer gracza?
-      const existingOk = isProfileComplete(existing) && !!getPlayerNo();
-
-      // Czy użytkownik coś zmienił?
-      const hasChanges = existingOk && (
-        (String(nick||"") !== String(existing.nick||"")) ||
-        (String(country||"") !== String(existing.country||"")) ||
-        (String(favClub||"") !== String(existing.favClub||"")) ||
-        (String(avatarVal||"") !== String(existing.avatar||""))
-      );
-
-      // Domyślnie: aktualizujemy istniejący profil (ten sam nr gracza)
-      let keepSamePlayerNo = true;
-
-      // Jeśli są zmiany w profilu, pokaż okno potwierdzenia:
-      // TAK = uwzględnij zmiany (ten sam nr gracza)
-      // NIE = nowy profil (nowy nr gracza)
-      if(hasChanges){
-        const langNow = getLang();
-        const modal = ensureProfileChangeConfirmModal();
-        const text = (langNow === "en")
-          ? "You changed the player profile. Apply changes?\nYES = apply changes\nNO = new profile"
-          : "Dokonałeś zmian w profilu gracza. Czy uwzględnić zmiany.\nJeśli to zmiany kliknij TAK jeśli nowy profil NIE.";
-        keepSamePlayerNo = await modal.open({text});
+      if(!isValidPlayerNo(playerNo)){
+        showToast(lang === "en" ? "Invalid player number." : "Niepoprawny nr gracza.");
+        return;
+      }
+      if(!/^\d{4}$/.test(pin)){
+        showToast(lang === "en" ? "Enter a 4-digit PIN." : "Wpisz 4-cyfrowy PIN.");
+        return;
       }
 
-      const playerNo = keepSamePlayerNo
-        ? ensurePlayerNoForCountry(country)
-        : generateFreshPlayerNo(country);
-
-      // pokaż w polu readonly
       const pnEl = document.getElementById("profilePlayerNo");
       if(pnEl) pnEl.value = playerNo;
 
@@ -1930,13 +1952,15 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         showToast(lang === "en" ? "Fill nickname and country." : "Uzupełnij nick i kraj.");
         return;
       }
+
+      localStorage.setItem(KEY_PLAYER_NO, playerNo);
+      localStorage.setItem(KEY_LAST_PLAYERNO, playerNo);
       localStorage.setItem(KEY_NICK, nick);
       setProfile(profile);
+      await __setStoredPinHash(playerNo, pin);
+      __setAuthedThisSession(playerNo);
 
-      // Jeśli jesteśmy w pokoju – uaktualnij dane gracza tylko gdy aktualizujemy istniejący profil (TAK)
-      if(keepSamePlayerNo){
-        try{ updatePlayerDocProfile(); }catch{}
-      }
+      try{ updatePlayerDocProfile(); }catch{}
 
       refreshNickLabels();
       modalClose();
@@ -1944,19 +1968,6 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     };
     avatarSlot.appendChild(btnAddProfile);
 
-    // NOWE: btn_my_profil.png (pod Avatar + Dodaj profil) – wpisanie nr gracza ręcznie
-    const br = document.createElement('div');
-    br.style.flexBasis = '100%';
-    br.style.height = '0';
-    avatarSlot.appendChild(br);
-
-    const btnMyProfil = makeSysImgButton("btn_my_profil.png", {
-      cls:"sysBtn profileAvatarBtn",
-      alt:(lang === "en" ? "My profile" : "Mój profil"),
-      title:(lang === "en" ? "My profile" : "Mój profil")
-    });
-    btnMyProfil.onclick = ()=>{ askAndSetPlayerNoFromMyProfile(); };
-    avatarSlot.appendChild(btnMyProfil);
   }
 
   requestAnimationFrame(()=>{
@@ -1971,16 +1982,19 @@ function openProfileModal({required=false, onDone, onCancel}={}){
 
 async function ensureProfile(){
   const p = getProfile();
-  if(isProfileComplete(p)){
-    // upewnij się, że nr gracza istnieje
-    if(!getPlayerNo()){
-      ensurePlayerNoForCountry(p.country);
-    }
-    return true;
+  if(isProfileComplete(p) && getPlayerNo()) return true;
+
+  const choice = await openStartProfileChoice();
+  if(choice === "my"){
+    const okLogin = await ensurePinLogin();
+    return !!okLogin;
   }
-  return await new Promise((resolve)=>{
-    openProfileModal({required:true, onDone: ()=>resolve(true), onCancel: ()=>resolve(false)});
-  });
+  if(choice === "add"){
+    return await new Promise((resolve)=>{
+      openProfileModal({required:true, onDone: ()=>resolve(true), onCancel: ()=>resolve(false)});
+    });
+  }
+  return false;
 }
 
 function nickModalAsk(){
@@ -2964,10 +2978,8 @@ function bindUI(){
 
   // HOME
   el("btnHomeRooms").onclick = async ()=>{
-    // Profil uzupełniamy przy pierwszym wejściu do gry (nick + kraj)
     const okProfile = await ensureProfile();
     if(!okProfile) return;
-    if(!getNick()){ const n = await ensureNick(); if(!n) return; }
     openRoomsChoiceModal();
   };
 
@@ -6198,11 +6210,9 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
     // zastosuj język od razu
     applyLangToUI();
 
-    // wymagane logowanie PIN przed wejściem
-    const okLogin = await ensurePinLogin();
-    if(!okLogin) return;
-
     showScreen("home");
+    const okProfile = await ensureProfile();
+    if(!okProfile) return;
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
