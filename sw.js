@@ -1,15 +1,12 @@
-// Typer PWA Service Worker (BUILD 8051)
-const CACHE_NAME = 'typer-cache-8052';
+// Typer PWA Service Worker (BUILD 8048)
+const CACHE_NAME = 'typer-cache-8051';
 
 // Core assets to pre-cache (keep minimal to avoid stale UI)
 const CORE = [
   './',
   './index.html',
   './app.js?v=8051',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-1024.png'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
