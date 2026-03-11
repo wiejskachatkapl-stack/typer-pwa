@@ -1,13 +1,24 @@
 {
-  "name": "Typer",
-  "short_name": "Typer",
-  "start_url": "./?v=20260202-01",
+  "name": "Typuj Sport - TYPER",
+  "short_name": "TYPER",
+  "description": "Gra TYPER - typowanie wyników sportowych.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b1a3a",
-  "theme_color": "#0b1a3a",
+  "background_color": "#08122a",
+  "theme_color": "#08122a",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
