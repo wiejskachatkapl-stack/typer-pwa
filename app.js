@@ -520,6 +520,22 @@ function setModalBackButton(onClick, label){
   btnBack.id = "modalBack";
   btnBack.onclick = onClick;
   modalCloseBtn.parentNode.insertBefore(btnBack, modalCloseBtn);
+
+  // v8064: in player stats modals make Back/Exit visually the same size
+  const sizeModalNavBtn = (btn)=>{
+    if(!btn) return;
+    btn.style.display = "inline-flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+    const img = btn.querySelector("img");
+    if(img){
+      img.style.width = "auto";
+      img.style.height = "58px";
+      img.style.maxHeight = "58px";
+    }
+  };
+  sizeModalNavBtn(btnBack);
+  sizeModalNavBtn(modalCloseBtn);
 }
 
 /** ROOMS MENU MODALS **/
