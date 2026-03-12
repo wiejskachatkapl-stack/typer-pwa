@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8068;
+const BUILD = 8069;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5908,7 +5908,30 @@ async function openPlayerStatsFromLeague(uid, nick){
   const q = boot.query(roundsCol(code), boot.orderBy("roundNo","desc"));
   const qs = await boot.getDocs(q);
   const playerSnap = await boot.getDoc(boot.doc(db, "rooms", code, "players", uid));
-  const playerData = playerSnap.exists() ? (playerSnap.data() || {}) : {};
+  let playerData = playerSnap.exists() ? (playerSnap.data() || {}) : {};
+
+  // v2019: awaryjnie odszukaj pełny profil gracza w pokoju, gdy uid w tabeli
+  // nie wskazuje dokumentu z kompletnymi danymi profilu (avatar/kraj/klub).
+  if(!playerData || !Object.keys(playerData).length || !playerData.avatar || !playerData.country || !playerData.favClub){
+    try{
+      const leagueRow = (leagueState.rows || []).find(r => String(r.uid||"") === String(uid||"")) || {};
+      const targetPlayerNo = String((playerData && playerData.playerNo) || leagueRow.playerNo || "").trim().toUpperCase();
+      const targetNick = String((playerData && playerData.nick) || leagueRow.nick || nick || "").trim();
+      const allPlayersSnap = await boot.getDocs(playersCol(code));
+      let fallback = null;
+      allPlayersSnap.forEach(docSnap => {
+        const d = docSnap.data() || {};
+        const docPlayerNo = String(d.playerNo || "").trim().toUpperCase();
+        const docNick = String(d.nick || "").trim();
+        if(!fallback && targetPlayerNo && docPlayerNo && docPlayerNo === targetPlayerNo) fallback = d;
+        if(!fallback && targetNick && docNick === targetNick) fallback = d;
+      });
+      if(fallback) playerData = { ...fallback, ...playerData };
+      if(leagueRow && Object.keys(leagueRow).length) playerData = { ...leagueRow, ...playerData };
+    }catch(e){
+      console.warn("player profile fallback failed", e);
+    }
+  }
 
   const wrap = document.createElement("div");
   wrap.style.display="flex";
