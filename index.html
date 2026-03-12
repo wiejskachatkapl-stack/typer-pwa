@@ -629,7 +629,7 @@
 
     
 
-/* v8064: players panel fills to bottom; show scrollbar only on overflow; hide bar itself */
+/* v8065: players panel fills to bottom; show scrollbar only on overflow; hide bar itself */
 .rightBar .spacer{display:none !important;}
 #playersList{flex:1;min-height:0;}
 #playersList::-webkit-scrollbar{width:0;height:0;}
@@ -2323,7 +2323,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8064" type="module"></script>
+<script src="./app.js?v=8065" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2343,14 +2343,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8064').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8065').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8064</div>
+<div id="buildCornerText">8065</div>
 </div>
 </body>
 </html>

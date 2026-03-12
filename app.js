@@ -4138,7 +4138,7 @@ async function openRoom(code, opts={}){
   maybeShowSeasonPodiumFromRoom();
 
   currentRoundNo = currentRoom?.currentRoundNo || 1;
-  el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
+  el("roundLabel").textContent = formatCurrentRoundSeasonLabel(currentRoundNo);
 
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
@@ -4161,7 +4161,7 @@ async function openRoom(code, opts={}){
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
     currentRoundNo = currentRoom?.currentRoundNo || 1;
-    el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
+    el("roundLabel").textContent = formatCurrentRoundSeasonLabel(currentRoundNo);
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
@@ -4713,7 +4713,7 @@ function openPicksPreview(uid, nick){
 
   const roundChip = document.createElement("div");
   roundChip.className = "chip";
-  roundChip.textContent = `${t("round")} ${currentRoundNo}`;
+  roundChip.textContent = (getLang()==="en") ? `Round ${getSeasonRoundNo(currentRoundNo)} • Season ${getSeasonNoForRound(currentRoundNo)}` : `Kolejka ${getSeasonRoundNo(currentRoundNo)} • Sezon ${getSeasonNoForRound(currentRoundNo)}`;
 
   const ptsChip = document.createElement("div");
   ptsChip.className = "chip";
@@ -4881,7 +4881,7 @@ function openResultsScreen(){
   resultsCancelSelected.clear();
 
   el("resRoomName").textContent = currentRoom?.name || "—";
-  el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
+  el("resRound").textContent = formatCurrentRoundSeasonLabel(currentRoundNo);
 
   for(const m of matchesCache){
     resultsDraft[m.id] = {
@@ -5810,6 +5810,16 @@ function seasonRangeForRound(roundNo){
   const endRound = seasonNo * SEASON_ROUNDS;
   return { seasonNo, startRound, endRound };
 }
+
+function formatCurrentRoundSeasonLabel(roundNo){
+  const rn = Number(roundNo || 1);
+  const seasonNo = getSeasonNoForRound(rn);
+  const seasonRoundNo = getSeasonRoundNo(rn);
+  return (getLang()==="en")
+    ? `${seasonRoundNo} • Season ${seasonNo}`
+    : `${seasonRoundNo} • Sezon ${seasonNo}`;
+}
+
 function getPodiumDocRef(code, seasonNo){
   return boot.doc(db, "rooms", code, "seasonPodiums", `season_${seasonNo}`);
 }
