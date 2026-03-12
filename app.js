@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8070;
+const BUILD = 8071;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -601,12 +601,23 @@ async function handleJoinFlow(){
     openJoinRoomModal();
     return;
   }
+  const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
+  if(/^[A-Z0-9]{7}$/.test(pn)){
+    try{
+      const rooms = await __listRoomsForPlayerNo(pn);
+      if(rooms.length){
+        openJoinRoomModal();
+        return;
+      }
+    }catch(err){
+      console.warn("Rooms-for-player lookup failed:", err);
+    }
+  }
   const saved = getSavedRoom();
-  // If user has a saved active room (admin or member), enter immediately.
+  // If user has a saved active room (admin or member), enter immediately only when we do not have a player-number room choice.
   if(saved && saved.length===6){
     try{
-      const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
-      if(/^[A-Z]\d{6}$/.test(pn)){
+      if(/^[A-Z0-9]{7}$/.test(pn)){
         await performNewLogin(pn, saved);
       }else{
         await openRoom(saved, {force:true});
@@ -641,7 +652,7 @@ function openJoinRoomModal(){
   wrap.appendChild(inp);
 
   const currentPlayerNo = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
-  const shouldShowRoomsForPlayer = /^[A-Z]\d{6}$/.test(currentPlayerNo);
+  const shouldShowRoomsForPlayer = /^[A-Z0-9]{7}$/.test(currentPlayerNo);
   if(shouldShowRoomsForPlayer){
     const roomsHint = document.createElement("div");
     roomsHint.className = "muted";
@@ -671,6 +682,8 @@ function openJoinRoomModal(){
       if(rooms.length===1){
         select.value = rooms[0].code;
         inp.value = rooms[0].code;
+      }else{
+        select.value = "";
       }
     })();
 
@@ -704,7 +717,7 @@ const btnEnter = makeSysImgButton("btn_wejdz_pokoj.png", {
     // If the user provided player number via "Mój profil" then we treat join as "New login"
     // (it restores profile + uses existing player doc in the room).
     const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
-    const usePlayerNoLogin = /^[A-Z]\d{6}$/.test(pn);
+    const usePlayerNoLogin = /^[A-Z0-9]{7}$/.test(pn);
     if(usePlayerNoLogin){
       // clear flag so next joins behave normally
       window.__pendingPlayerNoLogin = false;
@@ -780,7 +793,7 @@ function openNewLoginModal(){
     onClick: async ()=>{
       const pn = String(inpNo.value||"").trim().toUpperCase();
       const code = String(inpCode.value||"").trim().toUpperCase();
-      if(!/^[A-Z]\d{6}$/.test(pn)){
+      if(!/^[A-Z0-9]{7}$/.test(pn)){
         showToast(getLang()==="en" ? "Invalid player number" : "Niepoprawny nr gracza");
         return;
       }
@@ -4180,7 +4193,7 @@ async function joinRoom(code){
   const playerNo = String(prof.playerNo || getPlayerNo() || "").trim().toUpperCase();
 
   // jeśli ten numer gracza już istnieje w pokoju, ZAWSZE użyj tego samego dokumentu gracza
-  if(/^[A-Z]\d{6}$/.test(playerNo)){
+  if(/^[A-Z0-9]{7}$/.test(playerNo)){
     const canonical = await __resolveRoomIdentityByPlayerNo(code, playerNo);
     if(canonical){
       const data = canonical.data() || {};
