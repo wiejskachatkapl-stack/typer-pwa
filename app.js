@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8063;
+const BUILD = 8055;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -495,6 +495,8 @@ function modalOpen(title, bodyNode){
   tEl.textContent = title || "—";
   b.innerHTML = "";
   if(bodyNode) b.appendChild(bodyNode);
+  const closeBtn = el("modalClose");
+  if(closeBtn) closeBtn.style.display = "";
   m.classList.add("active");
 }
 function modalClose(){
@@ -505,37 +507,6 @@ function modalClose(){
   }
   const mb = el("modalBack");
   if(mb) mb.remove();
-}
-
-function setModalBackButton(onClick, label){
-  const modalCloseBtn = el("modalClose");
-  if(!modalCloseBtn) return;
-  const existing = el("modalBack");
-  if(existing) existing.remove();
-  const btnBack = makeSysImgButton("btn_back.png", {
-    cls:"imgBtn small",
-    alt: label || ((getLang()==="en") ? "Back" : "Cofnij"),
-    title: label || ((getLang()==="en") ? "Back" : "Cofnij")
-  });
-  btnBack.id = "modalBack";
-  btnBack.onclick = onClick;
-  modalCloseBtn.parentNode.insertBefore(btnBack, modalCloseBtn);
-
-  // v8064: in player stats modals make Back/Exit visually the same size
-  const sizeModalNavBtn = (btn)=>{
-    if(!btn) return;
-    btn.style.display = "inline-flex";
-    btn.style.alignItems = "center";
-    btn.style.justifyContent = "center";
-    const img = btn.querySelector("img");
-    if(img){
-      img.style.width = "auto";
-      img.style.height = "58px";
-      img.style.maxHeight = "58px";
-    }
-  };
-  sizeModalNavBtn(btnBack);
-  sizeModalNavBtn(modalCloseBtn);
 }
 
 /** ROOMS MENU MODALS **/
@@ -617,6 +588,8 @@ function openRoomsChoiceModal(){
   wrap.appendChild(actions);
 
   modalOpen((getLang()==="en") ? "TYPERS ROOMS" : "POKOJE TYPERÓW", wrap);
+  const closeBtn = el("modalClose");
+  if(closeBtn) closeBtn.style.display = "none";
   // upewnij się, że obrazki przełączą się przy aktualnym języku
   refreshAllButtonImages();
 }
@@ -3975,10 +3948,7 @@ async function createRoom(roomName){
       adminUid: userUid,
       adminNick: nick,
       createdAt: boot.serverTimestamp(),
-      currentRoundNo: 1,
-      lastSeasonNo: 0,
-      lastSeasonPodium: null,
-      lastSeasonPodiumToken: null
+      currentRoundNo: 1
     });
 
     const prof = getProfile() || {};
@@ -3991,13 +3961,7 @@ async function createRoom(roomName){
       favClub: (prof.favClub || null),
       avatar: (prof.avatar || null),
       joinedAt: boot.serverTimestamp(),
-      lastActiveAt: boot.serverTimestamp(),
-      medalsGold: 0,
-      medalsSilver: 0,
-      medalsBronze: 0,
-      cupsGold: 0,
-      cupsSilver: 0,
-      cupsBronze: 0
+      lastActiveAt: boot.serverTimestamp()
     });
 
     localStorage.setItem(KEY_ACTIVE_ROOM, code);
@@ -4135,10 +4099,9 @@ async function openRoom(code, opts={}){
   const snap = await boot.getDoc(ref);
   if(!snap.exists()) throw new Error("Room not found");
   currentRoom = snap.data();
-  maybeShowSeasonPodiumFromRoom();
 
   currentRoundNo = currentRoom?.currentRoundNo || 1;
-  el("roundLabel").textContent = formatCurrentRoundSeasonLabel(currentRoundNo);
+  el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
@@ -4161,7 +4124,7 @@ async function openRoom(code, opts={}){
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
     currentRoundNo = currentRoom?.currentRoundNo || 1;
-    el("roundLabel").textContent = formatCurrentRoundSeasonLabel(currentRoundNo);
+    el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
@@ -4171,7 +4134,6 @@ async function openRoom(code, opts={}){
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
     syncActionButtons();
-    maybeShowSeasonPodiumFromRoom();
   });
 
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
@@ -4713,7 +4675,7 @@ function openPicksPreview(uid, nick){
 
   const roundChip = document.createElement("div");
   roundChip.className = "chip";
-  roundChip.textContent = (getLang()==="en") ? `Round ${getSeasonRoundNo(currentRoundNo)} • Season ${getSeasonNoForRound(currentRoundNo)}` : `Kolejka ${getSeasonRoundNo(currentRoundNo)} • Sezon ${getSeasonNoForRound(currentRoundNo)}`;
+  roundChip.textContent = `${t("round")} ${currentRoundNo}`;
 
   const ptsChip = document.createElement("div");
   ptsChip.className = "chip";
@@ -4881,7 +4843,7 @@ function openResultsScreen(){
   resultsCancelSelected.clear();
 
   el("resRoomName").textContent = currentRoom?.name || "—";
-  el("resRound").textContent = formatCurrentRoundSeasonLabel(currentRoundNo);
+  el("resRound").textContent = `${t("round")} ${currentRoundNo}`;
 
   for(const m of matchesCache){
     resultsDraft[m.id] = {
@@ -5491,81 +5453,11 @@ async function archiveCurrentRound(){
     pointsMap[uid] = sum;
   }
 
-  const ranking = Object.entries(pointsMap)
-    .map(([uid, pts])=>({
-      uid,
-      pts: Number(pts || 0),
-      nick: nickByUid[uid] || (lastPlayers.find(p=>p.uid===uid)?.nick) || "—",
-      avatar: (lastPlayers.find(p=>p.uid===uid)?.avatar) || null,
-      country: (lastPlayers.find(p=>p.uid===uid)?.country) || null,
-      favClub: (lastPlayers.find(p=>p.uid===uid)?.favClub) || null
-    }))
-    .sort((a,b)=>{
-      if(b.pts !== a.pts) return b.pts - a.pts;
-      return String(a.nick||"").localeCompare(String(b.nick||""), "pl");
-    });
-
-  const roundTop3 = ranking.slice(0,3);
-  const seasonInfo = seasonRangeForRound(roundNo);
-  let seasonTop3 = null;
-  let seasonToken = null;
-  const seasonComplete = isSeasonFinalRound(roundNo);
-
-  if(seasonComplete){
-    const seasonalTotals = {};
-    const seasonalMeta = {};
-    try{
-      const archived = await boot.getDocs(boot.collection(db, "rooms", code, "rounds"));
-      archived.forEach(doc=>{
-        const rd = doc.data() || {};
-        const rn = Number(rd.roundNo || 0);
-        if(rn >= seasonInfo.startRound && rn < roundNo){
-          const ptsMap = rd.pointsByUid || {};
-          const nickMap = rd.nickByUid || {};
-          Object.entries(ptsMap).forEach(([uid, pts])=>{
-            seasonalTotals[uid] = (seasonalTotals[uid] || 0) + Number(pts || 0);
-            if(!seasonalMeta[uid]) seasonalMeta[uid] = { nick: nickMap[uid] || "—" };
-          });
-        }
-      });
-    }catch(e){ console.warn("season totals load failed", e); }
-
-    Object.entries(pointsMap).forEach(([uid, pts])=>{
-      seasonalTotals[uid] = (seasonalTotals[uid] || 0) + Number(pts || 0);
-      const lp = lastPlayers.find(p=>p.uid===uid) || {};
-      seasonalMeta[uid] = {
-        nick: nickByUid[uid] || lp.nick || "—",
-        avatar: lp.avatar || null,
-        country: lp.country || null,
-        favClub: lp.favClub || null
-      };
-    });
-
-    seasonTop3 = Object.entries(seasonalTotals)
-      .map(([uid, pts])=>({
-        uid,
-        pts: Number(pts || 0),
-        nick: seasonalMeta[uid]?.nick || "—",
-        avatar: seasonalMeta[uid]?.avatar || null,
-        country: seasonalMeta[uid]?.country || null,
-        favClub: seasonalMeta[uid]?.favClub || null
-      }))
-      .sort((a,b)=>{
-        if(b.pts !== a.pts) return b.pts - a.pts;
-        return String(a.nick||"").localeCompare(String(b.nick||""), "pl");
-      })
-      .slice(0,3);
-
-    seasonToken = `season_${seasonInfo.seasonNo}_${Date.now()}`;
-  }
-
   const b = boot.writeBatch(db);
 
   const rd = roundDocRef(code, roundNo);
   b.set(rd, {
     roundNo,
-    seasonNo: seasonInfo.seasonNo,
-    seasonRoundNo: seasonInfo.endRound ? getSeasonRoundNo(roundNo) : getSeasonRoundNo(roundNo),
     roomCode: code,
     roomName: currentRoom?.name || "",
     createdAt: boot.serverTimestamp(),
@@ -5575,8 +5467,7 @@ async function archiveCurrentRound(){
     matches,
     picksByUid,
     pointsByUid: pointsMap,
-    nickByUid,
-    roundTop3
+    nickByUid
   }, { merge:false });
 
   for(const [uid, pts] of Object.entries(pointsMap)){
@@ -5591,39 +5482,10 @@ async function archiveCurrentRound(){
     }, { merge:true });
   }
 
-  roundTop3.forEach((row, idx)=>{
-    const pr = boot.doc(db, "rooms", code, "players", row.uid);
-    const medalPatch = idx===0 ? { medalsGold: boot.increment(1) } : idx===1 ? { medalsSilver: boot.increment(1) } : { medalsBronze: boot.increment(1) };
-    b.set(pr, medalPatch, { merge:true });
-  });
-
-  if(seasonComplete && seasonTop3 && seasonTop3.length){
-    const podiumRef = getPodiumDocRef(code, seasonInfo.seasonNo);
-    b.set(podiumRef, {
-      seasonNo: seasonInfo.seasonNo,
-      startRound: seasonInfo.startRound,
-      endRound: seasonInfo.endRound,
-      closedAt: boot.serverTimestamp(),
-      top3: seasonTop3
-    }, { merge:true });
-
-    seasonTop3.forEach((row, idx)=>{
-      const pr = boot.doc(db, "rooms", code, "players", row.uid);
-      const cupPatch = idx===0 ? { cupsGold: boot.increment(1) } : idx===1 ? { cupsSilver: boot.increment(1) } : { cupsBronze: boot.increment(1) };
-      b.set(pr, cupPatch, { merge:true });
-    });
-  }
-
-  const roomPatch = {
+  b.update(roomRef(code), {
     currentRoundNo: roundNo + 1,
     updatedAt: boot.serverTimestamp()
-  };
-  if(seasonComplete && seasonTop3 && seasonTop3.length){
-    roomPatch.lastSeasonNo = seasonInfo.seasonNo;
-    roomPatch.lastSeasonPodium = seasonTop3;
-    roomPatch.lastSeasonPodiumToken = seasonToken;
-  }
-  b.set(roomRef(code), roomPatch, { merge:true });
+  });
 
   for(const m of matchesCache){
     b.delete(boot.doc(db, "rooms", code, "matches", m.id));
@@ -5634,9 +5496,6 @@ async function archiveCurrentRound(){
 
   await b.commit();
 
-  if(seasonComplete && seasonTop3 && seasonTop3.length){
-    openSeasonPodiumModal({ seasonNo: seasonInfo.seasonNo, top3: seasonTop3 });
-  }
   showToast(getLang()==="en" ? `ROUND ${roundNo} ended ✅` : `Zakończono KOLEJKĘ ${roundNo} ✅`);
 }
 
@@ -5789,155 +5648,6 @@ const leagueState = {
   viewMode: "TOTAL", // TOTAL | ROUND
   selectedRound: "ALL" // ALL or roundNo string
 };
-
-const SEASON_ROUNDS = 12;
-let __lastSeenSeasonPodiumToken = "";
-
-function getSeasonNoForRound(roundNo){
-  const rn = Number(roundNo || 0);
-  return rn > 0 ? Math.floor((rn - 1) / SEASON_ROUNDS) + 1 : 1;
-}
-function getSeasonRoundNo(roundNo){
-  const rn = Number(roundNo || 0);
-  return rn > 0 ? ((rn - 1) % SEASON_ROUNDS) + 1 : 1;
-}
-function isSeasonFinalRound(roundNo){
-  return getSeasonRoundNo(roundNo) === SEASON_ROUNDS;
-}
-function seasonRangeForRound(roundNo){
-  const seasonNo = getSeasonNoForRound(roundNo);
-  const startRound = (seasonNo - 1) * SEASON_ROUNDS + 1;
-  const endRound = seasonNo * SEASON_ROUNDS;
-  return { seasonNo, startRound, endRound };
-}
-
-function formatCurrentRoundSeasonLabel(roundNo){
-  const rn = Number(roundNo || 1);
-  const seasonNo = getSeasonNoForRound(rn);
-  const seasonRoundNo = getSeasonRoundNo(rn);
-  return (getLang()==="en")
-    ? `${seasonRoundNo} • Season ${seasonNo}`
-    : `${seasonRoundNo} • Sezon ${seasonNo}`;
-}
-
-function getPodiumDocRef(code, seasonNo){
-  return boot.doc(db, "rooms", code, "seasonPodiums", `season_${seasonNo}`);
-}
-function __avatarUrlFromStored(avatarVal){
-  const path = (typeof __normalizeAvatarValue === "function") ? __normalizeAvatarValue(avatarVal || "") : String(avatarVal || "").trim();
-  return path || "";
-}
-async function fetchSeasonPodiumDoc(code, seasonNo){
-  try{
-    const snap = await boot.getDoc(getPodiumDocRef(code, seasonNo));
-    return snap.exists() ? (snap.data() || null) : null;
-  }catch(e){
-    return null;
-  }
-}
-async function computeStoredCupCounts(code, uid){
-  const counts = {1:0,2:0,3:0};
-  try{
-    const qs = await boot.getDocs(boot.collection(db, "rooms", code, "seasonPodiums"));
-    qs.forEach(doc=>{
-      const data = doc.data() || {};
-      const top3 = Array.isArray(data.top3) ? data.top3 : [];
-      top3.forEach((row, idx)=>{
-        if(String(row?.uid || "") === String(uid || "") && idx < 3) counts[idx+1] += 1;
-      });
-    });
-  }catch(e){}
-  return counts;
-}
-function maybeShowSeasonPodiumFromRoom(){
-  const token = String(currentRoom?.lastSeasonPodiumToken || "").trim();
-  const top3 = Array.isArray(currentRoom?.lastSeasonPodium) ? currentRoom.lastSeasonPodium : null;
-  const seasonNo = Number(currentRoom?.lastSeasonNo || 0);
-  if(!token || !top3 || !top3.length) return;
-  if(token === __lastSeenSeasonPodiumToken) return;
-  __lastSeenSeasonPodiumToken = token;
-  openSeasonPodiumModal({ seasonNo, top3 });
-}
-function ensureSeasonPodiumStyles(){
-  if(document.getElementById("seasonPodiumStyles")) return;
-  const st = document.createElement("style");
-  st.id = "seasonPodiumStyles";
-  st.textContent = `
-    .seasonPodiumOverlay{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
-    .seasonPodiumBox{width:min(1100px,96vw);height:min(760px,94vh);position:relative;border-radius:24px;border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 80px rgba(0,0,0,.55);overflow:hidden;background:rgba(6,18,40,.92);}
-    .seasonPodiumBg{position:absolute;inset:0;background:center bottom/contain no-repeat, linear-gradient(180deg, rgba(7,18,41,.96), rgba(7,18,41,.90));}
-    .seasonPodiumTitle{position:absolute;top:18px;left:0;right:0;text-align:center;font-size:28px;font-weight:1000;letter-spacing:.4px;text-shadow:0 2px 12px rgba(0,0,0,.5);}
-    .seasonPodiumSub{position:absolute;top:58px;left:0;right:0;text-align:center;font-size:14px;font-weight:900;color:rgba(255,255,255,.82);}
-    .seasonPodiumClose{position:absolute;top:14px;right:14px;z-index:3;}
-    .seasonPodiumLayer{position:absolute;left:0;right:0;bottom:0;height:100%;}
-    .seasonPodiumPerson{position:absolute;display:flex;flex-direction:column;align-items:center;gap:8px;transform:translateX(-50%);width:220px;}
-    .seasonPodiumAvatarWrap{width:110px;height:110px;border-radius:22px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.35);}
-    .seasonPodiumAvatarWrap img{max-width:100%;max-height:100%;object-fit:contain;display:block;}
-    .seasonPodiumAvatarFallback{font-size:48px;opacity:.95;}
-    .seasonPodiumNick{font-weight:1000;font-size:20px;line-height:1.05;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.48);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .seasonPodiumCup{display:flex;align-items:center;gap:8px;font-weight:900;background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.16);padding:8px 12px;border-radius:16px;}
-    .seasonPodiumCup img{width:22px;height:22px;}
-    .seasonPodiumPos1{left:50%;bottom:235px;}
-    .seasonPodiumPos2{left:26%;bottom:180px;}
-    .seasonPodiumPos3{left:74%;bottom:164px;}
-    @media (max-width: 900px){
-      .seasonPodiumBox{height:min(680px,94vh);}
-      .seasonPodiumPerson{width:160px;}
-      .seasonPodiumAvatarWrap{width:84px;height:84px;border-radius:18px;}
-      .seasonPodiumAvatarFallback{font-size:36px;}
-      .seasonPodiumNick{font-size:16px;max-width:160px;}
-      .seasonPodiumPos1{bottom:210px;}
-      .seasonPodiumPos2{left:24%;bottom:168px;}
-      .seasonPodiumPos3{left:76%;bottom:154px;}
-    }
-  `;
-  document.head.appendChild(st);
-}
-function openSeasonPodiumModal({seasonNo, top3}){
-  if(!Array.isArray(top3) || !top3.length) return;
-  ensureSeasonPodiumStyles();
-  let ov = document.getElementById("seasonPodiumOverlay");
-  if(!ov){
-    ov = document.createElement("div");
-    ov.id = "seasonPodiumOverlay";
-    ov.className = "seasonPodiumOverlay";
-    ov.innerHTML = `
-      <div class="seasonPodiumBox" role="dialog" aria-modal="true">
-        <div class="seasonPodiumBg" id="seasonPodiumBg"></div>
-        <div class="seasonPodiumTitle" id="seasonPodiumTitle"></div>
-        <div class="seasonPodiumSub" id="seasonPodiumSub"></div>
-        <button class="imgBtn small seasonPodiumClose" id="seasonPodiumClose" type="button"><img data-btn="btn_exit.png" src="${getBtnDir()}/btn_exit.png" alt="close"></button>
-        <div class="seasonPodiumLayer" id="seasonPodiumLayer"></div>
-      </div>`;
-    document.body.appendChild(ov);
-    ov.addEventListener("click", (e)=>{ if(e.target === ov) ov.style.display = "none"; });
-    ov.querySelector("#seasonPodiumClose").onclick = ()=>{ ov.style.display = "none"; };
-  }
-  const bg = ov.querySelector("#seasonPodiumBg");
-  const ttl = ov.querySelector("#seasonPodiumTitle");
-  const sub = ov.querySelector("#seasonPodiumSub");
-  const layer = ov.querySelector("#seasonPodiumLayer");
-  if(bg) bg.style.backgroundImage = `url("ui/medale/podium.png?v=${BUILD}"), linear-gradient(180deg, rgba(7,18,41,.96), rgba(7,18,41,.90))`;
-  if(ttl) ttl.textContent = (getLang()==="en") ? `Season ${seasonNo} podium` : `Podium sezonu ${seasonNo}`;
-  if(sub) sub.textContent = (getLang()==="en") ? `Top 3 after ${SEASON_ROUNDS} rounds` : `Top 3 po ${SEASON_ROUNDS} kolejkach`;
-  if(layer){
-    layer.innerHTML = "";
-    top3.slice(0,3).forEach((row, idx)=>{
-      const pos = idx + 1;
-      const card = document.createElement("div");
-      card.className = `seasonPodiumPerson seasonPodiumPos${pos}`;
-      const avatarUrl = __avatarUrlFromStored(row?.avatar || "");
-      const cupSrc = pos===1 ? "ui/medale/puchar_1.png" : pos===2 ? "ui/medale/puchar_2.png" : "ui/medale/puchar_3.png";
-      card.innerHTML = `
-        <div class="seasonPodiumAvatarWrap">${avatarUrl ? `<img alt="avatar" src="${avatarUrl}?v=${BUILD}">` : `<div class="seasonPodiumAvatarFallback">🙂</div>`}</div>
-        <div class="seasonPodiumNick">${escapeHtml(String(row?.nick || "—"))}</div>
-        <div class="seasonPodiumCup"><img alt="cup" src="${cupSrc}"><span>${pos}</span></div>`;
-      layer.appendChild(card);
-    });
-  }
-  refreshAllButtonImages(ov);
-  ov.style.display = "flex";
-}
 
 async function loadLeagueFinishedRounds(code){
   leagueState.finishedRounds = [];
@@ -6196,13 +5906,12 @@ async function openPlayerStatsFromLeague(uid, nick){
 
   const q = boot.query(roundsCol(code), boot.orderBy("roundNo","desc"));
   const qs = await boot.getDocs(q);
-  const playerSnap = await boot.getDoc(boot.doc(db, "rooms", code, "players", uid));
-  const playerData = playerSnap.exists() ? (playerSnap.data() || {}) : {};
 
   const wrap = document.createElement("div");
   wrap.style.display="flex";
   wrap.style.flexDirection="column";
-  wrap.style.gap="8px";
+  // ciaśniej, aby weszło więcej kolejek bez scrolla
+  wrap.style.gap="4px";
 
   const head = document.createElement("div");
   head.className="row";
@@ -6211,25 +5920,21 @@ async function openPlayerStatsFromLeague(uid, nick){
   head.appendChild(chip((getLang()==="en") ? `Player: ${nick}` : `Gracz: ${nick}`));
   wrap.appendChild(head);
 
-  const profileCard = document.createElement("div");
-  profileCard.className = "matchCard";
-  profileCard.style.display = "grid";
-  profileCard.style.gridTemplateColumns = "84px 1fr";
-  profileCard.style.gap = "12px";
-  profileCard.style.alignItems = "center";
-  const avatarUrl = __avatarUrlFromStored(playerData.avatar || "");
-  const countryName = playerData.country ? __getCountryDisplayName(getLang(), String(playerData.country).toUpperCase()) : "—";
-  profileCard.innerHTML = `
-    <div style="width:84px;height:84px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;">${avatarUrl ? `<img alt="avatar" src="${avatarUrl}?v=${BUILD}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;">` : `<div style="font-size:36px;opacity:.92">🙂</div>`}</div>
-    <div style="display:grid;gap:6px;min-width:0;">
-      <div style="font-weight:1000;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(String(playerData.nick || nick || "—"))}</div>
-      <div style="font-weight:800;color:rgba(255,255,255,.78);">${(getLang()==="en") ? "Country" : "Kraj"}: ${escapeHtml(countryName)}</div>
-      <div style="font-weight:800;color:rgba(255,255,255,.78);">${(getLang()==="en") ? "Favorite club" : "Ulubiony klub"}: ${escapeHtml(String(playerData.favClub || "—"))}</div>
-    </div>`;
-  wrap.appendChild(profileCard);
+  if(qs.empty){
+    const info = document.createElement("div");
+    info.className="sub";
+    info.textContent = (getLang()==="en")
+      ? "No finished rounds in history."
+      : "Brak zakończonych kolejek w historii.";
+    wrap.appendChild(info);
+    modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
+    return;
+  }
 
+  // === Medale za kolejki (TOP3 w zakończonych kolejkach) ===
   const medalCounts = {1:0,2:0,3:0};
   const medalRounds = {1:[],2:[],3:[]};
+
   const roundDocs = [];
   qs.forEach(d=> roundDocs.push(d.data()));
 
@@ -6253,12 +5958,13 @@ async function openPlayerStatsFromLeague(uid, nick){
     }
   }
 
-  const storedCupCounts = await computeStoredCupCounts(code, uid);
-  const cupCounts = {
-    1: Math.max(Number(playerData.cupsGold || 0), storedCupCounts[1]),
-    2: Math.max(Number(playerData.cupsSilver || 0), storedCupCounts[2]),
-    3: Math.max(Number(playerData.cupsBronze || 0), storedCupCounts[3])
-  };
+  // === Puchary za miejsca w lidze (TOP3 w tabeli ligi) ===
+  const leagueRows = [...(leagueState.rows||[])];
+  leagueRows.sort((a,b)=>{
+    if(b.points!==a.points) return b.points-a.points;
+    return String(a.nick).localeCompare(String(b.nick), "pl");
+  });
+  const leaguePos = leagueRows.findIndex(x=> x.uid===uid);
 
   const awards = document.createElement("div");
   awards.className = "row statsAwardsRow";
@@ -6283,23 +5989,19 @@ async function openPlayerStatsFromLeague(uid, nick){
     return d;
   };
 
-  if(cupCounts[1]) awards.appendChild(mkAward("ui/medale/puchar_1.png", `x${cupCounts[1]}`));
-  if(cupCounts[2]) awards.appendChild(mkAward("ui/medale/puchar_2.png", `x${cupCounts[2]}`));
-  if(cupCounts[3]) awards.appendChild(mkAward("ui/medale/puchar_3.png", `x${cupCounts[3]}`));
-  if(medalCounts[1]) awards.appendChild(mkAward("ui/medale/medal_1.png", `x${medalCounts[1]}`));
-  if(medalCounts[2]) awards.appendChild(mkAward("ui/medale/medal_2.png", `x${medalCounts[2]}`));
-  if(medalCounts[3]) awards.appendChild(mkAward("ui/medale/medal_3.png", `x${medalCounts[3]}`));
-  if(awards.childNodes.length) wrap.appendChild(awards);
+  if(leaguePos>=0 && leaguePos<3){
+    const cupSrc = (leaguePos===0) ? "ui/medale/puchar_1.png" : (leaguePos===1) ? "ui/medale/puchar_2.png" : "ui/medale/puchar_3.png";
+    awards.appendChild(mkAward(cupSrc, (getLang()==="en") ? "League" : "Liga"));
+  }
 
-  if(qs.empty){
-    const info = document.createElement("div");
-    info.className="sub";
-    info.textContent = (getLang()==="en")
-      ? "No finished rounds in history."
-      : "Brak zakończonych kolejek w historii.";
-    wrap.appendChild(info);
-    modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
-    return;
+  if(medalCounts[1]||medalCounts[2]||medalCounts[3]){
+    if(medalCounts[1]) awards.appendChild(mkAward("ui/medale/medal_1.png", `x${medalCounts[1]}`));
+    if(medalCounts[2]) awards.appendChild(mkAward("ui/medale/medal_2.png", `x${medalCounts[2]}`));
+    if(medalCounts[3]) awards.appendChild(mkAward("ui/medale/medal_3.png", `x${medalCounts[3]}`));
+  }
+
+  if(awards.childNodes.length){
+    wrap.appendChild(awards);
   }
 
   roundDocs.forEach(rd=>{
@@ -6307,6 +6009,7 @@ async function openPlayerStatsFromLeague(uid, nick){
     const pts = rd?.pointsByUid?.[uid];
     const played = (pts !== undefined && pts !== null);
 
+    // Medal for this round (if any)
     let medalSrc = "";
     if(medalRounds[1].includes(rn)) medalSrc = "ui/medale/medal_1.png";
     else if(medalRounds[2].includes(rn)) medalSrc = "ui/medale/medal_2.png";
@@ -6320,9 +6023,9 @@ async function openPlayerStatsFromLeague(uid, nick){
     left.style.display="flex";
     left.style.flexDirection="column";
     left.style.gap="0px";
-    const seasonNo = Number(rd?.seasonNo || getSeasonNoForRound(rn));
-    const seasonRoundNo = Number(rd?.seasonRoundNo || getSeasonRoundNo(rn));
-    left.innerHTML = `<div style="font-weight:1000">${medalSrc ? `<img alt="medal" src="${medalSrc}" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"/>` : ""}${t("round")} ${rn} <span style="opacity:.72;font-weight:900">• ${(getLang()==="en") ? `Season ${seasonNo}/${seasonRoundNo}` : `Sezon ${seasonNo}/${seasonRoundNo}`}</span></div>`;
+    // W Statystykach gracza nie pokazujemy linii statusu (Zagrana / Brak typów / niepełne),
+    // aby wiersze były niższe i mieściło się więcej kolejek.
+    left.innerHTML = `<div style="font-weight:1000">${medalSrc ? `<img alt="medal" src="${medalSrc}" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"/>` : ""}${t("round")} ${rn}</div>`;
 
     const right = document.createElement("div");
     right.className="row statsRightRow";
@@ -6351,14 +6054,6 @@ async function openPlayerStatsFromLeague(uid, nick){
   });
 
   modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
-  setModalBackButton(()=>{ modalClose(); }, (getLang()==="en") ? "Back" : "Cofnij");
-  const modalCloseBtn = el("modalClose");
-  if(modalCloseBtn){
-    modalCloseBtn.onclick = ()=>{
-      modalClose();
-      if(currentRoomCode) showScreen("room");
-    };
-  }
 }
 
 async function openArchivedPicksPreview(code, roundNo, uid, nick){
@@ -6392,14 +6087,6 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
       : "Brak zapisanych typów w tej kolejce.";
     wrap.appendChild(info);
     modalOpen((getLang()==="en") ? "Archive preview" : "Podgląd (archiwum)", wrap);
-    setModalBackButton(()=>{ openPlayerStatsFromLeague(uid, nick); }, (getLang()==="en") ? "Back" : "Cofnij");
-    const modalCloseBtn = el("modalClose");
-    if(modalCloseBtn){
-      modalCloseBtn.onclick = ()=>{
-        modalClose();
-        if(currentRoomCode) showScreen("room");
-      };
-    }
     return;
   }
 
@@ -6471,14 +6158,6 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
   }
 
   modalOpen((getLang()==="en") ? "Archive preview" : "Podgląd (archiwum)", wrap);
-  setModalBackButton(()=>{ openPlayerStatsFromLeague(uid, nick); }, (getLang()==="en") ? "Back" : "Cofnij");
-  const modalCloseBtn = el("modalClose");
-  if(modalCloseBtn){
-    modalCloseBtn.onclick = ()=>{
-      modalClose();
-      if(currentRoomCode) showScreen("room");
-    };
-  }
 }
 
 function chip(text){
