@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8062;
+const BUILD = 8063;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -505,6 +505,21 @@ function modalClose(){
   }
   const mb = el("modalBack");
   if(mb) mb.remove();
+}
+
+function setModalBackButton(onClick, label){
+  const modalCloseBtn = el("modalClose");
+  if(!modalCloseBtn) return;
+  const existing = el("modalBack");
+  if(existing) existing.remove();
+  const btnBack = makeSysImgButton("btn_back.png", {
+    cls:"imgBtn small",
+    alt: label || ((getLang()==="en") ? "Back" : "Cofnij"),
+    title: label || ((getLang()==="en") ? "Back" : "Cofnij")
+  });
+  btnBack.id = "modalBack";
+  btnBack.onclick = onClick;
+  modalCloseBtn.parentNode.insertBefore(btnBack, modalCloseBtn);
 }
 
 /** ROOMS MENU MODALS **/
@@ -6310,6 +6325,7 @@ async function openPlayerStatsFromLeague(uid, nick){
   });
 
   modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
+  setModalBackButton(()=>{ modalClose(); }, (getLang()==="en") ? "Back" : "Cofnij");
 }
 
 async function openArchivedPicksPreview(code, roundNo, uid, nick){
@@ -6343,6 +6359,7 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
       : "Brak zapisanych typów w tej kolejce.";
     wrap.appendChild(info);
     modalOpen((getLang()==="en") ? "Archive preview" : "Podgląd (archiwum)", wrap);
+  setModalBackButton(()=>{ openPlayerStatsFromLeague(uid, nick); }, (getLang()==="en") ? "Back" : "Cofnij");
     return;
   }
 
