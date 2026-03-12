@@ -1860,9 +1860,6 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <button class="imgBtn" data-btn="btn_statistics.png" id="btnHomeStats" title="Statystyki">
 <img alt="Statystyki" data-btn="btn_statistics.png" src="ui/buttons/pl/btn_statistics.png"/>
 </button>
-<button class="imgBtn" data-btn="btn_exit.png" id="btnHomeExit" title="Wyjście">
-<img alt="Wyjście" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/>
-</button>
 </div>
 </section>
 <!-- CONTINUE -->
@@ -2323,7 +2320,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8051" type="module"></script>
+<script src="./app.js?v=8067" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2343,14 +2340,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8051').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8067').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">8051</div>
+<div id="buildCornerText">8067</div>
 </div>
 </body>
 </html>
