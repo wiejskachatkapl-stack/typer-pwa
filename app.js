@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8067;
+const BUILD = 8070;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -605,7 +605,12 @@ async function handleJoinFlow(){
   // If user has a saved active room (admin or member), enter immediately.
   if(saved && saved.length===6){
     try{
-      await openRoom(saved, {force:true});
+      const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
+      if(/^[A-Z]\d{6}$/.test(pn)){
+        await performNewLogin(pn, saved);
+      }else{
+        await openRoom(saved, {force:true});
+      }
       return;
     }catch(err){
       // If room no longer exists, fall back to asking for code
@@ -635,6 +640,46 @@ function openJoinRoomModal(){
   inp.style.textTransform = "uppercase";
   wrap.appendChild(inp);
 
+  const currentPlayerNo = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
+  const shouldShowRoomsForPlayer = /^[A-Z]\d{6}$/.test(currentPlayerNo);
+  if(shouldShowRoomsForPlayer){
+    const roomsHint = document.createElement("div");
+    roomsHint.className = "muted";
+    roomsHint.style.marginTop = "10px";
+    roomsHint.textContent = (getLang()==="en")
+      ? "Rooms available for this player number:"
+      : "Pokoje dostępne dla tego numeru gracza:";
+    wrap.appendChild(roomsHint);
+
+    const select = document.createElement("select");
+    select.id = "joinRoomSelectByPlayer";
+    select.className = "input";
+    select.style.textTransform = "none";
+    select.innerHTML = `<option value="">${getLang()==="en" ? "Loading…" : "Ładowanie…"}</option>`;
+    wrap.appendChild(select);
+
+    (async ()=>{
+      const rooms = await __listRoomsForPlayerNo(currentPlayerNo);
+      if(!rooms.length){
+        select.innerHTML = `<option value="">${getLang()==="en" ? "No saved rooms for this player" : "Brak pokoi dla tego numeru gracza"}</option>`;
+        return;
+      }
+      select.innerHTML = `<option value="">${getLang()==="en" ? "Choose room from list…" : "Wybierz pokój z listy…"}</option>` + rooms.map(r=>{
+        const role = r.admin ? (getLang()==="en" ? "admin" : "admin") : (getLang()==="en" ? "player" : "gracz");
+        return `<option value="${escapeHtml(r.code)}">${escapeHtml(r.name)} [${escapeHtml(r.code)}] • ${role}</option>`;
+      }).join("");
+      if(rooms.length===1){
+        select.value = rooms[0].code;
+        inp.value = rooms[0].code;
+      }
+    })();
+
+    select.addEventListener('change', ()=>{
+      const code = String(select.value||'').trim().toUpperCase();
+      if(code) inp.value = code;
+    });
+  }
+
   const row = document.createElement("div");
 row.className = "rowRight";
 
@@ -659,7 +704,7 @@ const btnEnter = makeSysImgButton("btn_wejdz_pokoj.png", {
     // If the user provided player number via "Mój profil" then we treat join as "New login"
     // (it restores profile + uses existing player doc in the room).
     const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
-    const usePlayerNoLogin = (window.__pendingPlayerNoLogin === true) && /^[A-Z]\d{6}$/.test(pn);
+    const usePlayerNoLogin = /^[A-Z]\d{6}$/.test(pn);
     if(usePlayerNoLogin){
       // clear flag so next joins behave normally
       window.__pendingPlayerNoLogin = false;
@@ -755,46 +800,188 @@ function openNewLoginModal(){
   setTimeout(()=> inpNo.focus(), 50);
 }
 
+
+async function __findPlayerDocsInRoomByPlayerNo(roomCode, playerNo){
+  const pno = String(playerNo||"").trim().toUpperCase();
+  if(!pno || !roomCode) return [];
+  try{
+    const q = boot.query(playersCol(roomCode), boot.where("playerNo","==", pno));
+    const qs = await boot.getDocs(q);
+    return qs.docs || [];
+  }catch(e){
+    console.warn("findPlayerDocsInRoomByPlayerNo failed", e);
+    return [];
+  }
+}
+
+function __joinedAtMs(v){
+  try{
+    if(!v) return 0;
+    if(typeof v.toMillis === 'function') return v.toMillis();
+    if(typeof v.seconds === 'number') return v.seconds * 1000 + Math.floor((v.nanoseconds||0)/1e6);
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }catch(e){ return 0; }
+}
+
+function __chooseCanonicalPlayerDoc(docs){
+  if(!Array.isArray(docs) || !docs.length) return null;
+  const scored = docs.map(docSnap=>{
+    const d = docSnap.data() || {};
+    let score = 0;
+    if(d.admin) score += 1000;
+    if(String(d.nick||'').trim()) score += 50;
+    if(String(d.avatar||'').trim()) score += 20;
+    if(String(d.country||'').trim()) score += 10;
+    if(String(d.favClub||'').trim()) score += 10;
+    score -= Math.floor(__joinedAtMs(d.joinedAt) / 1000 / 60 / 60 / 24 / 365); // tiny stabilizer
+    return {docSnap, d, score, joined: __joinedAtMs(d.joinedAt)};
+  });
+  scored.sort((a,b)=>{
+    if(b.score !== a.score) return b.score - a.score;
+    if(a.joined !== b.joined) return a.joined - b.joined;
+    return String(a.docSnap.id).localeCompare(String(b.docSnap.id));
+  });
+  return scored[0].docSnap;
+}
+
+async function __canonicalizeRoomPlayerByPlayerNo(roomCode, playerNo){
+  const docs = await __findPlayerDocsInRoomByPlayerNo(roomCode, playerNo);
+  if(!docs.length) return null;
+  const canonical = __chooseCanonicalPlayerDoc(docs);
+  if(!canonical) return null;
+  if(docs.length <= 1) return canonical;
+
+  try{
+    const canonicalRef = boot.doc(db, 'rooms', roomCode, 'players', canonical.id);
+    const canonicalData = canonical.data() || {};
+    const patch = {
+      uid: canonical.id,
+      playerNo: String(playerNo||'').trim().toUpperCase() || null,
+      admin: !!canonicalData.admin,
+      nick: canonicalData.nick || null,
+      country: canonicalData.country || null,
+      favClub: canonicalData.favClub || null,
+      avatar: canonicalData.avatar || null,
+      joinedAt: canonicalData.joinedAt || boot.serverTimestamp(),
+      lastActiveAt: boot.serverTimestamp()
+    };
+    await boot.setDoc(canonicalRef, patch, {merge:true});
+
+    for(const docSnap of docs){
+      if(docSnap.id === canonical.id) continue;
+      const d = docSnap.data() || {};
+      // migrate picks if canonical has none and duplicate has picks
+      try{
+        const dupPickRef = boot.doc(db, 'rooms', roomCode, 'picks', docSnap.id);
+        const canPickRef = boot.doc(db, 'rooms', roomCode, 'picks', canonical.id);
+        const [dupPickSnap, canPickSnap] = await Promise.all([boot.getDoc(dupPickRef), boot.getDoc(canPickRef)]);
+        const dupPicks = dupPickSnap.exists() ? (dupPickSnap.data()?.picks || null) : null;
+        const canPicks = canPickSnap.exists() ? (canPickSnap.data()?.picks || null) : null;
+        if(dupPicks && (!canPicks || !Object.keys(canPicks).length)){
+          await boot.setDoc(canPickRef, { picks: dupPicks }, {merge:true});
+        }
+      }catch(e){ console.warn('picks migration failed', e); }
+
+      // merge richer profile/admin fields if duplicate has something missing
+      const enrich = {};
+      if(d.admin && !canonicalData.admin) enrich.admin = true;
+      if(!canonicalData.nick && d.nick) enrich.nick = d.nick;
+      if(!canonicalData.country && d.country) enrich.country = d.country;
+      if(!canonicalData.favClub && d.favClub) enrich.favClub = d.favClub;
+      if(!canonicalData.avatar && d.avatar) enrich.avatar = d.avatar;
+      if(Object.keys(enrich).length){
+        enrich.uid = canonical.id;
+        enrich.playerNo = String(playerNo||'').trim().toUpperCase() || null;
+        enrich.lastActiveAt = boot.serverTimestamp();
+        await boot.setDoc(canonicalRef, enrich, {merge:true});
+      }
+
+      try{ await boot.deleteDoc(boot.doc(db, 'rooms', roomCode, 'players', docSnap.id)); }catch(e){ console.warn('dup player delete failed', e); }
+      try{ await boot.deleteDoc(boot.doc(db, 'rooms', roomCode, 'picks', docSnap.id)); }catch(e){}
+    }
+  }catch(e){
+    console.warn('__canonicalizeRoomPlayerByPlayerNo failed', e);
+  }
+  return canonical;
+}
+
+async function __resolveRoomIdentityByPlayerNo(roomCode, playerNo){
+  const pno = String(playerNo||'').trim().toUpperCase();
+  if(!roomCode || !pno) return null;
+  const canonical = await __canonicalizeRoomPlayerByPlayerNo(roomCode, pno);
+  if(canonical){
+    userUid = canonical.id;
+    return canonical;
+  }
+  return null;
+}
+
+async function __listRoomsForPlayerNo(playerNo){
+  const pno = String(playerNo||'').trim().toUpperCase();
+  if(!pno) return [];
+  const out = [];
+  try{
+    const roomsSnap = await boot.getDocs(boot.collection(db, 'rooms'));
+    for(const roomDoc of roomsSnap.docs || []){
+      const code = String(roomDoc.id || '').trim().toUpperCase();
+      if(code.length !== 6) continue;
+      const data = roomDoc.data() || {};
+      const docs = await __findPlayerDocsInRoomByPlayerNo(code, pno);
+      if(docs.length){
+        const canonical = __chooseCanonicalPlayerDoc(docs);
+        const pd = canonical ? (canonical.data() || {}) : {};
+        out.push({
+          code,
+          name: String(data.name || code),
+          admin: !!pd.admin,
+          joinedAtMs: __joinedAtMs(pd.joinedAt)
+        });
+      }
+    }
+  }catch(e){ console.warn('__listRoomsForPlayerNo failed', e); }
+  out.sort((a,b)=>{
+    if(b.joinedAtMs !== a.joinedAtMs) return b.joinedAtMs - a.joinedAtMs;
+    return String(a.name).localeCompare(String(b.name), 'pl');
+  });
+  return out;
+}
+
 async function performNewLogin(playerNo, roomCode){
   try{
-    const snap = await boot.getDoc(roomRef(roomCode));
+    const pno = String(playerNo||"").trim().toUpperCase();
+    const code = String(roomCode||"").trim().toUpperCase();
+    const snap = await boot.getDoc(roomRef(code));
     if(!snap.exists()){
       showToast(getLang()==="en" ? "Room not found" : "Nie ma takiego pokoju");
       return;
     }
 
-    // znajdź gracza w players po playerNo
-    const q = boot.query(playersCol(roomCode), boot.where("playerNo","==", playerNo));
-    const qs = await boot.getDocs(q);
-    if(qs.empty){
+    const canonical = await __resolveRoomIdentityByPlayerNo(code, pno);
+    if(!canonical){
       showToast(getLang()==="en" ? "Player number not found in this room" : "Nie znaleziono nr gracza w tym pokoju");
       return;
     }
 
-    const docSnap = qs.docs[0];
-    const data = docSnap.data() || {};
-
-    // Ustawiamy lokalnie nick i profil (jeśli mamy dane)
+    const data = canonical.data() || {};
     if(data.nick) localStorage.setItem(KEY_NICK, String(data.nick));
     const prof = getProfile() || {};
     if(data.country) prof.country = String(data.country);
     if(data.favClub) prof.favClub = String(data.favClub);
     if(data.avatar) prof.avatar = String(data.avatar);
     prof.nick = String(data.nick || prof.nick || "");
-    prof.playerNo = playerNo;
+    prof.playerNo = pno;
     setProfile(prof);
-    localStorage.setItem(KEY_PLAYER_NO, playerNo);
+    localStorage.setItem(KEY_PLAYER_NO, pno);
+    localStorage.setItem(KEY_LAST_PLAYERNO, pno);
+    __setAuthedThisSession(pno);
 
-    // Zapisz aktywny pokój i otwórz go (doc id gracza zostaje jak w pokoju)
-    localStorage.setItem(KEY_ACTIVE_ROOM, roomCode);
-    pushRoomHistory(roomCode);
+    localStorage.setItem(KEY_ACTIVE_ROOM, code);
+    pushRoomHistory(code);
 
-    // Najważniejsze: używamy uid z pokoju (id dokumentu gracza) jako bieżącego identyfikatora,
-    // żeby widzieć swoje typy/statystyki na innym urządzeniu.
-    userUid = docSnap.id;
-
+    window.__pendingPlayerNoLogin = false;
     modalClose();
-    await openRoom(roomCode, {force:true});
+    await openRoom(code, {force:true});
   }catch(e){
     console.error(e);
     showToast(getLang()==="en" ? "Cannot login" : "Nie udało się zalogować");
@@ -3989,13 +4176,38 @@ async function joinRoom(code){
     return;
   }
 
-  // dopnij dane profilu (w tym nr gracza) do dokumentu gracza w pokoju
   const prof = getProfile() || {};
-  const playerNo = prof.playerNo || getPlayerNo() || "";
+  const playerNo = String(prof.playerNo || getPlayerNo() || "").trim().toUpperCase();
+
+  // jeśli ten numer gracza już istnieje w pokoju, ZAWSZE użyj tego samego dokumentu gracza
+  if(/^[A-Z]\d{6}$/.test(playerNo)){
+    const canonical = await __resolveRoomIdentityByPlayerNo(code, playerNo);
+    if(canonical){
+      const data = canonical.data() || {};
+      if(data.nick) localStorage.setItem(KEY_NICK, String(data.nick));
+      const merged = getProfile() || {};
+      merged.nick = String(data.nick || nick || merged.nick || "");
+      merged.playerNo = playerNo;
+      if(data.country) merged.country = String(data.country);
+      if(data.favClub) merged.favClub = String(data.favClub);
+      if(data.avatar) merged.avatar = String(data.avatar);
+      setProfile(merged);
+      localStorage.setItem(KEY_PLAYER_NO, playerNo);
+      localStorage.setItem(KEY_LAST_PLAYERNO, playerNo);
+      __setAuthedThisSession(playerNo);
+      localStorage.setItem(KEY_ACTIVE_ROOM, code);
+      pushRoomHistory(code);
+      el("debugRooms").textContent = (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`;
+      await openRoom(code);
+      return;
+    }
+  }
+
+  // jeżeli numeru jeszcze nie ma w pokoju, utwórz normalny wpis tylko raz
   await boot.setDoc(boot.doc(db, "rooms", code, "players", userUid), {
     nick,
     uid: userUid,
-    playerNo: String(playerNo||"").toUpperCase() || null,
+    playerNo: playerNo || null,
     country: (prof.country || null),
     favClub: (prof.favClub || null),
     avatar: (prof.avatar || null),
