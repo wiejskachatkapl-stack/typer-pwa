@@ -1820,6 +1820,39 @@
       .profileInput{ width: min(86vw, 340px); max-width: min(86vw, 340px); }
       .profileSelect{ width: min(86vw, 380px); max-width: min(86vw, 380px); }
     }
+
+    /* ===== MOBILE SCROLL FOR RANKINGS (BUILD 8072) ===== */
+    @media (max-width: 900px){
+      #league,
+      #results{
+        padding:10px;
+        align-items:stretch;
+        justify-content:flex-start;
+        overflow:auto;
+        -webkit-overflow-scrolling:touch;
+      }
+      .leagueWrap,
+      .resultsWrap{
+        width:100%;
+        max-height:none;
+      }
+      .leagueTop,
+      .resultsTop{
+        align-items:flex-start;
+        flex-direction:column;
+      }
+      #league .row,
+      #results .row{
+        width:100%;
+        justify-content:flex-end;
+      }
+      #league .panel[style*="overflow:auto"],
+      .resultsList{
+        overflow:auto !important;
+        -webkit-overflow-scrolling:touch;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -2320,7 +2353,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8071" type="module"></script>
+<script src="./app.js?v=8072" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2340,7 +2373,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8071').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8072').catch(() => {});
     });
   }
 </script>
