@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8067;
+const BUILD = 8068;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -5907,11 +5907,12 @@ async function openPlayerStatsFromLeague(uid, nick){
 
   const q = boot.query(roundsCol(code), boot.orderBy("roundNo","desc"));
   const qs = await boot.getDocs(q);
+  const playerSnap = await boot.getDoc(boot.doc(db, "rooms", code, "players", uid));
+  const playerData = playerSnap.exists() ? (playerSnap.data() || {}) : {};
 
   const wrap = document.createElement("div");
   wrap.style.display="flex";
   wrap.style.flexDirection="column";
-  // ciaśniej, aby weszło więcej kolejek bez scrolla
   wrap.style.gap="4px";
 
   const head = document.createElement("div");
@@ -5920,6 +5921,23 @@ async function openPlayerStatsFromLeague(uid, nick){
   head.appendChild(chip(`${t("room")}: ${leagueState.roomName}`));
   head.appendChild(chip((getLang()==="en") ? `Player: ${nick}` : `Gracz: ${nick}`));
   wrap.appendChild(head);
+
+  const profileCard = document.createElement("div");
+  profileCard.className = "matchCard";
+  profileCard.style.display = "grid";
+  profileCard.style.gridTemplateColumns = "84px 1fr";
+  profileCard.style.gap = "12px";
+  profileCard.style.alignItems = "center";
+  const avatarUrl = __avatarUrlFromStored(playerData.avatar || "");
+  const countryName = playerData.country ? __getCountryDisplayName(getLang(), String(playerData.country).toUpperCase()) : "—";
+  profileCard.innerHTML = `
+    <div style="width:84px;height:84px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;overflow:hidden;">${avatarUrl ? `<img alt="avatar" src="${avatarUrl}?v=${BUILD}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;">` : `<div style="font-size:36px;opacity:.92">🙂</div>`}</div>
+    <div style="display:grid;gap:6px;min-width:0;">
+      <div style="font-weight:1000;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(String(playerData.nick || nick || "—"))}</div>
+      <div style="font-weight:800;color:rgba(255,255,255,.78);">${(getLang()==="en") ? "Country" : "Kraj"}: ${escapeHtml(countryName)}</div>
+      <div style="font-weight:800;color:rgba(255,255,255,.78);">${(getLang()==="en") ? "Favorite club" : "Ulubiony klub"}: ${escapeHtml(String(playerData.favClub || "—"))}</div>
+    </div>`;
+  wrap.appendChild(profileCard);
 
   if(qs.empty){
     const info = document.createElement("div");
@@ -5959,14 +5977,6 @@ async function openPlayerStatsFromLeague(uid, nick){
     }
   }
 
-  // === Puchary za miejsca w lidze (TOP3 w tabeli ligi) ===
-  const leagueRows = [...(leagueState.rows||[])];
-  leagueRows.sort((a,b)=>{
-    if(b.points!==a.points) return b.points-a.points;
-    return String(a.nick).localeCompare(String(b.nick), "pl");
-  });
-  const leaguePos = leagueRows.findIndex(x=> x.uid===uid);
-
   const awards = document.createElement("div");
   awards.className = "row statsAwardsRow";
   awards.style.flexWrap = "wrap";
@@ -5990,23 +6000,24 @@ async function openPlayerStatsFromLeague(uid, nick){
     return d;
   };
 
-  if(leaguePos>=0 && leaguePos<3){
-    const cupSrc = (leaguePos===0) ? "ui/medale/puchar_1.png" : (leaguePos===1) ? "ui/medale/puchar_2.png" : "ui/medale/puchar_3.png";
-    awards.appendChild(mkAward(cupSrc, (getLang()==="en") ? "League" : "Liga"));
-  }
-
-  if(medalCounts[1]||medalCounts[2]||medalCounts[3]){
-    if(medalCounts[1]) awards.appendChild(mkAward("ui/medale/medal_1.png", `x${medalCounts[1]}`));
-    if(medalCounts[2]) awards.appendChild(mkAward("ui/medale/medal_2.png", `x${medalCounts[2]}`));
-    if(medalCounts[3]) awards.appendChild(mkAward("ui/medale/medal_3.png", `x${medalCounts[3]}`));
-  }
-
+  const storedCupCounts = await computeStoredCupCounts(code, uid);
+  const cupCounts = {
+    1: Math.max(Number(playerData.cupsGold || 0), storedCupCounts[1]),
+    2: Math.max(Number(playerData.cupsSilver || 0), storedCupCounts[2]),
+    3: Math.max(Number(playerData.cupsBronze || 0), storedCupCounts[3])
+  };
+  if(cupCounts[1]) awards.appendChild(mkAward("ui/medale/puchar_1.png", `x${cupCounts[1]}`));
+  if(cupCounts[2]) awards.appendChild(mkAward("ui/medale/puchar_2.png", `x${cupCounts[2]}`));
+  if(cupCounts[3]) awards.appendChild(mkAward("ui/medale/puchar_3.png", `x${cupCounts[3]}`));
+  if(medalCounts[1]) awards.appendChild(mkAward("ui/medale/medal_1.png", `x${medalCounts[1]}`));
+  if(medalCounts[2]) awards.appendChild(mkAward("ui/medale/medal_2.png", `x${medalCounts[2]}`));
+  if(medalCounts[3]) awards.appendChild(mkAward("ui/medale/medal_3.png", `x${medalCounts[3]}`));
   if(awards.childNodes.length){
     wrap.appendChild(awards);
   }
 
   roundDocs.forEach(rd=>{
-    const rn = rd.roundNo ?? 0;
+    const rn = rd?.roundNo ?? 0;
     const pts = rd?.pointsByUid?.[uid];
     const played = (pts !== undefined && pts !== null);
 
