@@ -6352,6 +6352,13 @@ async function openPlayerStatsFromLeague(uid, nick){
 
   modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
   setModalBackButton(()=>{ modalClose(); }, (getLang()==="en") ? "Back" : "Cofnij");
+  const modalCloseBtn = el("modalClose");
+  if(modalCloseBtn){
+    modalCloseBtn.onclick = ()=>{
+      modalClose();
+      if(currentRoomCode) showScreen("room");
+    };
+  }
 }
 
 async function openArchivedPicksPreview(code, roundNo, uid, nick){
@@ -6385,7 +6392,14 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
       : "Brak zapisanych typów w tej kolejce.";
     wrap.appendChild(info);
     modalOpen((getLang()==="en") ? "Archive preview" : "Podgląd (archiwum)", wrap);
-  setModalBackButton(()=>{ openPlayerStatsFromLeague(uid, nick); }, (getLang()==="en") ? "Back" : "Cofnij");
+    setModalBackButton(()=>{ openPlayerStatsFromLeague(uid, nick); }, (getLang()==="en") ? "Back" : "Cofnij");
+    const modalCloseBtn = el("modalClose");
+    if(modalCloseBtn){
+      modalCloseBtn.onclick = ()=>{
+        modalClose();
+        if(currentRoomCode) showScreen("room");
+      };
+    }
     return;
   }
 
@@ -6457,6 +6471,14 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
   }
 
   modalOpen((getLang()==="en") ? "Archive preview" : "Podgląd (archiwum)", wrap);
+  setModalBackButton(()=>{ openPlayerStatsFromLeague(uid, nick); }, (getLang()==="en") ? "Back" : "Cofnij");
+  const modalCloseBtn = el("modalClose");
+  if(modalCloseBtn){
+    modalCloseBtn.onclick = ()=>{
+      modalClose();
+      if(currentRoomCode) showScreen("room");
+    };
+  }
 }
 
 function chip(text){
