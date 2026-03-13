@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8076;
+const BUILD = 8077;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -1614,10 +1614,11 @@ function __makeLoginModal(){
   return wrap;
 }
 
-async function ensurePinLogin(){
-  // If already authenticated in this tab session, skip
+async function ensurePinLogin(force=false){
+  // Normally we may skip within the same tab session,
+  // but on app start we want to always show the login modal with the last player number.
   const last = (localStorage.getItem(KEY_LAST_PLAYERNO) || "").trim();
-  if(last && __isAuthedThisSession(last)) return true;
+  if(!force && last && __isAuthedThisSession(last)) return true;
 
   return await new Promise((resolve)=>{
     const modal = __makeLoginModal();
@@ -1645,6 +1646,14 @@ async function ensurePinLogin(){
 
     inpNo.addEventListener("input", refreshSetArea);
     refreshSetArea();
+
+    // Focus PIN when last player number is available; otherwise focus player number.
+    setTimeout(()=>{
+      try{
+        if(last){ inpPin.focus(); inpPin.select?.(); }
+        else { inpNo.focus(); inpNo.select?.(); }
+      }catch(e){}
+    }, 20);
 
     modal.querySelector("#pinLoginNo").onclick = ()=>{ 
       // do not allow continue without login
@@ -6395,15 +6404,15 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
     // zastosuj język od razu
     applyLangToUI();
 
-    // wymagane logowanie PIN przed wejściem
-    const okLogin = await ensurePinLogin();
+    // wymagane logowanie PIN przed wejściem — zawsze pokazuj okno logowania na starcie
+    const okLogin = await ensurePinLogin(true);
     if(!okLogin) return;
 
     showScreen("home");
     showCenterLoading();
-    await new Promise(r=>setTimeout(r, 120));
+    await new Promise(r=>setTimeout(r, 2000));
     openJoinRoomModal();
-    setTimeout(()=>{ hideCenterLoading(); }, 180);
+    hideCenterLoading();
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
