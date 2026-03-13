@@ -1294,9 +1294,13 @@
       gap:10px;
     }
     .dot{
-      width:10px;height:10px;border-radius:999px;
+      width:16px;height:16px;border-radius:999px;
       display:inline-block;
-      border:1px solid rgba(255,255,255,.25);
+      flex:0 0 16px;
+      min-width:16px;min-height:16px;
+      border:2px solid rgba(255,255,255,.42);
+      box-shadow:0 0 0 2px rgba(0,0,0,.18), 0 0 10px rgba(255,255,255,.10);
+      vertical-align:middle;
     }
     .dot.green{background:#2bff88}
     .dot.yellow{background:#ffd24a}
@@ -2361,7 +2365,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8082" type="module"></script>
+<script src="./app.js?v=8083" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
