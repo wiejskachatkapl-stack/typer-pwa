@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8081;
+const BUILD = 8082;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -2580,14 +2580,19 @@ function buildAnnouncementPlayerCard(entry, big=false){
   avatar.style.alignItems = "center";
   avatar.style.justifyContent = "center";
   avatar.style.overflow = "hidden";
-  const av = String(entry?.avatar||"").trim();
+  const av = __normalizeAvatarValue(String(entry?.avatar||"").trim());
   if(av){
     const img = document.createElement("img");
-    img.src = av;
+    img.src = av + __avatarCacheBust();
     img.alt = "avatar";
     img.style.width = "100%";
     img.style.height = "100%";
     img.style.objectFit = "contain";
+    img.onerror = () => {
+      avatar.innerHTML = "";
+      avatar.textContent = "🙂";
+      avatar.style.fontSize = big ? "44px" : "34px";
+    };
     avatar.appendChild(img);
   }else{
     avatar.textContent = "🙂";
