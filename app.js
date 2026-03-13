@@ -1,5 +1,7 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8080;
+const BUILD = 8081;
+const SEASON_ROUNDS = 12;
+const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -2444,6 +2446,9 @@ let unsubPicks = null;
 let currentRoomCode = null;
 let currentRoom = null;
 let currentRoundNo = 1;
+let currentSeasonNo = 1;
+let announcementShowing = false;
+let announcementChecking = false;
 
 let matchesCache = [];
 let picksCache = {};
@@ -2532,12 +2537,212 @@ function matchesCol(code){ return boot.collection(db, "rooms", code, "matches");
 function picksCol(code){ return boot.collection(db, "rooms", code, "picks"); }
 function roundsCol(code){ return boot.collection(db, "rooms", code, "rounds"); }
 function leagueCol(code){ return boot.collection(db, "rooms", code, "league"); }
+function eventsCol(code){ return boot.collection(db, "rooms", code, "events"); }
 
-function roundDocRef(code, roundNo){
-  return boot.doc(db, "rooms", code, "rounds", `round_${roundNo}`);
+function roundDocRef(code, roundNo, seasonNo=null){
+  if(seasonNo==null) return boot.doc(db, "rooms", code, "rounds", `round_${roundNo}`);
+  return boot.doc(db, "rooms", code, "rounds", `season_${seasonNo}_round_${roundNo}`);
 }
 function leagueDocRef(code, uid){
   return boot.doc(db, "rooms", code, "league", uid);
+}
+
+function getSeasonRoundLabel(roundNo=currentRoundNo, seasonNo=currentSeasonNo){
+  const seasonTxt = (getLang()==="en") ? `Season ${seasonNo}` : `Sezon ${seasonNo}`;
+  return `${roundNo} • ${seasonTxt}`;
+}
+function refreshRoomSeasonLabels(){
+  if(el("roundLabel")) el("roundLabel").textContent = getSeasonRoundLabel();
+}
+function getEventSeenKey(code, eventId, playerNo){
+  return `${KEY_SEEN_EVENT_PREFIX}_${String(code||"").toUpperCase()}_${String(playerNo||"").toUpperCase()}_${String(eventId||"")}`;
+}
+function hasSeenEvent(code, eventId, playerNo){
+  try{ return localStorage.getItem(getEventSeenKey(code,eventId,playerNo)) === "1"; }catch(e){ return false; }
+}
+function markEventSeen(code, eventId, playerNo){
+  try{ localStorage.setItem(getEventSeenKey(code,eventId,playerNo), "1"); }catch(e){}
+}
+function buildAnnouncementPlayerCard(entry, big=false){
+  const card = document.createElement("div");
+  card.style.display = "flex";
+  card.style.flexDirection = "column";
+  card.style.alignItems = "center";
+  card.style.justifyContent = "flex-start";
+  card.style.gap = "8px";
+  const avatar = document.createElement("div");
+  avatar.style.width = big ? "94px" : "72px";
+  avatar.style.height = big ? "94px" : "72px";
+  avatar.style.borderRadius = "18px";
+  avatar.style.background = "rgba(255,255,255,.08)";
+  avatar.style.border = "1px solid rgba(255,255,255,.18)";
+  avatar.style.display = "flex";
+  avatar.style.alignItems = "center";
+  avatar.style.justifyContent = "center";
+  avatar.style.overflow = "hidden";
+  const av = String(entry?.avatar||"").trim();
+  if(av){
+    const img = document.createElement("img");
+    img.src = av;
+    img.alt = "avatar";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "contain";
+    avatar.appendChild(img);
+  }else{
+    avatar.textContent = "🙂";
+    avatar.style.fontSize = big ? "44px" : "34px";
+  }
+  const nick = document.createElement("div");
+  nick.textContent = String(entry?.nick||"—");
+  nick.style.fontWeight = "1000";
+  nick.style.textAlign = "center";
+  nick.style.maxWidth = big ? "170px" : "140px";
+  nick.style.whiteSpace = "nowrap";
+  nick.style.overflow = "hidden";
+  nick.style.textOverflow = "ellipsis";
+  const pts = document.createElement("div");
+  pts.textContent = (getLang()==="en") ? `${entry?.points ?? 0} pts` : `${entry?.points ?? 0} pkt`;
+  pts.style.opacity = ".9";
+  pts.style.fontWeight = "900";
+  pts.style.fontSize = big ? "18px" : "15px";
+  card.appendChild(avatar);
+  card.appendChild(nick);
+  card.appendChild(pts);
+  return card;
+}
+function ensureAnnouncementOverlay(){
+  let ov = document.getElementById("announcementOverlay");
+  if(ov) return ov;
+  ov = document.createElement("div");
+  ov.id = "announcementOverlay";
+  ov.style.position = "fixed";
+  ov.style.inset = "0";
+  ov.style.zIndex = "999999";
+  ov.style.display = "none";
+  ov.style.alignItems = "center";
+  ov.style.justifyContent = "center";
+  ov.style.background = "rgba(0,0,0,.68)";
+  ov.style.backdropFilter = "blur(8px)";
+  ov.style.webkitBackdropFilter = "blur(8px)";
+  document.body.appendChild(ov);
+  return ov;
+}
+function showRoundWinnersAnnouncement(ev){
+  return new Promise(resolve=>{
+    const ov = ensureAnnouncementOverlay();
+    ov.innerHTML = "";
+    ov.style.display = "flex";
+    const box = document.createElement("div");
+    box.style.width = "min(980px,92vw)";
+    box.style.borderRadius = "28px";
+    box.style.padding = "24px";
+    box.style.background = "linear-gradient(180deg, rgba(8,32,76,.98), rgba(3,17,46,.98))";
+    box.style.border = "1px solid rgba(255,255,255,.16)";
+    box.style.boxShadow = "0 24px 80px rgba(0,0,0,.45)";
+    const title = document.createElement("div");
+    title.style.fontSize = "34px";
+    title.style.fontWeight = "1000";
+    title.style.textAlign = "center";
+    title.style.marginBottom = "8px";
+    title.textContent = (getLang()==="en") ? `Round ${ev.roundNo} winners` : `Zwycięzcy kolejki ${ev.roundNo}`;
+    const sub = document.createElement("div");
+    sub.style.textAlign = "center";
+    sub.style.opacity = ".9";
+    sub.style.fontWeight = "900";
+    sub.style.marginBottom = "18px";
+    sub.textContent = (getLang()==="en") ? `Season ${ev.seasonNo}` : `Sezon ${ev.seasonNo}`;
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.justifyContent = "center";
+    row.style.alignItems = "flex-end";
+    row.style.gap = "24px";
+    row.style.flexWrap = "wrap";
+    (ev.winners||[]).forEach((w, idx)=>{
+      const col = buildAnnouncementPlayerCard(w, idx===0);
+      col.style.minWidth = idx===0 ? "180px" : "150px";
+      const cup = document.createElement("img");
+      cup.src = idx===0 ? "ui/medale/puchar_1.png" : idx===1 ? "ui/medale/puchar_2.png" : "ui/medale/puchar_3.png";
+      cup.alt = "cup";
+      cup.style.width = idx===0 ? "48px" : "42px";
+      cup.style.height = idx===0 ? "48px" : "42px";
+      cup.style.marginBottom = "8px";
+      col.insertBefore(cup, col.firstChild);
+      row.appendChild(col);
+    });
+    box.appendChild(title); box.appendChild(sub); box.appendChild(row); ov.appendChild(box);
+    setTimeout(()=>{ ov.style.display = "none"; ov.innerHTML=""; resolve(); }, 5000);
+  });
+}
+function showSeasonPodiumAnnouncement(ev){
+  return new Promise(resolve=>{
+    const ov = ensureAnnouncementOverlay();
+    ov.innerHTML = "";
+    ov.style.display = "flex";
+    const box = document.createElement("div");
+    box.style.width = "min(1100px,94vw)";
+    box.style.padding = "18px 18px 10px";
+    box.style.borderRadius = "28px";
+    box.style.background = "linear-gradient(180deg, rgba(8,32,76,.98), rgba(3,17,46,.98))";
+    box.style.border = "1px solid rgba(255,255,255,.16)";
+    box.style.boxShadow = "0 24px 80px rgba(0,0,0,.45)";
+    const title = document.createElement("div");
+    title.style.fontSize = "34px";
+    title.style.fontWeight = "1000";
+    title.style.textAlign = "center";
+    title.style.marginBottom = "8px";
+    title.textContent = (getLang()==="en") ? `Season ${ev.seasonNo} podium` : `Podium sezonu ${ev.seasonNo}`;
+    const stage = document.createElement("div");
+    stage.style.position = "relative";
+    stage.style.width = "100%";
+    stage.style.aspectRatio = "16 / 9";
+    stage.style.background = 'center/contain no-repeat url("ui/medale/podium.png")';
+    stage.style.marginTop = "8px";
+    const coords = [
+      { left:"50%", top:"8%", big:true, trans:"translateX(-50%)" },
+      { left:"24%", top:"22%", big:false, trans:"translateX(-50%)" },
+      { left:"76%", top:"24%", big:false, trans:"translateX(-50%)" }
+    ];
+    (ev.podium||[]).slice(0,3).forEach((w, idx)=>{
+      const wrap = document.createElement("div");
+      wrap.style.position = "absolute";
+      wrap.style.left = coords[idx].left;
+      wrap.style.top = coords[idx].top;
+      wrap.style.transform = coords[idx].trans;
+      const card = buildAnnouncementPlayerCard(w, !!coords[idx].big);
+      wrap.appendChild(card);
+      stage.appendChild(wrap);
+    });
+    box.appendChild(title); box.appendChild(stage); ov.appendChild(box);
+    setTimeout(()=>{ ov.style.display = "none"; ov.innerHTML=""; resolve(); }, 5000);
+  });
+}
+async function maybeShowPendingEvents(){
+  if(!currentRoomCode || announcementShowing || announcementChecking) return;
+  const playerNo = getPlayerNo();
+  if(!playerNo) return;
+  announcementChecking = true;
+  try{
+    const q = boot.query(eventsCol(currentRoomCode), boot.orderBy("eventOrder","asc"));
+    const qs = await boot.getDocs(q);
+    const pending = [];
+    qs.forEach(doc=>{
+      const data = doc.data() || {};
+      if(!hasSeenEvent(currentRoomCode, doc.id, playerNo)) pending.push({ id: doc.id, ...data });
+    });
+    if(!pending.length) return;
+    announcementShowing = true;
+    for(const ev of pending){
+      if(ev.type === "season_podium") await showSeasonPodiumAnnouncement(ev);
+      else await showRoundWinnersAnnouncement(ev);
+      markEventSeen(currentRoomCode, ev.id, playerNo);
+    }
+    announcementShowing = false;
+  }catch(e){
+    console.warn("maybeShowPendingEvents failed", e);
+  }finally{
+    announcementChecking = false;
+  }
 }
 
 function isCompletePicksObject(picksObj){
@@ -4136,7 +4341,9 @@ async function createRoom(roomName){
       adminUid: userUid,
       adminNick: nick,
       createdAt: boot.serverTimestamp(),
-      currentRoundNo: 1
+      currentRoundNo: 1,
+      currentSeasonNo: 1,
+      archiveCount: 0
     });
 
     const prof = getProfile() || {};
@@ -4314,7 +4521,8 @@ async function openRoom(code, opts={}){
   currentRoom = snap.data();
 
   currentRoundNo = currentRoom?.currentRoundNo || 1;
-  el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
+  currentSeasonNo = currentRoom?.currentSeasonNo || 1;
+  refreshRoomSeasonLabels();
 
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
@@ -4337,7 +4545,8 @@ async function openRoom(code, opts={}){
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
     currentRoundNo = currentRoom?.currentRoundNo || 1;
-    el("roundLabel").textContent = `${t("round")} ${currentRoundNo}`;
+    currentSeasonNo = currentRoom?.currentSeasonNo || 1;
+    refreshRoomSeasonLabels();
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
@@ -4347,6 +4556,7 @@ async function openRoom(code, opts={}){
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
     syncActionButtons();
+    setTimeout(()=>{ maybeShowPendingEvents(); }, 200);
   });
 
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
@@ -4891,7 +5101,7 @@ function openPicksPreview(uid, nick){
 
   const roundChip = document.createElement("div");
   roundChip.className = "chip";
-  roundChip.textContent = `${t("round")} ${currentRoundNo}`;
+  roundChip.textContent = `${t("round")} ${currentRoundNo} • ${(getLang()==="en") ? `Season ${currentSeasonNo}` : `Sezon ${currentSeasonNo}`}`;
 
   const ptsChip = document.createElement("div");
   ptsChip.className = "chip";
@@ -5633,6 +5843,9 @@ async function endRoundConfirmAndArchive(){
 async function archiveCurrentRound(){
   const code = currentRoomCode;
   const roundNo = currentRoundNo;
+  const seasonNo = currentSeasonNo || currentRoom?.currentSeasonNo || 1;
+  const roomArchiveCount = Number(currentRoom?.archiveCount || 0);
+  const nextArchiveIndex = roomArchiveCount + 1;
 
   const picksSnap = await boot.getDocs(picksCol(code));
   const picksByUid = {};
@@ -5669,11 +5882,54 @@ async function archiveCurrentRound(){
     pointsMap[uid] = sum;
   }
 
+  const playersByUid = {};
+  (lastPlayers||[]).forEach(p=>{ playersByUid[p.uid] = p; });
+
+  const roundRanking = Object.entries(pointsMap).map(([uid, pts])=>({
+    uid,
+    points: Number(pts||0),
+    nick: String(nickByUid[uid] || playersByUid[uid]?.nick || "—"),
+    avatar: String(playersByUid[uid]?.avatar || "")
+  })).sort((a,b)=>{
+    if(b.points !== a.points) return b.points - a.points;
+    return String(a.nick).localeCompare(String(b.nick), "pl");
+  });
+  const roundTop3 = roundRanking.slice(0,3);
+
+  const leagueSnap = await boot.getDocs(leagueCol(code));
+  const leagueMap = {};
+  leagueSnap.forEach(d=>{ leagueMap[d.id] = d.data() || {}; });
+
+  const seasonScoreMap = {};
+  const seasonRoundsMap = {};
+  const allUids = new Set([...Object.keys(leagueMap), ...Object.keys(pointsMap)]);
+  allUids.forEach(uid=>{
+    const ld = leagueMap[uid] || {};
+    const nick = String((playersByUid[uid]?.nick) || ld.nick || nickByUid[uid] || "—");
+    const avatar = String((playersByUid[uid]?.avatar) || ld.avatar || "");
+    seasonScoreMap[uid] = {
+      uid,
+      nick,
+      avatar,
+      points: Number(ld.seasonPoints || 0) + Number(pointsMap[uid] || 0),
+      rounds: Number(ld.seasonRoundsPlayed || 0) + (Object.prototype.hasOwnProperty.call(pointsMap, uid) ? 1 : 0)
+    };
+  });
+  const seasonRanking = Object.values(seasonScoreMap).sort((a,b)=>{
+    if(b.points !== a.points) return b.points - a.points;
+    return String(a.nick).localeCompare(String(b.nick), "pl");
+  });
+  const seasonEnd = roundNo >= SEASON_ROUNDS;
+  const seasonTop3 = seasonRanking.slice(0,3);
+
   const b = boot.writeBatch(db);
 
-  const rd = roundDocRef(code, roundNo);
+  const rd = roundDocRef(code, roundNo, seasonNo);
   b.set(rd, {
     roundNo,
+    seasonNo,
+    seasonRoundNo: roundNo,
+    archiveIndex: nextArchiveIndex,
     roomCode: code,
     roomName: currentRoom?.name || "",
     createdAt: boot.serverTimestamp(),
@@ -5686,20 +5942,67 @@ async function archiveCurrentRound(){
     nickByUid
   }, { merge:false });
 
-  for(const [uid, pts] of Object.entries(pointsMap)){
-    const nick = nickByUid[uid] || (lastPlayers.find(p=>p.uid===uid)?.nick) || "—";
-    const ld = leagueDocRef(code, uid);
-    b.set(ld, {
+  const cupByUid = {};
+  if(seasonEnd){
+    seasonTop3.forEach((x, idx)=>{ cupByUid[x.uid] = idx + 1; });
+  }
+
+  allUids.forEach(uid=>{
+    const pts = Number(pointsMap[uid] || 0);
+    const p = playersByUid[uid] || {};
+    const ld = leagueMap[uid] || {};
+    const patch = {
       uid,
-      nick,
-      totalPoints: boot.increment(pts),
-      roundsPlayed: boot.increment(1),
+      nick: String(p.nick || ld.nick || nickByUid[uid] || "—"),
+      avatar: String(p.avatar || ld.avatar || ""),
+      playerNo: String(p.playerNo || ld.playerNo || ""),
       updatedAt: boot.serverTimestamp()
-    }, { merge:true });
+    };
+    if(pts){
+      patch.totalPoints = boot.increment(pts);
+      patch.roundsPlayed = boot.increment(1);
+      if(!seasonEnd){
+        patch.seasonPoints = boot.increment(pts);
+        patch.seasonRoundsPlayed = boot.increment(1);
+      }
+    }
+    if(seasonEnd){
+      patch.seasonPoints = 0;
+      patch.seasonRoundsPlayed = 0;
+      if(cupByUid[uid] === 1) patch.cupGold = boot.increment(1);
+      else if(cupByUid[uid] === 2) patch.cupSilver = boot.increment(1);
+      else if(cupByUid[uid] === 3) patch.cupBronze = boot.increment(1);
+    }
+    b.set(leagueDocRef(code, uid), patch, { merge:true });
+  });
+
+  const roundEventRef = boot.doc(eventsCol(code));
+  b.set(roundEventRef, {
+    type: "round_winners",
+    eventOrder: nextArchiveIndex * 10 + 1,
+    seasonNo,
+    roundNo,
+    archiveIndex: nextArchiveIndex,
+    winners: roundTop3,
+    createdAt: boot.serverTimestamp()
+  }, { merge:false });
+
+  if(seasonEnd){
+    const seasonEventRef = boot.doc(eventsCol(code));
+    b.set(seasonEventRef, {
+      type: "season_podium",
+      eventOrder: nextArchiveIndex * 10 + 2,
+      seasonNo,
+      archiveIndex: nextArchiveIndex,
+      podium: seasonTop3,
+      createdAt: boot.serverTimestamp()
+    }, { merge:false });
   }
 
   b.update(roomRef(code), {
-    currentRoundNo: roundNo + 1,
+    currentRoundNo: seasonEnd ? 1 : (roundNo + 1),
+    currentSeasonNo: seasonEnd ? (seasonNo + 1) : seasonNo,
+    archiveCount: nextArchiveIndex,
     updatedAt: boot.serverTimestamp()
   });
 
@@ -5711,9 +6014,10 @@ async function archiveCurrentRound(){
   });
 
   await b.commit();
-
+  setTimeout(()=>{ maybeShowPendingEvents(); }, 400);
   showToast(getLang()==="en" ? `ROUND ${roundNo} ended ✅` : `Zakończono KOLEJKĘ ${roundNo} ✅`);
 }
+
 
 // ===== TEST QUEUE =====
 async function addTestQueue(){
@@ -5869,15 +6173,20 @@ async function loadLeagueFinishedRounds(code){
   leagueState.finishedRounds = [];
   leagueState.roundCache = new Map();
   try{
-    const q = boot.query(roundsCol(code), boot.orderBy("roundNo","asc"));
-    const qs = await boot.getDocs(q);
+    let qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy("archiveIndex","asc")));
+    if(qs.empty){
+      qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy("roundNo","asc")));
+    }
     const list = [];
     qs.forEach(d=>{
       const rd = d.data() || {};
-      const rn = Number(rd.roundNo || 0);
+      const rn = Number(rd.seasonRoundNo || rd.roundNo || 0);
+      const sn = Number(rd.seasonNo || 1);
+      const ai = Number(rd.archiveIndex || 0);
       if(rn>0){
-        list.push(rn);
-        leagueState.roundCache.set(rn, rd);
+        const entry = { id: d.id, seasonNo: sn, roundNo: rn, archiveIndex: ai };
+        list.push(entry);
+        leagueState.roundCache.set(d.id, { ...rd, _id: d.id });
       }
     });
     leagueState.finishedRounds = list;
@@ -5890,10 +6199,12 @@ function updateLeagueHintForMode(){
   const hint = el("leagueHint");
   if(!hint) return;
   if(leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL"){
-    const rn = Number(leagueState.selectedRound);
+    const rd = leagueState.roundCache.get(leagueState.selectedRound) || {};
+    const rn = Number(rd.seasonRoundNo || rd.roundNo || 0);
+    const sn = Number(rd.seasonNo || 1);
     hint.textContent = (getLang()==="en")
-      ? `Round preview: choose a player to open picks preview for round ${rn}.`
-      : `Podgląd kolejki: kliknij gracza, aby zobaczyć podgląd typów dla kolejki ${rn}.`;
+      ? `Round preview: choose a player to open picks preview for round ${rn} (Season ${sn}).`
+      : `Podgląd kolejki: kliknij gracza, aby zobaczyć podgląd typów dla kolejki ${rn} (Sezon ${sn}).`;
   }else{
     hint.textContent = (getLang()==="en")
       ? "Click a player to see stats (rounds + picks preview)."
@@ -5913,14 +6224,13 @@ function buildLeagueRoundDropdown(){
     : `Suma (po ${leagueState.afterRound})`;
   sel.appendChild(optAll);
 
-  for(const rn of leagueState.finishedRounds){
+  for(const rd of leagueState.finishedRounds){
     const o = document.createElement("option");
-    o.value = String(rn);
-    o.textContent = (getLang()==="en") ? `Round ${rn}` : `Kolejka ${rn}`;
+    o.value = String(rd.id);
+    o.textContent = (getLang()==="en") ? `Round ${rd.roundNo} • Season ${rd.seasonNo}` : `Kolejka ${rd.roundNo} • Sezon ${rd.seasonNo}`;
     sel.appendChild(o);
   }
 
-  // Domyślnie pokazujemy SUMĘ, tak jak było wcześniej ("Po kolejce: X").
   leagueState.selectedRound = "ALL";
   leagueState.viewMode = "TOTAL";
   sel.value = "ALL";
@@ -5934,8 +6244,7 @@ function buildLeagueRoundDropdown(){
       updateLeagueHintForMode();
       return;
     }
-    const rn = Number(v);
-    if(!Number.isFinite(rn) || rn<=0){
+    if(!leagueState.roundCache.get(v)){
       leagueState.viewMode = "TOTAL";
       leagueState.selectedRound = "ALL";
       sel.value = "ALL";
@@ -5944,20 +6253,20 @@ function buildLeagueRoundDropdown(){
       return;
     }
     leagueState.viewMode = "ROUND";
-    await setLeagueTableForRound(rn);
+    await setLeagueTableForRound(v);
     updateLeagueHintForMode();
   };
 }
 
-async function setLeagueTableForRound(roundNo){
+async function setLeagueTableForRound(roundKey){
   if(!leagueState.roomCode) return;
-  let rd = leagueState.roundCache.get(roundNo);
+  let rd = leagueState.roundCache.get(roundKey);
   if(!rd){
     try{
-      const snap = await boot.getDoc(roundDocRef(leagueState.roomCode, roundNo));
+      const snap = await boot.getDoc(boot.doc(db, "rooms", leagueState.roomCode, "rounds", String(roundKey)));
       if(snap.exists()){
-        rd = snap.data();
-        leagueState.roundCache.set(roundNo, rd);
+        rd = { ...snap.data(), _id: snap.id };
+        leagueState.roundCache.set(roundKey, rd);
       }
     }catch(e){
       console.warn("setLeagueTableForRound getDoc failed", e);
@@ -5978,13 +6287,14 @@ async function setLeagueTableForRound(roundNo){
     display.push({
       uid,
       nick: String(nickMap?.[uid] || base?.nick || "—"),
+      playerNo: String(base?.playerNo || ""),
       rounds: played ? 1 : 0,
       points: played ? Number(pts) : 0,
-      _played: played
+      _played: played,
+      _roundKey: roundKey
     });
   });
 
-  // sort: points desc, then nick
   display.sort((a,b)=>{
     if(b.points!==a.points) return b.points-a.points;
     return String(a.nick).localeCompare(String(b.nick), "pl");
@@ -6011,7 +6321,7 @@ async function openLeagueTable(roomCode, opts={}) {
     const room = snap.data();
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
-    leagueState.afterRound = (room?.currentRoundNo ? Math.max(0, room.currentRoundNo - 1) : 0);
+    leagueState.afterRound = Number(room?.archiveCount || 0);
 
     el("leagueRoomName").textContent = leagueState.roomName;
     await loadLeagueFinishedRounds(roomCode);
@@ -6045,7 +6355,11 @@ async function openLeagueTable(roomCode, opts={}) {
         nick: x.nick || "—",
         playerNo,
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
-        points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
+        points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0),
+        cupGold: Number(x.cupGold || 0),
+        cupSilver: Number(x.cupSilver || 0),
+        cupBronze: Number(x.cupBronze || 0),
+        avatar: String(x.avatar || "")
       });
     });
 
@@ -6107,8 +6421,7 @@ function renderLeagueTable(){
       <td>${r.points}</td>
     `;
     if(leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL"){
-      const rn = Number(leagueState.selectedRound);
-      tr.onclick = ()=> openArchivedPicksPreview(leagueState.roomCode, rn, r.uid, r.nick);
+      tr.onclick = ()=> openArchivedPicksPreview(leagueState.roomCode, String(r._roundKey || leagueState.selectedRound), r.uid, r.nick);
     }else{
       tr.onclick = ()=> openPlayerStatsFromLeague(r.uid, r.nick);
     }
@@ -6122,8 +6435,11 @@ async function openPlayerStatsFromLeague(uid, nick){
 
   const code = leagueState.roomCode;
 
-  const q = boot.query(roundsCol(code), boot.orderBy("roundNo","desc"));
-  const qs = await boot.getDocs(q);
+  let qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy("archiveIndex","desc")));
+  if(qs.empty){
+    qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy("roundNo","desc")));
+  }
+  const leagueSelf = (leagueState.rows||[]).find(x=> x.uid===uid) || {};
 
   const wrap = document.createElement("div");
   wrap.style.display="flex";
@@ -6154,10 +6470,10 @@ async function openPlayerStatsFromLeague(uid, nick){
   const medalRounds = {1:[],2:[],3:[]};
 
   const roundDocs = [];
-  qs.forEach(d=> roundDocs.push(d.data()));
+  qs.forEach(d=> roundDocs.push({ _id: d.id, ...(d.data()||{}) }));
 
   for(const rd of roundDocs){
-    const rn = rd?.roundNo ?? 0;
+    const rn = rd?.seasonRoundNo ?? rd?.roundNo ?? 0;
     const ptsMap = rd?.pointsByUid || {};
     const nickMap = rd?.nickByUid || {};
     const entries = Object.entries(ptsMap)
@@ -6172,17 +6488,9 @@ async function openPlayerStatsFromLeague(uid, nick){
     if(pos>=0 && pos<3){
       const m = pos+1;
       medalCounts[m] += 1;
-      medalRounds[m].push(rn);
+      medalRounds[m].push(rd._id || `${rd.seasonNo||1}_${rn}`);
     }
   }
-
-  // === Puchary za miejsca w lidze (TOP3 w tabeli ligi) ===
-  const leagueRows = [...(leagueState.rows||[])];
-  leagueRows.sort((a,b)=>{
-    if(b.points!==a.points) return b.points-a.points;
-    return String(a.nick).localeCompare(String(b.nick), "pl");
-  });
-  const leaguePos = leagueRows.findIndex(x=> x.uid===uid);
 
   const awards = document.createElement("div");
   awards.className = "row statsAwardsRow";
@@ -6207,10 +6515,9 @@ async function openPlayerStatsFromLeague(uid, nick){
     return d;
   };
 
-  if(leaguePos>=0 && leaguePos<3){
-    const cupSrc = (leaguePos===0) ? "ui/medale/puchar_1.png" : (leaguePos===1) ? "ui/medale/puchar_2.png" : "ui/medale/puchar_3.png";
-    awards.appendChild(mkAward(cupSrc, (getLang()==="en") ? "League" : "Liga"));
-  }
+  if(leagueSelf.cupGold) awards.appendChild(mkAward("ui/medale/puchar_1.png", `x${leagueSelf.cupGold}`));
+  if(leagueSelf.cupSilver) awards.appendChild(mkAward("ui/medale/puchar_2.png", `x${leagueSelf.cupSilver}`));
+  if(leagueSelf.cupBronze) awards.appendChild(mkAward("ui/medale/puchar_3.png", `x${leagueSelf.cupBronze}`));
 
   if(medalCounts[1]||medalCounts[2]||medalCounts[3]){
     if(medalCounts[1]) awards.appendChild(mkAward("ui/medale/medal_1.png", `x${medalCounts[1]}`));
@@ -6223,15 +6530,16 @@ async function openPlayerStatsFromLeague(uid, nick){
   }
 
   roundDocs.forEach(rd=>{
-    const rn = rd.roundNo ?? 0;
+    const rn = rd.seasonRoundNo ?? rd.roundNo ?? 0;
     const pts = rd?.pointsByUid?.[uid];
     const played = (pts !== undefined && pts !== null);
 
     // Medal for this round (if any)
     let medalSrc = "";
-    if(medalRounds[1].includes(rn)) medalSrc = "ui/medale/medal_1.png";
-    else if(medalRounds[2].includes(rn)) medalSrc = "ui/medale/medal_2.png";
-    else if(medalRounds[3].includes(rn)) medalSrc = "ui/medale/medal_3.png";
+    const rdKey = rd._id || `${rd.seasonNo||1}_${rn}`;
+    if(medalRounds[1].includes(rdKey)) medalSrc = "ui/medale/medal_1.png";
+    else if(medalRounds[2].includes(rdKey)) medalSrc = "ui/medale/medal_2.png";
+    else if(medalRounds[3].includes(rdKey)) medalSrc = "ui/medale/medal_3.png";
 
     const row = document.createElement("div");
     row.className="matchCard statsRoundCard";
@@ -6243,7 +6551,8 @@ async function openPlayerStatsFromLeague(uid, nick){
     left.style.gap="0px";
     // W Statystykach gracza nie pokazujemy linii statusu (Zagrana / Brak typów / niepełne),
     // aby wiersze były niższe i mieściło się więcej kolejek.
-    left.innerHTML = `<div style="font-weight:1000">${medalSrc ? `<img alt="medal" src="${medalSrc}" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"/>` : ""}${t("round")} ${rn}</div>`;
+    const sn = rd?.seasonNo || 1;
+    left.innerHTML = `<div style="font-weight:1000">${medalSrc ? `<img alt="medal" src="${medalSrc}" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"/>` : ""}${t("round")} ${rn} • ${(getLang()==="en") ? `Season ${sn}` : `Sezon ${sn}`}</div>`;
 
     const right = document.createElement("div");
     right.className="row statsRightRow";
@@ -6260,7 +6569,7 @@ async function openPlayerStatsFromLeague(uid, nick){
     btn.textContent = (getLang()==="en") ? "Preview" : "Podgląd";
     btn.disabled = !played;
     btn.onclick = async ()=>{
-      await openArchivedPicksPreview(code, rn, uid, nick);
+      await openArchivedPicksPreview(code, rd._id || rn, uid, nick);
     };
 
     right.appendChild(ptsChip);
@@ -6274,10 +6583,16 @@ async function openPlayerStatsFromLeague(uid, nick){
   modalOpen((getLang()==="en") ? "Player stats" : "Statystyki gracza", wrap);
 }
 
-async function openArchivedPicksPreview(code, roundNo, uid, nick){
-  const rd = await boot.getDoc(roundDocRef(code, roundNo));
+async function openArchivedPicksPreview(code, roundKey, uid, nick){
+  let rd = null;
+  let data = null;
+  if(String(roundKey||"").startsWith("season_")){
+    rd = await boot.getDoc(boot.doc(db, "rooms", code, "rounds", String(roundKey)));
+  }else{
+    rd = await boot.getDoc(roundDocRef(code, roundKey));
+  }
   if(!rd.exists()){ showToast(getLang()==="en" ? "Round archive missing" : "Brak archiwum tej kolejki"); return; }
-  const data = rd.data();
+  data = rd.data();
 
   const matches = data.matches || [];
   const picksByUid = data.picksByUid || {};
@@ -6292,7 +6607,9 @@ async function openArchivedPicksPreview(code, roundNo, uid, nick){
   top.className="row";
   top.style.flexWrap="wrap";
   top.appendChild(chip((getLang()==="en") ? `Player: ${nick}` : `Gracz: ${nick}`));
-  top.appendChild(chip(`${t("round")} ${roundNo}`));
+  const labelRound = Number(data?.seasonRoundNo || data?.roundNo || 0);
+  const labelSeason = Number(data?.seasonNo || 1);
+  top.appendChild(chip(`${t("round")} ${labelRound} • ${(getLang()==="en") ? `Season ${labelSeason}` : `Sezon ${labelSeason}`}`));
   const pts = data?.pointsByUid?.[uid];
   top.appendChild(chip((getLang()==="en") ? `POINTS: ${pts ?? "—"}` : `PUNKTY: ${pts ?? "—"}`));
   wrap.appendChild(top);
