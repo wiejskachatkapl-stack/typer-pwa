@@ -1395,6 +1395,14 @@
 
     .profileBtns{ display:flex; justify-content:center; gap:18px; margin-top:16px; }
 
+    /* v2031: wszystkie listy rozwijane białe z czarnymi literami */
+    select,
+    select option,
+    option{
+      background:#ffffff !important;
+      color:#000000 !important;
+    }
+
 
   
         /* ===== Nick modal (Add player profile) ===== */
@@ -2353,7 +2361,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8078" type="module"></script>
+<script src="./app.js?v=8079" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
