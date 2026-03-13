@@ -140,7 +140,7 @@
         "SC Freiburg",
 	"Augsburg",
         "Borussia Mönchengladbach",
-        "Hamburger SV"
+        "Hamburger SV",
         "Union Berlin",
         "Werder Brema",
         "1FC Koeln",
@@ -222,7 +222,7 @@
         "Bayer Leverkusen",
         "Sporting Lisboa",
         "Tottenham",
-        "Newcastle",
+        "Newcastle"
         ]
     },
     {
@@ -245,7 +245,7 @@
         "Genk",
         "SC Freiburg",
         "Nottingham",
-        "Midtjylland",
+        "Midtjylland"
       ]
     },
     {
@@ -268,7 +268,7 @@
         "Crystal Palace",
         "AEK Larnaka",
         "Sigma Ołomuniec",
-        "1FC Mainz 05",
+        "1FC Mainz 05"
       ]
     },
     {
@@ -276,7 +276,7 @@
       "name": "Liga Austrii",
       "country": "Austria",
       "teams": [
-        "Red Bull Salzburg",
+        "Red Bull Salzburg"
       ]
     },
     {
@@ -284,7 +284,7 @@
       "name": "Puchar Polski",
       "country": "Polska",
       "teams": [
-        "Jagiellonia Bialystok",
+        "Jagiellonia Bialystok"
 
       ]
     },
@@ -293,7 +293,7 @@
       "name": "Puchar Holandii",
       "country": "Holandia",
       "teams": [
-        "Ajax",
+        "Ajax"
 
       ]
     },
@@ -302,7 +302,7 @@
       "name": "Puchar Niemiec",
       "country": "Niemcy",
       "teams": [
-        "Bayern Monachium",
+        "Bayern Monachium"
 
       ]
     },
@@ -311,7 +311,7 @@
       "name": "Puchar Włoch",
       "country": "Wlochy",
       "teams": [
-        "Inter Mediolan",
+        "Inter Mediolan"
 
       ]
     },
@@ -320,7 +320,7 @@
       "name": "Puchar Hiszpanii",
       "country": "Hiszpania",
       "teams": [
-        "Real Madrid",
+        "Real Madrid"
 
       ]
     },
@@ -329,7 +329,7 @@
       "name": "Puchar Francji",
       "country": "Francja",
       "teams": [
-        "PSG",
+        "PSG"
 
       ]
     }
