@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8075;
+const BUILD = 8076;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -120,6 +120,48 @@ function showToast(msg){
   t.style.display = "block";
   clearTimeout(showToast._tm);
   showToast._tm = setTimeout(()=> t.style.display="none", 2600);
+}
+
+
+function ensureCenterLoadingOverlay(){
+  let ov = document.getElementById("centerLoadingOverlay");
+  if(ov) return ov;
+  ov = document.createElement("div");
+  ov.id = "centerLoadingOverlay";
+  ov.style.cssText = [
+    "position:fixed","inset:0","display:none","align-items:center","justify-content:center",
+    "background:rgba(0,0,0,.28)","backdrop-filter:blur(6px)","-webkit-backdrop-filter:blur(6px)",
+    "z-index:100001","pointer-events:none"
+  ].join(";");
+  const card = document.createElement("div");
+  card.id = "centerLoadingCard";
+  card.style.cssText = [
+    "padding:22px 34px","border-radius:22px","border:1px solid rgba(255,255,255,.14)",
+    "background:rgba(7,18,41,.88)","box-shadow:0 18px 50px rgba(0,0,0,.42)",
+    "font-weight:1000","font-size:42px","letter-spacing:1.2px","color:#fff",
+    "text-align:center","text-shadow:0 2px 10px rgba(0,0,0,.45)"
+  ].join(";");
+  const mobile = window.matchMedia && window.matchMedia("(max-width: 720px)").matches;
+  if(mobile){
+    card.style.fontSize = "28px";
+    card.style.padding = "18px 24px";
+  }
+  card.textContent = getLang()==="en" ? "LOADING......" : "ŁADOWANIE......";
+  ov.appendChild(card);
+  document.body.appendChild(ov);
+  return ov;
+}
+
+function showCenterLoading(text){
+  const ov = ensureCenterLoadingOverlay();
+  const card = document.getElementById("centerLoadingCard");
+  if(card) card.textContent = text || (getLang()==="en" ? "LOADING......" : "ŁADOWANIE......");
+  ov.style.display = "flex";
+}
+
+function hideCenterLoading(){
+  const ov = document.getElementById("centerLoadingOverlay");
+  if(ov) ov.style.display = "none";
 }
 
 function showScreen(id){
@@ -734,6 +776,7 @@ row.appendChild(btnEnter);
   wrap.appendChild(row);
 
   modalOpen((getLang()==="en") ? "JOIN ROOM" : "DOŁĄCZ DO POKOJU", wrap);
+  hideCenterLoading();
   setTimeout(()=>{ inp.focus(); }, 50);
 }
 
@@ -6357,6 +6400,10 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
     if(!okLogin) return;
 
     showScreen("home");
+    showCenterLoading();
+    await new Promise(r=>setTimeout(r, 120));
+    openJoinRoomModal();
+    setTimeout(()=>{ hideCenterLoading(); }, 180);
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
