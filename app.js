@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8079;
+const BUILD = 8080;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -4501,6 +4501,9 @@ function renderPlayers(players){
   if(!box) return;
   box.innerHTML = "";
 
+  // v2032: pokazujemy tylko graczy z przypisanym numerem gracza
+  const visiblePlayers = (players||[]).filter(p => String(p?.playerNo || "").trim());
+
   const delBtn = el("btnDeletePlayer");
   if(delBtn) delBtn.style.display = isAdmin() ? "" : "none";
 
@@ -4508,7 +4511,7 @@ function renderPlayers(players){
   const myOk = iAmSubmitted();
   const resultsOk = allResultsComplete();
 
-  players.forEach(p=>{
+  visiblePlayers.forEach(p=>{
     const row = document.createElement("div");
     row.className = "playerRow";
 
@@ -6035,10 +6038,12 @@ async function openLeagueTable(roomCode, opts={}) {
     const arr = [];
     qs.forEach(d=>{
       const x = d.data();
+      const playerNo = pnMap[x.uid || d.id] || "";
+      if(!String(playerNo).trim()) return;
       arr.push({
         uid: x.uid || d.id,
         nick: x.nick || "—",
-        playerNo: pnMap[x.uid || d.id] || "",
+        playerNo,
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0)
       });
