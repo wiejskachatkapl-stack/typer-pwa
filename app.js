@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8077;
+const BUILD = 8078;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -589,7 +589,18 @@ function openRoomsChoiceModal(){
     cls:"sysBtn sysBtnBig",
     alt:"join",
     title:(getLang()==="en") ? "Join a room" : "Dołącz do pokoju",
-    onClick: ()=>{ modalClose(); handleJoinFlow(); }
+    onClick: ()=>{
+      modalClose();
+      showCenterLoading();
+      setTimeout(async ()=>{
+        try{
+          await handleJoinFlow();
+        }catch(err){
+          console.warn("Join flow failed:", err);
+          hideCenterLoading();
+        }
+      }, 2000);
+    }
   });
 
   const btnCreate = makeSysImgButton("btn_create.png", {
