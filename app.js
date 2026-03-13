@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8074;
+const BUILD = 8075;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3430,12 +3430,12 @@ function closeAddQueueMenu(){
 }
 
 // ===== MANUAL QUEUE MENU (BUILD 6006) =====
-function openManualQueueMenu(){
+async function openManualQueueMenu(){
   const ov = el("manualQueueOverlay");
   if(!ov) return;
   ov.style.display = "flex";
   try{ setMQOverlayMode("manual"); }catch{}
-  buildManualQueueUI();
+  await buildManualQueueUI();
 }
 function closeManualQueueMenu(){
   const ov = el("manualQueueOverlay");
@@ -3624,169 +3624,88 @@ async function confirmMQDeadline(){
   renderManualMatchesList();
 }
 
-// Manual: wybór ligi (UI w następnym kroku rozbudujemy o mecze)
-const MANUAL_LEAGUES = [
-  { key: "FR", label: "Ligue 1 - FRANCJA" },
-  { key: "ES", label: "LaLiga - HISZPANIA" },
-  { key: "NL", label: "Eredivisie - HOLANDIA" },
-  { key: "DE", label: "Bundesliga - NIEMCY" },
-  { key: "IT", label: "Serie A - WŁOCHY" },
-  { key: "PL", label: "Ekstraklasa - POLSKA" },
-  { key: "EN", label: "Premier League - ANGLIA" }
 
+// Manual: ligi i kluby — domyślne dane awaryjne, docelowo ładowane z data/leagues.json
+let MANUAL_LEAGUES = [
+  { key: "PL", label: "Ekstraklasa - POLSKA" },
+  { key: "BEL", label: "Jupiter League - BELGIA" },
+  { key: "FL1", label: "Ligue 1 - FRANCJA" },
+  { key: "PD", label: "LaLiga - HISZPANIA" },
+  { key: "DED", label: "Eredivisie - HOLANDIA" },
+  { key: "BL1", label: "Bundesliga - NIEMCY" },
+  { key: "SA", label: "Serie A - WŁOCHY" },
+  { key: "PPL", label: "Liga Portugal - PORTUGALIA" }
 ];
 
-// Kluby dla lig (z pliku kluby.docx)
-const CLUBS_BY_LEAGUE = {
-  "FR": [
-    "PSG",
-    "Lens",
-    "Lyon",
-    "Marsylia",
-    "Lille",
-    "Rennes",
-    "Strasbourg",
-    "Monaco",
-    "Lorient",
-    "Toulouse",
-    "Brest",
-    "Angers",
-    "Le Havre",
-    "Nice",
-    "Paris FC",
-    "Auxerre",
-    "Nantes",
-    "Metz"
+let CLUBS_BY_LEAGUE = {
+  "PL": [
+    "Jagiellonia Białystok","Legia Warszawa","Lech Poznań","Raków Częstochowa","Pogoń Szczecin","Widzew Łódź","Korona Kielce","Górnik Zabrze","Radomiak Radom","Cracovia","Piast Gliwice","Zagłębie Lubin","Stal Mielec","Puszcza Niepołomice","Lechia Gdańsk","GKS Katowice","Motor Lublin","Śląsk Wrocław"
   ],
-  "ES": [
-    "Barcelona",
-    "Real Madryt",
-    "Villarreal",
-    "Atl. Madryt",
-    "Betis",
-    "Celta Vigo",
-    "Espanyol",
-    "Ath. Bilbao",
-    "Osasuna",
-    "Real Sociedad",
-    "Girona",
-    "Sevilla",
-    "Getafe",
-    "Alaves",
-    "Vallecano",
-    "Valencia",
-    "Elche",
-    "Mallorca",
-    "Levante",
-    "Oviedo"
+  "BEL": [
+    "Anderlecht","Club Brugge","Genk","Gent","Royal Antwerp","Standard Liège","Charleroi","Cercle Brugge","Mechelen","OH Leuven","Sint-Truiden","Kortrijk","Westerlo","Dender","Union Saint-Gilloise","Beerschot"
   ],
-  "NL": [
-    "PSV",
-    "Feyenoord",
-    "NEC Nijmegen",
-    "Ajax",
-    "Alkmaar",
-    "Twente",
-    "Sparta Rotterdam",
-    "Utrecht",
-    "Groningen",
-    "Heerenveen",
-    "Fortuna Sittard",
-    "Zwolle",
-    "Go Ahead Eagles",
-    "Exelsior",
-    "FC Volendam",
-    "NAC Breda",
-    "Telstar",
-    "Heracles"
+  "FL1": [
+    "Paris Saint-Germain","Olympique Marseille","Olympique Lyon","AS Monaco","Lille","Nice","Lens","Rennes","Nantes","Montpellier","Strasbourg","Reims","Brest","Toulouse","Le Havre","Auxerre","Saint-Étienne","Angers"
   ],
-  "DE": [
-    "Bayern Monachium",
-    "Borussia Dortmund",
-    "TSG Hoffenheim",
-    "Vfb Stuttgart",
-    "RB Lipsk",
-    "Bayer Levelkusen",
-    "S.C. Freiburg",
-    "Eintracht Frankfurt",
-    "Union Berlin",
-    "FC Augsburg",
-    "Hamburger SV",
-    "1.FC Koeln",
-    "1.FSV Mainz 05",
-    "Borussia Moencheng.",
-    "Vfl Wolsburg",
-    "St. Pauli",
-    "Werder Brema",
-    "Heidenheim"
+  "PD": [
+    "Real Madrid","Barcelona","Atlético Madrid","Sevilla","Valencia","Villarreal","Real Betis","Real Sociedad","Athletic Club","Getafe","Osasuna","Mallorca","Celta Vigo","Girona","Las Palmas","Espanyol","Alavés","Rayo Vallecano","Valladolid","Leganés"
   ],
-  "IT": [
-    "Inter",
-    "AC Milan",
-    "Napoli",
-    "AS Roma",
-    "Juventus",
-    "Como",
-    "Atalanta",
-    "Bologna",
-    "Sassuolo",
-    "Lazio",
-    "Udinese",
-    "Parma",
-    "Cagliari",
-    "Genoa",
-    "Torino",
-    "Fiorentina",
-    "Cremonese",
-    "Lecce",
-    "Pisa",
-    "Verona"
+  "DED": [
+    "Ajax","PSV Eindhoven","Feyenoord","AZ Alkmaar","Twente","Utrecht","Heerenveen","NEC Nijmegen","Sparta Rotterdam","Go Ahead Eagles","Groningen","Heracles Almelo","PEC Zwolle","Fortuna Sittard","NAC Breda","Willem II","RKC Waalwijk","Almere City"
   ],
-"PL": [
-    "Jagiellonia",
-    "Zagłębie Lubin",
-    "Lech Poznań",
-    "Górnik Zabrze",
-    "Raków",
-    "Wisła Płock",
-    "Cracovia",
-    "Korona",
-    "Radomiak",
-    "Pogoń",
-    "Lechia",
-    "GKS Katowice",
-    "Motor",
-    "Piast",
-    "Arka Gdynia",
-    "Legia",
-    "Widzew",
-    "Bruk-Bet Termalika"
+  "BL1": [
+    "Bayern Monachium","Borussia Dortmund","Bayer Leverkusen","RB Leipzig","VfB Stuttgart","Eintracht Frankfurt","Wolfsburg","Borussia Mönchengladbach","SC Freiburg","Mainz","Werder Brema","Augsburg","Union Berlin","Hoffenheim","St. Pauli","Heidenheim","Bochum","Holstein Kiel"
   ],
-    "EN": [
-    "Arsenal",
-    "Manchester City",
-    "Aston Villa",
-    "Manchester Utd",
-    "Chelsea",
-    "Liverpool",
-    "Brentford",
-    "Bournemouth",
-    "Everton",
-    "Fulham",
-    "Newcastle",
-    "Sunderland",
-    "Crystal Palace",
-    "Brighton",
-    "Leeds",
-    "Tottenham",
-    "Nottingham",
-    "West Ham",
-    "Burnley",
-    "Wolverhampton"
+  "SA": [
+    "Inter","Milan","Juventus","Roma","Lazio","Napoli","Atalanta","Fiorentina","Bologna","Torino","Genoa","Udinese","Monza","Lecce","Empoli","Parma","Como","Venezia","Verona","Cagliari"
+  ],
+  "PPL": [
+    "FC Porto","Sporting CP","Benfica","Braga","Vitória Guimarães","Moreirense","Famalicão","Casa Pia","Rio Ave","Gil Vicente","Arouca","Estoril","Farense","Nacional","Santa Clara","Boavista","AVS","Estrela Amadora"
   ]
 };
 
+let __leaguesDataLoaded = false;
+let __leaguesDataPromise = null;
 
+function __leagueLabelFromEntry(entry){
+  const name = String(entry?.name || entry?.label || entry?.key || "Liga").trim();
+  const country = String(entry?.country || "").trim();
+  return country ? `${name} - ${country.toUpperCase()}` : name;
+}
+
+async function ensureLeaguesDataLoaded(){
+  if(__leaguesDataLoaded) return;
+  if(__leaguesDataPromise) return __leaguesDataPromise;
+
+  __leaguesDataPromise = (async ()=>{
+    try{
+      const res = await fetch(`data/leagues.json?v=${BUILD}`, { cache: "no-store" });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const list = Array.isArray(data?.leagues) ? data.leagues : [];
+      if(list.length){
+        MANUAL_LEAGUES = list.map(l => ({
+          key: String(l.key || "").trim() || String(l.name || "").trim(),
+          label: __leagueLabelFromEntry(l)
+        })).filter(l => l.key);
+
+        const clubs = {};
+        for(const l of list){
+          const key = String(l.key || "").trim() || String(l.name || "").trim();
+          if(!key) continue;
+          clubs[key] = Array.isArray(l.teams) ? l.teams.map(x => String(x || "").trim()).filter(Boolean) : [];
+        }
+        if(Object.keys(clubs).length) CLUBS_BY_LEAGUE = clubs;
+      }
+    }catch(err){
+      console.warn("Nie udało się wczytać data/leagues.json — używam danych wbudowanych.", err);
+    }finally{
+      __leaguesDataLoaded = true;
+    }
+  })();
+
+  return __leaguesDataPromise;
+}
 
 function __loadManualQueueState(){
   try{
@@ -3841,8 +3760,13 @@ function __getAllManualMatches(){
   return st.all;
 }
 
-function buildManualQueueUI(){
+async function buildManualQueueUI(){
+  await ensureLeaguesDataLoaded();
   const st = __getManualState();
+
+  if(!MANUAL_LEAGUES.some(x => x.key === (st.leagueKey || ""))){
+    st.leagueKey = MANUAL_LEAGUES[0]?.key || "PL";
+  }
 
   // league select
   const leagueSel = el("manualLeagueSelect");
