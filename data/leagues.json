@@ -132,13 +132,13 @@
       "teams": [
         "Bayern Monachium",
         "Borussia Dortmund",
-	"Hoffenheim",
+        "Hoffenheim",
         "Bayer Leverkusen",
-	"VfB Stuttgart",
-        "RB Leipzig", 
+        "VfB Stuttgart",
+        "RB Leipzig",
         "Eintracht Frankfurt",
         "SC Freiburg",
-	"Augsburg",
+        "Augsburg",
         "Borussia Mönchengladbach",
         "Hamburger SV",
         "Union Berlin",
@@ -147,7 +147,7 @@
         "1FSV Mainz 05",
         "St. Pauli",
         "Heidenheim",
-        "VfL Wolfsburg",
+        "VfL Wolfsburg"
       ]
     },
     {
@@ -223,7 +223,7 @@
         "Sporting Lisboa",
         "Tottenham",
         "Newcastle"
-        ]
+      ]
     },
     {
       "key": "UEL",
@@ -285,7 +285,6 @@
       "country": "Polska",
       "teams": [
         "Jagiellonia Bialystok"
-
       ]
     },
     {
@@ -294,7 +293,6 @@
       "country": "Holandia",
       "teams": [
         "Ajax"
-
       ]
     },
     {
@@ -303,7 +301,6 @@
       "country": "Niemcy",
       "teams": [
         "Bayern Monachium"
-
       ]
     },
     {
@@ -312,7 +309,6 @@
       "country": "Wlochy",
       "teams": [
         "Inter Mediolan"
-
       ]
     },
     {
@@ -321,7 +317,6 @@
       "country": "Hiszpania",
       "teams": [
         "Real Madrid"
-
       ]
     },
     {
@@ -330,7 +325,6 @@
       "country": "Francja",
       "teams": [
         "PSG"
-
       ]
     }
   ]
