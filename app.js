@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8083;
+const BUILD = 8084;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5026,10 +5026,26 @@ function renderMatches(){
       resCol.textContent = "—";
     }
 
-    // ===== KOLUMNA 3: DATA + GODZINA =====
+    // ===== KOLUMNA 3: STATUS TYPU + PUNKTY ZA MECZ =====
     const dtCol = document.createElement("div");
-    dtCol.className = "matchDateCol";
-    dtCol.textContent = fmtKickoff(m);
+    dtCol.className = "matchDateCol matchJudgeCol";
+
+    const pNow = picksCache[m.id] || {};
+    const ptsOne = scoreOneMatch(pNow.h, pNow.a, m.resultH, m.resultA);
+    const dot = document.createElement("span");
+    dot.className = "dot matchJudgeDot " + ((ptsOne === null) ? "gray" : dotClassFor(pNow.h, pNow.a, m.resultH, m.resultA));
+    dot.title = (ptsOne === null)
+      ? ((getLang()==="en") ? "No settled points yet" : "Brak rozliczonych punktów")
+      : ((getLang()==="en") ? `${ptsOne} pts` : `${ptsOne} pkt`);
+
+    const ptsLbl = document.createElement("div");
+    ptsLbl.className = "matchJudgePts";
+    ptsLbl.textContent = (ptsOne === null)
+      ? ((getLang()==="en") ? "pts —" : "pkt —")
+      : ((getLang()==="en") ? `pts ${ptsOne}` : `pkt ${ptsOne}`);
+
+    dtCol.appendChild(dot);
+    dtCol.appendChild(ptsLbl);
 
     row.appendChild(pickCol);
     row.appendChild(resCol);
@@ -5039,7 +5055,7 @@ function renderMatches(){
 
 
 
-  // ===== 6008: licznik do końca typowania (1 min przed pierwszym meczem) =====
+  // ===== 6008: licznik do końca typowania (1 min przed pierwszym meczem) + suma rozliczonych punktów =====
   const cd = document.createElement("div");
   cd.className = "typingCountdown";
   cd.style.marginTop = "auto";
@@ -5049,7 +5065,7 @@ function renderMatches(){
   cd.style.background = "rgba(0,0,0,.18)";
   cd.style.display = "flex";
   cd.style.alignItems = "center";
-  cd.style.justifyContent = "center";
+  cd.style.justifyContent = "space-between";
   cd.style.gap = "10px";
 
   const label = document.createElement("div");
@@ -5073,8 +5089,27 @@ function renderMatches(){
     }
   }
 
-  cd.appendChild(label);
-  cd.appendChild(val);
+  const settledPtsSum = matchesCache.reduce((acc, mm)=>{
+    const pp = picksCache[mm.id] || {};
+    const one = scoreOneMatch(pp.h, pp.a, mm.resultH, mm.resultA);
+    return acc + (Number.isInteger(one) ? one : 0);
+  }, 0);
+
+  const leftWrap = document.createElement("div");
+  leftWrap.style.display = "flex";
+  leftWrap.style.alignItems = "center";
+  leftWrap.style.justifyContent = "center";
+  leftWrap.style.gap = "10px";
+  leftWrap.style.flex = "1 1 auto";
+  leftWrap.appendChild(label);
+  leftWrap.appendChild(val);
+
+  const settledBox = document.createElement("div");
+  settledBox.className = "settledPointsBox";
+  settledBox.textContent = (getLang()==="en") ? `Settled pts: ${settledPtsSum}` : `Suma pkt: ${settledPtsSum}`;
+
+  cd.appendChild(leftWrap);
+  cd.appendChild(settledBox);
   list.appendChild(cd);
   updateSaveButtonState();
 }
