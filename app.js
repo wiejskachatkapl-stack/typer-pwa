@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8073;
+const BUILD = 8074;
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
@@ -3310,7 +3310,7 @@ function bindUI(){
     await endRoundConfirmAndArchive();
   };
 
-  el("btnAddQueue").onclick = ()=>{ openAddQueueMenu(); };
+  el("btnAddQueue").onclick = ()=>{ openManualQueueMenu(); };
   if (el("btnMyQueue")) {
     el("btnMyQueue").onclick = async ()=>{ showToast(getLang()==="en" ? "My fixture – coming next" : "Własna kolejka – dopinamy dalej"); };
   }
@@ -5990,7 +5990,6 @@ async function setLeagueTableForRound(roundNo){
       nick: String(nickMap?.[uid] || base?.nick || "—"),
       rounds: played ? 1 : 0,
       points: played ? Number(pts) : 0,
-      playerNo: String(base?.playerNo || ""),
       _played: played
     });
   });
@@ -6081,14 +6080,6 @@ async function openAllTimeRanking(roomCode){
   showToast(getLang()==="en" ? "All‑time ranking" : "Ranking wszechczasów");
 }
 
-function __filterLeagueRowsForAdmin(rows){
-  const arr = Array.isArray(rows) ? rows.slice() : [];
-  if(!isAdmin()) return arr;
-  const hasAnyPlayerNo = arr.some(r => String(r?.playerNo || "").trim());
-  if(!hasAnyPlayerNo) return arr;
-  return arr.filter(r => String(r?.playerNo || "").trim());
-}
-
 function renderLeagueTable(){
   const body = el("leagueBody");
   if(!body) return;
@@ -6098,7 +6089,7 @@ function renderLeagueTable(){
     ? leagueState._displayRows
     : leagueState.rows;
 
-  const rows = __filterLeagueRowsForAdmin(source||[]);
+  const rows = [...(source||[])];
   rows.sort((a,b)=>{
     if(b.points !== a.points) return b.points - a.points;
     return String(a.nick).localeCompare(String(b.nick), "pl");
