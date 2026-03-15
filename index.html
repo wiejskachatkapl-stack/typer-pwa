@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 8037)</title>
+  <title>Typer (BUILD 8086)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1757,13 +1757,7 @@
       font-weight:900;
       text-shadow:0 2px 6px rgba(0,0,0,.55);
       letter-spacing:.5px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      white-space:nowrap;
     }
-    #buildCornerText .ownerName{font-weight:1000;}
-    #buildCornerText .ownerVersion{opacity:.96;}
     .footerRight{display:none !important;}
 
 
@@ -2393,7 +2387,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=8037" type="module"></script>
+<script src="./app.js?v=8086" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2413,14 +2407,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=8037').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=8086').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText"><span class="ownerName">Mariusz Gębka</span><span class="ownerVersion">v1.8037</span></div>
+<div id="buildCornerText">8086</div>
 </div>
 </body>
 </html>

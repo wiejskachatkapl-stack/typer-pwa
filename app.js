@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8085;
+const BUILD = 8086;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1844,7 +1844,8 @@ function __injectAvatarPickerStyles(){
     font-size: 22px;
     letter-spacing: .2px;
   }
-  .avatarPickerClose{
+  .avatarPickerClose,
+  .avatarPickerUpload{
     cursor:pointer;
     padding: 8px 12px;
     border-radius: 12px;
@@ -1911,12 +1912,50 @@ function __avatarCacheBust(){
 function __normalizeAvatarValue(val){
   if(!val) return "";
   if(typeof val !== "string") return "";
+  const raw = String(val).trim();
+  if(!raw) return "";
+  if(raw.startsWith("data:image/")) return raw;
   // usuń ewentualny query string / hash (cache bust)
-  const cleaned = val.split("?")[0].split("#")[0].trim();
+  const cleaned = raw.split("?")[0].split("#")[0].trim();
   if(!cleaned) return "";
   // allow either 'avatar_1.png' / 'avatar_1.jpg' or full 'ui/avatars/avatar_1.png'
   if(cleaned.includes("/")) return cleaned;
   return `ui/avatars/${cleaned}`;
+}
+
+function __avatarSrc(val){
+  const src = __normalizeAvatarValue(val);
+  if(!src) return "";
+  return src.startsWith("data:image/") ? src : (src + __avatarCacheBust());
+}
+
+function __fileToJpegDataUrl(file, maxSide=256, quality=0.86){
+  return new Promise((resolve, reject)=>{
+    try{
+      const fr = new FileReader();
+      fr.onerror = ()=> reject(new Error("Nie udało się odczytać pliku."));
+      fr.onload = ()=>{
+        const img = new Image();
+        img.onerror = ()=> reject(new Error("Nie udało się wczytać obrazu."));
+        img.onload = ()=>{
+          const w = img.width || 1;
+          const h = img.height || 1;
+          const scale = Math.min(1, maxSide / Math.max(w, h));
+          const cw = Math.max(1, Math.round(w * scale));
+          const ch = Math.max(1, Math.round(h * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = cw;
+          canvas.height = ch;
+          const ctx = canvas.getContext("2d");
+          if(!ctx){ reject(new Error("Brak canvas.")); return; }
+          ctx.drawImage(img, 0, 0, cw, ch);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    }catch(err){ reject(err); }
+  });
 }
 
 function __probeImage(url, timeoutMs=2500){
@@ -1964,9 +2003,11 @@ async function __listAvailableAvatars(max=60){
 }
 
 function __avatarValueToStore(val){
-  // zapisuj jako samą nazwę pliku, żeby nie mieszać ścieżek i cache-bustów
+  // dla własnych avatarów przechowujemy dataURL, dla wbudowanych samą nazwę pliku
   if(!val) return "";
-  const cleaned = String(val).split("?")[0].split("#")[0].trim();
+  const raw = String(val).trim();
+  if(raw.startsWith("data:image/")) return raw;
+  const cleaned = raw.split("?")[0].split("#")[0].trim();
   return cleaned.split("/").pop();
 }
 
@@ -1987,9 +2028,13 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
     <div class="avatarPickerPanel" role="dialog" aria-modal="true">
       <div class="avatarPickerHeader">
         <div class="avatarPickerTitle">${title}</div>
-        <button type="button" class="avatarPickerClose">${closeTxt}</button>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="avatarPickerUpload">${lang==="en"?"Add JPG":"Dodaj JPG"}</button>
+          <button type="button" class="avatarPickerClose">${closeTxt}</button>
+        </div>
       </div>
       <div class="avatarPickerBody">
+        <input id="__avatarUploadInput" type="file" accept=".jpg,.jpeg,image/jpeg" style="display:none;" />
         <div class="mutedText" id="__avatarLoading">${loadingTxt}</div>
         <div class="avatarGrid" id="__avatarGrid" style="display:none;"></div>
         <div class="mutedText" id="__avatarEmpty" style="display:none;">${emptyTxt}</div>
@@ -1999,6 +2044,8 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
   document.body.appendChild(overlay);
 
   const closeBtn = overlay.querySelector(".avatarPickerClose");
+  const uploadBtn = overlay.querySelector(".avatarPickerUpload");
+  const uploadInput = overlay.querySelector("#__avatarUploadInput");
   const grid = overlay.querySelector("#__avatarGrid");
   const loading = overlay.querySelector("#__avatarLoading");
   const empty = overlay.querySelector("#__avatarEmpty");
@@ -2014,6 +2061,29 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
 
   document.addEventListener("keydown", onKey);
   closeBtn.addEventListener("click", close);
+  if(uploadBtn && uploadInput){
+    uploadBtn.addEventListener("click", ()=> uploadInput.click());
+    uploadInput.addEventListener("change", async ()=>{
+      const file = uploadInput.files && uploadInput.files[0];
+      if(!file) return;
+      const okType = /image\/jpe?g/i.test(file.type) || /\.jpe?g$/i.test(file.name || "");
+      if(!okType){
+        alert(lang==="en" ? "Select a JPG file." : "Wybierz plik JPG.");
+        uploadInput.value = "";
+        return;
+      }
+      try{
+        const dataUrl = await __fileToJpegDataUrl(file, 256, 0.86);
+        if(typeof onPick === "function") onPick(dataUrl);
+        close();
+      }catch(err){
+        console.error(err);
+        alert(lang==="en" ? "Could not add avatar." : "Nie udało się dodać avatara.");
+      }finally{
+        uploadInput.value = "";
+      }
+    });
+  }
   overlay.addEventListener("click", (e) => { if(e.target === overlay) close(); });
 
   (async () => {
@@ -2118,7 +2188,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
     const path = __normalizeAvatarValue(chosenAvatar);
     if(path){
       if(avatarImgEl){
-        avatarImgEl.src = path + __avatarCacheBust();
+        avatarImgEl.src = __avatarSrc(path);
         avatarImgEl.onload = ()=>{ try{ avatarImgEl.style.width="100%"; avatarImgEl.style.height="100%"; avatarImgEl.style.objectFit="contain"; }catch(e){} };
         avatarImgEl.style.display = "block";
       }
@@ -2403,7 +2473,7 @@ function refreshNickLabels(){
     const avatarFallback = el("roomAvatarFallback");
     if(avatarImg){
       if(avatarFile){
-        avatarImg.src = `ui/avatars/${avatarFile}`;
+        avatarImg.src = __avatarSrc(avatarFile);
         avatarImg.style.display = "block";
         if(avatarFallback) avatarFallback.style.display = "none";
       }else{
@@ -2583,7 +2653,7 @@ function buildAnnouncementPlayerCard(entry, big=false){
   const av = __normalizeAvatarValue(String(entry?.avatar||"").trim());
   if(av){
     const img = document.createElement("img");
-    img.src = av + __avatarCacheBust();
+    img.src = __avatarSrc(av);
     img.alt = "avatar";
     img.style.width = "100%";
     img.style.height = "100%";
