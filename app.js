@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8086;
+const BUILD = 8087;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -2210,9 +2210,32 @@ function openProfileModal({required=false, onDone, onCancel}={}){
       openAvatarPicker({
         lang,
         current: chosenAvatar,
-        onPick: (url)=>{
+        onPick: async (url)=>{
           chosenAvatar = __avatarValueToStore(url);
           renderProfileAvatar();
+
+          // v2040: po wybraniu własnego JPG zapisujemy go od razu do profilu
+          // bez dodatkowego klikania, ale tylko gdy edytujemy już istniejący profil.
+          const isCustomUpload = String(url||'').startsWith('data:image/');
+          if(isCustomUpload && !required && isProfileComplete(existing) && !!getPlayerNo()){
+            try{
+              const nick = (document.getElementById("profileNick")?.value || "").trim();
+              const country = String((document.getElementById("profileCountry")?.value || "")).trim().toLowerCase();
+              const favClub = (document.getElementById("profileFav")?.value || "").trim();
+              const avatarVal = __avatarValueToStore(chosenAvatar);
+              const playerNo = ensurePlayerNoForCountry(country);
+              const profile = {...existing, nick, country, favClub, playerNo, avatar: avatarVal, updatedAt: Date.now()};
+              if(isProfileComplete(profile)){
+                localStorage.setItem(KEY_NICK, nick);
+                setProfile(profile);
+                try{ updatePlayerDocProfile(); }catch{}
+                refreshNickLabels();
+                showToast(lang === "en" ? "Avatar added." : "Avatar dodany.");
+              }
+            }catch(err){
+              console.error(err);
+            }
+          }
         }
       });
     };
