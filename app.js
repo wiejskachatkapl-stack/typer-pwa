@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8087;
+const BUILD = 8088;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1970,11 +1970,11 @@ function __probeImage(url, timeoutMs=2500){
   });
 }
 
-async function __listAvailableAvatars(max=60){
-  // Avatary mogą być w .png (docelowo) lub .jpg/.jpeg (obecnie w repozytorium)
-  // Skanujemy avatar_1..avatar_N i kończymy po kilku brakach z rzędu.
+async function __listAvailableAvatars(max=30){
+  // Avatary systemowe: skanujemy pełny zakres avatar_1..avatar_30
+  // bez przerywania po brakach, żeby nowe pliki dodane później do ui/avatars
+  // też pojawiały się na liście wyboru.
   const present = [];
-  let missStreak = 0;
 
   for(let i=1;i<=max;i++){
     const candidates = [
@@ -1990,13 +1990,7 @@ async function __listAvailableAvatars(max=60){
       if(ok){ found = u; break; }
     }
 
-    if(found){
-      present.push(found);
-      missStreak = 0;
-    }else{
-      missStreak++;
-      if(missStreak >= 5) break;
-    }
+    if(found) present.push(found);
   }
 
   return present;
