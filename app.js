@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 8088;
+const BUILD = 9001;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3994,7 +3994,9 @@ let MANUAL_LEAGUES = [
   { key: "DED", label: "Eredivisie - HOLANDIA" },
   { key: "BL1", label: "Bundesliga - NIEMCY" },
   { key: "SA", label: "Serie A - WŁOCHY" },
-  { key: "PPL", label: "Liga Portugal - PORTUGALIA" }
+  { key: "PPL", label: "Liga Portugal - PORTUGALIA" },
+  { key: "EPL", label: "Premier League - ANGLIA" },
+  { key: "AUT", label: "Bundesliga Austria - AUSTRIA" }
 ];
 
 let CLUBS_BY_LEAGUE = {
@@ -4021,6 +4023,12 @@ let CLUBS_BY_LEAGUE = {
   ],
   "PPL": [
     "FC Porto","Sporting CP","Benfica","Braga","Vitória Guimarães","Moreirense","Famalicão","Casa Pia","Rio Ave","Gil Vicente","Arouca","Estoril","Farense","Nacional","Santa Clara","Boavista","AVS","Estrela Amadora"
+  ],
+  "EPL": [
+    "Liverpool","Arsenal","Manchester City","Manchester United","Chelsea","Tottenham","Newcastle United","Aston Villa","Brighton","West Ham United","Crystal Palace","Fulham","Wolverhampton","Everton","Brentford","Bournemouth","Nottingham Forest","Leicester City","Ipswich Town","Southampton"
+  ],
+  "AUT": [
+    "Red Bull Salzburg","Rapid Wiedeń","Austria Wiedeń","Sturm Graz","LASK","Hartberg","Wolfsberger AC","BW Linz","Austria Klagenfurt","WSG Tirol","Grazer AK","Altach"
   ]
 };
 
