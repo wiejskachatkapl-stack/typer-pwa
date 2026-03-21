@@ -17,12 +17,12 @@
         "Cracovia",
         "Piast Gliwice",
         "Zagłębie Lubin",
-        "Arka Gdynia",
-        "Wisła Płock",
+        "Stal Mielec",
+        "Puszcza Niepołomice",
         "Lechia Gdańsk",
         "GKS Katowice",
         "Motor Lublin",
-        "BRUK-BET Termalica"
+        "Śląsk Wrocław"
       ]
     },
     {
@@ -30,22 +30,22 @@
       "name": "Jupiter League",
       "country": "Belgia",
       "teams": [
-        "Royale Union SG",
-        "Club Brugge",
-        "St. Truiden",
         "Anderlecht",
-        "KV Mechelen",
-        "Gent",
-        "Standard Liege",
+        "Club Brugge",
         "Genk",
-        "Westerlo",
-        "Antwerp",
-        "Cherleroi",
-        "Zulte Waregem",
-        "OH Leuven",
+        "Gent",
+        "Royal Antwerp",
+        "Standard Liège",
+        "Charleroi",
         "Cercle Brugge",
-        "RAAL La Louviere",
-        "Dender"
+        "Mechelen",
+        "OH Leuven",
+        "Sint-Truiden",
+        "Kortrijk",
+        "Westerlo",
+        "Dender",
+        "Union Saint-Gilloise",
+        "Beerschot"
       ]
     },
     {
@@ -56,21 +56,21 @@
         "Paris Saint-Germain",
         "Olympique Marseille",
         "Olympique Lyon",
+        "AS Monaco",
+        "Lille",
+        "Nice",
         "Lens",
         "Rennes",
-        "Lille",
-        "Monaco",
+        "Nantes",
+        "Montpellier",
         "Strasbourg",
+        "Reims",
         "Brest",
-        "Lorient",
-        "Angers",
         "Toulouse",
-        "Paris FC",
-        "Nice",
         "Le Havre",
         "Auxerre",
-        "Nantes",
-        "Metz"
+        "Saint-Étienne",
+        "Angers"
       ]
     },
     {
@@ -81,23 +81,23 @@
         "Real Madrid",
         "Barcelona",
         "Atlético Madrid",
-        "Villarreal",
-        "Betis",
-        "Celta Vigo",
-        "Espanyol",
-        "Real Sociedad",
-        "Getafe",
-        "Alh. Bilbao",
-        "Osasuna",
-        "Valencia",
-        "Vallecano",
         "Sevilla",
-        "Girona",
-        "Alaves",
-        "Elche",
+        "Valencia",
+        "Villarreal",
+        "Real Betis",
+        "Real Sociedad",
+        "Athletic Club",
+        "Getafe",
+        "Osasuna",
         "Mallorca",
-        "Levante",
-        "Oviedo"
+        "Celta Vigo",
+        "Girona",
+        "Las Palmas",
+        "Espanyol",
+        "Alavés",
+        "Rayo Vallecano",
+        "Valladolid",
+        "Leganés"
       ]
     },
     {
@@ -108,21 +108,21 @@
         "Ajax",
         "PSV Eindhoven",
         "Feyenoord",
-        "NEC Nijmegen",
+        "AZ Alkmaar",
         "Twente",
-        "Alkmaar",
-        "Sparta Rotterdam",
-        "Heerenveen",
         "Utrecht",
-        "Groningen",
-        "Fortuna Sittard",
+        "Heerenveen",
+        "NEC Nijmegen",
+        "Sparta Rotterdam",
         "Go Ahead Eagles",
-        "Zwolle",
-        "FC Volendam",
-        "Excelsior",
-        "Telstar",
+        "Groningen",
+        "Heracles Almelo",
+        "PEC Zwolle",
+        "Fortuna Sittard",
         "NAC Breda",
-        "Heracles"
+        "Willem II",
+        "RKC Waalwijk",
+        "Almere City"
       ]
     },
     {
@@ -132,22 +132,22 @@
       "teams": [
         "Bayern Monachium",
         "Borussia Dortmund",
-        "Hoffenheim",
         "Bayer Leverkusen",
-        "VfB Stuttgart",
         "RB Leipzig",
+        "VfB Stuttgart",
         "Eintracht Frankfurt",
-        "SC Freiburg",
-        "Augsburg",
+        "Wolfsburg",
         "Borussia Mönchengladbach",
-        "Hamburger SV",
-        "Union Berlin",
+        "SC Freiburg",
+        "Mainz",
         "Werder Brema",
-        "1FC Koeln",
-        "1FSV Mainz 05",
+        "Augsburg",
+        "Union Berlin",
+        "Hoffenheim",
         "St. Pauli",
         "Heidenheim",
-        "VfL Wolfsburg"
+        "Bochum",
+        "Holstein Kiel"
       ]
     },
     {
@@ -156,25 +156,25 @@
       "country": "Włochy",
       "teams": [
         "Inter",
-        "AC Milan",
+        "Milan",
         "Juventus",
-        "AS Roma",
-        "Como",
+        "Roma",
+        "Lazio",
         "Napoli",
         "Atalanta",
-        "Sassuolo",
-        "Bologna",
-        "Lazio",
-        "Parma",
-        "Udinese",
-        "Genoa",
-        "Cagliari",
-        "Torino",
-        "Lecce",
         "Fiorentina",
-        "Cremonese",
+        "Bologna",
+        "Torino",
+        "Genoa",
+        "Udinese",
+        "Monza",
+        "Lecce",
+        "Empoli",
+        "Parma",
+        "Como",
+        "Venezia",
         "Verona",
-        "Pisa"
+        "Cagliari"
       ]
     },
     {
@@ -186,145 +186,66 @@
         "Sporting CP",
         "Benfica",
         "Braga",
-        "Gil Vicente",
-        "Famalicão",
+        "Vitória Guimarães",
         "Moreirense",
-        "Estoril",
-        "Guimaraes",
-        "Alverca",
-        "Arouca",
-        "Estrela",
+        "Famalicão",
         "Casa Pia",
         "Rio Ave",
+        "Gil Vicente",
+        "Arouca",
+        "Estoril",
+        "Farense",
         "Nacional",
         "Santa Clara",
-        "Tondela",
-        "AFS"
+        "Boavista",
+        "AVS",
+        "Estrela Amadora"
       ]
     },
     {
-      "key": "UCL",
-      "name": "Liga Mistrzów",
-      "country": "Europa",
+      "key": "EPL",
+      "name": "Premier League",
+      "country": "Anglia",
       "teams": [
-        "Real Madrid",
-        "Barcelona",
-        "Atletico Madryt",
-        "Manchester City",
-        "Arsenal",
         "Liverpool",
+        "Arsenal",
+        "Manchester City",
+        "Manchester United",
         "Chelsea",
-        "Galatasaray",
-        "Bayern Monachium",
-        "Bodo/Glimt",
-        "Atalanta",
-        "PSG",
-        "Bayer Leverkusen",
-        "Sporting Lisboa",
         "Tottenham",
-        "Newcastle"
-      ]
-    },
-    {
-      "key": "UEL",
-      "name": "Liga Europy",
-      "country": "Europa",
-      "teams": [
-        "Bologna",
-        "AS Roma",
-        "Lille",
+        "Newcastle United",
         "Aston Villa",
-        "Panathinaikos",
-        "Betis",
-        "VfB Stuttgart",
-        "FC Porto",
-        "Celta Vigo",
-        "Lyon",
-        "Ferencvaros",
-        "Braga",
-        "Genk",
-        "SC Freiburg",
-        "Nottingham",
-        "Midtjylland"
-      ]
-    },
-    {
-      "key": "UECL",
-      "name": "Liga Konferencji",
-      "country": "Europa",
-      "teams": [
-        "Alkmaar",
-        "Lech Poznan",
-        "Rakow Czestochowa",
-        "Sparta Praga",
-        "Fiorentina",
-        "Szachtar Donieck",
-        "Rijeka",
-        "Strasbourg",
-        "Samsunspor",
-        "Vallecano",
-        "Celje",
-        "AEK",
+        "Brighton",
+        "West Ham United",
         "Crystal Palace",
-        "AEK Larnaka",
-        "Sigma Ołomuniec",
-        "1FC Mainz 05"
+        "Fulham",
+        "Wolverhampton",
+        "Everton",
+        "Brentford",
+        "Bournemouth",
+        "Nottingham Forest",
+        "Leicester City",
+        "Ipswich Town",
+        "Southampton"
       ]
     },
     {
       "key": "AUT",
-      "name": "Liga Austrii",
+      "name": "Bundesliga Austria",
       "country": "Austria",
       "teams": [
-        "Red Bull Salzburg"
-      ]
-    },
-    {
-      "key": "PP",
-      "name": "Puchar Polski",
-      "country": "Polska",
-      "teams": [
-        "Jagiellonia Bialystok"
-      ]
-    },
-    {
-      "key": "KNVB",
-      "name": "Puchar Holandii",
-      "country": "Holandia",
-      "teams": [
-        "Ajax"
-      ]
-    },
-    {
-      "key": "DFB",
-      "name": "Puchar Niemiec",
-      "country": "Niemcy",
-      "teams": [
-        "Bayern Monachium"
-      ]
-    },
-    {
-      "key": "COPPA",
-      "name": "Puchar Włoch",
-      "country": "Wlochy",
-      "teams": [
-        "Inter Mediolan"
-      ]
-    },
-    {
-      "key": "CDR",
-      "name": "Puchar Hiszpanii",
-      "country": "Hiszpania",
-      "teams": [
-        "Real Madrid"
-      ]
-    },
-    {
-      "key": "CDF",
-      "name": "Puchar Francji",
-      "country": "Francja",
-      "teams": [
-        "PSG"
+        "Red Bull Salzburg",
+        "Rapid Wiedeń",
+        "Austria Wiedeń",
+        "Sturm Graz",
+        "LASK",
+        "Hartberg",
+        "Wolfsberger AC",
+        "BW Linz",
+        "Austria Klagenfurt",
+        "WSG Tirol",
+        "Grazer AK",
+        "Altach"
       ]
     }
   ]
