@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 9001;
+const BUILD = 9002;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -768,14 +768,18 @@ const btnEnter = makeSysImgButton("btn_wejdz_pokoj.png", {
       showToast(getLang()==="en" ? "Enter 6-character code" : "Wpisz kod (6 znaków)");
       return;
     }
+
+    const select = document.getElementById("joinRoomSelectByPlayer");
+    const selectedCode = String(select?.value || "").trim().toUpperCase();
+    const chosenFromList = selectedCode.length === 6 && selectedCode === code;
+
     modalClose();
-    // If the user provided player number via "Mój profil" then we treat join as "New login"
-    // (it restores profile + uses existing player doc in the room).
+    // Kod wybrany z listy pokojów przywraca istniejące konto gracza w danym pokoju.
+    // Kod wpisany ręcznie pozwala dołączyć do nowego pokoju bez zmiany obecnego profilu.
     const pn = String(getPlayerNo() || (getProfile()||{}).playerNo || "").trim().toUpperCase();
     const usePlayerNoLogin = /^[A-Z0-9]{7}$/.test(pn);
-    if(usePlayerNoLogin){
-      // clear flag so next joins behave normally
-      window.__pendingPlayerNoLogin = false;
+    window.__pendingPlayerNoLogin = false;
+    if(usePlayerNoLogin && chosenFromList){
       await performNewLogin(pn, code);
     }else{
       await joinRoom(code);
