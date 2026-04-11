@@ -3510,7 +3510,7 @@ function renderWorldCupEvent(){
   const nickNode = el("worldcupNick");
   if(nickNode) nickNode.textContent = getNick() || "—";
   const roomNode = el("worldcupRoomName");
-  if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
+  if(roomNode) roomNode.textContent = (currentRoomData && (currentRoomData.name || currentRoomData.roomName)) || currentRoomCode || "—";
 }
 
 function openWorldCupEvent(){
