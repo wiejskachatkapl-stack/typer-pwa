@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 9004)</title>
+  <title>Typer (BUILD 9005)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -2357,6 +2357,54 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </section>
+<!-- WORLDCUP EVENT -->
+<section class="screen" id="worldcup">
+<div class="leagueWrap panel">
+<div class="leagueTop">
+<div class="leagueTopLeft">
+<div class="chip">EVENT MŚ 2026</div>
+<div class="chip"><span>Pokój</span>: <span id="worldCupRoomName">—</span></div>
+<div class="chip"><span>Nick</span>: <span id="worldCupNick">—</span></div>
+<div class="chip"><span>Mecze MŚ</span>: <span id="worldCupMatchesCount">0</span></div>
+<div class="chip"><span>Punkty</span>: <span id="worldCupPoints">—</span></div>
+</div>
+<div class="row">
+<button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnWorldCupBack" type="button"><img alt="btnWorldCupBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+<button class="imgBtn sysBtn small" data-btn="btn_exit.png" id="btnWorldCupExit" type="button"><img alt="btnWorldCupExit" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/></button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1.3fr .9fr;gap:14px;align-items:start;">
+<div class="panel" style="padding:14px;min-height:480px;">
+<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div>
+<div class="sub" style="margin-bottom:10px">Osobny mini-typer eventowy. Tu będą tylko mecze mundialowe.</div>
+<div class="panel" style="padding:14px;min-height:330px;display:flex;align-items:center;justify-content:center;text-align:center;">
+<div>
+<div style="font-size:22px;font-weight:1000;margin-bottom:8px;">Panel eventu gotowy</div>
+<div style="color:rgba(255,255,255,.78);font-weight:800;line-height:1.35;max-width:560px;">
+Po tej stronie pojawi się lista meczów MŚ, typowanie i zapis typów tylko dla eventu.
+</div>
+</div>
+</div>
+</div>
+<div class="col" style="gap:14px;">
+<div class="panel" id="worldCupAdminCard" style="padding:14px;display:none;">
+<div class="title" style="margin:0 0 10px 0">Panel admina MŚ</div>
+<div class="col" style="gap:10px;">
+<button class="imgBtn sysBtn" data-btn="btn_add_queue.png" id="btnWorldCupAddMatches" type="button"><img alt="btnWorldCupAddMatches" data-btn="btn_add_queue.png" src="ui/buttons/pl/btn_add_queue.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_enter_results.png" id="btnWorldCupEnterResults" type="button"><img alt="btnWorldCupEnterResults" data-btn="btn_enter_results.png" src="ui/buttons/pl/btn_enter_results.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_end_queue.png" id="btnWorldCupEndRound" type="button"><img alt="btnWorldCupEndRound" data-btn="btn_end_queue.png" src="ui/buttons/pl/btn_end_queue.png"/></button>
+</div>
+</div>
+<div class="panel" style="padding:14px;min-height:250px;">
+<div class="title" style="margin:0 0 10px 0">Ranking MŚ</div>
+<div class="sub" style="margin-bottom:10px;">Tutaj będzie liczony osobny ranking eventu mundialowego.</div>
+<div class="panel" style="padding:14px;min-height:140px;display:flex;align-items:center;justify-content:center;text-align:center;">
+<div style="color:rgba(255,255,255,.78);font-weight:800;">Brak danych eventu MŚ.</div>
+</div>
+</div>
+</div>
+</div>
+</section>
 <!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modalCard">
@@ -2387,7 +2435,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=9004" type="module"></script>
+<script src="./app.js?v=9005" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {

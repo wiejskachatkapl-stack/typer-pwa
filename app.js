@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 9004;
+const BUILD = 9005;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -173,7 +173,7 @@ function showScreen(id){
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results") setBg(BG_ROOM);
+  if(id === "room" || id === "results" || id === "worldcup") setBg(BG_ROOM);
   else setBg(BG_HOME);
 }
 
@@ -3387,6 +3387,9 @@ function openWorldCupEvent(){
   if(adminCard) adminCard.style.display = isAdmin() ? "block" : "none";
   if(el("worldCupMatchesCount")) el("worldCupMatchesCount").textContent = "0";
   if(el("worldCupPoints")) el("worldCupPoints").textContent = "—";
+  if(el("worldCupRoomName")) el("worldCupRoomName").textContent = String((currentRoomData && currentRoomData.name) || currentRoomCode || "—");
+  if(el("worldCupNick")) el("worldCupNick").textContent = String(getNick() || "—");
+  refreshAllButtonImages();
   showScreen("worldcup");
 }
 
