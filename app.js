@@ -3626,11 +3626,9 @@ function bindUI(){
       : (deletePlayerMode ? "Zaznacz gracza do usunięcia" : "Tryb usuwania wyłączony"));
   };
 
-  // 8004: zastępstwo
-  const __btnWorldCupEvent = el("btnWorldCupEvent");
-  if(__btnWorldCupEvent) __btnWorldCupEvent.onclick = ()=>{
-    showToast(getLang()==="en" ? "World Cup event coming soon" : "Event MŚ 2026 wkrótce");
-  };
+  // Event MŚ 2026 (w miejscu dawnego zastępstwa)
+  const __btnSubstitute = el("btnSubstitute");
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> showToast(getLang()==="en" ? "World Cup 2026 event soon" : "Event MŚ 2026 wkrótce");
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
