@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 9003)</title>
+  <title>Typer (BUILD 9002)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -2012,7 +2012,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <!-- 6028: osobny kontener na Kraj/Klub + przycisk Podmiana -->
   <div class="panel leftProfileInfo" id="roomProfileInfoCard">
     <div class="substituteRow" id="roomSubstituteRow">
-      <button aria-label="Podmiana" class="imgBtn sysBtn" data-btn="btn_event_worldcup.png" id="btnSubstitute" title="EVENT MŚ 2026" type="button">
+      <button aria-label="EVENT MŚ 2026" class="imgBtn sysBtn" data-btn="btn_event_worldcup.png" id="btnSubstitute" title="EVENT MŚ 2026" type="button">
         <img alt="EVENT MŚ 2026" data-btn="btn_event_worldcup.png" src="ui/buttons/pl/btn_event_worldcup.png"/>
       </button>
     </div>
@@ -2357,6 +2357,40 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </section>
+
+<!-- WC EVENT -->
+<section class="screen" id="wc_event">
+<div class="leagueWrap panel">
+<div class="leagueTop">
+<div class="leagueTopLeft">
+<div class="chip" id="t_wc_event">EVENT MŚ 2026</div>
+<div class="chip"><span id="t_wc_room">Pokój</span>: <span id="wcEventRoomName">—</span></div>
+<div class="chip"><span id="t_wc_nick">Nick</span>: <span id="wcEventNick">—</span></div>
+</div>
+<div class="row">
+<button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnWCEventBack" type="button"><img alt="btnWCEventBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+</div>
+</div>
+<div class="panel" style="padding:14px;margin-bottom:14px">
+<div class="title" id="t_wc_matches" style="margin:0 0 10px 0">Mecze MŚ</div>
+<div id="wcEventMatchesList" style="min-height:120px"></div>
+<div class="row" style="gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px">
+<button class="imgBtn sysBtn" data-btn="btn_dodaj_kolejke.png" id="btnWCAdminAdd" type="button" style="display:none"><img alt="btnWCAdminAdd" data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_dodaj_kolejke.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_dodaj_wyniki.png" id="btnWCAdminResults" type="button" style="display:none"><img alt="btnWCAdminResults" data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_dodaj_wyniki.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_zakoncz_kolejke.png" id="btnWCAdminEnd" type="button" style="display:none"><img alt="btnWCAdminEnd" data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png"/></button>
+</div>
+</div>
+<div class="panel" style="padding:14px">
+<div class="title" id="t_wc_ranking" style="margin:0 0 10px 0">Ranking MŚ</div>
+<div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
+<table id="wcEventRankingTable">
+<thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Typy</th><th style="width:120px">Punkty</th></tr></thead>
+<tbody id="wcEventRankingBody"><tr><td colspan="4" style="color:rgba(255,255,255,.75)">Event MŚ 2026 wkrótce</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
 <!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modalCard">
@@ -2369,7 +2403,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="footerRight" id="footerRight">—</div>
+<div class="footerRight" id="footerRight">Mariusz Gębka • v1.9004</div>
 </div>
 </div>
 <script>
@@ -2387,7 +2421,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=9003" type="module"></script>
+<script src="./app.js?v=9002" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2407,14 +2441,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=9003').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=9001').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka • v1.9003</div>
+<div id="buildCornerText">Mariusz Gębka • v1.9002</div>
 </div>
 </body>
 </html>

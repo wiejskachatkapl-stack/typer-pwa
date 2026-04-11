@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 9003;
+const BUILD = 9002;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -167,13 +167,13 @@ function hideCenterLoading(){
 }
 
 function showScreen(id){
-  const ids = ["splash","home","continue","rooms","room","results","league"];
+  const ids = ["splash","home","continue","rooms","room","results","league","wc_event"];
   ids.forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results") setBg(BG_ROOM);
+  if(id === "room" || id === "results" || id === "wc_event") setBg(BG_ROOM);
   else setBg(BG_HOME);
 }
 
@@ -262,6 +262,10 @@ const I18N = {
     players: "Gracze",
     playersSub: "",
     leagueBtn: "Tabela ligi typerów",
+    worldCupEvent: "EVENT MŚ 2026",
+    worldCupMatches: "Mecze MŚ",
+    worldCupRanking: "Ranking MŚ",
+    worldCupSoon: "Event MŚ 2026 wkrótce",
 
     results: "Wyniki",
     hintResults: "Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.",
@@ -338,6 +342,10 @@ const I18N = {
     players: "Players",
     playersSub: "",
     leagueBtn: "League table",
+    worldCupEvent: "WORLD CUP 2026",
+    worldCupMatches: "World Cup matches",
+    worldCupRanking: "World Cup ranking",
+    worldCupSoon: "World Cup 2026 event soon",
 
     results: "Results",
     hintResults: "Tip: fill all results and click “Save results”.",
@@ -508,6 +516,7 @@ function applyLangToUI(){
   if(el("t_players")) el("t_players").textContent = t("players");
   if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
   setBtnLabelSafe("btnLeagueFromRoom", t("leagueBtn"));
+  setBtnLabelSafe("btnSubstitute", t("worldCupEvent"));
 
   // Results
   if(el("t_results")) el("t_results").textContent = t("results");
@@ -3626,9 +3635,9 @@ function bindUI(){
       : (deletePlayerMode ? "Zaznacz gracza do usunięcia" : "Tryb usuwania wyłączony"));
   };
 
-  // Event MŚ 2026 (w miejscu dawnego zastępstwa)
+  // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> showToast(getLang()==="en" ? "World Cup 2026 event soon" : "Event MŚ 2026 wkrótce");
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openWorldCupEventScreen();
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
@@ -3760,6 +3769,14 @@ function bindUI(){
 
   // League
   el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
+  const __btnWCBack = el("btnWCEventBack");
+  if(__btnWCBack) __btnWCBack.onclick = ()=> showScreen("room");
+  const __btnWCAdminAdd = el("btnWCAdminAdd");
+  if(__btnWCAdminAdd) __btnWCAdminAdd.onclick = ()=> showToast(t("worldCupSoon"));
+  const __btnWCAdminResults = el("btnWCAdminResults");
+  if(__btnWCAdminResults) __btnWCAdminResults.onclick = ()=> showToast(t("worldCupSoon"));
+  const __btnWCAdminEnd = el("btnWCAdminEnd");
+  if(__btnWCAdminEnd) __btnWCAdminEnd.onclick = ()=> showToast(t("worldCupSoon"));
   // btnLeagueRefresh removed (BUILD 6014)
 
 
