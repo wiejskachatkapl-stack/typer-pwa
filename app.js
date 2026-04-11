@@ -167,7 +167,7 @@ function hideCenterLoading(){
 }
 
 function showScreen(id){
-  const ids = ["splash","home","continue","rooms","room","worldcup","results","league"];
+  const ids = ["splash","home","continue","rooms","room","results","league","worldcup"];
   ids.forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
@@ -3381,6 +3381,28 @@ function closeMessagesModal(){
   ov.setAttribute("aria-hidden","true");
 }
 
+
+function openWorldCupEvent(){
+  const adminCard = el("worldCupAdminCard");
+  if(adminCard) adminCard.style.display = isAdmin() ? "block" : "none";
+  if(el("worldCupMatchesCount")) el("worldCupMatchesCount").textContent = "0";
+  if(el("worldCupPoints")) el("worldCupPoints").textContent = "—";
+  showScreen("worldcup");
+}
+
+function bindWorldCupEventButtons(){
+  const back = el("btnWorldCupBack");
+  if(back) back.onclick = ()=> showScreen("room");
+  const exit = el("btnWorldCupExit");
+  if(exit) exit.onclick = ()=> showScreen("home");
+  const add = el("btnWorldCupAddMatches");
+  if(add) add.onclick = ()=> showToast(getLang()==="en" ? "World Cup match adding soon" : "Dodawanie meczów MŚ wkrótce");
+  const res = el("btnWorldCupEnterResults");
+  if(res) res.onclick = ()=> showToast(getLang()==="en" ? "World Cup results soon" : "Wpisywanie wyników MŚ wkrótce");
+  const end = el("btnWorldCupEndRound");
+  if(end) end.onclick = ()=> showToast(getLang()==="en" ? "World Cup round ending soon" : "Kończenie kolejki MŚ wkrótce");
+}
+
 // ===== SUBSTITUTE (Zastępstwo) – BUILD 8004 =====
 let _subMode = "player"; // "player" | "admin"
 
@@ -3503,20 +3525,6 @@ async function markAllMyMessagesRead(){
   await batch.commit();
 }
 
-
-function renderWorldCupEvent(){
-  const adminBox = el("worldcupAdminPanel");
-  if(adminBox) adminBox.style.display = isAdmin() ? "grid" : "none";
-  const nickNode = el("worldcupNick");
-  if(nickNode) nickNode.textContent = getNick() || "—";
-  const roomNode = el("worldcupRoomName");
-  if(roomNode) roomNode.textContent = (currentRoomData && (currentRoomData.name || currentRoomData.roomName)) || currentRoomCode || "—";
-}
-
-function openWorldCupEvent(){
-  renderWorldCupEvent();
-  showScreen("worldcup");
-}
 
 // ===== UI =====
 function bindUI(){
@@ -3643,6 +3651,7 @@ function bindUI(){
   // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
   if(__btnSubstitute) __btnSubstitute.onclick = ()=> openWorldCupEvent();
+  bindWorldCupEventButtons();
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
@@ -3664,20 +3673,6 @@ function bindUI(){
   const __btnSubYes = el("btnSubYes");
   if(__btnSubYes) __btnSubYes.onclick = ()=>{ /* intentionally inactive for now */ };
 
-
-  // WORLD CUP EVENT (mini-typer placeholder / separate module)
-  const __btnWorldCupBack = el("btnWorldCupBack");
-  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=> showScreen("room");
-  const __btnWorldCupMatches = el("btnWorldCupMatches");
-  if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
-  const __btnWorldCupRanking = el("btnWorldCupRanking");
-  if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
-  const __btnWorldCupAdd = el("btnWorldCupAdd");
-  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches." : "Dodawanie meczów MŚ.");
-  const __btnWorldCupResults = el("btnWorldCupResults");
-  if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
-  const __btnWorldCupEnd = el("btnWorldCupEnd");
-  if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round." : "Zakończenie kolejki MŚ.");
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
