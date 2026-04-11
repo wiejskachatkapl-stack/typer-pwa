@@ -2012,8 +2012,8 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <!-- 6028: osobny kontener na Kraj/Klub + przycisk Podmiana -->
   <div class="panel leftProfileInfo" id="roomProfileInfoCard">
     <div class="substituteRow" id="roomSubstituteRow">
-      <button aria-label="Podmiana" class="imgBtn sysBtn small" data-btn="btn_substitute.png" id="btnSubstitute" title="Podmiana" type="button">
-        <img alt="Podmiana" data-btn="btn_substitute.png" src="ui/buttons/pl/btn_substitute.png"/>
+      <button aria-label="Podmiana" class="imgBtn sysBtn small" data-btn="btn_event_worldcup.png" id="btnSubstitute" title="Event MŚ 2026" type="button">
+        <img alt="Event MŚ 2026" data-btn="btn_event_worldcup.png" src="ui/buttons/pl/btn_event_worldcup.png"/>
       </button>
     </div>
   </div>
@@ -2357,25 +2357,38 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 </section>
-
 <!-- WORLDCUP EVENT -->
 <section class="screen" id="worldcup">
-  <div class="leagueWrap panel">
-    <div class="leagueTop">
-      <div class="leagueTopLeft">
-        <div class="chip">EVENT MŚ 2026</div>
-      </div>
-      <div class="row">
-        <button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnWorldCupBack" type="button"><img alt="btnWorldCupBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
-      </div>
-    </div>
-    <div class="panel" style="padding:14px">
-      <div class="title" style="margin:0 0 10px 0">Mecze MŚ</div>
-      <div class="sub">To jest osobny mini-typer MŚ wewnątrz pokoju.</div>
-    </div>
-  </div>
-</section>
-
+<div class="leagueWrap panel">
+<div class="leagueTop">
+<div class="leagueTopLeft">
+<div class="chip">EVENT MŚ 2026</div>
+<div class="chip">Pokój : <span id="worldCupRoomName">—</span></div>
+<div class="chip">Nick : <span id="worldCupNick">—</span></div>
+</div>
+<div class="row">
+<button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnWorldCupBack" type="button"><img alt="btnWorldCupBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+</div>
+</div>
+<div class="panel" style="padding:14px;margin-bottom:14px">
+<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div>
+<div class="sub">To jest osobny mini-typer dla eventu mundialowego. W tym etapie przygotowany jest już osobny ekran eventu.</div>
+<div class="panel" style="padding:14px;margin-top:12px">Brak jeszcze dodanych meczów MŚ.</div>
+</div>
+<div class="panel" id="worldCupAdminTools" style="padding:14px;margin-bottom:14px;display:none">
+<div class="title" style="margin:0 0 10px 0">Panel admina MŚ</div>
+<div class="row" style="flex-wrap:wrap">
+<button class="imgBtn sysBtn" data-btn="btn_add_queue.png" id="btnWCAddMatches" type="button"><img alt="btnWCAddMatches" data-btn="btn_add_queue.png" src="ui/buttons/pl/btn_add_queue.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_enter_results.png" id="btnWCEnterResults" type="button"><img alt="btnWCEnterResults" data-btn="btn_enter_results.png" src="ui/buttons/pl/btn_enter_results.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_end_queue.png" id="btnWCEndRound" type="button"><img alt="btnWCEndRound" data-btn="btn_end_queue.png" src="ui/buttons/pl/btn_end_queue.png"/></button>
+</div>
+</div>
+<div class="panel" style="padding:14px">
+<div class="title" style="margin:0 0 10px 0">Ranking MŚ</div>
+<div class="sub">Ranking eventu MŚ będzie liczony osobno od zwykłej gry.</div>
+<div class="panel" style="padding:14px;margin-top:12px">Brak jeszcze danych rankingu MŚ.</div>
+</div>
+</div>
 <!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modalCard">
@@ -2433,7 +2446,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka • v1.9004</div>
+<div id="buildCornerText">Mariusz Gębka • v1.9002</div>
 </div>
 </body>
 </html>
