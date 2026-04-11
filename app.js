@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 9002;
+const BUILD = 9003;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3627,8 +3627,10 @@ function bindUI(){
   };
 
   // 8004: zastępstwo
-  const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSubstituteMenu();
+  const __btnWorldCupEvent = el("btnWorldCupEvent");
+  if(__btnWorldCupEvent) __btnWorldCupEvent.onclick = ()=>{
+    showToast(getLang()==="en" ? "World Cup event coming soon" : "Event MŚ 2026 wkrótce");
+  };
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
