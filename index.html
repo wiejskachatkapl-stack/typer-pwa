@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 9002)</title>
+  <title>Typer (BUILD 9004)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -2012,8 +2012,8 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <!-- 6028: osobny kontener na Kraj/Klub + przycisk Podmiana -->
   <div class="panel leftProfileInfo" id="roomProfileInfoCard">
     <div class="substituteRow" id="roomSubstituteRow">
-      <button aria-label="Podmiana" class="imgBtn sysBtn small" data-btn="btn_substitute.png" id="btnSubstitute" title="Podmiana" type="button">
-        <img alt="Podmiana" data-btn="btn_substitute.png" src="ui/buttons/pl/btn_substitute.png"/>
+      <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small" data-btn="btn_event_worldcup.png" id="btnSubstitute" title="Event MŚ 2026" type="button">
+        <img alt="Event MŚ 2026" data-btn="btn_event_worldcup.png" src="ui/buttons/pl/btn_event_worldcup.png" style="max-height:68px"/>
       </button>
     </div>
   </div>
@@ -2387,7 +2387,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=9002" type="module"></script>
+<script src="./app.js?v=9004" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2407,14 +2407,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=9001').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=9004').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka • v1.9002</div>
+<div id="buildCornerText">Mariusz Gębka • v1.9004</div>
 </div>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 9002;
+const BUILD = 9004;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -167,7 +167,7 @@ function hideCenterLoading(){
 }
 
 function showScreen(id){
-  const ids = ["splash","home","continue","rooms","room","results","league"];
+  const ids = ["splash","home","continue","rooms","room","worldcup","results","league"];
   ids.forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
@@ -3504,6 +3504,20 @@ async function markAllMyMessagesRead(){
 }
 
 
+function renderWorldCupEvent(){
+  const adminBox = el("worldcupAdminPanel");
+  if(adminBox) adminBox.style.display = isAdmin() ? "grid" : "none";
+  const nickNode = el("worldcupNick");
+  if(nickNode) nickNode.textContent = getNick() || "—";
+  const roomNode = el("worldcupRoomName");
+  if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
+}
+
+function openWorldCupEvent(){
+  renderWorldCupEvent();
+  showScreen("worldcup");
+}
+
 // ===== UI =====
 function bindUI(){
   // Modal
@@ -3628,7 +3642,7 @@ function bindUI(){
 
   // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSubstituteMenu();
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openWorldCupEvent();
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
@@ -3650,6 +3664,20 @@ function bindUI(){
   const __btnSubYes = el("btnSubYes");
   if(__btnSubYes) __btnSubYes.onclick = ()=>{ /* intentionally inactive for now */ };
 
+
+  // WORLD CUP EVENT (mini-typer placeholder / separate module)
+  const __btnWorldCupBack = el("btnWorldCupBack");
+  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=> showScreen("room");
+  const __btnWorldCupMatches = el("btnWorldCupMatches");
+  if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
+  const __btnWorldCupRanking = el("btnWorldCupRanking");
+  if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
+  const __btnWorldCupAdd = el("btnWorldCupAdd");
+  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches." : "Dodawanie meczów MŚ.");
+  const __btnWorldCupResults = el("btnWorldCupResults");
+  if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
+  const __btnWorldCupEnd = el("btnWorldCupEnd");
+  if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round." : "Zakończenie kolejki MŚ.");
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
