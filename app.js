@@ -167,13 +167,13 @@ function hideCenterLoading(){
 }
 
 function showScreen(id){
-  const ids = ["splash","home","continue","rooms","room","results","league","wc_event"];
+  const ids = ["splash","home","continue","rooms","room","results","league","worldcup"];
   ids.forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results" || id === "wc_event") setBg(BG_ROOM);
+  if(id === "room" || id === "results" || id === "worldcup") setBg(BG_ROOM);
   else setBg(BG_HOME);
 }
 
@@ -262,10 +262,6 @@ const I18N = {
     players: "Gracze",
     playersSub: "",
     leagueBtn: "Tabela ligi typerów",
-    worldCupEvent: "EVENT MŚ 2026",
-    worldCupMatches: "Mecze MŚ",
-    worldCupRanking: "Ranking MŚ",
-    worldCupSoon: "Event MŚ 2026 wkrótce",
 
     results: "Wyniki",
     hintResults: "Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.",
@@ -342,10 +338,6 @@ const I18N = {
     players: "Players",
     playersSub: "",
     leagueBtn: "League table",
-    worldCupEvent: "WORLD CUP 2026",
-    worldCupMatches: "World Cup matches",
-    worldCupRanking: "World Cup ranking",
-    worldCupSoon: "World Cup 2026 event soon",
 
     results: "Results",
     hintResults: "Tip: fill all results and click “Save results”.",
@@ -516,7 +508,6 @@ function applyLangToUI(){
   if(el("t_players")) el("t_players").textContent = t("players");
   if(el("t_players_sub")) el("t_players_sub").textContent = t("playersSub");
   setBtnLabelSafe("btnLeagueFromRoom", t("leagueBtn"));
-  setBtnLabelSafe("btnSubstitute", t("worldCupEvent"));
 
   // Results
   if(el("t_results")) el("t_results").textContent = t("results");
@@ -3637,7 +3628,7 @@ function bindUI(){
 
   // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openWorldCupEventScreen();
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openWorldCupEvent();
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
@@ -3769,14 +3760,18 @@ function bindUI(){
 
   // League
   el("btnLeagueBack").onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
-  const __btnWCBack = el("btnWCEventBack");
-  if(__btnWCBack) __btnWCBack.onclick = ()=> showScreen("room");
-  const __btnWCAdminAdd = el("btnWCAdminAdd");
-  if(__btnWCAdminAdd) __btnWCAdminAdd.onclick = ()=> showToast(t("worldCupSoon"));
-  const __btnWCAdminResults = el("btnWCAdminResults");
-  if(__btnWCAdminResults) __btnWCAdminResults.onclick = ()=> showToast(t("worldCupSoon"));
-  const __btnWCAdminEnd = el("btnWCAdminEnd");
-  if(__btnWCAdminEnd) __btnWCAdminEnd.onclick = ()=> showToast(t("worldCupSoon"));
+
+  const __btnWorldCupBack = el("btnWorldCupBack");
+  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
+
+  const __btnWorldCupAdd = el("btnWorldCupAddMatches");
+  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches soon" : "Dodawanie meczów MŚ wkrótce");
+
+  const __btnWorldCupResults = el("btnWorldCupEnterResults");
+  if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results soon" : "Wpisywanie wyników MŚ wkrótce");
+
+  const __btnWorldCupEnd = el("btnWorldCupEndRound");
+  if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "Closing World Cup round soon" : "Zakończenie kolejki MŚ wkrótce");
   // btnLeagueRefresh removed (BUILD 6014)
 
 
@@ -6913,3 +6908,77 @@ window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateL
 window.closeModal = function(){
   try{ document.querySelectorAll('.modal.active').forEach(m=>m.classList.remove('active')); }catch(e){}
 };
+
+
+function renderWorldCupEvent(){
+  const host = el("worldcup");
+  if(!host) return;
+  const lang = getLang();
+  const roomName = el("roomName")?.textContent || currentRoomCode || "—";
+  const nick = getNick() || "—";
+  const admin = isAdmin();
+
+  host.innerHTML = `
+    <div class="leagueWrap panel">
+      <div class="leagueTop">
+        <div class="leagueTopLeft">
+          <div class="chip">${lang === "en" ? "WORLD CUP 2026 EVENT" : "EVENT MŚ 2026"}</div>
+          <div class="chip">${lang === "en" ? "Room" : "Pokój"}: <span style="margin-left:8px">${escapeHtml(String(roomName))}</span></div>
+          <div class="chip">${lang === "en" ? "Nick" : "Nick"}: <span style="margin-left:8px">${escapeHtml(String(nick))}</span></div>
+        </div>
+        <div class="row">
+          <button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnWorldCupBack" type="button"><img alt="btnWorldCupBack" data-btn="btn_cofnij.png" src="${getBtnDir()}btn_cofnij.png"/></button>
+        </div>
+      </div>
+      <div class="panel" style="padding:14px">
+        <div class="title" style="margin:0 0 10px 0">${lang === "en" ? "World Cup matches" : "Mecze MŚ"}</div>
+        <div class="sub" style="margin-bottom:12px">${lang === "en" ? "This is the separate World Cup mini-typer inside the room." : "To jest osobny mini-typer MŚ wewnątrz pokoju."}</div>
+        ${admin ? `
+          <div class="row" style="gap:12px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="imgBtn sysBtn small" data-btn="btn_dodaj_kolejke.png" id="btnWorldCupAddMatches" type="button"><img alt="btnWorldCupAddMatches" data-btn="btn_dodaj_kolejke.png" src="${getBtnDir()}btn_dodaj_kolejke.png"/></button>
+            <button class="imgBtn sysBtn small" data-btn="btn_dodaj_wyniki.png" id="btnWorldCupEnterResults" type="button"><img alt="btnWorldCupEnterResults" data-btn="btn_dodaj_wyniki.png" src="${getBtnDir()}btn_dodaj_wyniki.png"/></button>
+            <button class="imgBtn sysBtn small" data-btn="btn_zakoncz_kolejke.png" id="btnWorldCupEndRound" type="button"><img alt="btnWorldCupEndRound" data-btn="btn_zakoncz_kolejke.png" src="${getBtnDir()}btn_zakoncz_kolejke.png"/></button>
+          </div>
+        ` : ''}
+        <div class="panel" style="padding:14px;min-height:220px;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(0,0,0,.12)">
+          <div>
+            <div style="font-size:24px;font-weight:1000;margin-bottom:10px">${lang === "en" ? "World Cup 2026" : "Mistrzostwa Świata 2026"}</div>
+            <div class="sub">${lang === "en" ? "Match list for the event will appear here." : "Tutaj pojawi się lista meczów eventu."}</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="padding:14px;margin-top:14px">
+        <div class="title" style="margin:0 0 10px 0">${lang === "en" ? "World Cup ranking" : "Ranking MŚ"}</div>
+        <div class="sub">${lang === "en" ? "Separate ranking for the World Cup event." : "Osobny ranking dla eventu MŚ."}</div>
+        <div style="margin-top:12px;border:1px solid rgba(255,255,255,.10);border-radius:18px;overflow:auto">
+          <table style="width:100%">
+            <thead>
+              <tr>
+                <th style="width:60px">#</th>
+                <th>${lang === "en" ? "Player" : "Gracz"}</th>
+                <th style="width:120px">${lang === "en" ? "Points" : "Punkty"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="3" style="color:rgba(255,255,255,.75);padding:14px">${lang === "en" ? "No World Cup data yet…" : "Brak jeszcze danych MŚ…"}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  refreshAllButtonImages();
+  const __btnWorldCupBack = el("btnWorldCupBack");
+  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=>{ if(currentRoomCode) showScreen("room"); else showScreen("home"); };
+  const __btnWorldCupAdd = el("btnWorldCupAddMatches");
+  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(lang === "en" ? "Add World Cup matches soon" : "Dodawanie meczów MŚ wkrótce");
+  const __btnWorldCupResults = el("btnWorldCupEnterResults");
+  if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(lang === "en" ? "Enter World Cup results soon" : "Wpisywanie wyników MŚ wkrótce");
+  const __btnWorldCupEnd = el("btnWorldCupEndRound");
+  if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(lang === "en" ? "Closing World Cup round soon" : "Zakończenie kolejki MŚ wkrótce");
+}
+
+function openWorldCupEvent(){
+  renderWorldCupEvent();
+  showScreen("worldcup");
+}

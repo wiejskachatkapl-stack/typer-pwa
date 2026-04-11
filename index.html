@@ -2012,8 +2012,8 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <!-- 6028: osobny kontener na Kraj/Klub + przycisk Podmiana -->
   <div class="panel leftProfileInfo" id="roomProfileInfoCard">
     <div class="substituteRow" id="roomSubstituteRow">
-      <button aria-label="EVENT MŚ 2026" class="imgBtn sysBtn" data-btn="btn_event_worldcup.png" id="btnSubstitute" title="EVENT MŚ 2026" type="button">
-        <img alt="EVENT MŚ 2026" data-btn="btn_event_worldcup.png" src="ui/buttons/pl/btn_event_worldcup.png"/>
+      <button aria-label="Podmiana" class="imgBtn sysBtn small" data-btn="btn_substitute.png" id="btnSubstitute" title="Podmiana" type="button">
+        <img alt="Podmiana" data-btn="btn_substitute.png" src="ui/buttons/pl/btn_substitute.png"/>
       </button>
     </div>
   </div>
@@ -2358,39 +2358,24 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </section>
 
-<!-- WC EVENT -->
-<section class="screen" id="wc_event">
-<div class="leagueWrap panel">
-<div class="leagueTop">
-<div class="leagueTopLeft">
-<div class="chip" id="t_wc_event">EVENT MŚ 2026</div>
-<div class="chip"><span id="t_wc_room">Pokój</span>: <span id="wcEventRoomName">—</span></div>
-<div class="chip"><span id="t_wc_nick">Nick</span>: <span id="wcEventNick">—</span></div>
-</div>
-<div class="row">
-<button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnWCEventBack" type="button"><img alt="btnWCEventBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
-</div>
-</div>
-<div class="panel" style="padding:14px;margin-bottom:14px">
-<div class="title" id="t_wc_matches" style="margin:0 0 10px 0">Mecze MŚ</div>
-<div id="wcEventMatchesList" style="min-height:120px"></div>
-<div class="row" style="gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px">
-<button class="imgBtn sysBtn" data-btn="btn_dodaj_kolejke.png" id="btnWCAdminAdd" type="button" style="display:none"><img alt="btnWCAdminAdd" data-btn="btn_dodaj_kolejke.png" src="ui/buttons/pl/btn_dodaj_kolejke.png"/></button>
-<button class="imgBtn sysBtn" data-btn="btn_dodaj_wyniki.png" id="btnWCAdminResults" type="button" style="display:none"><img alt="btnWCAdminResults" data-btn="btn_dodaj_wyniki.png" src="ui/buttons/pl/btn_dodaj_wyniki.png"/></button>
-<button class="imgBtn sysBtn" data-btn="btn_zakoncz_kolejke.png" id="btnWCAdminEnd" type="button" style="display:none"><img alt="btnWCAdminEnd" data-btn="btn_zakoncz_kolejke.png" src="ui/buttons/pl/btn_zakoncz_kolejke.png"/></button>
-</div>
-</div>
-<div class="panel" style="padding:14px">
-<div class="title" id="t_wc_ranking" style="margin:0 0 10px 0">Ranking MŚ</div>
-<div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)">
-<table id="wcEventRankingTable">
-<thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Typy</th><th style="width:120px">Punkty</th></tr></thead>
-<tbody id="wcEventRankingBody"><tr><td colspan="4" style="color:rgba(255,255,255,.75)">Event MŚ 2026 wkrótce</td></tr></tbody>
-</table>
-</div>
-</div>
-</div>
+<!-- WORLDCUP EVENT -->
+<section class="screen" id="worldcup">
+  <div class="leagueWrap panel">
+    <div class="leagueTop">
+      <div class="leagueTopLeft">
+        <div class="chip">EVENT MŚ 2026</div>
+      </div>
+      <div class="row">
+        <button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnWorldCupBack" type="button"><img alt="btnWorldCupBack" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+      </div>
+    </div>
+    <div class="panel" style="padding:14px">
+      <div class="title" style="margin:0 0 10px 0">Mecze MŚ</div>
+      <div class="sub">To jest osobny mini-typer MŚ wewnątrz pokoju.</div>
+    </div>
+  </div>
 </section>
+
 <!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modalCard">
@@ -2403,7 +2388,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="footerRight" id="footerRight">Mariusz Gębka • v1.9004</div>
+<div class="footerRight" id="footerRight">—</div>
 </div>
 </div>
 <script>
@@ -2448,7 +2433,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka • v1.9002</div>
+<div id="buildCornerText">Mariusz Gębka • v1.9004</div>
 </div>
 </body>
 </html>
