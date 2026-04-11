@@ -166,21 +166,8 @@ function hideCenterLoading(){
   if(ov) ov.style.display = "none";
 }
 
-function renderWorldCupEvent(){
-  const roomName = (currentRoom && currentRoom.name) || (el("roomName")?.textContent) || "—";
-  const nick = (getNick && getNick()) || (el("roomProfileNick")?.textContent) || "—";
-  const wcRoom = el("worldCupRoomName"); if(wcRoom) wcRoom.textContent = roomName;
-  const wcNick = el("worldCupNick"); if(wcNick) wcNick.textContent = nick;
-  const adminTools = el("worldCupAdminTools"); if(adminTools) adminTools.style.display = isAdmin() ? "flex" : "none";
-}
-
-function openWorldCupEvent(){
-  renderWorldCupEvent();
-  showScreen("worldcup");
-}
-
 function showScreen(id){
-  const ids = ["splash","home","continue","rooms","room","results","league","worldcup"];
+  const ids = ["splash","home","continue","rooms","room","results","league"];
   ids.forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
@@ -3639,21 +3626,9 @@ function bindUI(){
       : (deletePlayerMode ? "Zaznacz gracza do usunięcia" : "Tryb usuwania wyłączony"));
   };
 
-  // Event MŚ 2026
+  // 8004: zastępstwo
   const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openWorldCupEvent();
-
-  const __btnWorldCupBack = el("btnWorldCupBack");
-  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=> showScreen("room");
-
-  const __btnWCAddMatches = el("btnWCAddMatches");
-  if(__btnWCAddMatches) __btnWCAddMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel soon" : "Panel dodawania meczów MŚ wkrótce");
-
-  const __btnWCEnterResults = el("btnWCEnterResults");
-  if(__btnWCEnterResults) __btnWCEnterResults.onclick = ()=> showToast(getLang()==="en" ? "World Cup results panel soon" : "Panel wyników MŚ wkrótce");
-
-  const __btnWCEndRound = el("btnWCEndRound");
-  if(__btnWCEndRound) __btnWCEndRound.onclick = ()=> showToast(getLang()==="en" ? "World Cup round closing soon" : "Zamykanie kolejki MŚ wkrótce");
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSubstituteMenu();
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
