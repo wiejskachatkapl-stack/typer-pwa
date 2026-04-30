@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2012;
+const BUILD = 2013;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -173,8 +173,9 @@ function showScreen(id){
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results") setBg(BG_ROOM);
+  if(id === "room" || id === "results" || id === "worldcup" || id === "league") setBg(BG_ROOM);
   else setBg(BG_HOME);
+  try{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 10); }catch(e){}
 }
 
 function setSplash(msg){
@@ -3504,18 +3505,15 @@ async function markAllMyMessagesRead(){
 }
 
 
-const WORLD_CUP_2026_TEAMS = ["Meksyk", "Republika Południowej Afryki", "Korea Południowa", "Czechy", "Szwajcaria", "Katar", "Kanada", "Bośnia i Hercegowina", "Brazylia", "Maroko", "Szkocja", "Haiti", "USA", "Australia", "Paragwaj", "Turcja", "Niemcy", "Ekwador", "Wybrzeże Kości Słoniowej", "Curacao", "Holandia", "Japonia", "Tunezja", "Szwecja", "Belgia", "Iran", "Egipt", "Nowa Zelandia", "Hiszpania", "Urugwaj", "Arabia Saudyjska", "Republika Zielonego Przylądka", "Francja", "Senegal", "Norwegia", "Irak", "Argentyna", "Austria", "Algieria", "Jordania", "Portugalia", "Kolumbia", "Uzbekistan", "DR Konga", "Anglia", "Chorwacja", "Ghana", "Panama"];
-let worldCupMatchesCache = [];
-
-function renderWorldCupEvent(){
+async function renderWorldCupEvent(){
   const adminBox = el("worldcupAdminPanel");
-  if(adminBox) adminBox.style.display = isAdmin() ? "grid" : "none";
+  if(adminBox) adminBox.style.display = isAdmin() ? "block" : "none";
   const nickNode = el("worldcupNick");
   if(nickNode) nickNode.textContent = getNick() || "—";
   const roomNode = el("worldcupRoomName");
   if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
-  renderWorldCupRankingPlaceholder();
-  loadWorldCupMatches();
+  await renderWorldCupMatches();
+  await renderWorldCupRanking();
 }
 
 function openWorldCupEvent(){
@@ -3523,97 +3521,226 @@ function openWorldCupEvent(){
   showScreen("worldcup");
 }
 
-function getWorldCupMatchesCol(){
-  if(!boot || !db || !currentRoomCode) return null;
-  return boot.collection(db, "rooms", currentRoomCode, "worldcup_matches");
+const WORLDCUP_TEAMS = [
+  "Meksyk","Republika Południowej Afryki","Korea Południowa","Czechy",
+  "Szwajcaria","Katar","Kanada","Bośnia i Hercegowina",
+  "Brazylia","Maroko","Szkocja","Haiti",
+  "USA","Australia","Paragwaj","Turcja",
+  "Niemcy","Ekwador","Wybrzeże Kości Słoniowej","Curacao",
+  "Holandia","Japonia","Tunezja","Szwecja",
+  "Belgia","Iran","Egipt","Nowa Zelandia",
+  "Hiszpania","Urugwaj","Arabia Saudyjska","Republika Zielonego Przylądka",
+  "Francja","Senegal","Norwegia","Irak",
+  "Argentyna","Austria","Algieria","Jordania",
+  "Portugalia","Kolumbia","Uzbekistan","DR Konga",
+  "Anglia","Chorwacja","Ghana","Panama"
+];
+
+function worldCupMatchesCol(){
+  return boot.collection(db, "rooms", currentRoomCode, "worldcupMatches");
 }
-function populateWorldCupTeamSelects(){
-  const home = el("wcHomeSelect");
-  const away = el("wcAwaySelect");
-  if(!home || !away) return;
-  const opts = ['<option value="">— wybierz —</option>'].concat(
-    WORLD_CUP_2026_TEAMS.map(t=>`<option value="${String(t).replace(/"/g,'&quot;')}">${t}</option>`)
-  ).join('');
-  home.innerHTML = opts;
-  away.innerHTML = opts;
-}
-function updateWorldCupPreview(){
-  const home = el("wcHomeSelect")?.value || "—";
-  const away = el("wcAwaySelect")?.value || "—";
-  const box = el("worldCupMatchPreview");
-  if(box) box.textContent = `${home} — ${away}`;
-}
-function openWorldCupAddModal(){
-  populateWorldCupTeamSelects();
-  updateWorldCupPreview();
-  const ov = el("worldCupAddOverlay");
-  if(ov) ov.style.display = "flex";
-}
-function closeWorldCupAddModal(){
-  const ov = el("worldCupAddOverlay");
-  if(ov) ov.style.display = "none";
-}
-async function loadWorldCupMatches(){
-  const list = el("worldcupMatchesList");
-  const cnt = el("worldcupMatchesCount");
-  if(!list) return;
-  const col = getWorldCupMatchesCol();
-  if(!col){ list.innerHTML = '<div class="sub">Brak pokoju.</div>'; return; }
-  try{
-    const qs = await boot.getDocs(col);
-    worldCupMatchesCache = [];
-    qs.forEach(d=>{
-      const x = d.data() || {};
-      worldCupMatchesCache.push({ id:d.id, ...x });
-    });
-    worldCupMatchesCache.sort((a,b)=>{
-      const am = a.createdAt?.seconds || 0, bm = b.createdAt?.seconds || 0;
-      return am - bm;
-    });
-    if(cnt) cnt.textContent = String(worldCupMatchesCache.length || 0);
-    if(!worldCupMatchesCache.length){
-      list.innerHTML = '<div class="sub">Brak dodanych meczów MŚ.</div>';
-      return;
-    }
-    list.innerHTML = worldCupMatchesCache.map((m, i)=>`
-      <div class="panel" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="font-weight:1000;">${i+1}. ${m.home || '—'} — ${m.away || '—'}</div>
-      </div>
-    `).join('');
-  }catch(err){
-    list.innerHTML = '<div class="sub">Nie udało się wczytać meczów MŚ.</div>';
-  }
-}
-async function saveWorldCupMatch(){
-  const home = el("wcHomeSelect")?.value || "";
-  const away = el("wcAwaySelect")?.value || "";
-  if(!home || !away){ showToast(getLang()==='en' ? 'Select both teams' : 'Wybierz obie drużyny'); return; }
-  if(home === away){ showToast(getLang()==='en' ? 'Teams must be different' : 'Drużyny muszą być różne'); return; }
-  const col = getWorldCupMatchesCol();
-  if(!col){ showToast(getLang()==='en' ? 'No room selected' : 'Brak wybranego pokoju'); return; }
-  try{
-    await boot.addDoc(col, {
-      home, away,
-      createdAt: boot.serverTimestamp(),
-      createdBy: userUid || "",
-      createdByNick: getNick() || ""
-    });
-    closeWorldCupAddModal();
-    await loadWorldCupMatches();
-    showToast(getLang()==='en' ? 'Match added' : 'Mecz dodany');
-  }catch(err){
-    showToast(getLang()==='en' ? 'Failed to add match' : 'Nie udało się dodać meczu');
-  }
-}
-function renderWorldCupRankingPlaceholder(){
-  const body = el("worldcupRankingBody");
-  if(!body) return;
-  const rows = (lastPlayers || []).filter(p=> (p?.nick || '').trim()).sort((a,b)=> (a.nick||'').localeCompare(b.nick||''));
-  if(!rows.length){
-    body.innerHTML = '<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>';
+
+async function renderWorldCupMatches(){
+  const box = el("worldcupMatchesList");
+  const countNode = el("worldcupMatchesCount");
+  if(!box) return;
+  box.innerHTML = "";
+  if(!db || !currentRoomCode){
+    box.innerHTML = '<div style="color:rgba(255,255,255,.75);font-weight:900">Brak pokoju.</div>';
+    if(countNode) countNode.textContent = "0";
     return;
   }
-  body.innerHTML = rows.map((p, i)=> `<tr><td>${i+1}</td><td>${p.nick || '—'}</td><td>0</td></tr>`).join('');
+  try{
+    const qs = await boot.getDocs(worldCupMatchesCol());
+    const rows = [];
+    qs.forEach(docSnap=>{
+      const d = docSnap.data() || {};
+      rows.push({ id: docSnap.id, home: d.home || "—", away: d.away || "—", createdAt: d.createdAt });
+    });
+    rows.sort((a,b)=>{
+      const am = a.createdAt?.seconds || 0;
+      const bm = b.createdAt?.seconds || 0;
+      return am - bm;
+    });
+    if(countNode) countNode.textContent = String(rows.length);
+    if(!rows.length){
+      box.innerHTML = '<div style="color:rgba(255,255,255,.75);font-weight:900">Brak meczów MŚ.</div>';
+      return;
+    }
+    rows.forEach((m, idx)=>{
+      const row = document.createElement("div");
+      row.className = "matchRow";
+      row.innerHTML = `
+        <div class="matchPickCol"><div class="teamName">${idx+1}. ${m.home} — ${m.away}</div></div>
+        <div class="matchResultCol">Typ: —</div>
+        <div class="matchDateCol">Wynik: —</div>
+      `;
+      box.appendChild(row);
+    });
+  }catch(err){
+    box.innerHTML = '<div style="color:#ffb3b3;font-weight:900">Nie udało się wczytać meczów MŚ.</div>';
+  }
+}
+
+async function renderWorldCupRanking(){
+  const body = el("worldcupRankingBody");
+  if(!body) return;
+  body.innerHTML = '<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Ładowanie…</td></tr>';
+  try{
+    let players = Array.isArray(lastPlayers) ? [...lastPlayers] : [];
+    if((!players || !players.length) && db && currentRoomCode){
+      const qs = await boot.getDocs(boot.collection(db,"rooms",currentRoomCode,"players"));
+      players = [];
+      qs.forEach(d => players.push({uid:d.id, ...(d.data()||{})}));
+    }
+    players = players.filter(Boolean).sort((a,b)=> String(a.nick||"").localeCompare(String(b.nick||""), 'pl'));
+    if(!players.length){
+      body.innerHTML = '<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>';
+      return;
+    }
+    body.innerHTML = "";
+    players.forEach((p, idx)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${idx+1}</td><td>${p.nick || "—"}</td><td>0</td>`;
+      body.appendChild(tr);
+    });
+  }catch{
+    body.innerHTML = '<tr><td colspan="3" style="color:#ffb3b3">Nie udało się wczytać rankingu.</td></tr>';
+  }
+}
+
+function openWorldCupAddMatchModal(){
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.flexDirection = "column";
+  wrap.style.gap = "12px";
+
+  const title = document.createElement("div");
+  title.className = "title";
+  title.style.margin = "0";
+  title.textContent = "Dodaj mecz MŚ";
+  wrap.appendChild(title);
+
+  const row = document.createElement("div");
+  row.style.display = "grid";
+  row.style.gridTemplateColumns = "1fr 1fr";
+  row.style.gap = "10px";
+
+  const mkSel = (labelTxt)=>{
+    const holder = document.createElement("div");
+    holder.style.display = "flex";
+    holder.style.flexDirection = "column";
+    holder.style.gap = "6px";
+    const lab = document.createElement("div");
+    lab.textContent = labelTxt;
+    lab.style.fontWeight = "900";
+    const sel = document.createElement("select");
+    sel.className = "mqClubSelect";
+    WORLDCUP_TEAMS.forEach(team=>{
+      const opt = document.createElement("option");
+      opt.value = team;
+      opt.textContent = team;
+      sel.appendChild(opt);
+    });
+    holder.append(lab, sel);
+    return {holder, sel};
+  };
+
+  const homeObj = mkSel("Gospodarz");
+  const awayObj = mkSel("Gość");
+  row.append(homeObj.holder, awayObj.holder);
+  wrap.appendChild(row);
+
+  const preview = document.createElement("div");
+  preview.className = "chip";
+  preview.style.justifyContent = "center";
+  const updatePreview = ()=>{
+    preview.textContent = `${homeObj.sel.value || "—"} — ${awayObj.sel.value || "—"}`;
+  };
+  homeObj.sel.onchange = updatePreview;
+  awayObj.sel.onchange = updatePreview;
+  updatePreview();
+  wrap.appendChild(preview);
+
+  const btnRow = document.createElement("div");
+  btnRow.style.display = "flex";
+  btnRow.style.gap = "12px";
+  btnRow.style.justifyContent = "center";
+  btnRow.style.flexWrap = "wrap";
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "mqAddMatchBtn";
+  addBtn.textContent = "Dodaj mecz";
+
+  const saveBtn = makeSysImgButton("btn_zapisz_kolejke.png", {cls:"sysBtn", alt:"saveWorldCupMatch"});
+  const cancelBtn = makeSysImgButton("btn_cofnij.png", {cls:"sysBtn", alt:"cancelWorldCupMatch", onClick:()=> modalClose()});
+  btnRow.append(addBtn, saveBtn, cancelBtn);
+  wrap.appendChild(btnRow);
+
+  const addedList = document.createElement("div");
+  addedList.className = "mqMatchesList";
+  addedList.innerHTML = '<div class="mqEmpty">Nie dodano jeszcze meczów.</div>';
+  wrap.appendChild(addedList);
+
+  const tempMatches = [];
+  const refreshTemp = ()=>{
+    addedList.innerHTML = "";
+    if(!tempMatches.length){
+      addedList.innerHTML = '<div class="mqEmpty">Nie dodano jeszcze meczów.</div>';
+      return;
+    }
+    tempMatches.forEach((m, idx)=>{
+      const r = document.createElement("div");
+      r.className = "mqMatchRow";
+      r.innerHTML = `<div class="mqMatchTxt">${idx+1}. ${m.home} — ${m.away}</div>`;
+      addedList.appendChild(r);
+    });
+  };
+
+  addBtn.onclick = ()=>{
+    const home = homeObj.sel.value;
+    const away = awayObj.sel.value;
+    if(!home || !away){
+      showToast("Wybierz obie drużyny");
+      return;
+    }
+    if(home === away){
+      showToast("Drużyny muszą być różne");
+      return;
+    }
+    tempMatches.push({home, away});
+    refreshTemp();
+  };
+
+  saveBtn.onclick = async ()=>{
+    try{
+      if(!tempMatches.length){
+        const home = homeObj.sel.value;
+        const away = awayObj.sel.value;
+        if(home && away && home !== away){
+          tempMatches.push({home, away});
+        }
+      }
+      if(!tempMatches.length){
+        showToast("Brak meczów do zapisania");
+        return;
+      }
+      const batch = boot.writeBatch(db);
+      tempMatches.forEach((m, idx)=>{
+        const ref = boot.doc(worldCupMatchesCol());
+        batch.set(ref, { home:m.home, away:m.away, createdAt: boot.serverTimestamp(), order: Date.now()+idx });
+      });
+      await batch.commit();
+      modalClose();
+      await renderWorldCupMatches();
+      showToast("Zapisano mecze MŚ");
+    }catch(e){
+      showToast("Nie udało się zapisać meczów");
+    }
+  };
+
+  modalOpen("Dodaj mecze MŚ", wrap);
 }
 
 
@@ -3767,30 +3894,14 @@ function bindUI(){
   // WORLD CUP EVENT (mini-typer placeholder / separate module)
   const __btnWorldCupBack = el("btnWorldCupBack");
   if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=> showScreen("room");
-  const __btnWorldCupMatches = el("btnWorldCupMatches");
-  if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
-  const __btnWorldCupRanking = el("btnWorldCupRanking");
-  if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
-  const __btnWorldCupAdd = el("btnWorldCupAdd");
-  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> openWorldCupAddModal();
+  const __btnWorldCupExit = el("btnWorldCupExit");
+  if(__btnWorldCupExit) __btnWorldCupExit.onclick = ()=> showScreen("room");
+  const __btnWorldCupAdd = el("btnWorldCupAddMatches");
+  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> openWorldCupAddMatchModal();
   const __btnWorldCupResults = el("btnWorldCupResults");
   if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
   const __btnWorldCupEnd = el("btnWorldCupEnd");
   if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round." : "Zakończenie kolejki MŚ.");
-  const __btnWorldCupExit = el("btnWorldCupExit");
-  if(__btnWorldCupExit) __btnWorldCupExit.onclick = ()=> showScreen("room");
-  const __btnWorldCupAddClose = el("btnWorldCupAddClose");
-  if(__btnWorldCupAddClose) __btnWorldCupAddClose.onclick = ()=> closeWorldCupAddModal();
-  const __btnWorldCupBackToEvent = el("btnWorldCupBackToEvent");
-  if(__btnWorldCupBackToEvent) __btnWorldCupBackToEvent.onclick = ()=> closeWorldCupAddModal();
-  const __btnWorldCupSaveMatch = el("btnWorldCupSaveMatch");
-  if(__btnWorldCupSaveMatch) __btnWorldCupSaveMatch.onclick = ()=> saveWorldCupMatch();
-  const __wcHome = el("wcHomeSelect");
-  const __wcAway = el("wcAwaySelect");
-  if(__wcHome) __wcHome.onchange = updateWorldCupPreview;
-  if(__wcAway) __wcAway.onchange = updateWorldCupPreview;
-  const __wcOv = el("worldCupAddOverlay");
-  if(__wcOv) __wcOv.addEventListener("click", (e)=>{ if(e.target === __wcOv) closeWorldCupAddModal(); });
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
@@ -6996,8 +7107,7 @@ function shouldLockLandscape(){
   const active = document.querySelector('.screen.active')?.id || '';
   const lockScreens = new Set(["room","results","league","worldcup"]);
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-  const portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
-  return isMobile && portrait && lockScreens.has(active);
+  return isMobile && lockScreens.has(active);
 }
 
 async function applyOrientationPreference(){
@@ -7012,9 +7122,15 @@ async function applyOrientationPreference(){
 
 function updateLandscapeLock(){
   const overlay = el("rotateOverlay");
-  const locked = shouldLockLandscape();
-  if(overlay) overlay.style.display = locked ? "flex" : "none";
-  document.body.classList.toggle("lockedPortrait", locked);
+  if(overlay) overlay.style.display = "none";
+  document.body.classList.remove("lockedPortrait");
+  const active = document.querySelector('.screen.active')?.id || '';
+  const lockScreens = new Set(["room","results","league","worldcup"]);
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
+  const isPortrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+  const shouldForce = !!(isMobile && isPortrait && lockScreens.has(active));
+  document.body.classList.toggle("forceLandscapeUI", shouldForce);
+  try{ if(shouldForce && document.documentElement.requestFullscreen && !document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); } }catch(e){}
   try{ applyOrientationPreference(); }catch(e){}
 }
 
@@ -7026,7 +7142,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.001`);
+    setFooter(`Mariusz Gębka v.2.008`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
