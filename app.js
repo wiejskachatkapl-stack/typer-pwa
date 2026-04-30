@@ -6905,7 +6905,9 @@ function updateLandscapeLock(){
   const lockScreens = new Set(["room","results","league","worldcup"]);
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
   const isPortrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
-  document.body.classList.toggle("forceLandscapeUI", !!(isMobile && isPortrait && lockScreens.has(active)));
+  const shouldForce = !!(isMobile && isPortrait && lockScreens.has(active));
+  document.body.classList.toggle("forceLandscapeUI", shouldForce);
+  try{ if(shouldForce && document.documentElement.requestFullscreen && !document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); } }catch(e){}
   try{ applyOrientationPreference(); }catch(e){}
 }
 
