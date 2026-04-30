@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 2002)</title>
+    <title>Typer (BUILD 2004)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1656,10 +1656,10 @@
   align-items:center;
 }
 .sysBtn.actionSmall img{
-  height:64px !important;
+  height:52px !important;
 }
 @media (max-width: 520px){
-  .sysBtn.actionSmall img{ height:58px !important; }
+  .sysBtn.actionSmall img{ height:44px !important; }
 }
 
 
@@ -1706,7 +1706,7 @@
     }
 
 
-    /* ===== BUILD 2003: mobile rooms button + forced landscape UI ===== */
+    /* ===== BUILD 2004: mobile rooms button + improved forced landscape UI ===== */
     @media (max-width: 700px){
       #rooms .block .row .sysBtn img{height:42px !important; max-width:30vw !important;}
       #rooms .roomsBox > .row .sysBtn.small img{height:34px !important; max-width:20vw !important;}
@@ -1737,6 +1737,16 @@
         border-radius:0 !important;
       }
     }
+    @media (max-width: 980px) and (orientation: portrait){
+      body.forceLandscapeUI #roomLayout{flex-direction:row !important; height:100% !important; overflow:hidden !important; padding:12px !important;}
+      body.forceLandscapeUI .leftBar{width:320px !important; min-width:300px !important; height:100% !important; display:flex !important; flex-direction:column !important; gap:0 !important; padding:14px !important;}
+      body.forceLandscapeUI .mid{flex:1 !important; height:100% !important; display:flex !important; flex-direction:column !important; gap:12px !important; min-width:0 !important;}
+      body.forceLandscapeUI .rightBar{width:340px !important; min-width:320px !important; height:100% !important; display:flex !important; flex-direction:column !important; gap:12px !important; padding:14px !important; position:relative !important;}
+      body.forceLandscapeUI .matchesWrap{overflow:hidden !important;}
+      body.forceLandscapeUI .rightFooterBtn{position:absolute !important; left:14px !important; right:14px !important; bottom:14px !important; margin-top:0 !important;}
+      body.forceLandscapeUI .rightExitContainer{position:static !important; margin-top:0 !important;}
+    }
+
     /* language flags (top-right) */
     .homeLang{position:absolute; right:26px; top:18px; display:flex; gap:14px; z-index:50;}
     #btnLangPL, #btnLangEN{
@@ -2507,7 +2517,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.003</div>
+<div id="buildCornerText">Mariusz Gębka v.2.004</div>
 </div>
 </body>
 </html>
