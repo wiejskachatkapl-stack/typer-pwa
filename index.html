@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 2004)</title>
+    <title>Typer (BUILD 2005)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1558,11 +1558,6 @@
   border:1px solid rgba(255,255,255,.14)!important;
 }
 .rowRight{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; align-items:center; }
-/* v2058: only shrink and center Join Room button in join modal */
-.rowRight{justify-content:center;}
-.rowRight #btnJoinRoom img{height:38px !important;width:auto !important;display:block;}
-@media (max-width:700px){.rowRight #btnJoinRoom img{height:34px !important;}}
-
 .input{
   width:100%;
   padding:13px 12px;
@@ -1604,9 +1599,9 @@
     .sysBtn:disabled img{ opacity:.45; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
 
     /* BUILD 2004: smaller Join Room button on phone */
-    #btnJoinRoom img{height:64px !important;width:auto;max-width:min(86vw,420px);}
+    #btnJoinRoom img{height:32px !important;width:auto;max-width:min(43vw,210px);}
     @media (max-width: 720px){
-      #btnJoinRoom img{height:56px !important;max-width:min(82vw,360px);}
+      #btnJoinRoom img{height:28px !important;max-width:min(41vw,180px);}
     }
 
 
@@ -2463,7 +2458,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.004</div>
+<div id="buildCornerText">Mariusz Gębka v.2.005</div>
 </div>
 </body>
 </html>
