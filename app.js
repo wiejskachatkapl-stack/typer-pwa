@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2004;
+const BUILD = 2005;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -6919,7 +6919,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.004`);
+    setFooter(`Mariusz Gębka v.2.005`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
