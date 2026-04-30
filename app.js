@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2001;
+const BUILD = 2012;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3504,6 +3504,9 @@ async function markAllMyMessagesRead(){
 }
 
 
+const WORLD_CUP_2026_TEAMS = ["Meksyk", "Republika Południowej Afryki", "Korea Południowa", "Czechy", "Szwajcaria", "Katar", "Kanada", "Bośnia i Hercegowina", "Brazylia", "Maroko", "Szkocja", "Haiti", "USA", "Australia", "Paragwaj", "Turcja", "Niemcy", "Ekwador", "Wybrzeże Kości Słoniowej", "Curacao", "Holandia", "Japonia", "Tunezja", "Szwecja", "Belgia", "Iran", "Egipt", "Nowa Zelandia", "Hiszpania", "Urugwaj", "Arabia Saudyjska", "Republika Zielonego Przylądka", "Francja", "Senegal", "Norwegia", "Irak", "Argentyna", "Austria", "Algieria", "Jordania", "Portugalia", "Kolumbia", "Uzbekistan", "DR Konga", "Anglia", "Chorwacja", "Ghana", "Panama"];
+let worldCupMatchesCache = [];
+
 function renderWorldCupEvent(){
   const adminBox = el("worldcupAdminPanel");
   if(adminBox) adminBox.style.display = isAdmin() ? "grid" : "none";
@@ -3511,6 +3514,8 @@ function renderWorldCupEvent(){
   if(nickNode) nickNode.textContent = getNick() || "—";
   const roomNode = el("worldcupRoomName");
   if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
+  renderWorldCupRankingPlaceholder();
+  loadWorldCupMatches();
 }
 
 function openWorldCupEvent(){
@@ -3518,97 +3523,99 @@ function openWorldCupEvent(){
   showScreen("worldcup");
 }
 
-
-const WORLDCUP_2026_TEAMS = [
-  "Meksyk","Republika Południowej Afryki","Korea Południowa","Czechy",
-  "Szwajcaria","Katar","Kanada","Bośnia i Hercegowina",
-  "Brazylia","Maroko","Szkocja","Haiti",
-  "USA","Australia","Paragwaj","Turcja",
-  "Niemcy","Ekwador","Wybrzeże Kości Słoniowej","Curacao",
-  "Holandia","Japonia","Tunezja","Szwecja",
-  "Belgia","Iran","Egipt","Nowa Zelandia",
-  "Hiszpania","Urugwaj","Arabia Saudyjska","Republika Zielonego Przylądka",
-  "Francja","Senegal","Norwegia","Irak",
-  "Argentyna","Austria","Algieria","Jordania",
-  "Portugalia","Kolumbia","Uzbekistan","DR Konga",
-  "Anglia","Chorwacja","Ghana","Panama"
-];
-
-function openWorldCupAddMatchesModal(){
-  const wrap = document.createElement('div');
-  wrap.className = 'col';
-  wrap.style.gap = '12px';
-
-  const info = document.createElement('div');
-  info.className = 'sub';
-  info.textContent = getLang()==='en' ? 'Add World Cup matches for the event.' : 'Dodaj mecze MŚ do eventu.';
-  wrap.appendChild(info);
-
-  const row1 = document.createElement('div');
-  row1.className = 'col';
-  const label1 = document.createElement('div');
-  label1.textContent = getLang()==='en' ? 'Home team' : 'Gospodarz';
-  label1.style.fontWeight = '1000';
-  const sel1 = document.createElement('select');
-  sel1.className = 'profileSelect';
-  sel1.style.width = '100%';
-  sel1.style.maxWidth = '100%';
-  const row2 = document.createElement('div');
-  row2.className = 'col';
-  const label2 = document.createElement('div');
-  label2.textContent = getLang()==='en' ? 'Away team' : 'Gość';
-  label2.style.fontWeight = '1000';
-  const sel2 = document.createElement('select');
-  sel2.className = 'profileSelect';
-  sel2.style.width = '100%';
-  sel2.style.maxWidth = '100%';
-
-  const def1 = document.createElement('option');
-  def1.value=''; def1.textContent = getLang()==='en' ? 'Select team' : 'Wybierz drużynę';
-  sel1.appendChild(def1);
-  const def2 = document.createElement('option');
-  def2.value=''; def2.textContent = getLang()==='en' ? 'Select team' : 'Wybierz drużynę';
-  sel2.appendChild(def2);
-  for(const team of WORLDCUP_2026_TEAMS){
-    const o1 = document.createElement('option'); o1.value=team; o1.textContent=team; sel1.appendChild(o1);
-    const o2 = document.createElement('option'); o2.value=team; o2.textContent=team; sel2.appendChild(o2);
-  }
-  row1.append(label1, sel1);
-  row2.append(label2, sel2);
-  wrap.append(row1, row2);
-
-  const preview = document.createElement('div');
-  preview.className = 'panel';
-  preview.style.padding = '12px';
-  preview.innerHTML = '<div style="font-weight:1000;margin-bottom:6px;">'+(getLang()==='en' ? 'Preview' : 'Podgląd')+'</div><div style="opacity:.9;">—</div>';
-  const prevText = preview.querySelector('div:last-child');
-  const updatePreview = ()=>{
-    const a = sel1.value || '—';
-    const b = sel2.value || '—';
-    prevText.textContent = a + '  vs  ' + b;
-  };
-  sel1.onchange = updatePreview;
-  sel2.onchange = updatePreview;
-  wrap.appendChild(preview);
-
-  const actions = document.createElement('div');
-  actions.className = 'row';
-  actions.style.justifyContent = 'center';
-  actions.style.marginTop = '8px';
-  const btn = document.createElement('button');
-  btn.className = 'btn';
-  btn.textContent = getLang()==='en' ? 'Save match' : 'Zapisz mecz';
-  btn.onclick = ()=>{
-    if(!sel1.value || !sel2.value){ showToast(getLang()==='en' ? 'Select both teams' : 'Wybierz obie drużyny'); return; }
-    if(sel1.value === sel2.value){ showToast(getLang()==='en' ? 'Teams must be different' : 'Drużyny muszą być różne'); return; }
-    showToast(getLang()==='en' ? 'Event match saved.' : 'Zapisano mecz eventu.');
-    modalClose();
-  };
-  actions.appendChild(btn);
-  wrap.appendChild(actions);
-
-  modalOpen(getLang()==='en' ? 'Add World Cup matches' : 'Dodawanie meczów MŚ', wrap);
+function getWorldCupMatchesCol(){
+  if(!boot || !db || !currentRoomCode) return null;
+  return boot.collection(db, "rooms", currentRoomCode, "worldcup_matches");
 }
+function populateWorldCupTeamSelects(){
+  const home = el("wcHomeSelect");
+  const away = el("wcAwaySelect");
+  if(!home || !away) return;
+  const opts = ['<option value="">— wybierz —</option>'].concat(
+    WORLD_CUP_2026_TEAMS.map(t=>`<option value="${String(t).replace(/"/g,'&quot;')}">${t}</option>`)
+  ).join('');
+  home.innerHTML = opts;
+  away.innerHTML = opts;
+}
+function updateWorldCupPreview(){
+  const home = el("wcHomeSelect")?.value || "—";
+  const away = el("wcAwaySelect")?.value || "—";
+  const box = el("worldCupMatchPreview");
+  if(box) box.textContent = `${home} — ${away}`;
+}
+function openWorldCupAddModal(){
+  populateWorldCupTeamSelects();
+  updateWorldCupPreview();
+  const ov = el("worldCupAddOverlay");
+  if(ov) ov.style.display = "flex";
+}
+function closeWorldCupAddModal(){
+  const ov = el("worldCupAddOverlay");
+  if(ov) ov.style.display = "none";
+}
+async function loadWorldCupMatches(){
+  const list = el("worldcupMatchesList");
+  const cnt = el("worldcupMatchesCount");
+  if(!list) return;
+  const col = getWorldCupMatchesCol();
+  if(!col){ list.innerHTML = '<div class="sub">Brak pokoju.</div>'; return; }
+  try{
+    const qs = await boot.getDocs(col);
+    worldCupMatchesCache = [];
+    qs.forEach(d=>{
+      const x = d.data() || {};
+      worldCupMatchesCache.push({ id:d.id, ...x });
+    });
+    worldCupMatchesCache.sort((a,b)=>{
+      const am = a.createdAt?.seconds || 0, bm = b.createdAt?.seconds || 0;
+      return am - bm;
+    });
+    if(cnt) cnt.textContent = String(worldCupMatchesCache.length || 0);
+    if(!worldCupMatchesCache.length){
+      list.innerHTML = '<div class="sub">Brak dodanych meczów MŚ.</div>';
+      return;
+    }
+    list.innerHTML = worldCupMatchesCache.map((m, i)=>`
+      <div class="panel" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="font-weight:1000;">${i+1}. ${m.home || '—'} — ${m.away || '—'}</div>
+      </div>
+    `).join('');
+  }catch(err){
+    list.innerHTML = '<div class="sub">Nie udało się wczytać meczów MŚ.</div>';
+  }
+}
+async function saveWorldCupMatch(){
+  const home = el("wcHomeSelect")?.value || "";
+  const away = el("wcAwaySelect")?.value || "";
+  if(!home || !away){ showToast(getLang()==='en' ? 'Select both teams' : 'Wybierz obie drużyny'); return; }
+  if(home === away){ showToast(getLang()==='en' ? 'Teams must be different' : 'Drużyny muszą być różne'); return; }
+  const col = getWorldCupMatchesCol();
+  if(!col){ showToast(getLang()==='en' ? 'No room selected' : 'Brak wybranego pokoju'); return; }
+  try{
+    await boot.addDoc(col, {
+      home, away,
+      createdAt: boot.serverTimestamp(),
+      createdBy: userUid || "",
+      createdByNick: getNick() || ""
+    });
+    closeWorldCupAddModal();
+    await loadWorldCupMatches();
+    showToast(getLang()==='en' ? 'Match added' : 'Mecz dodany');
+  }catch(err){
+    showToast(getLang()==='en' ? 'Failed to add match' : 'Nie udało się dodać meczu');
+  }
+}
+function renderWorldCupRankingPlaceholder(){
+  const body = el("worldcupRankingBody");
+  if(!body) return;
+  const rows = (lastPlayers || []).filter(p=> (p?.nick || '').trim()).sort((a,b)=> (a.nick||'').localeCompare(b.nick||''));
+  if(!rows.length){
+    body.innerHTML = '<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map((p, i)=> `<tr><td>${i+1}</td><td>${p.nick || '—'}</td><td>0</td></tr>`).join('');
+}
+
 
 // ===== UI =====
 function bindUI(){
@@ -3764,14 +3771,26 @@ function bindUI(){
   if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
   const __btnWorldCupRanking = el("btnWorldCupRanking");
   if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
-  const __btnWorldCupAdd = el("btnWorldCupAdd") || el("btnWorldCupAddMatches");
-  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> openWorldCupAddMatchesModal();
-  const __btnWorldCupExit = el("btnWorldCupExit");
-  if(__btnWorldCupExit) __btnWorldCupExit.onclick = ()=> showScreen("room");
+  const __btnWorldCupAdd = el("btnWorldCupAdd");
+  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> openWorldCupAddModal();
   const __btnWorldCupResults = el("btnWorldCupResults");
   if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
   const __btnWorldCupEnd = el("btnWorldCupEnd");
   if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round." : "Zakończenie kolejki MŚ.");
+  const __btnWorldCupExit = el("btnWorldCupExit");
+  if(__btnWorldCupExit) __btnWorldCupExit.onclick = ()=> showScreen("room");
+  const __btnWorldCupAddClose = el("btnWorldCupAddClose");
+  if(__btnWorldCupAddClose) __btnWorldCupAddClose.onclick = ()=> closeWorldCupAddModal();
+  const __btnWorldCupBackToEvent = el("btnWorldCupBackToEvent");
+  if(__btnWorldCupBackToEvent) __btnWorldCupBackToEvent.onclick = ()=> closeWorldCupAddModal();
+  const __btnWorldCupSaveMatch = el("btnWorldCupSaveMatch");
+  if(__btnWorldCupSaveMatch) __btnWorldCupSaveMatch.onclick = ()=> saveWorldCupMatch();
+  const __wcHome = el("wcHomeSelect");
+  const __wcAway = el("wcAwaySelect");
+  if(__wcHome) __wcHome.onchange = updateWorldCupPreview;
+  if(__wcAway) __wcAway.onchange = updateWorldCupPreview;
+  const __wcOv = el("worldCupAddOverlay");
+  if(__wcOv) __wcOv.addEventListener("click", (e)=>{ if(e.target === __wcOv) closeWorldCupAddModal(); });
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
