@@ -173,8 +173,9 @@ function showScreen(id){
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results") setBg(BG_ROOM);
+  if(id === "room" || id === "results" || id === "worldcup" || id === "league") setBg(BG_ROOM);
   else setBg(BG_HOME);
+  try{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 10); }catch(e){}
 }
 
 function setSplash(msg){
@@ -3504,18 +3505,18 @@ async function markAllMyMessagesRead(){
 }
 
 
-function renderWorldCupEvent(){
-  const adminBox = el("worldcupAdminPanel");
-  if(adminBox) adminBox.style.display = isAdmin() ? "grid" : "none";
-  const nickNode = el("worldcupNick");
-  if(nickNode) nickNode.textContent = getNick() || "—";
-  const roomNode = el("worldcupRoomName");
-  if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
+function openWorldCupEvent(){
+  const modal = el("worldcupModal");
+  if(!modal) return;
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden","false");
 }
 
-function openWorldCupEvent(){
-  renderWorldCupEvent();
-  showScreen("worldcup");
+function closeWorldCupEvent(){
+  const modal = el("worldcupModal");
+  if(!modal) return;
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden","true");
 }
 
 // ===== UI =====
@@ -3665,21 +3666,13 @@ function bindUI(){
   if(__btnSubYes) __btnSubYes.onclick = ()=>{ /* intentionally inactive for now */ };
 
 
-  // WORLD CUP EVENT (mini-typer placeholder / separate module)
-  const __btnWorldCupBack = el("btnWorldCupBack");
-  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=> showScreen("room");
-  const __btnWorldCupExit = el("btnWorldCupExit");
-  if(__btnWorldCupExit) __btnWorldCupExit.onclick = ()=> showScreen("room");
-  const __btnWorldCupMatches = el("btnWorldCupMatches");
-  if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
-  const __btnWorldCupRanking = el("btnWorldCupRanking");
-  if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
-  const __btnWorldCupAdd = el("btnWorldCupAdd");
-  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches." : "Dodawanie meczów MŚ.");
-  const __btnWorldCupResults = el("btnWorldCupResults");
-  if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
-  const __btnWorldCupEnd = el("btnWorldCupEnd");
-  if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round." : "Zakończenie kolejki MŚ.");
+  // WORLD CUP EVENT (minimal modal)
+  const __worldcupModal = el("worldcupModal");
+  if(__worldcupModal) __worldcupModal.addEventListener("click", (e)=>{ if(e.target === __worldcupModal) closeWorldCupEvent(); });
+  const __btnWorldCupModalBack = el("btnWorldCupModalBack");
+  if(__btnWorldCupModalBack) __btnWorldCupModalBack.onclick = ()=> closeWorldCupEvent();
+  const __btnWorldCupModalExit = el("btnWorldCupModalExit");
+  if(__btnWorldCupModalExit) __btnWorldCupModalExit.onclick = ()=> { closeWorldCupEvent(); showScreen("room"); };
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
@@ -6885,8 +6878,7 @@ function shouldLockLandscape(){
   const active = document.querySelector('.screen.active')?.id || '';
   const lockScreens = new Set(["room","results","league","worldcup"]);
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-  const portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
-  return isMobile && portrait && lockScreens.has(active);
+  return isMobile && lockScreens.has(active);
 }
 
 async function applyOrientationPreference(){
@@ -6901,9 +6893,15 @@ async function applyOrientationPreference(){
 
 function updateLandscapeLock(){
   const overlay = el("rotateOverlay");
-  const locked = shouldLockLandscape();
-  if(overlay) overlay.style.display = locked ? "flex" : "none";
-  document.body.classList.toggle("lockedPortrait", locked);
+  if(overlay) overlay.style.display = "none";
+  document.body.classList.remove("lockedPortrait");
+  const active = document.querySelector('.screen.active')?.id || '';
+  const lockScreens = new Set(["room","results","league","worldcup"]);
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
+  const isPortrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+  const shouldForce = !!(isMobile && isPortrait && lockScreens.has(active));
+  document.body.classList.toggle("forceLandscapeUI", shouldForce);
+  try{ if(shouldForce && document.documentElement.requestFullscreen && !document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); } }catch(e){}
   try{ applyOrientationPreference(); }catch(e){}
 }
 
@@ -6915,7 +6913,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.001`);
+    setFooter(`Mariusz Gębka v.2.008`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
