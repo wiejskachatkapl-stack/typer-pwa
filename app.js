@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2017;
+const BUILD = 2018;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3508,6 +3508,7 @@ async function markAllMyMessagesRead(){
 const WORLD_CUP_2026_TEAMS = ["Meksyk", "Republika Południowej Afryki", "Korea Południowa", "Czechy", "Szwajcaria", "Katar", "Kanada", "Bośnia i Hercegowina", "Brazylia", "Maroko", "Szkocja", "Haiti", "USA", "Australia", "Paragwaj", "Turcja", "Niemcy", "Ekwador", "Wybrzeże Kości Słoniowej", "Curacao", "Holandia", "Japonia", "Tunezja", "Szwecja", "Belgia", "Iran", "Egipt", "Nowa Zelandia", "Hiszpania", "Urugwaj", "Arabia Saudyjska", "Republika Zielonego Przylądka", "Francja", "Senegal", "Norwegia", "Irak", "Argentyna", "Austria", "Algieria", "Jordania", "Portugalia", "Kolumbia", "Uzbekistan", "DR Konga", "Anglia", "Chorwacja", "Ghana", "Panama"];
 let worldCupMatchesCache = [];
 let worldCupDraftMatches = [];
+let worldCupPicksCache = {};
 
 function renderWorldCupRankingPlaceholder(){
   const body = el("worldcupRankingBody");
@@ -3518,6 +3519,68 @@ function renderWorldCupRankingPlaceholder(){
     return;
   }
   body.innerHTML = rows.map((p, i)=> `<tr><td>${i+1}</td><td>${p.nick || '—'}</td><td>0</td></tr>`).join('');
+}
+
+function getWorldCupPicksDoc(uid = userUid){
+  if(!boot || !db || !currentRoomCode || !uid) return null;
+  return boot.doc(db, "rooms", currentRoomCode, "worldcup_picks", uid);
+}
+
+async function loadWorldCupMyPicks(){
+  const ref = getWorldCupPicksDoc();
+  worldCupPicksCache = {};
+  if(!ref) return;
+  try{
+    const snap = await boot.getDoc(ref);
+    if(snap.exists()){
+      const data = snap.data() || {};
+      worldCupPicksCache = data.picks || {};
+    }
+  }catch(err){
+    worldCupPicksCache = {};
+  }
+}
+
+function allWorldCupPicksFilled(){
+  if(!worldCupMatchesCache.length) return false;
+  return worldCupMatchesCache.every(m => {
+    const p = worldCupPicksCache[m.id] || {};
+    return Number.isInteger(parseInt(p.home,10)) && Number.isInteger(parseInt(p.away,10));
+  });
+}
+
+function updateWorldCupPointsPreview(){
+  const box = el("worldcupPoints");
+  if(!box) return;
+  box.textContent = '0';
+}
+
+async function saveWorldCupPicks(){
+  if(!currentRoomCode || !userUid){
+    showToast(getLang()==='en' ? 'No room selected' : 'Brak wybranego pokoju');
+    return;
+  }
+  if(!worldCupMatchesCache.length){
+    showToast(getLang()==='en' ? 'No World Cup matches' : 'Brak meczów MŚ');
+    return;
+  }
+  if(!allWorldCupPicksFilled()){
+    showToast(getLang()==='en' ? 'Fill all picks' : 'Uzupełnij wszystkie typy');
+    return;
+  }
+  const ref = getWorldCupPicksDoc();
+  try{
+    await boot.setDoc(ref, {
+      uid: userUid,
+      nick: getNick(),
+      updatedAt: boot.serverTimestamp(),
+      picks: worldCupPicksCache
+    }, { merge:true });
+    showToast(getLang()==='en' ? 'World Cup picks saved ✅' : 'Zapisano typy MŚ ✅');
+  }catch(err){
+    console.error('saveWorldCupPicks failed', err);
+    showToast(getLang()==='en' ? 'Failed to save World Cup picks' : 'Nie udało się zapisać typów MŚ');
+  }
 }
 
 function getWorldCupMatchesCol(){
@@ -3616,11 +3679,39 @@ async function loadWorldCupMatches(){
       list.innerHTML = '<div class="sub">Brak dodanych meczów MŚ.</div>';
       return;
     }
-    list.innerHTML = worldCupMatchesCache.map((m, i)=> `
+    list.innerHTML = worldCupMatchesCache.map((m, i)=> {
+      const p = worldCupPicksCache[m.id] || {};
+      const homeVal = (p.home ?? '');
+      const awayVal = (p.away ?? '');
+      return `
       <div class="panel" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div style="font-weight:1000;">${i+1}. ${m.home || '—'} — ${m.away || '—'}</div>
+        <div style="font-weight:1000;flex:1;min-width:0;">${i+1}. ${m.home || '—'} — ${m.away || '—'}</div>
+        <div class="scoreBox" style="margin-left:auto;">
+          <input class="scoreInput" type="number" min="0" max="20" inputmode="numeric" data-wc-pick-home="${m.id}" value="${homeVal}">
+          <span class="sep">:</span>
+          <input class="scoreInput" type="number" min="0" max="20" inputmode="numeric" data-wc-pick-away="${m.id}" value="${awayVal}">
+        </div>
       </div>
-    `).join('');
+    `}).join('');
+    list.querySelectorAll('[data-wc-pick-home]').forEach(inp=>{
+      inp.oninput = ()=>{
+        const id = inp.getAttribute('data-wc-pick-home');
+        worldCupPicksCache[id] = worldCupPicksCache[id] || {};
+        worldCupPicksCache[id].home = inp.value === '' ? '' : String(Math.max(0, Math.min(20, Number(inp.value)||0)));
+        inp.value = worldCupPicksCache[id].home;
+        updateWorldCupPointsPreview();
+      };
+    });
+    list.querySelectorAll('[data-wc-pick-away]').forEach(inp=>{
+      inp.oninput = ()=>{
+        const id = inp.getAttribute('data-wc-pick-away');
+        worldCupPicksCache[id] = worldCupPicksCache[id] || {};
+        worldCupPicksCache[id].away = inp.value === '' ? '' : String(Math.max(0, Math.min(20, Number(inp.value)||0)));
+        inp.value = worldCupPicksCache[id].away;
+        updateWorldCupPointsPreview();
+      };
+    });
+    updateWorldCupPointsPreview();
   }catch(err){
     list.innerHTML = '<div class="sub">Nie udało się wczytać meczów MŚ.</div>';
   }
@@ -3757,8 +3848,10 @@ async function renderWorldCupEvent(){
   const roomNode = el("worldcupRoomName");
   if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
   renderWorldCupRankingPlaceholder();
-  loadWorldCupMatches();
+  await loadWorldCupMyPicks();
+  await loadWorldCupMatches();
   await loadWorldCupMeta();
+  updateWorldCupPointsPreview();
 }
 
 function openWorldCupEvent(){
@@ -3943,6 +4036,8 @@ function bindUI(){
   if(__btnWorldCupBackToEvent) __btnWorldCupBackToEvent.onclick = ()=> closeWorldCupAddModal();
   const __btnWorldCupSaveMatch = el("btnWorldCupSaveMatch");
   if(__btnWorldCupSaveMatch) __btnWorldCupSaveMatch.onclick = ()=> saveWorldCupMatch();
+  const __btnWorldCupSavePicks = el("btnWorldCupSavePicks");
+  if(__btnWorldCupSavePicks) __btnWorldCupSavePicks.onclick = ()=> saveWorldCupPicks();
 
   const __btnWorldCupFinishConfirm = el("btnWorldCupFinishConfirm");
   if(__btnWorldCupFinishConfirm) __btnWorldCupFinishConfirm.onclick = ()=> finishWorldCupEvent();

@@ -2550,7 +2550,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=2015').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=2018').catch(() => {});
     });
   }
 </script>
@@ -2577,6 +2577,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
         <div class="title" style="margin:0 0 10px 0;">Mecze MŚ</div>
         <div id="worldcupMatchesList" style="display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0;flex:1;">
           <div class="sub">Brak dodanych meczów MŚ.</div>
+        </div>
+        <div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap;margin-top:12px;">
+          <button class="imgBtn sysBtn" id="btnWorldCupSavePicks" type="button" data-btn="btn_save_picks.png"><img data-btn="btn_save_picks.png" src="ui/buttons/pl/btn_save_picks.png" alt="Zapisz typy"></button>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;min-height:0;">
@@ -2663,7 +2666,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.017</div>
+<div id="buildCornerText">Mariusz Gębka v.2.018</div>
 </div>
 </body>
 </html>
