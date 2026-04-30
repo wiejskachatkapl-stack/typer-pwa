@@ -6901,6 +6901,11 @@ function updateLandscapeLock(){
   const overlay = el("rotateOverlay");
   if(overlay) overlay.style.display = "none";
   document.body.classList.remove("lockedPortrait");
+  const active = document.querySelector('.screen.active')?.id || '';
+  const lockScreens = new Set(["room","results","league","worldcup"]);
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
+  const isPortrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+  document.body.classList.toggle("forceLandscapeUI", !!(isMobile && isPortrait && lockScreens.has(active)));
   try{ applyOrientationPreference(); }catch(e){}
 }
 
@@ -6912,7 +6917,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.002`);
+    setFooter(`Mariusz Gębka v.2.003`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();

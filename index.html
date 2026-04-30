@@ -1705,6 +1705,38 @@
       #rooms .block h2{font-size:18px;}
     }
 
+
+    /* ===== BUILD 2003: mobile rooms button + forced landscape UI ===== */
+    @media (max-width: 700px){
+      #rooms .block .row .sysBtn img{height:42px !important; max-width:30vw !important;}
+      #rooms .roomsBox > .row .sysBtn.small img{height:34px !important; max-width:20vw !important;}
+      .modalHead .sysBtn.small img{height:38px !important; max-width:22vw !important;}
+      .modalHead{padding:10px 10px 8px 10px;}
+      .modalHead .chip{max-width:calc(100% - 92px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    }
+    @media (max-width: 980px) and (orientation: portrait){
+      body.forceLandscapeUI{overflow:hidden !important;}
+      body.forceLandscapeUI #app{
+        position:fixed !important;
+        inset:0 !important;
+        width:100vh !important;
+        height:100vw !important;
+        min-height:0 !important;
+        padding:0 !important;
+        transform-origin:top left !important;
+        transform:rotate(90deg) translateY(-100%) !important;
+        align-items:flex-start !important;
+        justify-content:flex-start !important;
+      }
+      body.forceLandscapeUI .frame{
+        width:100vw !important;
+        height:100vh !important;
+        min-height:0 !important;
+        max-width:none !important;
+        max-height:none !important;
+        border-radius:0 !important;
+      }
+    }
     /* language flags (top-right) */
     .homeLang{position:absolute; right:26px; top:18px; display:flex; gap:14px; z-index:50;}
     #btnLangPL, #btnLangEN{
@@ -2448,7 +2480,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=9004" type="module"></script>
+<script src="./app.js?v=2003" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2468,14 +2500,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=9004').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=2003').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.002</div>
+<div id="buildCornerText">Mariusz Gębka v.2.003</div>
 </div>
 </body>
 </html>
