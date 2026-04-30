@@ -2550,7 +2550,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=2014').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=2015').catch(() => {});
     });
   }
 </script>
@@ -2612,7 +2612,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       <div class="title" style="margin:0;">Dodaj mecz MŚ</div>
       <button class="imgBtn sysBtn small" id="btnWorldCupAddClose" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="Zamknij"></button>
     </div>
-    <div class="row" style="gap:10px;flex-wrap:wrap;">
+    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end;">
       <div style="flex:1;min-width:220px;">
         <div class="sub" style="margin-bottom:6px;">Gospodarz</div>
         <select id="wcHomeSelect" class="mqClubSelect" style="width:100%;"></select>
@@ -2621,10 +2621,17 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
         <div class="sub" style="margin-bottom:6px;">Gość</div>
         <select id="wcAwaySelect" class="mqClubSelect" style="width:100%;"></select>
       </div>
+      <div style="min-width:120px;display:flex;justify-content:center;">
+        <button id="btnWorldCupAddMatchDraft" type="button" class="mqAddMatchBtn" style="width:120px;">+ Dodaj</button>
+      </div>
     </div>
     <div class="chip" id="worldCupMatchPreview" style="justify-content:center;">—</div>
+    <div id="worldCupDraftCount" class="mqCount">Mecze: 0</div>
+    <div id="worldCupDraftList" class="mqMatchesList" style="max-height:240px;">
+      <div class="mqEmpty">Nie dodano jeszcze meczów.</div>
+    </div>
     <div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap;">
-      <button class="imgBtn sysBtn" id="btnWorldCupSaveMatch" type="button" data-btn="btn_save_queue.png"><img data-btn="btn_save_queue.png" src="ui/buttons/pl/btn_save_queue.png" alt="Zapisz mecz"></button>
+      <button class="imgBtn sysBtn" id="btnWorldCupSaveMatch" type="button" data-btn="btn_save_queue.png"><img data-btn="btn_save_queue.png" src="ui/buttons/pl/btn_save_queue.png" alt="Zapisz kolejkę"></button>
       <button class="imgBtn sysBtn" id="btnWorldCupBackToEvent" type="button" data-btn="btn_back.png"><img data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png" alt="Cofnij"></button>
     </div>
   </div>
@@ -2633,7 +2640,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.014</div>
+<div id="buildCornerText">Mariusz Gębka v.2.015</div>
 </div>
 </body>
 </html>

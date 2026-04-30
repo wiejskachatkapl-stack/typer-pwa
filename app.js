@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2014;
+const BUILD = 2015;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3507,6 +3507,7 @@ async function markAllMyMessagesRead(){
 
 const WORLD_CUP_2026_TEAMS = ["Meksyk", "Republika Południowej Afryki", "Korea Południowa", "Czechy", "Szwajcaria", "Katar", "Kanada", "Bośnia i Hercegowina", "Brazylia", "Maroko", "Szkocja", "Haiti", "USA", "Australia", "Paragwaj", "Turcja", "Niemcy", "Ekwador", "Wybrzeże Kości Słoniowej", "Curacao", "Holandia", "Japonia", "Tunezja", "Szwecja", "Belgia", "Iran", "Egipt", "Nowa Zelandia", "Hiszpania", "Urugwaj", "Arabia Saudyjska", "Republika Zielonego Przylądka", "Francja", "Senegal", "Norwegia", "Irak", "Argentyna", "Austria", "Algieria", "Jordania", "Portugalia", "Kolumbia", "Uzbekistan", "DR Konga", "Anglia", "Chorwacja", "Ghana", "Panama"];
 let worldCupMatchesCache = [];
+let worldCupDraftMatches = [];
 
 function renderWorldCupRankingPlaceholder(){
   const body = el("worldcupRankingBody");
@@ -3542,9 +3543,49 @@ function updateWorldCupPreview(){
   if(box) box.textContent = `${home} — ${away}`;
 }
 
+
+function renderWorldCupDraftMatches(){
+  const list = el("worldCupDraftList");
+  const cnt = el("worldCupDraftCount");
+  if(cnt) cnt.textContent = `Mecze: ${worldCupDraftMatches.length}`;
+  if(!list) return;
+  if(!worldCupDraftMatches.length){
+    list.innerHTML = '<div class="mqEmpty">Nie dodano jeszcze meczów.</div>';
+    return;
+  }
+  list.innerHTML = worldCupDraftMatches.map((m,i)=>`
+    <div class="mqMatchRow">
+      <div class="mqMatchTxt">${i+1}. ${m.home} — ${m.away}</div>
+      <button type="button" class="mqDelBtn" data-wc-del="${i}">Usuń</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-wc-del]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const idx = Number(btn.getAttribute('data-wc-del'));
+      if(Number.isInteger(idx)){
+        worldCupDraftMatches.splice(idx,1);
+        renderWorldCupDraftMatches();
+      }
+    };
+  });
+}
+
+function addWorldCupDraftMatch(){
+  const home = el("wcHomeSelect")?.value || "";
+  const away = el("wcAwaySelect")?.value || "";
+  if(!home || !away){ showToast(getLang()==='en' ? 'Select both teams' : 'Wybierz obie drużyny'); return; }
+  if(home === away){ showToast(getLang()==='en' ? 'Teams must be different' : 'Drużyny muszą być różne'); return; }
+  if(worldCupDraftMatches.some(m => m.home===home && m.away===away)){ showToast(getLang()==='en' ? 'Match already added' : 'Ten mecz już dodano'); return; }
+  worldCupDraftMatches.push({home, away});
+  renderWorldCupDraftMatches();
+  showToast(getLang()==='en' ? 'Match added to list' : 'Mecz dodany do listy');
+}
+
 function openWorldCupAddModal(){
+  worldCupDraftMatches = [];
   populateWorldCupTeamSelects();
   updateWorldCupPreview();
+  renderWorldCupDraftMatches();
   const ov = el("worldCupAddOverlay");
   if(ov) ov.style.display = "flex";
 }
@@ -3552,6 +3593,8 @@ function openWorldCupAddModal(){
 function closeWorldCupAddModal(){
   const ov = el("worldCupAddOverlay");
   if(ov) ov.style.display = "none";
+  worldCupDraftMatches = [];
+  renderWorldCupDraftMatches();
 }
 
 async function loadWorldCupMatches(){
@@ -3587,19 +3630,22 @@ async function loadWorldCupMatches(){
 }
 
 async function saveWorldCupMatch(){
-  const home = el("wcHomeSelect")?.value || "";
-  const away = el("wcAwaySelect")?.value || "";
-  if(!home || !away){ showToast(getLang()==='en' ? 'Select both teams' : 'Wybierz obie drużyny'); return; }
-  if(home === away){ showToast(getLang()==='en' ? 'Teams must be different' : 'Drużyny muszą być różne'); return; }
   const col = getWorldCupMatchesCol();
   if(!col){ showToast(getLang()==='en' ? 'No room selected' : 'Brak wybranego pokoju'); return; }
+  if(!worldCupDraftMatches.length){
+    addWorldCupDraftMatch();
+    if(!worldCupDraftMatches.length) return;
+  }
   try{
-    await boot.addDoc(col, { home, away, createdAt: boot.serverTimestamp(), createdBy: userUid || "", createdByNick: getNick() || "" });
+    for(const m of worldCupDraftMatches){
+      await boot.addDoc(col, { home: m.home, away: m.away, createdAt: boot.serverTimestamp(), createdBy: userUid || "", createdByNick: getNick() || "" });
+    }
+    const addedCount = worldCupDraftMatches.length;
     closeWorldCupAddModal();
     await loadWorldCupMatches();
-    showToast(getLang()==='en' ? 'Match added' : 'Mecz dodany');
+    showToast(getLang()==='en' ? `Saved ${addedCount} matches` : `Zapisano ${addedCount} mecz${addedCount===1?'':'e'}`);
   }catch(err){
-    showToast(getLang()==='en' ? 'Failed to add match' : 'Nie udało się dodać meczu');
+    showToast(getLang()==='en' ? 'Failed to save matches' : 'Nie udało się zapisać meczów');
   }
 }
 
@@ -3796,6 +3842,8 @@ function bindUI(){
   if(__btnWorldCupBackToEvent) __btnWorldCupBackToEvent.onclick = ()=> closeWorldCupAddModal();
   const __btnWorldCupSaveMatch = el("btnWorldCupSaveMatch");
   if(__btnWorldCupSaveMatch) __btnWorldCupSaveMatch.onclick = ()=> saveWorldCupMatch();
+  const __btnWorldCupAddMatchDraft = el("btnWorldCupAddMatchDraft");
+  if(__btnWorldCupAddMatchDraft) __btnWorldCupAddMatchDraft.onclick = ()=> addWorldCupDraftMatch();
   const __wcHome = el("wcHomeSelect");
   const __wcAway = el("wcAwaySelect");
   if(__wcHome) __wcHome.onchange = updateWorldCupPreview;
