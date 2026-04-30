@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2015;
+const BUILD = 2016;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3649,7 +3649,97 @@ async function saveWorldCupMatch(){
   }
 }
 
-function renderWorldCupEvent(){
+
+let worldCupEventEnded = false;
+
+function getWorldCupMetaDoc(){
+  if(!boot || !db || !currentRoomCode) return null;
+  return boot.doc(db, "rooms", currentRoomCode, "meta", "worldcup_event");
+}
+
+async function loadWorldCupMeta(){
+  const ref = getWorldCupMetaDoc();
+  worldCupEventEnded = false;
+  try{
+    if(ref){
+      const snap = await boot.getDoc(ref);
+      if(snap.exists()){
+        const d = snap.data() || {};
+        worldCupEventEnded = !!d.ended;
+      }
+    }
+  }catch{}
+  const addBtn = el("btnWorldCupAdd");
+  const resultsBtn = el("btnWorldCupResults");
+  const endBtn = el("btnWorldCupEnd");
+  if(addBtn) addBtn.disabled = worldCupEventEnded;
+  if(resultsBtn) resultsBtn.disabled = worldCupEventEnded;
+  if(endBtn) endBtn.disabled = worldCupEventEnded;
+}
+
+function openWorldCupEndConfirm(){
+  const ov = el("worldCupEndConfirmOverlay");
+  if(ov) ov.style.display = "flex";
+}
+function closeWorldCupEndConfirm(){
+  const ov = el("worldCupEndConfirmOverlay");
+  if(ov) ov.style.display = "none";
+}
+function closeWorldCupWinnerOverlay(){
+  const ov = el("worldCupWinnerOverlay");
+  if(ov) ov.style.display = "none";
+}
+
+function getWorldCupWinnerData(){
+  const rows = [];
+  const body = el("worldcupRankingBody");
+  if(body){
+    [...body.querySelectorAll('tr')].forEach(tr=>{
+      const tds = tr.querySelectorAll('td');
+      if(tds.length >= 3){
+        const nick = (tds[1].textContent || '').trim();
+        const pts = parseInt((tds[2].textContent || '0').replace(/[^0-9-]/g,''), 10);
+        if(nick) rows.push({ nick, points: Number.isFinite(pts) ? pts : 0 });
+      }
+    });
+  }
+  rows.sort((a,b)=> (b.points - a.points) || a.nick.localeCompare(b.nick));
+  if(!rows.length) return { nick: 'Brak danych', points: 0, hasWinner: false };
+  if(rows[0].points <= 0) return { nick: rows[0].nick, points: rows[0].points, hasWinner: false };
+  return { nick: rows[0].nick, points: rows[0].points, hasWinner: true };
+}
+
+function openWorldCupWinnerOverlay(data){
+  const nick = el("worldCupWinnerNick");
+  const pts = el("worldCupWinnerPts");
+  if(nick) nick.textContent = data?.nick || 'Brak danych';
+  if(pts) pts.textContent = (data && data.hasWinner) ? `${data.points} pkt` : 'Brak punktów eventu do wyłonienia zwycięzcy';
+  const ov = el("worldCupWinnerOverlay");
+  if(ov) ov.style.display = "flex";
+}
+
+async function finishWorldCupEvent(){
+  const data = getWorldCupWinnerData();
+  const ref = getWorldCupMetaDoc();
+  try{
+    if(ref){
+      await boot.setDoc(ref, {
+        ended: true,
+        endedAt: boot.serverTimestamp(),
+        winnerNick: data.nick || '',
+        winnerPoints: data.points || 0
+      }, { merge:true });
+    }
+    worldCupEventEnded = true;
+    closeWorldCupEndConfirm();
+    await loadWorldCupMeta();
+    openWorldCupWinnerOverlay(data);
+  }catch(err){
+    showToast(getLang()==='en' ? 'Failed to end event' : 'Nie udało się zakończyć eventu');
+  }
+}
+
+async function renderWorldCupEvent(){
   const adminBox = el("worldcupAdminPanel");
   if(adminBox) adminBox.style.display = isAdmin() ? "grid" : "none";
   const nickNode = el("worldcupNick");
@@ -3658,6 +3748,7 @@ function renderWorldCupEvent(){
   if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
   renderWorldCupRankingPlaceholder();
   loadWorldCupMatches();
+  await loadWorldCupMeta();
 }
 
 function openWorldCupEvent(){
@@ -3842,6 +3933,18 @@ function bindUI(){
   if(__btnWorldCupBackToEvent) __btnWorldCupBackToEvent.onclick = ()=> closeWorldCupAddModal();
   const __btnWorldCupSaveMatch = el("btnWorldCupSaveMatch");
   if(__btnWorldCupSaveMatch) __btnWorldCupSaveMatch.onclick = ()=> saveWorldCupMatch();
+
+  const __btnWorldCupFinishConfirm = el("btnWorldCupFinishConfirm");
+  if(__btnWorldCupFinishConfirm) __btnWorldCupFinishConfirm.onclick = ()=> finishWorldCupEvent();
+  const __btnWorldCupFinishCancel = el("btnWorldCupFinishCancel");
+  if(__btnWorldCupFinishCancel) __btnWorldCupFinishCancel.onclick = ()=> closeWorldCupEndConfirm();
+  const __btnWorldCupWinnerClose = el("btnWorldCupWinnerClose");
+  if(__btnWorldCupWinnerClose) __btnWorldCupWinnerClose.onclick = ()=> closeWorldCupWinnerOverlay();
+  const __wcEndOv = el("worldCupEndConfirmOverlay");
+  if(__wcEndOv) __wcEndOv.addEventListener("click", (e)=>{ if(e.target === __wcEndOv) closeWorldCupEndConfirm(); });
+  const __wcWinnerOv = el("worldCupWinnerOverlay");
+  if(__wcWinnerOv) __wcWinnerOv.addEventListener("click", (e)=>{ if(e.target === __wcWinnerOv) closeWorldCupWinnerOverlay(); });
+
   const __btnWorldCupAddMatchDraft = el("btnWorldCupAddMatchDraft");
   if(__btnWorldCupAddMatchDraft) __btnWorldCupAddMatchDraft.onclick = ()=> addWorldCupDraftMatch();
   const __wcHome = el("wcHomeSelect");

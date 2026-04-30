@@ -2637,10 +2637,33 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   </div>
 </div>
 
+<div id="worldCupEndConfirmOverlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:96;padding:16px;">
+  <div class="panel" style="width:min(720px,94vw);padding:18px;display:flex;flex-direction:column;gap:14px;">
+    <div class="title" style="margin:0;">Koniec eventu MŚ</div>
+    <div class="sub">Kliknięcie zakończy event. To wydarzenie nie ma stałej liczby kolejek ani meczów — kończysz je ręcznie.</div>
+    <div class="chip" style="justify-content:center;">Czy zakończyć event i ogłosić zwycięzcę?</div>
+    <div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap;">
+      <button class="imgBtn sysBtn" id="btnWorldCupFinishConfirm" type="button" data-btn="btn_yes.png"><img data-btn="btn_yes.png" src="ui/buttons/pl/btn_yes.png" alt="Tak"></button>
+      <button class="imgBtn sysBtn" id="btnWorldCupFinishCancel" type="button" data-btn="btn_no.png"><img data-btn="btn_no.png" src="ui/buttons/pl/btn_no.png" alt="Nie"></button>
+    </div>
+  </div>
+</div>
+<div id="worldCupWinnerOverlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:97;padding:16px;">
+  <div class="panel" style="width:min(760px,94vw);padding:20px;display:flex;flex-direction:column;gap:14px;align-items:center;">
+    <div class="title" style="margin:0;">Koniec eventu MŚ 2026</div>
+    <div class="chip" style="font-size:18px;font-weight:1000;justify-content:center;">Zwycięzca eventu</div>
+    <div id="worldCupWinnerBox" class="panel" style="padding:18px 22px;min-width:min(420px,84vw);text-align:center;background:rgba(0,0,0,.18);">
+      <div id="worldCupWinnerNick" style="font-size:28px;font-weight:1000;">—</div>
+      <div id="worldCupWinnerPts" class="sub" style="margin-top:8px;font-size:16px;">0 pkt</div>
+    </div>
+    <button class="imgBtn sysBtn" id="btnWorldCupWinnerClose" type="button" data-btn="btn_close.png"><img data-btn="btn_close.png" src="ui/buttons/pl/btn_close.png" alt="Zamknij"></button>
+  </div>
+</div>
+
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.015</div>
+<div id="buildCornerText">Mariusz Gębka v.2.016</div>
 </div>
 </body>
 </html>
