@@ -173,9 +173,8 @@ function showScreen(id){
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results" || id === "worldcup" || id === "league") setBg(BG_ROOM);
+  if(id === "room" || id === "results") setBg(BG_ROOM);
   else setBg(BG_HOME);
-  try{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 10); }catch(e){}
 }
 
 function setSplash(msg){
@@ -6884,7 +6883,8 @@ function shouldLockLandscape(){
   const active = document.querySelector('.screen.active')?.id || '';
   const lockScreens = new Set(["room","results","league","worldcup"]);
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-  return isMobile && lockScreens.has(active);
+  const portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+  return isMobile && portrait && lockScreens.has(active);
 }
 
 async function applyOrientationPreference(){
@@ -6899,15 +6899,9 @@ async function applyOrientationPreference(){
 
 function updateLandscapeLock(){
   const overlay = el("rotateOverlay");
-  if(overlay) overlay.style.display = "none";
-  document.body.classList.remove("lockedPortrait");
-  const active = document.querySelector('.screen.active')?.id || '';
-  const lockScreens = new Set(["room","results","league","worldcup"]);
-  const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-  const isPortrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
-  const shouldForce = !!(isMobile && isPortrait && lockScreens.has(active));
-  document.body.classList.toggle("forceLandscapeUI", shouldForce);
-  try{ if(shouldForce && document.documentElement.requestFullscreen && !document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); } }catch(e){}
+  const locked = shouldLockLandscape();
+  if(overlay) overlay.style.display = locked ? "flex" : "none";
+  document.body.classList.toggle("lockedPortrait", locked);
   try{ applyOrientationPreference(); }catch(e){}
 }
 
@@ -6919,7 +6913,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.004`);
+    setFooter(`Mariusz Gębka v.2.001`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
