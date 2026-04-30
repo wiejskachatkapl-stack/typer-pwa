@@ -376,11 +376,6 @@
     .block h2{margin:0 0 8px 0;font-size:20px;font-weight:1000}
     .help{color:var(--muted);font-weight:800;font-size:13px}
 
-
-    @media (max-width: 700px){
-      .joinRoomRow{flex-direction:column; align-items:stretch !important; gap:10px !important;}
-      .joinRoomRow input{width:100%;}
-    }
     /* ===== CONTINUE ===== */
     #continue{
       padding:22px;
@@ -1742,9 +1737,9 @@
         border-radius:0 !important;
       }
     }
-    /* ===== BUILD 2006: mobile button sizing + better forced landscape ===== */
+    /* ===== BUILD 2007: mobile button sizing + better forced landscape ===== */
     @media (max-width: 700px){
-      #btnJoinRoom img{height:46px !important; width:auto !important; max-width:34vw !important;}
+      #btnJoinRoom img{height:24px !important; width:auto !important; max-width:18vw !important;}
       #btnCreateRoom img{height:56px !important; width:auto !important; max-width:42vw !important;}
       #btnAddQueue img{height:46px !important; width:auto !important; max-width:56vw !important;}
       .midHead #btnAddQueue img{height:46px !important; max-width:56vw !important;}
@@ -2117,7 +2112,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <div class="panel block">
 <h2 id="t_join_title">Dołącz do pokoju</h2>
-<div class="row joinRoomRow" style="margin-top:10px"><input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase"/>
+<div class="row" style="margin-top:10px"><input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase"/>
 <button class="imgBtn sysBtn" data-btn="btn_wejdz_pokoj.png" id="btnJoinRoom" type="button"><img alt="btnJoinRoom" data-btn="btn_wejdz_pokoj.png" src="ui/buttons/pl/btn_wejdz_pokoj.png"/></button>
 </div>
 <div class="help" id="t_join_help" style="margin-top:8px">Wpisz kod od admina.</div>
@@ -2559,16 +2554,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.005</div>
+<div id="buildCornerText">Mariusz Gębka v.2.007</div>
 </div>
 </body>
 </html>
-
-/* ===== BUILD 2006: join button half-size + centered on mobile ===== */
-    @media (max-width: 700px){
-      #rooms #btnJoinRoom{display:flex !important; justify-content:center !important; align-items:center !important; margin:10px auto 0 !important; width:100% !important;}
-      #rooms #btnJoinRoom img{height:23px !important; width:auto !important; max-width:17vw !important;}
-      #rooms #btnCreateRoom img{height:56px !important; width:auto !important; max-width:42vw !important;}
-      #rooms #btnAddQueue img{height:46px !important; width:auto !important; max-width:56vw !important;}
-      .midHead #btnAddQueue img{height:46px !important; max-width:56vw !important;}
-    }
