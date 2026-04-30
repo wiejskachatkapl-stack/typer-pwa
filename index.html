@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 2002)</title>
+    <title>Typer (BUILD 2008)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1737,9 +1737,12 @@
         border-radius:0 !important;
       }
     }
-    /* ===== BUILD 2007: mobile button sizing + better forced landscape ===== */
+    /* ===== BUILD 2008: mobile button sizing + better forced landscape ===== */
+    @media (max-width: 980px){
+      #btnJoinRoom{display:flex !important; justify-content:center !important; width:100% !important;}
+      #btnJoinRoom img{height:38px !important; width:auto !important; max-width:44vw !important; margin:0 auto !important;}
+    }
     @media (max-width: 700px){
-      #btnJoinRoom img{height:24px !important; width:auto !important; max-width:18vw !important;}
       #btnCreateRoom img{height:56px !important; width:auto !important; max-width:42vw !important;}
       #btnAddQueue img{height:46px !important; width:auto !important; max-width:56vw !important;}
       .midHead #btnAddQueue img{height:46px !important; max-width:56vw !important;}
@@ -2554,7 +2557,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.007</div>
+<div id="buildCornerText">Mariusz Gębka v.2.008</div>
 </div>
 </body>
 </html>
