@@ -173,8 +173,9 @@ function showScreen(id){
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results") setBg(BG_ROOM);
+  if(id === "room" || id === "results" || id === "worldcup" || id === "league") setBg(BG_ROOM);
   else setBg(BG_HOME);
+  try{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 10); }catch(e){}
 }
 
 function setSplash(msg){
@@ -1621,8 +1622,8 @@ function __makeLoginModal(){
         <div id="pinLoginError" style="display:none;color:#ff9b9b;font-weight:700;"></div>
 
         <div style="display:flex;gap:14px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
-          <img id="pinLoginYes" class="imgBtn" alt="YES" src="${getBtnDir()}/btn_yes.png" style="height:46px;cursor:pointer;"/>
-          <img id="pinLoginNo" class="imgBtn" alt="NO" src="${getBtnDir()}/btn_no.png" style="height:46px;cursor:pointer;"/>
+          <img id="pinLoginYes" class="imgBtn" alt="YES" src="${getBtnDir()}/btn_yes.png" style="height:54px;cursor:pointer;"/>
+          <img id="pinLoginNo" class="imgBtn" alt="NO" src="${getBtnDir()}/btn_no.png" style="height:54px;cursor:pointer;"/>
         </div>
       </div>
     </div>
@@ -6883,8 +6884,7 @@ function shouldLockLandscape(){
   const active = document.querySelector('.screen.active')?.id || '';
   const lockScreens = new Set(["room","results","league","worldcup"]);
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-  const portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
-  return isMobile && portrait && lockScreens.has(active);
+  return isMobile && lockScreens.has(active);
 }
 
 async function applyOrientationPreference(){
@@ -6898,10 +6898,10 @@ async function applyOrientationPreference(){
 }
 
 function updateLandscapeLock(){
-  try{ applyOrientationPreference(); }catch(e){}
   const overlay = el("rotateOverlay");
   if(overlay) overlay.style.display = "none";
   document.body.classList.remove("lockedPortrait");
+  try{ applyOrientationPreference(); }catch(e){}
 }
 
 window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); }catch(e){} }, {passive:true});
@@ -6912,7 +6912,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • v.2.002`);
+    setFooter(`Mariusz Gębka v.2.002`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
