@@ -3672,8 +3672,10 @@ function bindUI(){
   if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
   const __btnWorldCupRanking = el("btnWorldCupRanking");
   if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
-  const __btnWorldCupAdd = el("btnWorldCupAdd");
+  const __btnWorldCupAdd = el("btnWorldCupAdd") || el("btnWorldCupAddMatches");
   if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches." : "Dodawanie meczów MŚ.");
+  const __btnWorldCupExit = el("btnWorldCupExit");
+  if(__btnWorldCupExit) __btnWorldCupExit.onclick = ()=> showScreen("room");
   const __btnWorldCupResults = el("btnWorldCupResults");
   if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
   const __btnWorldCupEnd = el("btnWorldCupEnd");
