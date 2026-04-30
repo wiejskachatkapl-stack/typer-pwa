@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 2008)</title>
+    <title>Typer (BUILD 2004)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1558,6 +1558,11 @@
   border:1px solid rgba(255,255,255,.14)!important;
 }
 .rowRight{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; align-items:center; }
+/* v2058: only shrink and center Join Room button in join modal */
+.rowRight{justify-content:center;}
+.rowRight #btnJoinRoom img{height:38px !important;width:auto !important;display:block;}
+@media (max-width:700px){.rowRight #btnJoinRoom img{height:34px !important;}}
+
 .input{
   width:100%;
   padding:13px 12px;
@@ -1597,6 +1602,12 @@
     .sysBtn.small img{ height:52px; }
     .sysBtn:active img{ transform: translateY(1px) scale(.98); filter: drop-shadow(0 6px 10px rgba(0,0,0,.28)); }
     .sysBtn:disabled img{ opacity:.45; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+
+    /* BUILD 2004: smaller Join Room button on phone */
+    #btnJoinRoom img{height:64px !important;width:auto;max-width:min(86vw,420px);}
+    @media (max-width: 720px){
+      #btnJoinRoom img{height:56px !important;max-width:min(82vw,360px);}
+    }
 
 
     @media (max-width: 720px){
@@ -1682,111 +1693,6 @@
   #roomActionsCol .sysBtn img{ height: 64px; }
 }
 
-
-
-    /* ===== BUILD 2002: rooms/login mobile fit ===== */
-    #rooms .roomsBox > .row{flex-wrap:wrap; align-items:center;}
-    #rooms .roomsBox > .row .chip{max-width:100%;}
-    #rooms .block .row{flex-wrap:nowrap; min-width:0;}
-    #rooms .block .row input{min-width:0;}
-    #rooms .block .row .sysBtn img{height:64px; width:auto; max-width:42vw; object-fit:contain;}
-    #rooms .roomsBox > .row .sysBtn.small img{height:52px; width:auto; max-width:30vw; object-fit:contain;}
-    @media (max-width: 900px){
-      #rooms{padding:14px;}
-      .roomsBox{padding:14px; gap:10px;}
-      .block{padding:12px;}
-      #rooms .block .row .sysBtn img{height:54px; max-width:38vw;}
-      #rooms .roomsBox > .row .sysBtn.small img{height:46px; max-width:26vw;}
-    }
-    @media (max-width: 520px){
-      #rooms .block .row{gap:8px;}
-      #rooms .block .row .sysBtn img{height:48px; max-width:34vw;}
-      #rooms .roomsBox > .row .sysBtn.small img{height:40px; max-width:24vw;}
-      #rooms .block h2{font-size:18px;}
-    }
-
-
-    /* ===== BUILD 2003: mobile rooms button + forced landscape UI ===== */
-    @media (max-width: 700px){
-      #rooms .block .row .sysBtn img{height:42px !important; max-width:30vw !important;}
-      #rooms .roomsBox > .row .sysBtn.small img{height:34px !important; max-width:20vw !important;}
-      .modalHead .sysBtn.small img{height:38px !important; max-width:22vw !important;}
-      .modalHead{padding:10px 10px 8px 10px;}
-      .modalHead .chip{max-width:calc(100% - 92px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-    }
-    @media (max-width: 980px) and (orientation: portrait){
-      body.forceLandscapeUI{overflow:hidden !important;}
-      body.forceLandscapeUI #app{
-        position:fixed !important;
-        inset:0 !important;
-        width:100vh !important;
-        height:100vw !important;
-        min-height:0 !important;
-        padding:0 !important;
-        transform-origin:top left !important;
-        transform:rotate(90deg) translateY(-100%) !important;
-        align-items:flex-start !important;
-        justify-content:flex-start !important;
-      }
-      body.forceLandscapeUI .frame{
-        width:100vw !important;
-        height:100vh !important;
-        min-height:0 !important;
-        max-width:none !important;
-        max-height:none !important;
-        border-radius:0 !important;
-      }
-    }
-    /* ===== BUILD 2008: mobile button sizing + better forced landscape ===== */
-    @media (max-width: 980px){
-      #btnJoinRoom{display:flex !important; justify-content:center !important; width:100% !important;}
-      #btnJoinRoom img{height:38px !important; width:auto !important; max-width:44vw !important; margin:0 auto !important;}
-    }
-    @media (max-width: 700px){
-      #btnCreateRoom img{height:56px !important; width:auto !important; max-width:42vw !important;}
-      #btnAddQueue img{height:46px !important; width:auto !important; max-width:56vw !important;}
-      .midHead #btnAddQueue img{height:46px !important; max-width:56vw !important;}
-    }
-    @media (max-width: 980px) and (orientation: portrait){
-      body.forceLandscapeUI{overflow:hidden !important; width:100vw !important; height:100vh !important;}
-      body.forceLandscapeUI #app{
-        position:fixed !important;
-        top:100vh !important;
-        left:0 !important;
-        inset:auto !important;
-        width:100vh !important;
-        height:100vw !important;
-        min-height:0 !important;
-        margin:0 !important;
-        padding:0 !important;
-        transform-origin:top left !important;
-        transform:rotate(-90deg) translateX(-100%) !important;
-        align-items:stretch !important;
-        justify-content:flex-start !important;
-        overflow:hidden !important;
-      }
-      body.forceLandscapeUI .frame{
-        width:100vh !important;
-        height:100vw !important;
-        min-height:0 !important;
-        max-width:none !important;
-        max-height:none !important;
-        border-radius:0 !important;
-        overflow:hidden !important;
-      }
-      body.forceLandscapeUI .screen.active{height:100% !important; width:100% !important;}
-      body.forceLandscapeUI #room,
-      body.forceLandscapeUI #results,
-      body.forceLandscapeUI #league,
-      body.forceLandscapeUI #worldcup{padding:8px !important; align-items:stretch !important; justify-content:flex-start !important;}
-      body.forceLandscapeUI #roomLayout{height:100% !important; overflow:hidden !important; padding:8px !important;}
-      body.forceLandscapeUI .leftBar,
-      body.forceLandscapeUI .mid,
-      body.forceLandscapeUI .rightBar{height:100% !important; min-height:0 !important;}
-      body.forceLandscapeUI .matchesWrap,
-      body.forceLandscapeUI .playersList{overflow:auto !important; -webkit-overflow-scrolling:touch !important;}
-    }
-
     /* language flags (top-right) */
     .homeLang{position:absolute; right:26px; top:18px; display:flex; gap:14px; z-index:50;}
     #btnLangPL, #btnLangEN{
@@ -1866,7 +1772,7 @@
     .footerRight{display:none !important;}
 
 
-    /* ===== BUILD 2002: mobile fit for room/buttons/logo ===== */
+    /* ===== BUILD 2001: mobile fit for room buttons/logo ===== */
     @media (max-width: 900px){
       #room .leftBar .imgBtn img,
       #room .rightBar .imgBtn img{
@@ -2530,7 +2436,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=2003" type="module"></script>
+<script src="./app.js?v=2004" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2550,14 +2456,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=2003').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=2004').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.008</div>
+<div id="buildCornerText">Mariusz Gębka v.2.004</div>
 </div>
 </body>
 </html>
