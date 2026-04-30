@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 9002;
+const BUILD = 2001;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -167,7 +167,7 @@ function hideCenterLoading(){
 }
 
 function showScreen(id){
-  const ids = ["splash","home","continue","rooms","room","results","league"];
+  const ids = ["splash","home","continue","rooms","room","worldcup","results","league"];
   ids.forEach(s=>{
     const node = el(s);
     if (node) node.classList.toggle("active", s===id);
@@ -3381,94 +3381,6 @@ function closeMessagesModal(){
   ov.setAttribute("aria-hidden","true");
 }
 
-
-function renderWorldCupScreen(){
-  const host = el("worldcup");
-  if(!host) return;
-  const isAdm = !!isAdmin();
-  const me = (lastPlayers || []).find(p => String(p.uid||p.id||"") === String(userUid||"")) || {};
-  const nick = String(me.nick || getNick() || "—");
-  const roomName = String((currentRoomData && (currentRoomData.name || currentRoomData.roomName)) || currentRoomCode || "—");
-  host.innerHTML = `
-    <div style="display:grid;grid-template-rows:auto auto 1fr;gap:14px;padding:16px;width:100%;height:100%;box-sizing:border-box;">
-      <div class="panel" style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div>
-          <div class="title" style="margin:0;">EVENT MŚ 2026</div>
-          <div class="sub">Pokój: ${roomName} • Gracz: ${nick}</div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <div class="chip">Mecze MŚ: <b id="wcMatchCount" style="margin-left:8px">0</b></div>
-          <div class="chip">Punkty: <b id="wcMyPoints" style="margin-left:8px">0</b></div>
-          <button class="imgBtn small" id="btnWorldCupBack" type="button" aria-label="Cofnij" title="Cofnij"><img data-btn="btn_back.png" src="${getBtnDir()}btn_back.png" alt="Cofnij"></button>
-          <button class="imgBtn small" id="btnWorldCupExit" type="button" aria-label="Wyjście" title="Wyjście"><img data-btn="btn_exit.png" src="${getBtnDir()}btn_exit.png" alt="Wyjście"></button>
-        </div>
-      </div>
-
-      <div class="panel" style="padding:10px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
-        <div class="sub" style="font-size:14px;">Osobny mini-typer MŚ. Ten moduł nie ingeruje w głównego typera.</div>
-        ${isAdm ? `<div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn" id="btnWCAddMatches" type="button">Dodaj mecze MŚ</button>
-          <button class="btn" id="btnWCEnterResults" type="button">Wpisz wyniki MŚ</button>
-          <button class="btn" id="btnWCEndRound" type="button">Zakończ kolejkę MŚ</button>
-        </div>` : `<div class="chip">Tryb gracza</div>`}
-      </div>
-
-      <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:14px;min-height:0;">
-        <div class="panel" style="padding:14px;display:grid;grid-template-rows:auto auto 1fr auto;gap:12px;min-height:0;">
-          <div class="title" style="font-size:20px;">Mecze MŚ</div>
-          <div class="sub">Tutaj pojawią się mecze eventowe Mistrzostw Świata.</div>
-          <div id="wcMatchesList" style="overflow:auto;display:grid;gap:10px;align-content:start;padding-right:4px;">
-            <div class="panel" style="padding:14px;background:rgba(255,255,255,.05);">
-              <div style="font-weight:1000;">Brak dodanych meczów MŚ</div>
-              <div class="sub" style="margin-top:6px;">Admin będzie mógł dodać osobne mecze eventowe bez wpływu na głównego typera.</div>
-            </div>
-          </div>
-          <div class="panel" style="padding:12px;background:rgba(255,255,255,.04);">
-            <div class="sub" style="margin-bottom:8px;">Pole typowania</div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto;gap:8px;align-items:center;">
-              <input id="wcPickHome" type="number" min="0" max="20" placeholder="0">
-              <span style="font-weight:1000;opacity:.85;">:</span>
-              <input id="wcPickAway" type="number" min="0" max="20" placeholder="0">
-              <button class="btn" id="btnWCSavePick" type="button">Zapisz typ</button>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-rows:1fr 1fr;gap:14px;min-height:0;">
-          <div class="panel" style="padding:14px;display:grid;grid-template-rows:auto auto 1fr;gap:12px;min-height:0;">
-            <div class="title" style="font-size:20px;">Ranking MŚ</div>
-            <div class="sub">Osobny ranking punktów tylko z eventu mundialowego.</div>
-            <div id="wcRankingList" style="overflow:auto;display:grid;gap:10px;align-content:start;padding-right:4px;">
-              <div class="panel" style="padding:12px;background:rgba(255,255,255,.05);display:flex;justify-content:space-between;gap:12px;">
-                <b>Brak klasyfikacji</b><span class="sub">0 pkt</span>
-              </div>
-            </div>
-          </div>
-          <div class="panel" style="padding:14px;display:grid;gap:10px;align-content:start;">
-            <div class="title" style="font-size:20px;">Panel eventu</div>
-            <div class="sub">Tu będzie osobna obsługa eventu MŚ 2026: mecze, typy, wyniki i ranking.</div>
-            <div class="chip">Status: szkic mini-typera</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  refreshAllButtonImages();
-
-  const goBack = ()=> showScreen("room");
-  const b1 = el("btnWorldCupBack"); if(b1) b1.onclick = goBack;
-  const b2 = el("btnWorldCupExit"); if(b2) b2.onclick = goBack;
-  const save = el("btnWCSavePick"); if(save) save.onclick = ()=> showToast(getLang()==="en" ? "World Cup event pick saved soon" : "Typ eventowy MŚ będzie działał w kolejnym kroku");
-  const a1 = el("btnWCAddMatches"); if(a1) a1.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches soon" : "Dodawanie meczów MŚ będzie w kolejnym kroku");
-  const a2 = el("btnWCEnterResults"); if(a2) a2.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results soon" : "Wpisywanie wyników MŚ będzie w kolejnym kroku");
-  const a3 = el("btnWCEndRound"); if(a3) a3.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round soon" : "Zakończenie kolejki MŚ będzie w kolejnym kroku");
-}
-
-function openWorldCupEvent(){
-  renderWorldCupScreen();
-  showScreen("worldcup");
-}
-
 // ===== SUBSTITUTE (Zastępstwo) – BUILD 8004 =====
 let _subMode = "player"; // "player" | "admin"
 
@@ -3591,6 +3503,20 @@ async function markAllMyMessagesRead(){
   await batch.commit();
 }
 
+
+function renderWorldCupEvent(){
+  const adminBox = el("worldcupAdminPanel");
+  if(adminBox) adminBox.style.display = isAdmin() ? "grid" : "none";
+  const nickNode = el("worldcupNick");
+  if(nickNode) nickNode.textContent = getNick() || "—";
+  const roomNode = el("worldcupRoomName");
+  if(roomNode) roomNode.textContent = currentRoom?.name || currentRoomCode || "—";
+}
+
+function openWorldCupEvent(){
+  renderWorldCupEvent();
+  showScreen("worldcup");
+}
 
 // ===== UI =====
 function bindUI(){
@@ -3738,6 +3664,20 @@ function bindUI(){
   const __btnSubYes = el("btnSubYes");
   if(__btnSubYes) __btnSubYes.onclick = ()=>{ /* intentionally inactive for now */ };
 
+
+  // WORLD CUP EVENT (mini-typer placeholder / separate module)
+  const __btnWorldCupBack = el("btnWorldCupBack");
+  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=> showScreen("room");
+  const __btnWorldCupMatches = el("btnWorldCupMatches");
+  if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
+  const __btnWorldCupRanking = el("btnWorldCupRanking");
+  if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
+  const __btnWorldCupAdd = el("btnWorldCupAdd");
+  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches." : "Dodawanie meczów MŚ.");
+  const __btnWorldCupResults = el("btnWorldCupResults");
+  if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
+  const __btnWorldCupEnd = el("btnWorldCupEnd");
+  if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round." : "Zakończenie kolejki MŚ.");
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
@@ -6939,20 +6879,41 @@ function escapeHtml(s){
 }
 
 // ===== ORIENTATION (phones: landscape-first) =====
+function shouldLockLandscape(){
+  const active = document.querySelector('.screen.active')?.id || '';
+  const lockScreens = new Set(["room","results","league","worldcup"]);
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
+  const portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+  return isMobile && portrait && lockScreens.has(active);
+}
+
+async function applyOrientationPreference(){
+  try{
+    const shouldLock = shouldLockLandscape();
+    if(screen.orientation && screen.orientation.lock){
+      if(shouldLock) await screen.orientation.lock('landscape');
+      else if(screen.orientation.unlock) screen.orientation.unlock();
+    }
+  }catch(e){}
+}
+
 function updateLandscapeLock(){
   const overlay = el("rotateOverlay");
-  if(overlay) overlay.style.display = "none";
-  document.body.classList.remove("lockedPortrait");
+  const locked = shouldLockLandscape();
+  if(overlay) overlay.style.display = locked ? "flex" : "none";
+  document.body.classList.toggle("lockedPortrait", locked);
+  try{ applyOrientationPreference(); }catch(e){}
 }
 
 window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); }catch(e){} }, {passive:true});
 window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 60); });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ updateLandscapeLock(); }catch(e){} } });
 
 // ===== START =====
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`BUILD ${BUILD}`);
+    setFooter(`Mariusz Gębka v.2.001`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();

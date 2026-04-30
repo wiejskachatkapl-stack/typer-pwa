@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-  <title>Typer (BUILD 9002)</title>
+    <title>Typer (BUILD 2001)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1761,6 +1761,44 @@
     .footerRight{display:none !important;}
 
 
+    /* ===== BUILD 2001: mobile fit for room buttons/logo ===== */
+    @media (max-width: 900px){
+      #room .leftBar .imgBtn img,
+      #room .rightBar .imgBtn img{
+        width:min(76vw, 320px) !important;
+        max-width:100% !important;
+        height:auto !important;
+        max-height:58px !important;
+        object-fit:contain;
+      }
+      #room .leftTopProfile .avatarBox{width:104px;height:104px;flex:0 0 104px;border-radius:22px;}
+      #room .leftTopProfile{min-height:132px;padding:12px;gap:12px;}
+      #room .profileTopText .profileNick{font-size:18px;}
+      #room .profileTopText .profileMeta{font-size:14px;}
+      #room .leftProfileInfo,
+      #room .leftDeleteRoomCard,
+      #room .rightBottomMessages,
+      #room .rightBottomExit,
+      #room .leftBottomStack > .panel{padding:10px 12px !important;}
+      #room .leftBottomStack{gap:8px;}
+      #room .rightBar{gap:8px;}
+      #room .playersHeader .imgBtn img{max-height:52px !important;}
+      #room .playerRow{padding:7px 8px;font-size:12px;gap:6px;}
+      #room .eyeBtn{width:30px;height:24px;}
+      #buildCorner{right:10px;bottom:8px;gap:4px;}
+      #buildCornerLogo{width:96px;}
+      #buildCornerText{font-size:11px;max-width:170px;text-align:center;line-height:1.15;}
+    }
+    @media (max-width: 520px){
+      #room .leftBar .imgBtn img,
+      #room .rightBar .imgBtn img{max-height:50px !important;width:min(74vw, 290px) !important;}
+      #room .leftTopProfile .avatarBox{width:96px;height:96px;flex-basis:96px;}
+      #room .title{font-size:18px;}
+      #buildCornerLogo{width:86px;}
+      #buildCornerText{font-size:10px;max-width:150px;}
+    }
+
+
     /* Profile modal layout – przywrócenie układu jak na screenie (zielone zaznaczenie) */
     .modal.profileMode .modalHead{
       position:relative;
@@ -2013,7 +2051,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <div class="panel leftProfileInfo" id="roomProfileInfoCard">
     <div class="substituteRow" id="roomSubstituteRow">
       <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small" data-btn="btn_event_worldcup.png" id="btnSubstitute" title="Event MŚ 2026" type="button">
-        <img alt="Event MŚ 2026" data-btn="btn_event_worldcup.png" src="ui/buttons/pl/btn_event_worldcup.png"/>
+        <img alt="Event MŚ 2026" data-btn="btn_event_worldcup.png" src="ui/buttons/pl/btn_event_worldcup.png" style="max-height:68px"/>
       </button>
     </div>
   </div>
@@ -2321,8 +2359,6 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </section>
 <!-- LEAGUE -->
-
-<section class="screen" id="worldcup"></section>
 <section class="screen" id="league">
 <div class="leagueWrap panel">
 <div class="leagueTop">
@@ -2389,7 +2425,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=9002" type="module"></script>
+<script src="./app.js?v=9004" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2409,14 +2445,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=9001').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=9004').catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka • v1.9005</div>
+<div id="buildCornerText">Mariusz Gębka v.2.001</div>
 </div>
 </body>
 </html>
