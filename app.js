@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2001;
+const BUILD = 2002;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1621,8 +1621,8 @@ function __makeLoginModal(){
         <div id="pinLoginError" style="display:none;color:#ff9b9b;font-weight:700;"></div>
 
         <div style="display:flex;gap:14px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
-          <img id="pinLoginYes" class="imgBtn" alt="YES" src="${getBtnDir()}/btn_yes.png" style="height:54px;cursor:pointer;"/>
-          <img id="pinLoginNo" class="imgBtn" alt="NO" src="${getBtnDir()}/btn_no.png" style="height:54px;cursor:pointer;"/>
+          <img id="pinLoginYes" class="imgBtn" alt="YES" src="${getBtnDir()}/btn_yes.png" style="height:46px;cursor:pointer;"/>
+          <img id="pinLoginNo" class="imgBtn" alt="NO" src="${getBtnDir()}/btn_no.png" style="height:46px;cursor:pointer;"/>
         </div>
       </div>
     </div>
@@ -6898,11 +6898,10 @@ async function applyOrientationPreference(){
 }
 
 function updateLandscapeLock(){
-  const overlay = el("rotateOverlay");
-  const locked = shouldLockLandscape();
-  if(overlay) overlay.style.display = locked ? "flex" : "none";
-  document.body.classList.toggle("lockedPortrait", locked);
   try{ applyOrientationPreference(); }catch(e){}
+  const overlay = el("rotateOverlay");
+  if(overlay) overlay.style.display = "none";
+  document.body.classList.remove("lockedPortrait");
 }
 
 window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); }catch(e){} }, {passive:true});
@@ -6913,7 +6912,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.001`);
+    setFooter(`Mariusz Gębka • v.2.002`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
