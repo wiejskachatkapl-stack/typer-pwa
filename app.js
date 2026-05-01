@@ -3652,16 +3652,16 @@ function wcBuildShell(){
   const grid = document.createElement('div');
   grid.className='wcEventGrid';
   const left = document.createElement('div'); left.className='panel wcEventLeft'; left.style.padding='16px';
-  left.innerHTML = `<div class="title" style="margin:0 0 12px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcSaveWrap" style="justify-content:center"></div><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div>`;
-  left.querySelector('.wcSaveWrap').appendChild(wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy'));
+  left.innerHTML = `<div class="title" style="margin:0 0 12px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div>`;
+  const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
   const right = document.createElement('div'); right.className='col'; right.style.gap='14px';
   right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div>`;
   const adminBtns = left.querySelector('.wcAdminButtons');
   adminBtns.append(
     wcMakeImgButton('btn_dodaj_kolejke.png', 'wcAddRoundBtn', getLang()==='en'?'Add round':'Dodaj kolejkę'),
     wcMakeImgButton('btn_dodaj_wyniki.png', 'wcResultsBtn', getLang()==='en'?'Enter results':'Wpisz wyniki'),
-    wcMakeImgButton('btn_zakoncz_kolejke.png', 'wcEndRoundBtn', getLang()==='en'?'End round':'Zakończ kolejkę'),
-    wcMakeImgButton('btn_zamknij.png', 'wcEndEventBtn', getLang()==='en'?'End':'Koniec')
+    wcSavePicksButton,
+    wcMakeImgButton('btn_zakoncz_kolejke.png', 'wcEndRoundBtn', getLang()==='en'?'End round':'Zakończ kolejkę')
   );
   grid.append(left,right); body.appendChild(grid);
   body._els = {
