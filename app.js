@@ -3634,7 +3634,6 @@ async function wcFetchMyPicksDoc(roundId){
       }
     }catch{}
   }
-  if(wcArePicksSavedLocal(roundId)) return {exists:true, picks:{}, localOnly:true};
   return {exists:false, picks:{}};
 }
 function wcBuildShell(){
@@ -3739,6 +3738,20 @@ async function saveWorldCupRound(){
   if(!state.activeRoundId){ showToast(getLang()==='en'?'No active round':'Brak aktywnej kolejki'); return; }
   const matches = await wcFetchRoundMatches(state.activeRoundId);
   if(!matches.length){ showToast(getLang()==='en'?'No matches':'Brak meczów'); return; }
+
+  const picks = {};
+  for(const row of document.querySelectorAll('.wcPickRow')){
+    const id = row.dataset.matchId;
+    const home = clampInt(row.querySelector('.wcPickHome')?.value,0,99);
+    const away = clampInt(row.querySelector('.wcPickAway')?.value,0,99);
+    if(!id || home===null || away===null){ showToast(getLang()==='en'?'Fill all picks first':'Najpierw wpisz wszystkie typy'); return; }
+    picks[id] = {home, away};
+  }
+  if(Object.keys(picks).length !== matches.length){ showToast(getLang()==='en'?'Fill all picks first':'Najpierw wpisz wszystkie typy'); return; }
+
+  await boot.setDoc(wcPicksRef(state.activeRoundId), {uid:userUid, playerNo:getPlayerNo(), nick:getNick(), picks, locked:true, savedAt: boot.serverTimestamp(), updatedAt: boot.serverTimestamp()}, {merge:true});
+  wcMarkPicksSavedLocal(state.activeRoundId);
+
   await boot.setDoc(wcRoundRef(state.activeRoundId), {savedAt: boot.serverTimestamp(), status:'saved'}, {merge:true});
   showToast(getLang()==='en'?'Round saved':'Zapisano kolejkę');
   await openWorldCupEvent();
@@ -3872,7 +3885,7 @@ async function renderWorldCupEvent(){
   setAdminBtnState(body._els.endRoundBtn(), !!matches.length && roundIsSaved && allResultsSaved);
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
-  const myPicksAlreadySaved = !!myPicksDoc.exists || wcArePicksSavedLocal(state.activeRoundId);
+  const myPicksAlreadySaved = !!myPicksDoc.exists;
   const savePicksBtn = body._els.savePicksBtn();
   body._els.matchesCount().textContent = String(matches.length);
   const list = body._els.matchesList();
