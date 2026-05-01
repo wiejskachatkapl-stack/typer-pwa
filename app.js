@@ -3600,6 +3600,13 @@ async function wcFetchRoundMatches(roundId){
     return qs.docs.map(d=>({id:d.id, ...(d.data()||{})}));
   }catch{return [];}
 }
+async function wcFetchRoundMeta(roundId){
+  if(!roundId) return {};
+  try{
+    const snap = await boot.getDoc(wcRoundRef(roundId));
+    return snap.exists() ? (snap.data() || {}) : {};
+  }catch{return {};}
+}
 async function wcFetchMyPicks(roundId){
   if(!roundId || !userUid) return {};
   try{
@@ -3725,7 +3732,18 @@ async function saveWorldCupPicks(){
   showToast(getLang()==='en' ? 'Picks saved' : 'Zapisano typy');
   await openWorldCupEvent();
 }
+async function saveWorldCupRound(){
+  if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
+  const state = await wcGetState();
+  if(!state.activeRoundId){ showToast(getLang()==='en'?'No active round':'Brak aktywnej kolejki'); return; }
+  const matches = await wcFetchRoundMatches(state.activeRoundId);
+  if(!matches.length){ showToast(getLang()==='en'?'No matches':'Brak meczów'); return; }
+  await boot.setDoc(wcRoundRef(state.activeRoundId), {savedAt: boot.serverTimestamp(), status:'saved'}, {merge:true});
+  showToast(getLang()==='en'?'Round saved':'Zapisano kolejkę');
+  await openWorldCupEvent();
+}
 async function openWorldCupAddRoundModal(){
+  if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
   const pending = [];
   const body = document.createElement('div'); body.className='col'; body.style.gap='12px';
   const row = document.createElement('div'); row.className='row'; row.style.flexWrap='wrap'; row.style.alignItems='end';
@@ -3757,8 +3775,11 @@ async function openWorldCupAddRoundModal(){
   modalOpen(getLang()==='en' ? 'World Cup round' : 'Kolejka MŚ', body);
 }
 async function openWorldCupResultsModal(){
+  if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
   const state = await wcGetState();
   if(!state.activeRoundId){ showToast(getLang()==='en' ? 'No active round' : 'Brak aktywnej kolejki'); return; }
+  const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
+  if(!roundMeta.savedAt && roundMeta.status !== 'saved'){ showToast(getLang()==='en'?'Save round first':'Najpierw zapisz kolejkę'); return; }
   const matches = await wcFetchRoundMatches(state.activeRoundId);
   const body = document.createElement('div'); body.className='col'; body.style.gap='10px';
   matches.forEach(m=>{
@@ -3789,6 +3810,7 @@ async function openWorldCupResultsModal(){
   modalOpen(getLang()==='en' ? 'World Cup results' : 'Wyniki MŚ', body);
 }
 async function endWorldCupRound(){
+  if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
   const state = await wcGetState();
   if(!state.activeRoundId){ showToast(getLang()==='en'?'No active round':'Brak aktywnej kolejki'); return; }
   const matches = await wcFetchRoundMatches(state.activeRoundId);
@@ -3802,6 +3824,7 @@ async function endWorldCupRound(){
   await openWorldCupEvent();
 }
 async function endWorldCupEvent(){
+  if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
   await wcSetState({ended:true, endedAt: boot.serverTimestamp(), activeRoundId:null});
   const ranking = await wcComputeRanking();
   const winner = ranking[0];
@@ -3823,7 +3846,7 @@ async function renderWorldCupEvent(){
   body._els.roomName().textContent = currentRoom?.name || currentRoomCode || '—';
   body._els.nick().textContent = getNick() || '—';
   body._els.adminPanel().style.display = isAdmin() ? 'flex' : 'none';
-  body._els.savePicksBtn().onclick = ()=> saveWorldCupPicks();
+  body._els.savePicksBtn().onclick = ()=> saveWorldCupRound();
   body._els.addRoundBtn().onclick = ()=> openWorldCupAddRoundModal();
   body._els.resultsBtn().onclick = ()=> openWorldCupResultsModal();
   body._els.endRoundBtn().onclick = ()=> endWorldCupRound();
@@ -3833,18 +3856,18 @@ async function renderWorldCupEvent(){
   const state = await wcGetState();
   window.__wcState = state;
   const matches = await wcFetchRoundMatches(state.activeRoundId);
+  const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
+  const allResultsSaved = !!(matches.length && matches.every(m=>m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null));
+  const roundIsSaved = !!(roundMeta.savedAt || roundMeta.status === 'saved');
+  const showAdminBtn = (node, visible)=>{ if(node) node.style.display = (isAdmin() && visible) ? 'inline-flex' : 'none'; };
+  showAdminBtn(body._els.addRoundBtn(), !matches.length);
+  showAdminBtn(body._els.savePicksBtn(), !!matches.length && !roundIsSaved);
+  showAdminBtn(body._els.resultsBtn(), !!matches.length && roundIsSaved && !allResultsSaved);
+  showAdminBtn(body._els.endRoundBtn(), !!matches.length && roundIsSaved && allResultsSaved);
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists || wcArePicksSavedLocal(state.activeRoundId);
   const savePicksBtn = body._els.savePicksBtn();
-  if(myPicksAlreadySaved){
-    savePicksBtn.disabled = true;
-    savePicksBtn.textContent = getLang()==='en' ? 'Picks saved' : 'Typy zapisane';
-    savePicksBtn.style.opacity = '.45';
-    savePicksBtn.style.cursor = 'not-allowed';
-    savePicksBtn.classList.add('wcPickLocked');
-    savePicksBtn.title = getLang()==='en' ? 'Picks saved' : 'Typy zapisane';
-  }
   body._els.matchesCount().textContent = String(matches.length);
   const list = body._els.matchesList();
   list.innerHTML='';
