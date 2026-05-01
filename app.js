@@ -3765,16 +3765,16 @@ async function openWorldCupResultsModal(){
     const row = document.createElement('div'); row.className='matchCard'; row.style.gridTemplateColumns='1fr 120px 1fr';
     const t1 = document.createElement('div'); t1.className='team'; t1.textContent=m.home;
     const mid = document.createElement('div'); mid.className='scoreBox';
-    const i1=document.createElement('input'); i1.type='number'; i1.className='scoreInput'; i1.value=m.resultHome ?? '';
+    const i1=document.createElement('input'); i1.type='text'; i1.inputMode='numeric'; i1.pattern='[0-9]*'; i1.maxLength=2; i1.className='scoreInput'; i1.value=m.resultHome ?? ''; i1.oninput=()=>{ i1.value=String(i1.value||'').replace(/\D/g,'').slice(0,2); };
     const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
-    const i2=document.createElement('input'); i2.type='number'; i2.className='scoreInput'; i2.value=m.resultAway ?? '';
+    const i2=document.createElement('input'); i2.type='text'; i2.inputMode='numeric'; i2.pattern='[0-9]*'; i2.maxLength=2; i2.className='scoreInput'; i2.value=m.resultAway ?? ''; i2.oninput=()=>{ i2.value=String(i2.value||'').replace(/\D/g,'').slice(0,2); };
     mid.append(i1,sep,i2);
     const t2 = document.createElement('div'); t2.className='team'; t2.style.justifyContent='flex-end'; t2.textContent=m.away;
     row.append(t1,mid,t2); row.dataset.matchId=m.id; row._home=i1; row._away=i2; body.appendChild(row);
   });
-  const footer=document.createElement('div'); footer.className='row'; footer.style.justifyContent='center'; footer.style.flexWrap='wrap';
-  const save=document.createElement('button'); save.className='btn'; save.textContent=getLang()==='en'?'Save results':'Zapisz wyniki';
-  const back=document.createElement('button'); back.className='btn'; back.textContent=getLang()==='en'?'Back':'Cofnij'; back.onclick=()=>{ modalClose(); openWorldCupEvent(); };
+  const footer=document.createElement('div'); footer.className='row'; footer.style.justifyContent='center'; footer.style.flexWrap='wrap'; footer.style.gap='12px';
+  const save=wcMakeImgButton('btn_zapisz_wyniki.png', 'wcSaveResultsBtn', getLang()==='en'?'Save results':'Zapisz wyniki');
+  const back=wcMakeImgButton('btn_cofnij.png', 'wcResultsBackBtn', getLang()==='en'?'Back':'Cofnij', ()=>{ modalClose(); openWorldCupEvent(); });
   footer.append(save,back); body.appendChild(footer);
   save.onclick = async ()=>{
     for(const row of body.querySelectorAll('.matchCard')){
