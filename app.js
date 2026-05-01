@@ -2937,7 +2937,7 @@ async function initFirebase(){
   const { getAuth, onAuthStateChanged, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
   const {
     getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-    collection, query, where, orderBy, onSnapshot,
+    collection, query, where, orderBy, onSnapshot, addDoc,
     writeBatch, deleteDoc, getDocs, increment
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
@@ -2948,6 +2948,7 @@ async function initFirebase(){
   boot.doc = doc; boot.getDoc = getDoc; boot.setDoc = setDoc; boot.updateDoc = updateDoc;
   boot.serverTimestamp = serverTimestamp;
   boot.collection = collection; boot.query = query; boot.orderBy = orderBy; boot.onSnapshot = onSnapshot;
+  boot.addDoc = addDoc;
   boot.where = where;
   boot.writeBatch = writeBatch; boot.deleteDoc = deleteDoc; boot.getDocs = getDocs;
   boot.increment = increment;
