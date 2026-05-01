@@ -3915,7 +3915,16 @@ async function renderWorldCupEvent(){
       const info = document.createElement('div'); info.className='resultPill';
       if(m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null){
         const pts = wcPointsForPick(myPicks[m.id]?.home,myPicks[m.id]?.away,m.resultHome,m.resultAway);
-        info.textContent = `${getLang()==='en'?'Result':'Wynik'}: ${m.resultHome}:${m.resultAway} • ${getLang()==='en'?'pts':'pkt'} ${pts ?? '—'}`;
+        info.textContent = '';
+        info.style.display = 'inline-flex';
+        info.style.alignItems = 'center';
+        info.style.justifyContent = 'center';
+        info.style.gap = '8px';
+        const dot = document.createElement('span');
+        dot.className = 'dot ' + (pts === 3 ? 'green' : (pts === 1 ? 'yellow' : (pts === 0 ? 'red' : 'gray')));
+        const txt = document.createElement('span');
+        txt.textContent = `${getLang()==='en'?'Result':'Wynik'}: ${m.resultHome}:${m.resultAway} • ${getLang()==='en'?'pts':'pkt'} ${pts ?? '—'}`;
+        info.append(dot, txt);
       }else{
         info.textContent = getLang()==='en' ? 'Awaiting result' : 'Czeka na wynik';
       }
