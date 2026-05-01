@@ -3545,6 +3545,7 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .wcSaveWrap .wcBtnImg img{height:64px !important;max-width:220px !important;}
     #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:56px !important;max-width:180px !important;}
     #modal.worldcupMode .wcPickLocked{opacity:.55;cursor:not-allowed;}
+    #modal.worldcupMode .wcBtnDisabled{opacity:.35;filter:grayscale(1) brightness(.8);cursor:not-allowed;pointer-events:none;}
     @media (max-width:980px){#modal.worldcupMode .modalCard{width:96vw !important;min-height:92vh !important;}#modal.worldcupMode .wcEventGrid{grid-template-columns:1fr;min-height:0;}#modal.worldcupMode .wcEventLeft{min-height:360px;}#modal.worldcupMode .wcPickRow{grid-template-columns:1fr 120px 150px !important;}}
   `;
   document.head.appendChild(st);
@@ -3859,11 +3860,16 @@ async function renderWorldCupEvent(){
   const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
   const allResultsSaved = !!(matches.length && matches.every(m=>m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null));
   const roundIsSaved = !!(roundMeta.savedAt || roundMeta.status === 'saved');
-  const showAdminBtn = (node, visible)=>{ if(node) node.style.display = (isAdmin() && visible) ? 'inline-flex' : 'none'; };
-  showAdminBtn(body._els.addRoundBtn(), !matches.length);
-  showAdminBtn(body._els.savePicksBtn(), !!matches.length && !roundIsSaved);
-  showAdminBtn(body._els.resultsBtn(), !!matches.length && roundIsSaved && !allResultsSaved);
-  showAdminBtn(body._els.endRoundBtn(), !!matches.length && roundIsSaved && allResultsSaved);
+  const setAdminBtnState = (node, enabled)=>{
+    if(!node) return;
+    node.style.display = isAdmin() ? 'inline-flex' : 'none';
+    node.disabled = !(isAdmin() && enabled);
+    node.classList.toggle('wcBtnDisabled', !(isAdmin() && enabled));
+  };
+  setAdminBtnState(body._els.addRoundBtn(), !matches.length);
+  setAdminBtnState(body._els.savePicksBtn(), false);
+  setAdminBtnState(body._els.resultsBtn(), !!matches.length && roundIsSaved && !allResultsSaved);
+  setAdminBtnState(body._els.endRoundBtn(), !!matches.length && roundIsSaved && allResultsSaved);
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists || wcArePicksSavedLocal(state.activeRoundId);
@@ -3871,6 +3877,14 @@ async function renderWorldCupEvent(){
   body._els.matchesCount().textContent = String(matches.length);
   const list = body._els.matchesList();
   list.innerHTML='';
+  const updateWcSaveRoundButton = ()=>{
+    const btn = body._els.savePicksBtn();
+    if(!btn || !isAdmin() || !matches.length || roundIsSaved) return;
+    const inputs = Array.from(document.querySelectorAll('.wcPickHome,.wcPickAway'));
+    const allFilled = inputs.length === matches.length * 2 && inputs.every(inp=>String(inp.value||'').trim() !== '');
+    btn.disabled = !allFilled;
+    btn.classList.toggle('wcBtnDisabled', !allFilled);
+  };
   if(!matches.length){
     const empty=document.createElement('div'); empty.className='sub'; empty.textContent=getLang()==='en'?'No active matches yet.':'Brak aktywnych meczów.'; list.appendChild(empty);
   }else{
@@ -3878,9 +3892,9 @@ async function renderWorldCupEvent(){
       const row = document.createElement('div'); row.className='matchRow wcPickRow'; row.dataset.matchId = m.id; row.style.gridTemplateColumns='1fr 120px 140px';
       const teams = document.createElement('div'); teams.className='team'; teams.innerHTML = `<span class="teamName">${idx+1}. ${m.home} — ${m.away}</span>`;
       const pick = document.createElement('div'); pick.className='scoreBox';
-      const p1=document.createElement('input'); p1.type='text'; p1.inputMode='numeric'; p1.pattern='[0-9]*'; p1.maxLength=2; p1.className='scoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? ''; p1.oninput=()=>{ p1.value=String(p1.value||'').replace(/\D/g,'').slice(0,2); };
+      const p1=document.createElement('input'); p1.type='text'; p1.inputMode='numeric'; p1.pattern='[0-9]*'; p1.maxLength=2; p1.className='scoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? ''; p1.oninput=()=>{ p1.value=String(p1.value||'').replace(/\D/g,'').slice(0,2); updateWcSaveRoundButton(); };
       const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
-      const p2=document.createElement('input'); p2.type='text'; p2.inputMode='numeric'; p2.pattern='[0-9]*'; p2.maxLength=2; p2.className='scoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? ''; p2.oninput=()=>{ p2.value=String(p2.value||'').replace(/\D/g,'').slice(0,2); };
+      const p2=document.createElement('input'); p2.type='text'; p2.inputMode='numeric'; p2.pattern='[0-9]*'; p2.maxLength=2; p2.className='scoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? ''; p2.oninput=()=>{ p2.value=String(p2.value||'').replace(/\D/g,'').slice(0,2); updateWcSaveRoundButton(); };
       if(myPicksAlreadySaved || (m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null)){
         p1.disabled=true; p2.disabled=true; p1.classList.add('wcPickLocked'); p2.classList.add('wcPickLocked');
       }
@@ -3894,6 +3908,7 @@ async function renderWorldCupEvent(){
       }
       row.append(teams,pick,info); list.appendChild(row);
     });
+    updateWcSaveRoundButton();
   }
   const ranking = await wcComputeRanking();
   const tbody = body._els.rankingBody(); tbody.innerHTML='';
