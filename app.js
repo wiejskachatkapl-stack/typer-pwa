@@ -1,10 +1,25 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2009;
+const BUILD = 2019;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
 const BG_HOME = "img_menu_pc.png";
 const BG_ROOM = "img_tlo.png";
+const WORLD_CUP_TEAMS = [
+  "Meksyk","Republika Południowej Afryki","Korea Południowa","Czechy",
+  "Szwajcaria","Katar","Kanada","Bośnia i Hercegowina",
+  "Brazylia","Maroko","Szkocja","Haiti",
+  "USA","Australia","Paragwaj","Turcja",
+  "Niemcy","Ekwador","Wybrzeże Kości Słoniowej","Curacao",
+  "Holandia","Japonia","Tunezja","Szwecja",
+  "Belgia","Iran","Egipt","Nowa Zelandia",
+  "Hiszpania","Urugwaj","Arabia Saudyjska","Republika Zielonego Przylądka",
+  "Francja","Senegal","Norwegia","Irak",
+  "Argentyna","Austria","Algieria","Jordania",
+  "Portugalia","Kolumbia","Uzbekistan","DR Konga",
+  "Anglia","Chorwacja","Ghana","Panama"
+];
+
 
 const KEY_NICK = "typer_nick_v3";
 const KEY_ACTIVE_ROOM = "typer_active_room_v3";
@@ -173,8 +188,9 @@ function showScreen(id){
     if (node) node.classList.toggle("active", s===id);
   });
 
-  if(id === "room" || id === "results") setBg(BG_ROOM);
+  if(id === "room" || id === "results" || id === "worldcup" || id === "league") setBg(BG_ROOM);
   else setBg(BG_HOME);
+  try{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 10); }catch(e){}
 }
 
 function setSplash(msg){
@@ -3504,59 +3520,269 @@ async function markAllMyMessagesRead(){
 }
 
 
-function renderWorldCupEvent(){
-  const wrap = document.createElement("div");
-  wrap.className = "col";
-  wrap.style.gap = "14px";
+function wcEventStateRef(){
+  return boot.doc(db, "rooms", currentRoomCode, "worldcup_event", "state");
+}
+function wcRoundRef(roundId){
+  return boot.doc(db, "rooms", currentRoomCode, "worldcup_rounds", roundId);
+}
+function wcRoundsCol(){
+  return boot.collection(db, "rooms", currentRoomCode, "worldcup_rounds");
+}
+function wcMatchesCol(roundId){
+  return boot.collection(db, "rooms", currentRoomCode, "worldcup_rounds", roundId, "matches");
+}
+function wcPicksRef(roundId, uid=userUid){
+  return boot.doc(db, "rooms", currentRoomCode, "worldcup_rounds", roundId, "picks", uid);
+}
+async function wcGetState(){
+  if(!currentRoomCode) return {activeRoundId:null, currentRoundNo:1, nextRoundNo:1, ended:false};
+  try{
+    const snap = await boot.getDoc(wcEventStateRef());
+    if(snap.exists()) return Object.assign({activeRoundId:null, currentRoundNo:1, nextRoundNo:1, ended:false}, snap.data()||{});
+  }catch{}
+  return {activeRoundId:null, currentRoundNo:1, nextRoundNo:1, ended:false};
+}
+async function wcSetState(patch){
+  await boot.setDoc(wcEventStateRef(), patch, {merge:true});
+}
+function wcOutcome(a,b){ if(a===b) return 0; return a>b ? 1 : -1; }
+function wcPointsForPick(ph,pa,rh,ra){
+  if([ph,pa,rh,ra].some(v=>v===null || v===undefined || Number.isNaN(Number(v)))) return null;
+  ph=Number(ph); pa=Number(pa); rh=Number(rh); ra=Number(ra);
+  if(ph===rh && pa===ra) return 3;
+  return wcOutcome(ph,pa)===wcOutcome(rh,ra) ? 1 : 0;
+}
+async function wcFetchRoundMatches(roundId){
+  if(!roundId) return [];
+  try{
+    const qs = await boot.getDocs(boot.query(wcMatchesCol(roundId), boot.orderBy("order","asc")));
+    return qs.docs.map(d=>({id:d.id, ...(d.data()||{})}));
+  }catch{return [];}
+}
+async function wcFetchMyPicks(roundId){
+  if(!roundId || !userUid) return {};
+  try{
+    const snap = await boot.getDoc(wcPicksRef(roundId));
+    return snap.exists() ? (snap.data()?.picks || {}) : {};
+  }catch{return {};}
+}
+function wcBuildShell(){
+  const body = document.createElement('div');
+  body.className = 'col';
+  body.style.gap = '12px';
+  const top = document.createElement('div');
+  top.className = 'row';
+  top.style.flexWrap = 'wrap';
+  top.innerHTML = `
+    <div class="chip">EVENT MŚ 2026</div>
+    <div class="chip">Pokój: <span id="wcRoomName">—</span></div>
+    <div class="chip">Gracz: <span id="wcNick">—</span></div>
+    <div class="chip">Mecze: <span id="wcMatchesCount">0</span></div>
+    <div class="chip">Punkty: <span id="wcMyPoints">0</span></div>`;
+  const btns = document.createElement('div');
+  btns.className='row'; btns.style.marginLeft='auto';
+  const back = document.createElement('button'); back.className='btn'; back.textContent=getLang()==='en'?'Back':'Cofnij'; back.onclick=()=>modalClose();
+  const exit = document.createElement('button'); exit.className='btn'; exit.textContent=getLang()==='en'?'Exit':'Wyjście'; exit.onclick=()=>{modalClose(); showScreen('room');};
+  btns.append(back, exit); top.appendChild(btns); body.appendChild(top);
+  const grid = document.createElement('div');
+  grid.style.display='grid'; grid.style.gridTemplateColumns='1.4fr 1fr'; grid.style.gap='12px';
+  const left = document.createElement('div'); left.className='panel'; left.style.padding='14px';
+  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:8px"></div><div class="row" style="justify-content:center;margin-top:12px"><button id="wcSavePicksBtn" class="btn">Zapisz typy</button></div>`;
+  const right = document.createElement('div'); right.className='col'; right.style.gap='12px';
+  right.innerHTML = `<div id="wcAdminPanel" class="panel" style="padding:14px;display:none"><div class="title" style="margin:0 0 10px 0">Panel admina MŚ</div><div class="row" style="flex-wrap:wrap;justify-content:center"><button id="wcAddRoundBtn" class="btn">Dodaj kolejkę</button><button id="wcResultsBtn" class="btn">Wpisz wyniki</button><button id="wcEndRoundBtn" class="btn">Zakończ kolejkę</button><button id="wcEndEventBtn" class="btn">Koniec</button></div></div><div class="panel" style="padding:14px"><div class="title" style="margin:0 0 10px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div>`;
+  grid.append(left,right); body.appendChild(grid);
+  body._els = {
+    roomName: ()=> body.querySelector('#wcRoomName'),
+    nick: ()=> body.querySelector('#wcNick'),
+    matchesCount: ()=> body.querySelector('#wcMatchesCount'),
+    myPoints: ()=> body.querySelector('#wcMyPoints'),
+    matchesList: ()=> body.querySelector('#wcMatchesList'),
+    savePicksBtn: ()=> body.querySelector('#wcSavePicksBtn'),
+    adminPanel: ()=> body.querySelector('#wcAdminPanel'),
+    addRoundBtn: ()=> body.querySelector('#wcAddRoundBtn'),
+    resultsBtn: ()=> body.querySelector('#wcResultsBtn'),
+    endRoundBtn: ()=> body.querySelector('#wcEndRoundBtn'),
+    endEventBtn: ()=> body.querySelector('#wcEndEventBtn'),
+    rankingBody: ()=> body.querySelector('#wcRankingBody')
+  };
+  return body;
+}
+async function wcComputeRanking(){
+  const ranking = {};
+  (lastPlayers||[]).forEach(p=>{ const uid = p.uid||p.id||p.playerUid||p.playerId; if(uid) ranking[uid] = {uid, nick:p.nick||'—', points:0}; });
+  try{
+    const roundsQs = await boot.getDocs(boot.query(wcRoundsCol(), boot.orderBy('roundNo','asc')));
+    for(const rdoc of roundsQs.docs){
+      const rd = rdoc.data()||{}; if(!rd.closedAt) continue;
+      const matches = await wcFetchRoundMatches(rdoc.id);
+      const picksQs = await boot.getDocs(boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', rdoc.id, 'picks'));
+      picksQs.forEach(pd=>{
+        const uid = pd.id; const picks = pd.data()?.picks || {};
+        let pts = 0;
+        matches.forEach(m=>{ const p = picks[m.id]||{}; const val = wcPointsForPick(p.home,p.away,m.resultHome,m.resultAway); if(val!=null) pts += val; });
+        if(!ranking[uid]) ranking[uid] = {uid, nick: uid, points:0};
+        ranking[uid].points += pts;
+      });
+    }
+  }catch{}
+  return Object.values(ranking).sort((a,b)=> b.points-a.points || String(a.nick).localeCompare(String(b.nick),'pl'));
+}
+async function saveWorldCupPicks(){
+  const roundId = window.__wcState?.activeRoundId;
+  if(!roundId){ showToast(getLang()==='en' ? 'No active round' : 'Brak aktywnej kolejki'); return; }
+  const picks = {};
+  document.querySelectorAll('.wcPickRow').forEach(row=>{
+    const id = row.dataset.matchId;
+    const home = clampInt(row.querySelector('.wcPickHome')?.value,0,99);
+    const away = clampInt(row.querySelector('.wcPickAway')?.value,0,99);
+    if(home!==null && away!==null) picks[id] = {home, away};
+  });
+  await boot.setDoc(wcPicksRef(roundId), {uid:userUid, nick:getNick(), picks, updatedAt: boot.serverTimestamp()}, {merge:true});
+  showToast(getLang()==='en' ? 'Picks saved' : 'Zapisano typy');
+  await openWorldCupEvent();
+}
+async function openWorldCupAddRoundModal(){
+  const pending = [];
+  const body = document.createElement('div'); body.className='col'; body.style.gap='12px';
+  const row = document.createElement('div'); row.className='row'; row.style.flexWrap='wrap'; row.style.alignItems='end';
+  const mk = (label)=>{ const wrap=document.createElement('div'); wrap.className='col'; wrap.style.flex='1'; wrap.style.minWidth='240px'; const l=document.createElement('div'); l.className='sub'; l.textContent=label; const s=document.createElement('select'); s.className='mqClubSelect'; WORLD_CUP_TEAMS.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; s.appendChild(o);}); wrap.append(l,s); return [wrap,s]; };
+  const [hw,hs] = mk(getLang()==='en'?'Home':'Gospodarz'); const [aw,as] = mk(getLang()==='en'?'Away':'Gość');
+  const add = document.createElement('button'); add.className='btn'; add.textContent = getLang()==='en' ? '+ Add' : '+ Dodaj';
+  row.append(hw,aw,add); body.appendChild(row);
+  const list = document.createElement('div'); list.className='panel'; list.style.padding='12px'; list.style.maxHeight='34vh'; list.style.overflow='auto'; body.appendChild(list);
+  const render=()=>{ list.innerHTML=''; if(!pending.length){ const e=document.createElement('div'); e.className='sub'; e.textContent=getLang()==='en'?'No matches added yet.':'Nie dodano jeszcze meczów.'; list.appendChild(e); return;} pending.forEach((m,idx)=>{ const r=document.createElement('div'); r.className='row'; r.style.justifyContent='space-between'; r.style.padding='8px 10px'; r.style.border='1px solid rgba(255,255,255,.10)'; r.style.borderRadius='12px'; r.style.background='rgba(0,0,0,.14)'; const txt=document.createElement('div'); txt.style.fontWeight='900'; txt.textContent=`${idx+1}. ${m.home} — ${m.away}`; const del=document.createElement('button'); del.className='btnSmall btn'; del.textContent=getLang()==='en'?'Delete':'Usuń'; del.onclick=()=>{ pending.splice(idx,1); render(); }; r.append(txt,del); list.appendChild(r);});}; render();
+  add.onclick=()=>{ if(!hs.value || !as.value || hs.value===as.value){ showToast(getLang()==='en'?'Choose two different teams':'Wybierz dwie różne drużyny'); return; } pending.append({home:hs.value, away:as.value}); render(); };
+  const footer = document.createElement('div'); footer.className='row'; footer.style.justifyContent='center'; footer.style.flexWrap='wrap';
+  const save=document.createElement('button'); save.className='btn'; save.textContent=getLang()==='en'?'Save round':'Zapisz kolejkę';
+  const back=document.createElement('button'); back.className='btn'; back.textContent=getLang()==='en'?'Back':'Cofnij'; back.onclick=()=>{ modalClose(); openWorldCupEvent(); };
+  footer.append(save,back); body.appendChild(footer);
+  save.onclick = async ()=>{
+    if(!pending.length){ showToast(getLang()==='en'?'Add at least one match':'Dodaj przynajmniej jeden mecz'); return; }
+    const state = await wcGetState();
+    const roundId = state.activeRoundId || `round_${Date.now()}`;
+    const roundNo = state.activeRoundId ? (state.currentRoundNo || state.nextRoundNo || 1) : (state.nextRoundNo || 1);
+    await boot.setDoc(wcRoundRef(roundId), {roundNo, createdAt: boot.serverTimestamp(), closedAt: null}, {merge:true});
+    const existing = await wcFetchRoundMatches(roundId);
+    let order = existing.length + 1;
+    for(const m of pending){ await boot.addDoc(wcMatchesCol(roundId), {home:m.home, away:m.away, order:order++, createdAt: boot.serverTimestamp()}); }
+    await wcSetState({activeRoundId: roundId, currentRoundNo: roundNo, nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1), ended:false});
+    showToast(getLang()==='en' ? 'Round saved' : 'Zapisano kolejkę');
+    modalClose();
+    await openWorldCupEvent();
+  };
+  modalOpen(getLang()==='en' ? 'World Cup round' : 'Kolejka MŚ', body);
+}
+async function openWorldCupResultsModal(){
+  const state = await wcGetState();
+  if(!state.activeRoundId){ showToast(getLang()==='en' ? 'No active round' : 'Brak aktywnej kolejki'); return; }
+  const matches = await wcFetchRoundMatches(state.activeRoundId);
+  const body = document.createElement('div'); body.className='col'; body.style.gap='10px';
+  matches.forEach(m=>{
+    const row = document.createElement('div'); row.className='matchCard'; row.style.gridTemplateColumns='1fr 120px 1fr';
+    const t1 = document.createElement('div'); t1.className='team'; t1.textContent=m.home;
+    const mid = document.createElement('div'); mid.className='scoreBox';
+    const i1=document.createElement('input'); i1.type='number'; i1.className='scoreInput'; i1.value=m.resultHome ?? '';
+    const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
+    const i2=document.createElement('input'); i2.type='number'; i2.className='scoreInput'; i2.value=m.resultAway ?? '';
+    mid.append(i1,sep,i2);
+    const t2 = document.createElement('div'); t2.className='team'; t2.style.justifyContent='flex-end'; t2.textContent=m.away;
+    row.append(t1,mid,t2); row.dataset.matchId=m.id; row._home=i1; row._away=i2; body.appendChild(row);
+  });
+  const footer=document.createElement('div'); footer.className='row'; footer.style.justifyContent='center'; footer.style.flexWrap='wrap';
+  const save=document.createElement('button'); save.className='btn'; save.textContent=getLang()==='en'?'Save results':'Zapisz wyniki';
+  const back=document.createElement('button'); back.className='btn'; back.textContent=getLang()==='en'?'Back':'Cofnij'; back.onclick=()=>{ modalClose(); openWorldCupEvent(); };
+  footer.append(save,back); body.appendChild(footer);
+  save.onclick = async ()=>{
+    for(const row of body.querySelectorAll('.matchCard')){
+      const rh = clampInt(row._home.value,0,99); const ra = clampInt(row._away.value,0,99);
+      if(rh===null || ra===null){ showToast(getLang()==='en'?'Fill all results':'Uzupełnij wszystkie wyniki'); return; }
+      await boot.updateDoc(boot.doc(wcMatchesCol(state.activeRoundId), row.dataset.matchId), {resultHome: rh, resultAway: ra, updatedAt: boot.serverTimestamp()});
+    }
+    showToast(getLang()==='en'?'Results saved':'Zapisano wyniki');
+    modalClose();
+    await openWorldCupEvent();
+  };
+  modalOpen(getLang()==='en' ? 'World Cup results' : 'Wyniki MŚ', body);
+}
+async function endWorldCupRound(){
+  const state = await wcGetState();
+  if(!state.activeRoundId){ showToast(getLang()==='en'?'No active round':'Brak aktywnej kolejki'); return; }
+  const matches = await wcFetchRoundMatches(state.activeRoundId);
+  if(!matches.length){ showToast(getLang()==='en'?'No matches':'Brak meczów'); return; }
+  if(matches.some(m=>m.resultHome===undefined || m.resultAway===undefined || m.resultHome===null || m.resultAway===null)){
+    showToast(getLang()==='en'?'Enter all results first':'Najpierw wpisz wszystkie wyniki'); return;
+  }
+  await boot.setDoc(wcRoundRef(state.activeRoundId), {closedAt: boot.serverTimestamp()}, {merge:true});
+  await wcSetState({activeRoundId:null, currentRoundNo:(state.nextRoundNo||((state.currentRoundNo||1)+1))});
+  showToast(getLang()==='en'?'Round ended':'Zakończono kolejkę');
+  await openWorldCupEvent();
+}
+async function endWorldCupEvent(){
+  await wcSetState({ended:true, endedAt: boot.serverTimestamp(), activeRoundId:null});
+  const ranking = await wcComputeRanking();
+  const winner = ranking[0];
+  showToast(winner ? `${getLang()==='en'?'Winner':'Zwycięzca'}: ${winner.nick}` : (getLang()==='en'?'Event ended':'Zakończono event'));
+  await openWorldCupEvent();
+}
+async function renderWorldCupEvent(){
+  if(!currentRoomCode){ showToast(getLang()==='en'?'No room':'Brak pokoju'); return; }
+  const body = wcBuildShell();
+  modalOpen('EVENT MŚ 2026', body);
+  body._els.roomName().textContent = currentRoom?.name || currentRoomCode || '—';
+  body._els.nick().textContent = getNick() || '—';
+  body._els.adminPanel().style.display = isAdmin() ? '' : 'none';
+  body._els.savePicksBtn().onclick = ()=> saveWorldCupPicks();
+  body._els.addRoundBtn().onclick = ()=> openWorldCupAddRoundModal();
+  body._els.resultsBtn().onclick = ()=> openWorldCupResultsModal();
+  body._els.endRoundBtn().onclick = ()=> endWorldCupRound();
+  body._els.endEventBtn().onclick = ()=> endWorldCupEvent();
 
-  const top = document.createElement("div");
-  top.className = "row";
-  top.style.flexWrap = "wrap";
-  top.style.justifyContent = "space-between";
-  top.style.alignItems = "center";
-
-  const title = document.createElement("div");
-  title.className = "chip";
-  title.textContent = "EVENT MŚ 2026";
-  top.appendChild(title);
-
-  const info = document.createElement("div");
-  info.className = "row";
-  info.style.flexWrap = "wrap";
-  info.innerHTML = `<div class="chip">Pokój: <span>${currentRoom?.name || currentRoomCode || "—"}</span></div><div class="chip">Gracz: <span>${getNick() || "—"}</span></div>`;
-  top.appendChild(info);
-
-  const btns = document.createElement("div");
-  btns.className = "row";
-  btns.style.marginLeft = "auto";
-  const back = document.createElement("button");
-  back.className = "btn";
-  back.textContent = getLang()==='en' ? 'Back' : 'Cofnij';
-  back.onclick = ()=> modalClose();
-  const exit = document.createElement("button");
-  exit.className = "btn";
-  exit.textContent = getLang()==='en' ? 'Exit' : 'Wyjście';
-  exit.onclick = ()=> { modalClose(); showScreen('room'); };
-  btns.append(back, exit);
-  top.appendChild(btns);
-  wrap.appendChild(top);
-
-  const panel = document.createElement("div");
-  panel.className = "panel";
-  panel.style.padding = "16px";
-  panel.innerHTML = `
-    <div class="title" style="margin:0">EVENT MŚ 2026</div>
-    <div class="sub">Moduł eventowy. Kolejne funkcje dojdą w następnych zmianach.</div>
-  `;
-  wrap.appendChild(panel);
-
-  modalOpen("EVENT MŚ 2026", wrap);
+  const state = await wcGetState();
+  window.__wcState = state;
+  const matches = await wcFetchRoundMatches(state.activeRoundId);
+  const myPicks = await wcFetchMyPicks(state.activeRoundId);
+  body._els.matchesCount().textContent = String(matches.length);
+  const list = body._els.matchesList();
+  list.innerHTML='';
+  if(!matches.length){
+    const empty=document.createElement('div'); empty.className='sub'; empty.textContent=getLang()==='en'?'No active matches yet.':'Brak aktywnych meczów.'; list.appendChild(empty);
+  }else{
+    matches.forEach((m,idx)=>{
+      const row = document.createElement('div'); row.className='matchRow wcPickRow'; row.dataset.matchId = m.id; row.style.gridTemplateColumns='1fr 120px 140px';
+      const teams = document.createElement('div'); teams.className='team'; teams.innerHTML = `<span class="teamName">${idx+1}. ${m.home} — ${m.away}</span>`;
+      const pick = document.createElement('div'); pick.className='scoreBox';
+      const p1=document.createElement('input'); p1.type='number'; p1.className='scoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? '';
+      const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
+      const p2=document.createElement('input'); p2.type='number'; p2.className='scoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? '';
+      if(m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null){
+        p1.disabled=true; p2.disabled=true;
+      }
+      pick.append(p1,sep,p2);
+      const info = document.createElement('div'); info.className='resultPill';
+      if(m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null){
+        const pts = wcPointsForPick(myPicks[m.id]?.home,myPicks[m.id]?.away,m.resultHome,m.resultAway);
+        info.textContent = `${getLang()==='en'?'Result':'Wynik'}: ${m.resultHome}:${m.resultAway} • ${getLang()==='en'?'pts':'pkt'} ${pts ?? '—'}`;
+      }else{
+        info.textContent = getLang()==='en' ? 'Awaiting result' : 'Czeka na wynik';
+      }
+      row.append(teams,pick,info); list.appendChild(row);
+    });
+  }
+  const ranking = await wcComputeRanking();
+  const tbody = body._els.rankingBody(); tbody.innerHTML='';
+  let myPoints = 0;
+  ranking.forEach((r,idx)=>{
+    const tr=document.createElement('tr'); tr.innerHTML=`<td>${idx+1}</td><td>${r.nick}</td><td>${r.points}</td>`; tbody.appendChild(tr); if(r.uid===userUid) myPoints=r.points;
+  });
+  if(!ranking.length){ tbody.innerHTML='<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>'; }
+  body._els.myPoints().textContent = String(myPoints);
+}
+async function openWorldCupEvent(){
+  await renderWorldCupEvent();
 }
 
-function openWorldCupEvent(){
-  renderWorldCupEvent();
-}
-
+// ===== UI =====
 // ===== UI =====
 function bindUI(){
   // Modal
@@ -3703,20 +3929,6 @@ function bindUI(){
   const __btnSubYes = el("btnSubYes");
   if(__btnSubYes) __btnSubYes.onclick = ()=>{ /* intentionally inactive for now */ };
 
-
-  // WORLD CUP EVENT (mini-typer placeholder / separate module)
-  const __btnWorldCupBack = el("btnWorldCupBack");
-  if(__btnWorldCupBack) __btnWorldCupBack.onclick = ()=> showScreen("room");
-  const __btnWorldCupMatches = el("btnWorldCupMatches");
-  if(__btnWorldCupMatches) __btnWorldCupMatches.onclick = ()=> showToast(getLang()==="en" ? "World Cup matches panel ready." : "Panel meczów MŚ gotowy.");
-  const __btnWorldCupRanking = el("btnWorldCupRanking");
-  if(__btnWorldCupRanking) __btnWorldCupRanking.onclick = ()=> showToast(getLang()==="en" ? "World Cup ranking panel ready." : "Panel rankingu MŚ gotowy.");
-  const __btnWorldCupAdd = el("btnWorldCupAdd");
-  if(__btnWorldCupAdd) __btnWorldCupAdd.onclick = ()=> showToast(getLang()==="en" ? "Add World Cup matches." : "Dodawanie meczów MŚ.");
-  const __btnWorldCupResults = el("btnWorldCupResults");
-  if(__btnWorldCupResults) __btnWorldCupResults.onclick = ()=> showToast(getLang()==="en" ? "Enter World Cup results." : "Wpisywanie wyników MŚ.");
-  const __btnWorldCupEnd = el("btnWorldCupEnd");
-  if(__btnWorldCupEnd) __btnWorldCupEnd.onclick = ()=> showToast(getLang()==="en" ? "End World Cup round." : "Zakończenie kolejki MŚ.");
 
   // dodatkowy przycisk „Wyjście” po prawej stronie (obok „Tabela typerów”)
   const __btnExitFromRoomRight = el("btnExitFromRoomRight");
@@ -6922,8 +7134,7 @@ function shouldLockLandscape(){
   const active = document.querySelector('.screen.active')?.id || '';
   const lockScreens = new Set(["room","results","league","worldcup"]);
   const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
-  const portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
-  return isMobile && portrait && lockScreens.has(active);
+  return isMobile && lockScreens.has(active);
 }
 
 async function applyOrientationPreference(){
@@ -6938,9 +7149,15 @@ async function applyOrientationPreference(){
 
 function updateLandscapeLock(){
   const overlay = el("rotateOverlay");
-  const locked = shouldLockLandscape();
-  if(overlay) overlay.style.display = locked ? "flex" : "none";
-  document.body.classList.toggle("lockedPortrait", locked);
+  if(overlay) overlay.style.display = "none";
+  document.body.classList.remove("lockedPortrait");
+  const active = document.querySelector('.screen.active')?.id || '';
+  const lockScreens = new Set(["room","results","league","worldcup"]);
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 980px)").matches;
+  const isPortrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+  const shouldForce = !!(isMobile && isPortrait && lockScreens.has(active));
+  document.body.classList.toggle("forceLandscapeUI", shouldForce);
+  try{ if(shouldForce && document.documentElement.requestFullscreen && !document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); } }catch(e){}
   try{ applyOrientationPreference(); }catch(e){}
 }
 
@@ -6952,7 +7169,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.001`);
+    setFooter(`Mariusz Gębka v.2.008`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
