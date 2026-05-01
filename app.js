@@ -3827,7 +3827,8 @@ async function renderWorldCupEvent(){
   body._els.addRoundBtn().onclick = ()=> openWorldCupAddRoundModal();
   body._els.resultsBtn().onclick = ()=> openWorldCupResultsModal();
   body._els.endRoundBtn().onclick = ()=> endWorldCupRound();
-  body._els.endEventBtn().onclick = ()=> endWorldCupEvent();
+  const wcEndEventBtn = body._els.endEventBtn();
+  if(wcEndEventBtn) wcEndEventBtn.onclick = ()=> endWorldCupEvent();
 
   const state = await wcGetState();
   window.__wcState = state;
