@@ -556,7 +556,11 @@ function modalOpen(title, bodyNode){
   b.innerHTML = "";
   if(bodyNode) b.appendChild(bodyNode);
   const closeBtn = el("modalClose");
-  if(closeBtn) closeBtn.style.display = "";
+  if(closeBtn){
+    closeBtn.style.removeProperty('display');
+    closeBtn.style.removeProperty('visibility');
+    closeBtn.style.removeProperty('pointer-events');
+  }
   m.classList.add("active");
 }
 function modalClose(){
@@ -3527,10 +3531,14 @@ function wcEnsureEventStyles(){
   st.id = 'wcEventStyles';
   st.textContent = `
     #modal.worldcupMode .modalCard{width:min(1320px,96vw) !important;min-height:min(760px,92vh) !important;max-height:min(900px,94vh) !important;}
+    #modal.worldcupMode #modalClose{display:none !important;visibility:hidden !important;pointer-events:none !important;}
+    #modal.worldcupMode .modalHead .sysBtn#modalClose{display:none !important;visibility:hidden !important;pointer-events:none !important;}
     #modal.worldcupMode .modalBody{padding:18px !important;overflow:auto !important;}
     #modal.worldcupMode .wcEventBody{width:100%;min-height:650px;display:flex;flex-direction:column;}
     #modal.worldcupMode .wcEventGrid{display:grid;grid-template-columns:minmax(560px,1.45fr) minmax(360px,.95fr);gap:14px;flex:1;min-height:500px;align-items:stretch;}
-    #modal.worldcupMode .wcEventLeft{min-height:500px;}
+    #modal.worldcupMode .wcEventLeft{min-height:500px;display:flex;flex-direction:column;}
+    #modal.worldcupMode #wcMatchesList{flex:1;min-height:0;}
+    #modal.worldcupMode .wcBottomActions{margin-top:auto;min-height:84px;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.12);}
     #modal.worldcupMode .wcPickRow{padding:10px 12px !important;grid-template-columns:1fr 140px 170px !important;gap:12px !important;}
     #modal.worldcupMode .wcPickRow .scoreInput{width:46px;height:32px;font-size:15px;}
     #modal.worldcupMode .wcBtnImg img{height:54px !important;width:auto !important;max-width:190px !important;object-fit:contain;}
@@ -3644,11 +3652,11 @@ function wcBuildShell(){
   const grid = document.createElement('div');
   grid.className='wcEventGrid';
   const left = document.createElement('div'); left.className='panel wcEventLeft'; left.style.padding='16px';
-  left.innerHTML = `<div class="title" style="margin:0 0 12px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:10px"></div><div class="row wcSaveWrap" style="justify-content:center;margin-top:14px"></div>`;
+  left.innerHTML = `<div class="title" style="margin:0 0 12px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcSaveWrap" style="justify-content:center"></div><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div>`;
   left.querySelector('.wcSaveWrap').appendChild(wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy'));
   const right = document.createElement('div'); right.className='col'; right.style.gap='14px';
-  right.innerHTML = `<div id="wcAdminPanel" class="panel" style="padding:16px;display:none"><div class="title" style="margin:0 0 12px 0">Panel admina MŚ</div><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div>`;
-  const adminBtns = right.querySelector('.wcAdminButtons');
+  right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div>`;
+  const adminBtns = left.querySelector('.wcAdminButtons');
   adminBtns.append(
     wcMakeImgButton('btn_dodaj_kolejke.png', 'wcAddRoundBtn', getLang()==='en'?'Add round':'Dodaj kolejkę'),
     wcMakeImgButton('btn_dodaj_wyniki.png', 'wcResultsBtn', getLang()==='en'?'Enter results':'Wpisz wyniki'),
@@ -3663,7 +3671,7 @@ function wcBuildShell(){
     myPoints: ()=> body.querySelector('#wcMyPoints'),
     matchesList: ()=> body.querySelector('#wcMatchesList'),
     savePicksBtn: ()=> body.querySelector('#wcSavePicksBtn'),
-    adminPanel: ()=> body.querySelector('#wcAdminPanel'),
+    adminPanel: ()=> body.querySelector('.wcAdminButtons'),
     addRoundBtn: ()=> body.querySelector('#wcAddRoundBtn'),
     resultsBtn: ()=> body.querySelector('#wcResultsBtn'),
     endRoundBtn: ()=> body.querySelector('#wcEndRoundBtn'),
@@ -3806,9 +3814,15 @@ async function renderWorldCupEvent(){
   modalOpen('EVENT MŚ 2026', body);
   const wcModal = el('modal');
   if(wcModal) wcModal.classList.add('worldcupMode');
+  const wcCloseBtn = el('modalClose');
+  if(wcCloseBtn){
+    wcCloseBtn.style.setProperty('display','none','important');
+    wcCloseBtn.style.setProperty('visibility','hidden','important');
+    wcCloseBtn.style.setProperty('pointer-events','none','important');
+  }
   body._els.roomName().textContent = currentRoom?.name || currentRoomCode || '—';
   body._els.nick().textContent = getNick() || '—';
-  body._els.adminPanel().style.display = isAdmin() ? '' : 'none';
+  body._els.adminPanel().style.display = isAdmin() ? 'flex' : 'none';
   body._els.savePicksBtn().onclick = ()=> saveWorldCupPicks();
   body._els.addRoundBtn().onclick = ()=> openWorldCupAddRoundModal();
   body._els.resultsBtn().onclick = ()=> openWorldCupResultsModal();
