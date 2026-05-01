@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 2001)</title>
+    <title>Typer (BUILD 2014)</title>
 <link href="manifest.json" rel="manifest"/>
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
@@ -1682,6 +1682,111 @@
   #roomActionsCol .sysBtn img{ height: 64px; }
 }
 
+
+
+    /* ===== BUILD 2002: rooms/login mobile fit ===== */
+    #rooms .roomsBox > .row{flex-wrap:wrap; align-items:center;}
+    #rooms .roomsBox > .row .chip{max-width:100%;}
+    #rooms .block .row{flex-wrap:nowrap; min-width:0;}
+    #rooms .block .row input{min-width:0;}
+    #rooms .block .row .sysBtn img{height:64px; width:auto; max-width:42vw; object-fit:contain;}
+    #rooms .roomsBox > .row .sysBtn.small img{height:52px; width:auto; max-width:30vw; object-fit:contain;}
+    @media (max-width: 900px){
+      #rooms{padding:14px;}
+      .roomsBox{padding:14px; gap:10px;}
+      .block{padding:12px;}
+      #rooms .block .row .sysBtn img{height:54px; max-width:38vw;}
+      #rooms .roomsBox > .row .sysBtn.small img{height:46px; max-width:26vw;}
+    }
+    @media (max-width: 520px){
+      #rooms .block .row{gap:8px;}
+      #rooms .block .row .sysBtn img{height:48px; max-width:34vw;}
+      #rooms .roomsBox > .row .sysBtn.small img{height:40px; max-width:24vw;}
+      #rooms .block h2{font-size:18px;}
+    }
+
+
+    /* ===== BUILD 2003: mobile rooms button + forced landscape UI ===== */
+    @media (max-width: 700px){
+      #rooms .block .row .sysBtn img{height:42px !important; max-width:30vw !important;}
+      #rooms .roomsBox > .row .sysBtn.small img{height:34px !important; max-width:20vw !important;}
+      .modalHead .sysBtn.small img{height:38px !important; max-width:22vw !important;}
+      .modalHead{padding:10px 10px 8px 10px;}
+      .modalHead .chip{max-width:calc(100% - 92px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    }
+    @media (max-width: 980px) and (orientation: portrait){
+      body.forceLandscapeUI{overflow:hidden !important;}
+      body.forceLandscapeUI #app{
+        position:fixed !important;
+        inset:0 !important;
+        width:100vh !important;
+        height:100vw !important;
+        min-height:0 !important;
+        padding:0 !important;
+        transform-origin:top left !important;
+        transform:rotate(90deg) translateY(-100%) !important;
+        align-items:flex-start !important;
+        justify-content:flex-start !important;
+      }
+      body.forceLandscapeUI .frame{
+        width:100vw !important;
+        height:100vh !important;
+        min-height:0 !important;
+        max-width:none !important;
+        max-height:none !important;
+        border-radius:0 !important;
+      }
+    }
+    /* ===== BUILD 2008: mobile button sizing + better forced landscape ===== */
+    @media (max-width: 980px){
+      #btnJoinRoom{display:flex !important; justify-content:center !important; width:100% !important;}
+      #btnJoinRoom img{height:38px !important; width:auto !important; max-width:44vw !important; margin:0 auto !important;}
+    }
+    @media (max-width: 700px){
+      #btnCreateRoom img{height:56px !important; width:auto !important; max-width:42vw !important;}
+      #btnAddQueue img{height:46px !important; width:auto !important; max-width:56vw !important;}
+      .midHead #btnAddQueue img{height:46px !important; max-width:56vw !important;}
+    }
+    @media (max-width: 980px) and (orientation: portrait){
+      body.forceLandscapeUI{overflow:hidden !important; width:100vw !important; height:100vh !important;}
+      body.forceLandscapeUI #app{
+        position:fixed !important;
+        top:100vh !important;
+        left:0 !important;
+        inset:auto !important;
+        width:100vh !important;
+        height:100vw !important;
+        min-height:0 !important;
+        margin:0 !important;
+        padding:0 !important;
+        transform-origin:top left !important;
+        transform:rotate(-90deg) translateX(-100%) !important;
+        align-items:stretch !important;
+        justify-content:flex-start !important;
+        overflow:hidden !important;
+      }
+      body.forceLandscapeUI .frame{
+        width:100vh !important;
+        height:100vw !important;
+        min-height:0 !important;
+        max-width:none !important;
+        max-height:none !important;
+        border-radius:0 !important;
+        overflow:hidden !important;
+      }
+      body.forceLandscapeUI .screen.active{height:100% !important; width:100% !important;}
+      body.forceLandscapeUI #room,
+      body.forceLandscapeUI #results,
+      body.forceLandscapeUI #league,
+      body.forceLandscapeUI #worldcup{padding:8px !important; align-items:stretch !important; justify-content:flex-start !important;}
+      body.forceLandscapeUI #roomLayout{height:100% !important; overflow:hidden !important; padding:8px !important;}
+      body.forceLandscapeUI .leftBar,
+      body.forceLandscapeUI .mid,
+      body.forceLandscapeUI .rightBar{height:100% !important; min-height:0 !important;}
+      body.forceLandscapeUI .matchesWrap,
+      body.forceLandscapeUI .playersList{overflow:auto !important; -webkit-overflow-scrolling:touch !important;}
+    }
+
     /* language flags (top-right) */
     .homeLang{position:absolute; right:26px; top:18px; display:flex; gap:14px; z-index:50;}
     #btnLangPL, #btnLangEN{
@@ -1761,7 +1866,7 @@
     .footerRight{display:none !important;}
 
 
-    /* ===== BUILD 2001: mobile fit for room buttons/logo ===== */
+    /* ===== BUILD 2002: mobile fit for room/buttons/logo ===== */
     @media (max-width: 900px){
       #room .leftBar .imgBtn img,
       #room .rightBar .imgBtn img{
@@ -2425,7 +2530,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=2009" type="module"></script>
+<script src="./app.js?v=2014" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2445,14 +2550,120 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=2009').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=2015').catch(() => {});
     });
   }
 </script>
+
+<!-- WORLD CUP EVENT MODAL (BUILD 2009) -->
+<div aria-hidden="true" class="modal" id="worldcupModal">
+  <div aria-label="EVENT MŚ 2026" class="modalCard panel" role="dialog" style="width:min(1320px,96%); min-height:min(760px,92vh);">
+    <div class="modalHead">
+      <div class="chip" style="font-size:20px; font-weight:1000;">EVENT MŚ 2026</div>
+      <div class="spacer"></div>
+      <div class="chip">Pokój: <span id="worldcupRoomName">—</span></div>
+      <div class="chip">Gracz: <span id="worldcupNick">—</span></div>
+      <div class="chip">Mecze: <span id="worldcupMatchesCount">0</span></div>
+      <div class="chip">Punkty: <span id="worldcupPoints">0</span></div>
+      <button class="imgBtn sysBtn small" data-btn="btn_back.png" id="btnWorldCupModalBack" type="button">
+        <img alt="btnWorldCupModalBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
+      </button>
+      <button class="imgBtn sysBtn small" data-btn="btn_exit.png" id="btnWorldCupModalExit" type="button">
+        <img alt="btnWorldCupModalExit" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/>
+      </button>
+    </div>
+    <div class="modalBody" style="padding:16px; display:grid; grid-template-columns:1.35fr .95fr; gap:12px; min-height:0; align-items:stretch;">
+      <div class="panel" style="padding:14px; display:flex; flex-direction:column; min-height:520px;">
+        <div class="title" style="margin:0 0 10px 0;">Mecze MŚ</div>
+        <div id="worldcupMatchesList" style="display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0;flex:1;">
+          <div class="sub">Brak dodanych meczów MŚ.</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-height:0;">
+        <div class="panel" id="worldcupAdminPanel" style="padding:14px;display:none;">
+          <div class="title" style="margin:0 0 10px 0;">Panel admina MŚ</div>
+          <div class="row" style="gap:10px;flex-wrap:wrap;justify-content:center;">
+            <button class="imgBtn sysBtn small" id="btnWorldCupAdd" type="button" data-btn="btn_add_queue.png"><img data-btn="btn_add_queue.png" src="ui/buttons/pl/btn_add_queue.png" alt="Dodaj kolejkę"></button>
+            <button class="imgBtn sysBtn small" id="btnWorldCupResults" type="button" data-btn="btn_enter_results.png"><img data-btn="btn_enter_results.png" src="ui/buttons/pl/btn_enter_results.png" alt="Wpisz wyniki"></button>
+            <button class="imgBtn sysBtn small" id="btnWorldCupEnd" type="button" data-btn="btn_end_queue.png"><img data-btn="btn_end_queue.png" src="ui/buttons/pl/btn_end_queue.png" alt="Zakończ kolejkę"></button>
+          </div>
+        </div>
+        <div class="panel" style="padding:14px;display:flex;flex-direction:column;min-height:0;flex:1;">
+          <div class="title" style="margin:0 0 10px 0;">Ranking MŚ</div>
+          <div class="sub" style="margin-bottom:10px;">Na razie podgląd graczy pokoju. Punkty eventu dojdą w następnym kroku.</div>
+          <div style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10);min-height:0;flex:1;">
+            <table>
+              <thead>
+                <tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr>
+              </thead>
+              <tbody id="worldcupRankingBody">
+                <tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="worldCupAddOverlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:95;padding:16px;">
+  <div class="panel" style="width:min(760px,94vw);padding:18px;display:flex;flex-direction:column;gap:12px;">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:10px;">
+      <div class="title" style="margin:0;">Dodaj mecz MŚ</div>
+      <button class="imgBtn sysBtn small" id="btnWorldCupAddClose" type="button" data-btn="btn_exit.png"><img data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png" alt="Zamknij"></button>
+    </div>
+    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <div style="flex:1;min-width:220px;">
+        <div class="sub" style="margin-bottom:6px;">Gospodarz</div>
+        <select id="wcHomeSelect" class="mqClubSelect" style="width:100%;"></select>
+      </div>
+      <div style="flex:1;min-width:220px;">
+        <div class="sub" style="margin-bottom:6px;">Gość</div>
+        <select id="wcAwaySelect" class="mqClubSelect" style="width:100%;"></select>
+      </div>
+      <div style="min-width:120px;display:flex;justify-content:center;">
+        <button id="btnWorldCupAddMatchDraft" type="button" class="mqAddMatchBtn" style="width:120px;">+ Dodaj</button>
+      </div>
+    </div>
+    <div class="chip" id="worldCupMatchPreview" style="justify-content:center;">—</div>
+    <div id="worldCupDraftCount" class="mqCount">Mecze: 0</div>
+    <div id="worldCupDraftList" class="mqMatchesList" style="max-height:240px;">
+      <div class="mqEmpty">Nie dodano jeszcze meczów.</div>
+    </div>
+    <div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap;">
+      <button class="imgBtn sysBtn" id="btnWorldCupSaveMatch" type="button" data-btn="btn_save_queue.png"><img data-btn="btn_save_queue.png" src="ui/buttons/pl/btn_save_queue.png" alt="Zapisz kolejkę"></button>
+      <button class="imgBtn sysBtn" id="btnWorldCupBackToEvent" type="button" data-btn="btn_back.png"><img data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png" alt="Cofnij"></button>
+    </div>
+  </div>
+</div>
+
+<div id="worldCupEndConfirmOverlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:96;padding:16px;">
+  <div class="panel" style="width:min(720px,94vw);padding:18px;display:flex;flex-direction:column;gap:14px;">
+    <div class="title" style="margin:0;">Koniec eventu MŚ</div>
+    <div class="sub">Kliknięcie zakończy event. To wydarzenie nie ma stałej liczby kolejek ani meczów — kończysz je ręcznie.</div>
+    <div class="chip" style="justify-content:center;">Czy zakończyć event i ogłosić zwycięzcę?</div>
+    <div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap;">
+      <button class="imgBtn sysBtn" id="btnWorldCupFinishConfirm" type="button" data-btn="btn_yes.png"><img data-btn="btn_yes.png" src="ui/buttons/pl/btn_yes.png" alt="Tak"></button>
+      <button class="imgBtn sysBtn" id="btnWorldCupFinishCancel" type="button" data-btn="btn_no.png"><img data-btn="btn_no.png" src="ui/buttons/pl/btn_no.png" alt="Nie"></button>
+    </div>
+  </div>
+</div>
+<div id="worldCupWinnerOverlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:97;padding:16px;">
+  <div class="panel" style="width:min(760px,94vw);padding:20px;display:flex;flex-direction:column;gap:14px;align-items:center;">
+    <div class="title" style="margin:0;">Koniec eventu MŚ 2026</div>
+    <div class="chip" style="font-size:18px;font-weight:1000;justify-content:center;">Zwycięzca eventu</div>
+    <div id="worldCupWinnerBox" class="panel" style="padding:18px 22px;min-width:min(420px,84vw);text-align:center;background:rgba(0,0,0,.18);">
+      <div id="worldCupWinnerNick" style="font-size:28px;font-weight:1000;">—</div>
+      <div id="worldCupWinnerPts" class="sub" style="margin-top:8px;font-size:16px;">0 pkt</div>
+    </div>
+    <button class="imgBtn sysBtn" id="btnWorldCupWinnerClose" type="button" data-btn="btn_close.png"><img data-btn="btn_close.png" src="ui/buttons/pl/btn_close.png" alt="Zamknij"></button>
+  </div>
+</div>
+
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.001</div>
+<div id="buildCornerText">Mariusz Gębka v.2.016</div>
 </div>
 </body>
 </html>
