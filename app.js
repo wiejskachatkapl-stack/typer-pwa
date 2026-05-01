@@ -564,6 +564,7 @@ function modalClose(){
   if(m){
     m.classList.remove("active");
     m.classList.remove("profileMode");
+    m.classList.remove("worldcupMode");
   }
   const mb = el("modalBack");
   if(mb) mb.remove();
@@ -3570,7 +3571,7 @@ async function wcFetchMyPicks(roundId){
 }
 function wcBuildShell(){
   const body = document.createElement('div');
-  body.className = 'col';
+  body.className = 'col wcEventShell';
   body.style.gap = '12px';
   const top = document.createElement('div');
   top.className = 'row';
@@ -3587,9 +3588,9 @@ function wcBuildShell(){
   const exit = document.createElement('button'); exit.className='btn'; exit.textContent=getLang()==='en'?'Exit':'Wyjście'; exit.onclick=()=>{modalClose(); showScreen('room');};
   btns.append(back, exit); top.appendChild(btns); body.appendChild(top);
   const grid = document.createElement('div');
-  grid.style.display='grid'; grid.style.gridTemplateColumns='1.4fr 1fr'; grid.style.gap='12px';
-  const left = document.createElement('div'); left.className='panel'; left.style.padding='14px';
-  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:8px"></div><div class="row" style="justify-content:center;margin-top:12px"><button id="wcSavePicksBtn" class="btn">Zapisz typy</button></div>`;
+  grid.className='wcEventGrid'; grid.style.display='grid'; grid.style.gridTemplateColumns='1.55fr .95fr'; grid.style.gap='14px';
+  const left = document.createElement('div'); left.className='panel wcMatchesPanel'; left.style.padding='16px';
+  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:10px"></div><div class="row" style="justify-content:center;margin-top:12px"><button id="wcSavePicksBtn" class="btn">Zapisz typy</button></div>`;
   const right = document.createElement('div'); right.className='col'; right.style.gap='12px';
   right.innerHTML = `<div id="wcAdminPanel" class="panel" style="padding:14px;display:none"><div class="title" style="margin:0 0 10px 0">Panel admina MŚ</div><div class="row" style="flex-wrap:wrap;justify-content:center"><button id="wcAddRoundBtn" class="btn">Dodaj kolejkę</button><button id="wcResultsBtn" class="btn">Wpisz wyniki</button><button id="wcEndRoundBtn" class="btn">Zakończ kolejkę</button><button id="wcEndEventBtn" class="btn">Koniec</button></div></div><div class="panel" style="padding:14px"><div class="title" style="margin:0 0 10px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div>`;
   grid.append(left,right); body.appendChild(grid);
@@ -3683,9 +3684,9 @@ async function openWorldCupResultsModal(){
     const row = document.createElement('div'); row.className='matchCard'; row.style.gridTemplateColumns='1fr 120px 1fr';
     const t1 = document.createElement('div'); t1.className='team'; t1.textContent=m.home;
     const mid = document.createElement('div'); mid.className='scoreBox';
-    const i1=document.createElement('input'); i1.type='number'; i1.className='scoreInput'; i1.value=m.resultHome ?? '';
+    const i1=document.createElement('input'); i1.type='text'; i1.inputMode='numeric'; i1.pattern='[0-9]*'; i1.className='scoreInput wcScoreInput'; i1.value=m.resultHome ?? '';
     const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
-    const i2=document.createElement('input'); i2.type='number'; i2.className='scoreInput'; i2.value=m.resultAway ?? '';
+    const i2=document.createElement('input'); i2.type='text'; i2.inputMode='numeric'; i2.pattern='[0-9]*'; i2.className='scoreInput wcScoreInput'; i2.value=m.resultAway ?? '';
     mid.append(i1,sep,i2);
     const t2 = document.createElement('div'); t2.className='team'; t2.style.justifyContent='flex-end'; t2.textContent=m.away;
     row.append(t1,mid,t2); row.dataset.matchId=m.id; row._home=i1; row._away=i2; body.appendChild(row);
@@ -3705,6 +3706,7 @@ async function openWorldCupResultsModal(){
     await openWorldCupEvent();
   };
   modalOpen(getLang()==='en' ? 'World Cup results' : 'Wyniki MŚ', body);
+  const mm = el('modal'); if(mm) mm.classList.add('worldcupMode');
 }
 async function endWorldCupRound(){
   const state = await wcGetState();
@@ -3730,6 +3732,7 @@ async function renderWorldCupEvent(){
   if(!currentRoomCode){ showToast(getLang()==='en'?'No room':'Brak pokoju'); return; }
   const body = wcBuildShell();
   modalOpen('EVENT MŚ 2026', body);
+  const wm = el('modal'); if(wm) wm.classList.add('worldcupMode');
   body._els.roomName().textContent = currentRoom?.name || currentRoomCode || '—';
   body._els.nick().textContent = getNick() || '—';
   body._els.adminPanel().style.display = isAdmin() ? '' : 'none';
@@ -3750,12 +3753,12 @@ async function renderWorldCupEvent(){
     const empty=document.createElement('div'); empty.className='sub'; empty.textContent=getLang()==='en'?'No active matches yet.':'Brak aktywnych meczów.'; list.appendChild(empty);
   }else{
     matches.forEach((m,idx)=>{
-      const row = document.createElement('div'); row.className='matchRow wcPickRow'; row.dataset.matchId = m.id; row.style.gridTemplateColumns='1fr 120px 140px';
+      const row = document.createElement('div'); row.className='matchRow wcPickRow'; row.dataset.matchId = m.id; row.style.gridTemplateColumns='1fr 145px 170px';
       const teams = document.createElement('div'); teams.className='team'; teams.innerHTML = `<span class="teamName">${idx+1}. ${m.home} — ${m.away}</span>`;
       const pick = document.createElement('div'); pick.className='scoreBox';
-      const p1=document.createElement('input'); p1.type='number'; p1.className='scoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? '';
+      const p1=document.createElement('input'); p1.type='text'; p1.inputMode='numeric'; p1.pattern='[0-9]*'; p1.className='scoreInput wcScoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? '';
       const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
-      const p2=document.createElement('input'); p2.type='number'; p2.className='scoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? '';
+      const p2=document.createElement('input'); p2.type='text'; p2.inputMode='numeric'; p2.pattern='[0-9]*'; p2.className='scoreInput wcScoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? '';
       if(m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null){
         p1.disabled=true; p2.disabled=true;
       }
