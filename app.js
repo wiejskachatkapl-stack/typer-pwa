@@ -3804,6 +3804,63 @@ async function saveWorldCupRound(){
   showToast(getLang()==='en'?'Round saved':'Zapisano kolejkę');
   await openWorldCupEvent();
 }
+function wcAskTypingDeadlineMs(defaultMs){
+  return new Promise(resolve=>{
+    const host = document.getElementById('modal') || document.body;
+    const overlay = document.createElement('div');
+    overlay.style.position = 'absolute';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '999';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.background = 'rgba(0,0,0,.58)';
+    overlay.style.backdropFilter = 'blur(6px)';
+    overlay.style.webkitBackdropFilter = 'blur(6px)';
+    const card = document.createElement('div');
+    card.className = 'panel col';
+    card.style.width = 'min(520px, 92vw)';
+    card.style.padding = '18px';
+    card.style.gap = '14px';
+    card.style.borderRadius = '22px';
+    card.style.boxShadow = '0 18px 60px rgba(0,0,0,.55)';
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.style.margin = '0';
+    title.textContent = getLang()==='en' ? 'Set typing deadline' : 'Ustaw koniec typowania';
+    const info = document.createElement('div');
+    info.className = 'sub';
+    info.textContent = getLang()==='en' ? 'Choose date and time before saving the World Cup round.' : 'Wybierz datę i godzinę przed zapisaniem kolejki MŚ.';
+    const input = document.createElement('input');
+    input.type = 'datetime-local';
+    input.className = 'input';
+    input.value = toDateTimeLocal(defaultMs || wcDefaultDeadlineMs());
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.justifyContent = 'center';
+    row.style.gap = '12px';
+    row.style.flexWrap = 'wrap';
+    const ok = document.createElement('button');
+    ok.className = 'btn';
+    ok.textContent = getLang()==='en' ? 'Save' : 'Zapisz';
+    const cancel = document.createElement('button');
+    cancel.className = 'btn';
+    cancel.textContent = getLang()==='en' ? 'Back' : 'Cofnij';
+    const close = (val)=>{ try{ overlay.remove(); }catch{} resolve(val); };
+    ok.onclick = ()=>{
+      const ms = Date.parse(input.value || '');
+      if(!isFinite(ms)){ showToast(getLang()==='en'?'Set typing deadline':'Ustaw czas końca typowania'); return; }
+      close(ms);
+    };
+    cancel.onclick = ()=> close(null);
+    row.append(ok,cancel);
+    card.append(title,info,input,row);
+    overlay.appendChild(card);
+    host.appendChild(overlay);
+    setTimeout(()=>input.focus(),50);
+  });
+}
+
 async function openWorldCupAddRoundModal(){
   if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
   const pending = [];
@@ -3814,10 +3871,6 @@ async function openWorldCupAddRoundModal(){
   const add = document.createElement('button'); add.className='btn'; add.textContent = getLang()==='en' ? '+ Add' : '+ Dodaj';
   row.append(hw,aw,add); body.appendChild(row);
   const list = document.createElement('div'); list.className='panel'; list.style.padding='12px'; list.style.maxHeight='34vh'; list.style.overflow='auto'; body.appendChild(list);
-  const deadlineWrap = document.createElement('div'); deadlineWrap.className='panel col'; deadlineWrap.style.padding='12px'; deadlineWrap.style.gap='8px';
-  const deadlineLabel = document.createElement('div'); deadlineLabel.className='sub'; deadlineLabel.textContent = getLang()==='en' ? 'Typing deadline' : 'Koniec możliwości typowania';
-  const deadlineInput = document.createElement('input'); deadlineInput.type='datetime-local'; deadlineInput.className='input'; deadlineInput.value = toDateTimeLocal(wcDefaultDeadlineMs());
-  deadlineWrap.append(deadlineLabel, deadlineInput); body.appendChild(deadlineWrap);
   const render=()=>{ list.innerHTML=''; if(!pending.length){ const e=document.createElement('div'); e.className='sub'; e.textContent=getLang()==='en'?'No matches added yet.':'Nie dodano jeszcze meczów.'; list.appendChild(e); return;} pending.forEach((m,idx)=>{ const r=document.createElement('div'); r.className='row'; r.style.justifyContent='space-between'; r.style.padding='8px 10px'; r.style.border='1px solid rgba(255,255,255,.10)'; r.style.borderRadius='12px'; r.style.background='rgba(0,0,0,.14)'; const txt=document.createElement('div'); txt.style.fontWeight='900'; txt.textContent=`${idx+1}. ${m.home} — ${m.away}`; const del=document.createElement('button'); del.className='btnSmall btn'; del.textContent=getLang()==='en'?'Delete':'Usuń'; del.onclick=()=>{ pending.splice(idx,1); render(); }; r.append(txt,del); list.appendChild(r);});}; render();
   add.onclick=()=>{ if(!hs.value || !as.value || hs.value===as.value){ showToast(getLang()==='en'?'Choose two different teams':'Wybierz dwie różne drużyny'); return; } pending.push({home:hs.value, away:as.value}); render(); };
   const footer = document.createElement('div'); footer.className='row'; footer.style.justifyContent='center'; footer.style.flexWrap='wrap';
@@ -3826,8 +3879,8 @@ async function openWorldCupAddRoundModal(){
   footer.append(save,back); body.appendChild(footer);
   save.onclick = async ()=>{
     if(!pending.length){ showToast(getLang()==='en'?'Add at least one match':'Dodaj przynajmniej jeden mecz'); return; }
-    const deadlineMs = Date.parse(deadlineInput.value || '');
-    if(!isFinite(deadlineMs)){ showToast(getLang()==='en'?'Set typing deadline':'Ustaw czas końca typowania'); return; }
+    const deadlineMs = await wcAskTypingDeadlineMs(wcDefaultDeadlineMs());
+    if(!deadlineMs) return;
     const state = await wcGetState();
     const roundId = state.activeRoundId || `round_${Date.now()}`;
     const roundNo = state.activeRoundId ? (state.currentRoundNo || state.nextRoundNo || 1) : (state.nextRoundNo || 1);
@@ -3929,7 +3982,6 @@ async function renderWorldCupEvent(){
   const roundIsSaved = !!(roundMeta.savedAt || roundMeta.status === 'saved');
   const wcDeadlineMs = wcParseMs(roundMeta.typingDeadlineMs ?? roundMeta.typingDeadline ?? null);
   const wcTypingClosed = !!(wcDeadlineMs && Date.now() >= wcDeadlineMs);
-  wcRenderDeadline(matches.length ? wcDeadlineMs : null);
   const setAdminBtnState = (node, enabled)=>{
     if(!node) return;
     node.style.display = isAdmin() ? 'inline-flex' : 'none';
@@ -3943,6 +3995,15 @@ async function renderWorldCupEvent(){
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists;
+  const myPicksSavedOrLocked = myPicksAlreadySaved || wcArePicksSavedLocal(state.activeRoundId);
+  const wcDeadlineBox = document.getElementById('wcDeadlineBox');
+  if(myPicksSavedOrLocked){
+    if(window.__wcDeadlineTimer){ clearInterval(window.__wcDeadlineTimer); window.__wcDeadlineTimer = null; }
+    if(wcDeadlineBox) wcDeadlineBox.style.display = 'none';
+  }else{
+    if(wcDeadlineBox) wcDeadlineBox.style.display = '';
+    wcRenderDeadline(matches.length ? wcDeadlineMs : null);
+  }
   const savePicksBtn = body._els.savePicksBtn();
   body._els.matchesCount().textContent = String(matches.length);
   const list = body._els.matchesList();
