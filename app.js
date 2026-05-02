@@ -4118,6 +4118,105 @@ async function endWorldCupRound(){
   showToast(getLang()==='en'?'Round ended':'Zakończono kolejkę');
   await openWorldCupEvent();
 }
+async function wcConfirmEndEvent(){
+  return new Promise(resolve=>{
+    const host = document.getElementById('modal') || document.body;
+    const overlay = document.createElement('div');
+    overlay.style.position = 'absolute';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '1000';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.background = 'rgba(0,0,0,.58)';
+    overlay.style.backdropFilter = 'blur(6px)';
+    overlay.style.webkitBackdropFilter = 'blur(6px)';
+
+    const card = document.createElement('div');
+    card.className = 'panel col';
+    card.style.width = 'min(620px, 92vw)';
+    card.style.padding = '22px';
+    card.style.gap = '18px';
+    card.style.borderRadius = '22px';
+    card.style.boxShadow = '0 18px 60px rgba(0,0,0,.55)';
+    card.style.textAlign = 'center';
+
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.style.margin = '0';
+    title.textContent = getLang()==='en' ? 'Confirm ending the event?' : 'Czy potwierdzasz zakończenie Eventu?';
+
+    const info = document.createElement('div');
+    info.className = 'sub';
+    info.textContent = getLang()==='en'
+      ? 'This will definitively end the World Cup event and announce the final winners.'
+      : 'To definitywnie zakończy Event MŚ i ogłosi zwycięzców końcowych.';
+
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.justifyContent = 'center';
+    row.style.gap = '18px';
+    row.style.flexWrap = 'wrap';
+
+    const yes = makeSysImgButton('btn_tak.png', {cls:'sysBtn', alt:getLang()==='en'?'Yes':'TAK', title:getLang()==='en'?'Yes':'TAK'});
+    const no = makeSysImgButton('btn_nie.png', {cls:'sysBtn', alt:getLang()==='en'?'No':'NIE', title:getLang()==='en'?'No':'NIE'});
+
+    const finish = (val)=>{ try{ overlay.remove(); }catch{} resolve(val); };
+    yes.onclick = ()=> finish(true);
+    no.onclick = ()=> finish(false);
+
+    row.append(yes, no);
+    card.append(title, info, row);
+    overlay.appendChild(card);
+    overlay.addEventListener('click', e=>{ if(e.target === overlay) finish(false); });
+    host.appendChild(overlay);
+  });
+}
+function wcShowFinalWinnersForFiveSeconds(winners){
+  return new Promise(resolve=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'col';
+    wrap.style.gap = '16px';
+    wrap.style.alignItems = 'stretch';
+
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.style.textAlign = 'center';
+    title.textContent = getLang()==='en' ? 'Final event winners' : 'Zwycięzcy Eventu MŚ';
+    wrap.appendChild(title);
+
+    winners.forEach((r, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'playerRow';
+      row.style.padding = '14px 16px';
+      row.style.fontSize = '18px';
+      row.style.minHeight = '58px';
+      const place = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : '🥉');
+      const left = document.createElement('div');
+      left.style.fontWeight = '1000';
+      left.textContent = `${place} ${idx+1}. ${r.nick}`;
+      const pts = document.createElement('div');
+      pts.className = 'badge';
+      pts.textContent = getLang()==='en' ? `${r.points} pts` : `${r.points} pkt`;
+      row.append(left, pts);
+      wrap.appendChild(row);
+    });
+
+    modalOpen(getLang()==='en' ? 'Event winners' : 'Zwycięzcy eventu', wrap);
+    const m = document.getElementById('modal');
+    const c = document.getElementById('modalClose');
+    if(m) m.classList.add('worldcupMode');
+    if(c){
+      c.style.setProperty('display','none','important');
+      c.style.setProperty('visibility','hidden','important');
+      c.style.setProperty('pointer-events','none','important');
+    }
+    setTimeout(async ()=>{
+      try{ modalClose(); }catch{}
+      resolve();
+    }, 5000);
+  });
+}
 async function endWorldCupEvent(){
   if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
   const state = await wcGetState();
@@ -4131,48 +4230,14 @@ async function endWorldCupEvent(){
     return;
   }
 
+  const ok = await wcConfirmEndEvent();
+  if(!ok) return;
+
   await wcSetState({ended:true, endedAt: boot.serverTimestamp(), activeRoundId:null});
-
-  const winners = ranking.slice(0,3);
-  const wrap = document.createElement('div');
-  wrap.className = 'col';
-  wrap.style.gap = '12px';
-
-  const title = document.createElement('div');
-  title.className = 'title';
-  title.textContent = getLang()==='en' ? 'World Cup Event finished' : 'Event MŚ zakończony';
-  wrap.appendChild(title);
-
-  const info = document.createElement('div');
-  info.className = 'sub';
-  info.textContent = getLang()==='en' ? 'Final winners:' : 'Zwycięzcy końcowi:';
-  wrap.appendChild(info);
-
-  winners.forEach((r, idx)=>{
-    const row = document.createElement('div');
-    row.className = 'playerRow';
-    row.style.padding = '12px 14px';
-    row.style.fontSize = '15px';
-    const place = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : '🥉');
-    const left = document.createElement('div');
-    left.style.fontWeight = '1000';
-    left.textContent = `${place} ${idx+1}. ${r.nick}`;
-    const pts = document.createElement('div');
-    pts.className = 'badge';
-    pts.textContent = getLang()==='en' ? `${r.points} pts` : `${r.points} pkt`;
-    row.append(left, pts);
-    wrap.appendChild(row);
-  });
-
-  const footer = document.createElement('div');
-  footer.className = 'row';
-  footer.style.justifyContent = 'center';
-  footer.style.marginTop = '8px';
-  footer.appendChild(wcMakeImgButton('btn_zamknij.png', 'wcEndEventCloseBtn', getLang()==='en'?'Close':'Zamknij', async ()=>{ modalClose(); await openWorldCupEvent(); }));
-  wrap.appendChild(footer);
-
-  modalOpen(getLang()==='en' ? 'Event winners' : 'Zwycięzcy eventu', wrap);
+  await wcShowFinalWinnersForFiveSeconds(ranking.slice(0,3));
+  await openWorldCupEvent();
 }
+
 async function renderWorldCupEvent(){
   if(!currentRoomCode){ showToast(getLang()==='en'?'No room':'Brak pokoju'); return; }
   const body = wcBuildShell();
