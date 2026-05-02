@@ -3682,7 +3682,161 @@ async function wcFetchMyPicksDoc(roundId){
   }
   return {exists:false, picks:{}};
 }
+async function wcFetchAllPicks(roundId){
+  if(!roundId) return {};
+  const out = {};
+  try{
+    const qs = await boot.getDocs(boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks'));
+    qs.forEach(d=>{
+      const data = d.data() || {};
+      out[d.id] = Object.assign({uid:d.id}, data, {picks:(data.picks || {})});
+    });
+  }catch{}
+  return out;
+}
+function wcHasCompletePicksForMatches(picks, matches){
+  const arr = Array.isArray(matches) ? matches : [];
+  const obj = picks || {};
+  if(!arr.length) return false;
+  return arr.every(m=>{
+    const p = obj[m.id] || {};
+    return p.home !== undefined && p.home !== null && String(p.home).trim() !== '' &&
+           p.away !== undefined && p.away !== null && String(p.away).trim() !== '';
+  });
+}
+function wcPlayerRoundPoints(picks, matches){
+  let pts = 0;
+  (matches || []).forEach(m=>{
+    if(m.resultHome===undefined || m.resultHome===null || m.resultAway===undefined || m.resultAway===null) return;
+    const p = (picks || {})[m.id] || {};
+    const val = wcPointsForPick(p.home, p.away, m.resultHome, m.resultAway);
+    if(val != null) pts += val;
+  });
+  return pts;
+}
+function openWorldCupPicksPreview(player, matches, picksObj){
+  const nick = player?.nick || '—';
+  const hasPicks = wcHasCompletePicksForMatches(picksObj, matches);
+  const host = document.getElementById('modal') || document.body;
+  const overlay = document.createElement('div');
+  overlay.style.position = 'absolute';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '1000';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.background = 'rgba(0,0,0,.58)';
+  overlay.style.backdropFilter = 'blur(6px)';
+  overlay.style.webkitBackdropFilter = 'blur(6px)';
+
+  const card = document.createElement('div');
+  card.className = 'panel';
+  card.style.width = 'min(980px, 94vw)';
+  card.style.maxHeight = '88vh';
+  card.style.overflow = 'auto';
+  card.style.padding = '18px';
+  card.style.borderRadius = '22px';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'col';
+  wrap.style.gap = '10px';
+
+  const top = document.createElement('div');
+  top.className = 'row';
+  top.style.flexWrap = 'wrap';
+  top.style.justifyContent = 'space-between';
+
+  const left = document.createElement('div');
+  left.className = 'row';
+  left.style.flexWrap = 'wrap';
+  left.style.gap = '10px';
+
+  const titleChip = document.createElement('div');
+  titleChip.className = 'chip';
+  titleChip.textContent = (getLang()==='en') ? `Player: ${nick}` : `Gracz: ${nick}`;
+
+  const matchesChip = document.createElement('div');
+  matchesChip.className = 'chip';
+  matchesChip.textContent = (getLang()==='en') ? `Matches: ${(matches||[]).length}` : `Mecze: ${(matches||[]).length}`;
+
+  const ptsChip = document.createElement('div');
+  ptsChip.className = 'chip';
+  const allResultsReady = (matches||[]).length && (matches||[]).every(m=>m.resultHome!==undefined && m.resultHome!==null && m.resultAway!==undefined && m.resultAway!==null);
+  ptsChip.textContent = allResultsReady && hasPicks
+    ? ((getLang()==='en') ? `POINTS: ${wcPlayerRoundPoints(picksObj, matches)}` : `PUNKTY: ${wcPlayerRoundPoints(picksObj, matches)}`)
+    : ((getLang()==='en') ? 'POINTS: —' : 'PUNKTY: —');
+
+  left.append(titleChip, matchesChip, ptsChip);
+  const closeBtn = wcMakeImgButton('btn_cofnij.png', null, getLang()==='en'?'Back':'Cofnij', ()=>{ try{ overlay.remove(); }catch{} });
+  top.append(left, closeBtn);
+  wrap.appendChild(top);
+
+  if(!hasPicks){
+    const info = document.createElement('div');
+    info.className = 'sub';
+    info.textContent = (getLang()==='en')
+      ? 'This player has not saved picks for this round.'
+      : 'Ten gracz nie oddał jeszcze typów w tej kolejce.';
+    wrap.appendChild(info);
+    card.appendChild(wrap); overlay.appendChild(card); host.appendChild(overlay);
+    return;
+  }
+
+  (matches || []).forEach((m, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'matchCard';
+
+    const leftTeam = document.createElement('div');
+    leftTeam.className = 'team';
+    const ln = document.createElement('div');
+    ln.className = 'teamName';
+    ln.textContent = `${idx+1}. ${m.home || '—'}`;
+    leftTeam.appendChild(ln);
+
+    const center = document.createElement('div');
+    center.className = 'scoreBox';
+    center.style.flexWrap = 'wrap';
+    center.style.justifyContent = 'center';
+    const p = (picksObj || {})[m.id] || {};
+
+    const pickPill = document.createElement('div');
+    pickPill.className = 'resultPill';
+    pickPill.textContent = (getLang()==='en') ? `Pick: ${p.home ?? '—'}:${p.away ?? '—'}` : `Typ: ${p.home ?? '—'}:${p.away ?? '—'}`;
+    center.appendChild(pickPill);
+
+    if(m.resultHome!==undefined && m.resultHome!==null && m.resultAway!==undefined && m.resultAway!==null){
+      const dot = document.createElement('span');
+      const pts = wcPointsForPick(p.home, p.away, m.resultHome, m.resultAway);
+      dot.className = 'dot ' + (pts === 3 ? 'green' : (pts === 1 ? 'yellow' : (pts === 0 ? 'red' : 'gray')));
+      const resPill = document.createElement('div');
+      resPill.className = 'resultPill';
+      resPill.textContent = (getLang()==='en') ? `Result: ${m.resultHome}:${m.resultAway}` : `Wynik: ${m.resultHome}:${m.resultAway}`;
+      const ptsPill = document.createElement('div');
+      ptsPill.className = 'resultPill';
+      ptsPill.textContent = (getLang()==='en') ? `pts: ${pts ?? '—'}` : `pkt: ${pts ?? '—'}`;
+      center.append(dot, resPill, ptsPill);
+    }
+
+    const rightTeam = document.createElement('div');
+    rightTeam.className = 'team';
+    rightTeam.style.justifyContent = 'flex-end';
+    const rn = document.createElement('div');
+    rn.className = 'teamName';
+    rn.style.textAlign = 'right';
+    rn.textContent = m.away || '—';
+    rightTeam.appendChild(rn);
+
+    row.append(leftTeam, center, rightTeam);
+    wrap.appendChild(row);
+  });
+
+  card.appendChild(wrap);
+  overlay.appendChild(card);
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay){ try{ overlay.remove(); }catch{} } });
+  host.appendChild(overlay);
+}
 function wcBuildShell(){
+
   wcEnsureEventStyles();
   const body = document.createElement('div');
   body.className = 'col wcEventBody';
@@ -3708,7 +3862,7 @@ function wcBuildShell(){
   left.innerHTML = `<div class="title" style="margin:0 0 12px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div>`;
   const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
   const right = document.createElement('div'); right.className='col'; right.style.gap='14px';
-  right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div>`;
+  right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Gracze MŚ</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
   const adminBtns = left.querySelector('.wcAdminButtons');
   adminBtns.append(
     wcMakeImgButton('btn_dodaj_kolejke.png', 'wcAddRoundBtn', getLang()==='en'?'Add round':'Dodaj kolejkę'),
@@ -3729,7 +3883,8 @@ function wcBuildShell(){
     resultsBtn: ()=> body.querySelector('#wcResultsBtn'),
     endRoundBtn: ()=> body.querySelector('#wcEndRoundBtn'),
     endEventBtn: ()=> body.querySelector('#wcEndEventBtn'),
-    rankingBody: ()=> body.querySelector('#wcRankingBody')
+    rankingBody: ()=> body.querySelector('#wcRankingBody'),
+    playersList: ()=> body.querySelector('#wcPlayersList')
   };
   return body;
 }
@@ -3993,6 +4148,7 @@ async function renderWorldCupEvent(){
   setAdminBtnState(body._els.resultsBtn(), !!matches.length && roundIsSaved && !allResultsSaved);
   setAdminBtnState(body._els.endRoundBtn(), !!matches.length && roundIsSaved && allResultsSaved);
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
+  const roundPicksByUid = await wcFetchAllPicks(state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists;
   const myPicksSavedOrLocked = myPicksAlreadySaved || wcArePicksSavedLocal(state.activeRoundId);
@@ -4058,7 +4214,87 @@ async function renderWorldCupEvent(){
   });
   if(!ranking.length){ tbody.innerHTML='<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>'; }
   body._els.myPoints().textContent = String(myPoints);
+
+  const playersBox = body._els.playersList ? body._els.playersList() : null;
+  if(playersBox){
+    playersBox.innerHTML = '';
+    const visiblePlayers = (lastPlayers || []).filter(p => String(p?.playerNo || '').trim());
+    const adminUid = currentRoom?.adminUid;
+    if(!visiblePlayers.length){
+      const empty = document.createElement('div');
+      empty.className = 'sub';
+      empty.textContent = getLang()==='en' ? 'No players to display.' : 'Brak graczy do wyświetlenia.';
+      playersBox.appendChild(empty);
+    }else{
+      visiblePlayers.forEach(p=>{
+        const row = document.createElement('div');
+        row.className = 'playerRow';
+
+        const left = document.createElement('div');
+        left.style.display = 'flex';
+        left.style.alignItems = 'center';
+        left.style.gap = '8px';
+        left.style.minWidth = '0';
+
+        const dot = document.createElement('div');
+        const active = isPlayerActive(p);
+        dot.style.width = '8px';
+        dot.style.height = '8px';
+        dot.style.borderRadius = '999px';
+        dot.style.flex = '0 0 auto';
+        dot.style.background = active ? '#33ff88' : '#ff4d4d';
+        dot.style.boxShadow = active ? '0 0 10px rgba(51,255,136,.55)' : '0 0 10px rgba(255,77,77,.45)';
+        dot.title = active ? (getLang()==='en' ? 'Active' : 'Aktywny') : (getLang()==='en' ? 'Inactive' : 'Nieaktywny');
+
+        const name = document.createElement('div');
+        const baseNick = p.nick || '—';
+        const pn = p.playerNo ? String(p.playerNo).trim().toUpperCase() : '';
+        name.textContent = pn ? `${baseNick} [${pn}]` : baseNick;
+        name.style.whiteSpace = 'nowrap';
+        name.style.overflow = 'hidden';
+        name.style.textOverflow = 'ellipsis';
+
+        const submitted = wcHasCompletePicksForMatches(roundPicksByUid[p.uid]?.picks, matches);
+        const status = document.createElement('div');
+        status.textContent = submitted ? '✓' : '✗';
+        status.style.fontWeight = '1000';
+        status.style.fontSize = '16px';
+        status.style.lineHeight = '1';
+        status.style.color = submitted ? '#33ff88' : '#ff4d4d';
+        status.title = submitted
+          ? ((getLang()==='en') ? 'Picks saved' : 'Typy oddane')
+          : ((getLang()==='en') ? 'No picks yet' : 'Brak oddanych typów');
+
+        left.append(dot, name, status);
+
+        const right = document.createElement('div');
+        right.className = 'row';
+        right.style.gap = '6px';
+
+        const eye = document.createElement('button');
+        eye.className = 'eyeBtn';
+        eye.textContent = '👁';
+        eye.disabled = !submitted;
+        eye.title = submitted
+          ? ((getLang()==='en') ? 'Preview picks' : 'Podgląd typów')
+          : ((getLang()==='en') ? 'Preview available after player submits picks' : 'Podgląd po oddaniu typów przez gracza');
+        eye.onclick = ()=> openWorldCupPicksPreview(p, matches, roundPicksByUid[p.uid]?.picks || {});
+        right.appendChild(eye);
+
+        if(p.uid === adminUid){
+          const b = document.createElement('div');
+          b.className = 'badge';
+          b.textContent = 'ADMIN';
+          right.appendChild(b);
+        }
+
+        row.append(left, right);
+        playersBox.appendChild(row);
+      });
+    }
+  }
 }
+
 async function openWorldCupEvent(){
   await renderWorldCupEvent();
 }
