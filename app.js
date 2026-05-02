@@ -4037,6 +4037,8 @@ function wcAskTypingDeadlineMs(defaultMs){
 
 async function openWorldCupAddRoundModal(){
   if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
+  const eventState = await wcGetState();
+  if(eventState.ended){ showToast(getLang()==='en' ? 'Event is ended' : 'EVENT ZAKOŃCZONY'); return; }
   const pending = [];
   const body = document.createElement('div'); body.className='col'; body.style.gap='12px';
   const row = document.createElement('div'); row.className='row'; row.style.flexWrap='wrap'; row.style.alignItems='end';
@@ -4274,18 +4276,18 @@ async function renderWorldCupEvent(){
     node.disabled = !(isAdmin() && enabled);
     node.classList.toggle('wcBtnDisabled', !(isAdmin() && enabled));
   };
-  setAdminBtnState(body._els.addRoundBtn(), !matches.length);
+  setAdminBtnState(body._els.addRoundBtn(), !state.ended && !matches.length);
   setAdminBtnState(body._els.savePicksBtn(), false);
-  setAdminBtnState(body._els.resultsBtn(), !!matches.length && roundIsSaved && !allResultsSaved);
-  setAdminBtnState(body._els.endRoundBtn(), !!matches.length && roundIsSaved && allResultsSaved);
-  setAdminBtnState(body._els.endEventBtn(), !state.activeRoundId);
+  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && !allResultsSaved);
+  setAdminBtnState(body._els.endRoundBtn(), !state.ended && !!matches.length && roundIsSaved && allResultsSaved);
+  setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId);
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const roundPicksByUid = await wcFetchAllPicks(state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists;
   const myPicksSavedOrLocked = myPicksAlreadySaved || wcArePicksSavedLocal(state.activeRoundId);
   const wcDeadlineBox = document.getElementById('wcDeadlineBox');
-  if(myPicksSavedOrLocked){
+  if(state.ended || myPicksSavedOrLocked){
     if(window.__wcDeadlineTimer){ clearInterval(window.__wcDeadlineTimer); window.__wcDeadlineTimer = null; }
     if(wcDeadlineBox) wcDeadlineBox.style.display = 'none';
   }else{
@@ -4305,7 +4307,23 @@ async function renderWorldCupEvent(){
     btn.classList.toggle('wcBtnDisabled', !allFilled);
   };
   if(!matches.length){
-    const empty=document.createElement('div'); empty.className='sub'; empty.textContent=getLang()==='en'?'No active matches yet.':'Brak aktywnych meczów.'; list.appendChild(empty);
+    const empty=document.createElement('div');
+    if(state.ended){
+      empty.className='title';
+      empty.textContent='EVENT ZAKOŃCZONY';
+      empty.style.minHeight='260px';
+      empty.style.display='flex';
+      empty.style.alignItems='center';
+      empty.style.justifyContent='center';
+      empty.style.textAlign='center';
+      empty.style.fontSize='34px';
+      empty.style.letterSpacing='1px';
+      empty.style.opacity='.95';
+    }else{
+      empty.className='sub';
+      empty.textContent=getLang()==='en'?'No active matches yet.':'Brak aktywnych meczów.';
+    }
+    list.appendChild(empty);
   }else{
     matches.forEach((m,idx)=>{
       const row = document.createElement('div'); row.className='matchRow wcPickRow'; row.dataset.matchId = m.id; row.style.gridTemplateColumns='1fr 120px 140px';
