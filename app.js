@@ -4060,11 +4060,29 @@ async function openWorldCupAddRoundModal(){
     const state = await wcGetState();
     const roundId = state.activeRoundId || `round_${Date.now()}`;
     const roundNo = state.activeRoundId ? (state.currentRoundNo || state.nextRoundNo || 1) : (state.nextRoundNo || 1);
-    await boot.setDoc(wcRoundRef(roundId), {roundNo, typingDeadlineMs: deadlineMs, createdAt: boot.serverTimestamp(), closedAt: null}, {merge:true});
+    const batch = boot.writeBatch(db);
+    batch.set(wcRoundRef(roundId), {
+      roundNo,
+      typingDeadlineMs: deadlineMs,
+      status: 'saved',
+      savedAt: boot.serverTimestamp(),
+      createdAt: boot.serverTimestamp(),
+      closedAt: null
+    }, {merge:true});
     const existing = await wcFetchRoundMatches(roundId);
     let order = existing.length + 1;
-    for(const m of pending){ await boot.addDoc(wcMatchesCol(roundId), {home:m.home, away:m.away, order:order++, createdAt: boot.serverTimestamp()}); }
-    await wcSetState({activeRoundId: roundId, currentRoundNo: roundNo, nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1), ended:false});
+    for(const m of pending){
+      const matchRef = boot.doc(wcMatchesCol(roundId));
+      batch.set(matchRef, {home:m.home, away:m.away, order:order++, createdAt: boot.serverTimestamp()});
+    }
+    batch.set(wcEventStateRef(), {
+      activeRoundId: roundId,
+      currentRoundNo: roundNo,
+      nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1),
+      ended:false
+    }, {merge:true});
+    await batch.commit();
+    window.__wcState = {activeRoundId: roundId, currentRoundNo: roundNo, nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1), ended:false};
     showToast(getLang()==='en' ? 'Round saved' : 'Zapisano kolejkę');
     modalClose();
     await openWorldCupEvent();
