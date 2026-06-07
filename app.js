@@ -3533,13 +3533,13 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .modalCard{width:min(1320px,96vw) !important;height:min(820px,94vh) !important;max-height:94vh !important;display:flex !important;flex-direction:column !important;}
     #modal.worldcupMode #modalClose{display:none !important;visibility:hidden !important;pointer-events:none !important;}
     #modal.worldcupMode .modalHead .sysBtn#modalClose{display:none !important;visibility:hidden !important;pointer-events:none !important;}
-    #modal.worldcupMode .modalBody{padding:14px !important;overflow:hidden !important;flex:1 1 auto !important;min-height:0 !important;}
-    #modal.worldcupMode .wcEventBody{width:100%;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
-    #modal.worldcupMode .wcEventGrid{display:grid;grid-template-columns:minmax(560px,1.45fr) minmax(360px,.95fr);gap:14px;flex:1 1 auto;min-height:0;align-items:stretch;overflow:hidden;}
-    #modal.worldcupMode .wcEventLeft{min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;overflow:hidden;}
-    #modal.worldcupMode #wcMatchesList{min-height:0;overflow:auto;padding-right:4px;padding-bottom:4px;}
+    #modal.worldcupMode .modalBody{padding:14px !important;overflow-y:auto !important;overflow-x:hidden !important;-webkit-overflow-scrolling:touch !important;flex:1 1 auto !important;min-height:0 !important;}
+    #modal.worldcupMode .wcEventBody{width:100%;height:auto;min-height:100%;display:flex;flex-direction:column;overflow:visible;}
+    #modal.worldcupMode .wcEventGrid{display:grid;grid-template-columns:minmax(560px,1.45fr) minmax(360px,.95fr);gap:14px;flex:0 0 auto;min-height:0;align-items:start;overflow:visible;}
+    #modal.worldcupMode .wcEventLeft{min-height:0;display:flex;flex-direction:column;overflow:visible;}
+    #modal.worldcupMode #wcMatchesList{min-height:0;overflow:visible;padding-right:4px;padding-bottom:8px;}
     #modal.worldcupMode .wcDeadlineBox{min-height:42px;margin:8px 0 0 0;padding:8px 12px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.12);font-weight:1000;color:rgba(255,255,255,.92);flex:0 0 auto;}
-    #modal.worldcupMode .wcBottomActions{margin-top:8px;min-height:68px;padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);flex:0 0 auto;position:relative;z-index:1;}
+    #modal.worldcupMode .wcBottomActions{margin:0 0 12px 0;min-height:68px;padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);flex:0 0 auto;position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
     #modal.worldcupMode .wcPickRow{padding:9px 12px !important;grid-template-columns:minmax(220px,1fr) 120px 170px !important;gap:10px !important;min-height:58px !important;}
     #modal.worldcupMode .wcPickRow .scoreInput{width:42px;height:30px;font-size:15px;}
     #modal.worldcupMode .wcBtnImg img{height:50px !important;width:auto !important;max-width:176px !important;object-fit:contain;}
@@ -3587,6 +3587,22 @@ function wcEnsureEventStyles(){
       #modal.worldcupMode #wcMatchesList{overflow:visible !important;}
       #modal.worldcupMode .wcBottomActions{min-height:46px !important;}
       #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:34px !important;max-width:116px !important;}
+    }
+
+
+    /* v2097: EVENT MŚ - przewijanie całego okna i widoczny pasek przycisków */
+    #modal.worldcupMode .modalCard{overflow:hidden !important;}
+    #modal.worldcupMode .modalBody{overflow-y:auto !important;overflow-x:hidden !important;-webkit-overflow-scrolling:touch !important;}
+    #modal.worldcupMode .wcEventBody,#modal.worldcupMode .wcEventGrid,#modal.worldcupMode .wcEventLeft{overflow:visible !important;height:auto !important;}
+    #modal.worldcupMode .wcBottomActions{display:flex !important;visibility:visible !important;position:sticky !important;top:0 !important;z-index:50 !important;}
+    #modal.worldcupMode #wcSavePicksBtn,#modal.worldcupMode #wcResultsBtn,#modal.worldcupMode #wcAddRoundBtn,#modal.worldcupMode #wcEndRoundBtn,#modal.worldcupMode #wcEndEventBtn{visibility:visible !important;}
+    @media (max-width:980px), (max-height:620px){
+      #modal.worldcupMode .modalCard{width:96vw !important;height:94vh !important;max-height:94vh !important;}
+      #modal.worldcupMode .modalBody{padding:8px !important;overflow-y:auto !important;}
+      #modal.worldcupMode .wcEventGrid{display:flex !important;flex-direction:column !important;}
+      #modal.worldcupMode .wcBottomActions{top:0 !important;margin-bottom:8px !important;min-height:46px !important;padding:5px !important;gap:5px !important;}
+      #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:34px !important;max-width:116px !important;}
+      #modal.worldcupMode .wcAdminButtons .btn{min-height:30px !important;padding:5px 9px !important;font-size:12px !important;}
     }
 
     @media (max-height:520px){
@@ -3931,7 +3947,7 @@ function wcBuildShell(){
   const grid = document.createElement('div');
   grid.className='wcEventGrid';
   const left = document.createElement('div'); left.className='panel wcEventLeft'; left.style.padding='16px';
-  left.innerHTML = `<div class="title" style="margin:0 0 12px 0">Mecze MŚ</div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div>`;
+  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
   const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
   const right = document.createElement('div'); right.className='col'; right.style.gap='14px';
   right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Gracze MŚ</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
