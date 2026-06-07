@@ -3530,24 +3530,54 @@ function wcEnsureEventStyles(){
   const st = document.createElement('style');
   st.id = 'wcEventStyles';
   st.textContent = `
-    #modal.worldcupMode .modalCard{width:min(1320px,96vw) !important;min-height:min(760px,92vh) !important;max-height:min(900px,94vh) !important;}
+    #modal.worldcupMode .modalCard{width:min(1320px,96vw) !important;height:min(820px,94vh) !important;max-height:94vh !important;display:flex !important;flex-direction:column !important;}
     #modal.worldcupMode #modalClose{display:none !important;visibility:hidden !important;pointer-events:none !important;}
     #modal.worldcupMode .modalHead .sysBtn#modalClose{display:none !important;visibility:hidden !important;pointer-events:none !important;}
-    #modal.worldcupMode .modalBody{padding:18px !important;overflow:auto !important;}
-    #modal.worldcupMode .wcEventBody{width:100%;min-height:650px;display:flex;flex-direction:column;}
-    #modal.worldcupMode .wcEventGrid{display:grid;grid-template-columns:minmax(560px,1.45fr) minmax(360px,.95fr);gap:14px;flex:1;min-height:500px;align-items:stretch;}
-    #modal.worldcupMode .wcEventLeft{min-height:500px;display:flex;flex-direction:column;}
-    #modal.worldcupMode #wcMatchesList{flex:1;min-height:0;}
-    #modal.worldcupMode .wcDeadlineBox{min-height:54px;margin:10px 0 0 0;padding:12px 14px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.12);font-weight:1000;color:rgba(255,255,255,.92);}
-    #modal.worldcupMode .wcBottomActions{margin-top:auto;min-height:84px;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.12);}
-    #modal.worldcupMode .wcPickRow{padding:10px 12px !important;grid-template-columns:1fr 140px 170px !important;gap:12px !important;}
-    #modal.worldcupMode .wcPickRow .scoreInput{width:46px;height:32px;font-size:15px;}
-    #modal.worldcupMode .wcBtnImg img{height:54px !important;width:auto !important;max-width:190px !important;object-fit:contain;}
-    #modal.worldcupMode .wcSaveWrap .wcBtnImg img{height:64px !important;max-width:220px !important;}
-    #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:56px !important;max-width:180px !important;}
+    #modal.worldcupMode .modalBody{padding:14px !important;overflow:hidden !important;flex:1 1 auto !important;min-height:0 !important;}
+    #modal.worldcupMode .wcEventBody{width:100%;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+    #modal.worldcupMode .wcEventGrid{display:grid;grid-template-columns:minmax(560px,1.45fr) minmax(360px,.95fr);gap:14px;flex:1 1 auto;min-height:0;align-items:stretch;overflow:hidden;}
+    #modal.worldcupMode .wcEventLeft{min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;overflow:hidden;}
+    #modal.worldcupMode #wcMatchesList{min-height:0;overflow:auto;padding-right:4px;padding-bottom:4px;}
+    #modal.worldcupMode .wcDeadlineBox{min-height:42px;margin:8px 0 0 0;padding:8px 12px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.12);font-weight:1000;color:rgba(255,255,255,.92);flex:0 0 auto;}
+    #modal.worldcupMode .wcBottomActions{margin-top:8px;min-height:68px;padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);flex:0 0 auto;position:relative;z-index:1;}
+    #modal.worldcupMode .wcPickRow{padding:9px 12px !important;grid-template-columns:minmax(220px,1fr) 120px 170px !important;gap:10px !important;min-height:58px !important;}
+    #modal.worldcupMode .wcPickRow .scoreInput{width:42px;height:30px;font-size:15px;}
+    #modal.worldcupMode .wcBtnImg img{height:50px !important;width:auto !important;max-width:176px !important;object-fit:contain;}
+    #modal.worldcupMode .wcSaveWrap .wcBtnImg img{height:54px !important;max-width:190px !important;}
+    #modal.worldcupMode .wcAdminButtons{align-items:center !important;}
+    #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:48px !important;max-width:160px !important;}
+    #modal.worldcupMode .wcAdminButtons .btn{min-height:38px !important;padding:7px 13px !important;font-size:14px !important;}
     #modal.worldcupMode .wcPickLocked{opacity:.55;cursor:not-allowed;}
     #modal.worldcupMode .wcBtnDisabled{opacity:.35;filter:grayscale(1) brightness(.8);cursor:not-allowed;pointer-events:none;}
-    @media (max-width:980px){#modal.worldcupMode .modalCard{width:96vw !important;min-height:92vh !important;}#modal.worldcupMode .wcEventGrid{grid-template-columns:1fr;min-height:0;}#modal.worldcupMode .wcEventLeft{min-height:360px;}#modal.worldcupMode .wcPickRow{grid-template-columns:1fr 120px 150px !important;}}
+    @media (max-width:980px){
+      #modal.worldcupMode .modalCard{width:96vw !important;height:94vh !important;}
+      #modal.worldcupMode .modalBody{padding:10px !important;}
+      #modal.worldcupMode .wcEventBody{gap:8px !important;}
+      #modal.worldcupMode .wcEventBody>.row:first-child{gap:6px !important;}
+      #modal.worldcupMode .wcEventBody>.row:first-child .chip{font-size:12px !important;padding:6px 9px !important;}
+      #modal.worldcupMode .wcEventGrid{grid-template-columns:1fr;gap:10px;}
+      #modal.worldcupMode .wcEventLeft{min-height:0;}
+      #modal.worldcupMode .wcPickRow{grid-template-columns:minmax(170px,1fr) 96px 128px !important;gap:7px !important;padding:7px 9px !important;min-height:50px !important;}
+      #modal.worldcupMode .wcPickRow .teamName{font-size:14px !important;line-height:1.15 !important;}
+      #modal.worldcupMode .wcPickRow .resultPill{font-size:12px !important;padding:5px 7px !important;}
+      #modal.worldcupMode .wcPickRow .scoreInput{width:34px !important;height:26px !important;font-size:13px !important;}
+      #modal.worldcupMode .wcBottomActions{min-height:52px;padding:6px;gap:6px;}
+      #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:38px !important;max-width:126px !important;}
+      #modal.worldcupMode .wcAdminButtons .btn{min-height:32px !important;padding:5px 10px !important;font-size:12px !important;}
+    }
+    @media (max-height:520px){
+      #modal.worldcupMode .modalCard{height:96vh !important;}
+      #modal.worldcupMode .modalBody{padding:8px !important;}
+      #modal.worldcupMode .wcEventBody{gap:6px !important;}
+      #modal.worldcupMode .wcEventGrid{gap:8px;}
+      #modal.worldcupMode .wcEventLeft{padding:10px !important;}
+      #modal.worldcupMode .wcEventLeft>.title{font-size:18px !important;margin-bottom:6px !important;}
+      #modal.worldcupMode .wcDeadlineBox{display:none !important;}
+      #modal.worldcupMode .wcPickRow{min-height:46px !important;padding:6px 8px !important;}
+      #modal.worldcupMode .wcBottomActions{min-height:48px;margin-top:6px;}
+      #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:34px !important;max-width:116px !important;}
+      #modal.worldcupMode .wcAdminButtons .btn{min-height:30px !important;font-size:12px !important;}
+    }
   `;
   document.head.appendChild(st);
 }
@@ -4060,29 +4090,11 @@ async function openWorldCupAddRoundModal(){
     const state = await wcGetState();
     const roundId = state.activeRoundId || `round_${Date.now()}`;
     const roundNo = state.activeRoundId ? (state.currentRoundNo || state.nextRoundNo || 1) : (state.nextRoundNo || 1);
-    const batch = boot.writeBatch(db);
-    batch.set(wcRoundRef(roundId), {
-      roundNo,
-      typingDeadlineMs: deadlineMs,
-      status: 'saved',
-      savedAt: boot.serverTimestamp(),
-      createdAt: boot.serverTimestamp(),
-      closedAt: null
-    }, {merge:true});
+    await boot.setDoc(wcRoundRef(roundId), {roundNo, typingDeadlineMs: deadlineMs, createdAt: boot.serverTimestamp(), closedAt: null}, {merge:true});
     const existing = await wcFetchRoundMatches(roundId);
     let order = existing.length + 1;
-    for(const m of pending){
-      const matchRef = boot.doc(wcMatchesCol(roundId));
-      batch.set(matchRef, {home:m.home, away:m.away, order:order++, createdAt: boot.serverTimestamp()});
-    }
-    batch.set(wcEventStateRef(), {
-      activeRoundId: roundId,
-      currentRoundNo: roundNo,
-      nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1),
-      ended:false
-    }, {merge:true});
-    await batch.commit();
-    window.__wcState = {activeRoundId: roundId, currentRoundNo: roundNo, nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1), ended:false};
+    for(const m of pending){ await boot.addDoc(wcMatchesCol(roundId), {home:m.home, away:m.away, order:order++, createdAt: boot.serverTimestamp()}); }
+    await wcSetState({activeRoundId: roundId, currentRoundNo: roundNo, nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1), ended:false});
     showToast(getLang()==='en' ? 'Round saved' : 'Zapisano kolejkę');
     modalClose();
     await openWorldCupEvent();
