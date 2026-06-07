@@ -3947,18 +3947,21 @@ function wcBuildShell(){
   const grid = document.createElement('div');
   grid.className='wcEventGrid';
   const left = document.createElement('div'); left.className='panel wcEventLeft'; left.style.padding='16px';
-  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
+  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div><div id="wcPlayerActions" class="row wcPlayerActions" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
+  const wcSaveRoundButton = wcMakeImgButton('btn_zapisz_kolejke.png', 'wcSaveRoundBtn', getLang()==='en'?'Save round':'Zapisz kolejkę');
   const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
   const right = document.createElement('div'); right.className='col'; right.style.gap='14px';
   right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Gracze MŚ</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
   const adminBtns = left.querySelector('.wcAdminButtons');
   adminBtns.append(
     wcMakeImgButton('btn_dodaj_kolejke.png', 'wcAddRoundBtn', getLang()==='en'?'Add round':'Dodaj kolejkę'),
+    wcSaveRoundButton,
     wcMakeImgButton('btn_dodaj_wyniki.png', 'wcResultsBtn', getLang()==='en'?'Enter results':'Wpisz wyniki'),
-    wcSavePicksButton,
     wcMakeImgButton('btn_zakoncz_kolejke.png', 'wcEndRoundBtn', getLang()==='en'?'End round':'Zakończ kolejkę'),
     wcMakeTextButton('wcEndEventBtn', getLang()==='en'?'End Event':'Zakończ Event')
   );
+  const playerBtns = left.querySelector('.wcPlayerActions');
+  playerBtns.append(wcSavePicksButton);
   grid.append(left,right); body.appendChild(grid);
   body._els = {
     roomName: ()=> body.querySelector('#wcRoomName'),
@@ -3967,7 +3970,9 @@ function wcBuildShell(){
     myPoints: ()=> body.querySelector('#wcMyPoints'),
     matchesList: ()=> body.querySelector('#wcMatchesList'),
     savePicksBtn: ()=> body.querySelector('#wcSavePicksBtn'),
+    saveRoundBtn: ()=> body.querySelector('#wcSaveRoundBtn'),
     adminPanel: ()=> body.querySelector('.wcAdminButtons'),
+    playerActions: ()=> body.querySelector('#wcPlayerActions'),
     addRoundBtn: ()=> body.querySelector('#wcAddRoundBtn'),
     resultsBtn: ()=> body.querySelector('#wcResultsBtn'),
     endRoundBtn: ()=> body.querySelector('#wcEndRoundBtn'),
@@ -4001,6 +4006,9 @@ async function saveWorldCupPicks(){
   const roundId = window.__wcState?.activeRoundId;
   if(!roundId){ showToast(getLang()==='en' ? 'No active round' : 'Brak aktywnej kolejki'); return; }
   const saveBtn = document.getElementById('wcSavePicksBtn');
+  const roundMeta = await wcFetchRoundMeta(roundId);
+  if(!(roundMeta.savedAt || roundMeta.status === 'saved')){ showToast(getLang()==='en' ? 'Round is not saved yet' : 'Kolejka nie jest jeszcze zapisana'); return; }
+  if(wcIsTypingClosed(roundMeta)){ showToast(getLang()==='en' ? 'Typing is closed' : 'Typowanie jest zakończone'); return; }
   const alreadySaved = await wcFetchMyPicksDoc(roundId);
   if(alreadySaved.exists || wcArePicksSavedLocal(roundId)){
     if(saveBtn){ saveBtn.disabled = true; saveBtn.classList.add('wcPickLocked'); saveBtn.title = getLang()==='en' ? 'Picks saved' : 'Typy zapisane'; }
@@ -4024,29 +4032,32 @@ async function saveWorldCupPicks(){
 }
 async function saveWorldCupRound(){
   if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
-  const state = await wcGetState();
-  if(!state.activeRoundId){ showToast(getLang()==='en'?'No active round':'Brak aktywnej kolejki'); return; }
-  const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
-  if(wcIsTypingClosed(roundMeta)){ showToast(getLang()==='en'?'Typing is closed':'Typowanie jest zakończone'); return; }
-  const matches = await wcFetchRoundMatches(state.activeRoundId);
-  if(!matches.length){ showToast(getLang()==='en'?'No matches':'Brak meczów'); return; }
+  const btn = document.getElementById('wcSaveRoundBtn');
+  try{
+    if(btn){ btn.disabled = true; btn.classList.add('wcBtnDisabled'); }
+    const state = await wcGetState();
+    if(!state.activeRoundId){ showToast(getLang()==='en'?'No active round':'Brak aktywnej kolejki'); return; }
+    const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
+    if(wcIsTypingClosed(roundMeta)){ showToast(getLang()==='en'?'Typing is closed':'Typowanie jest zakończone'); return; }
+    const matches = await wcFetchRoundMatches(state.activeRoundId);
+    if(!matches.length){ showToast(getLang()==='en'?'No matches':'Brak meczów'); return; }
 
-  const picks = {};
-  for(const row of document.querySelectorAll('.wcPickRow')){
-    const id = row.dataset.matchId;
-    const home = clampInt(row.querySelector('.wcPickHome')?.value,0,99);
-    const away = clampInt(row.querySelector('.wcPickAway')?.value,0,99);
-    if(!id || home===null || away===null){ showToast(getLang()==='en'?'Fill all picks first':'Najpierw wpisz wszystkie typy'); return; }
-    picks[id] = {home, away};
+    // v2098: ten przycisk zapisuje kolejkę eventu, a nie typy admina.
+    // Nie wymaga wpisywania typów w meczach — ma tylko zatwierdzić kolejkę,
+    // żeby można było przejść dalej do „Wpisz wyniki”.
+    await boot.setDoc(wcRoundRef(state.activeRoundId), {
+      savedAt: boot.serverTimestamp(),
+      status:'saved',
+      updatedAt: boot.serverTimestamp()
+    }, {merge:true});
+    showToast(getLang()==='en'?'Round saved':'Zapisano kolejkę');
+    await openWorldCupEvent();
+  }catch(err){
+    console.error('saveWorldCupRound failed', err);
+    showToast(getLang()==='en'?'Could not save round':'Nie udało się zapisać kolejki');
+  }finally{
+    if(btn){ btn.disabled = false; btn.classList.remove('wcBtnDisabled'); }
   }
-  if(Object.keys(picks).length !== matches.length){ showToast(getLang()==='en'?'Fill all picks first':'Najpierw wpisz wszystkie typy'); return; }
-
-  await boot.setDoc(wcPicksRef(state.activeRoundId), {uid:userUid, playerNo:getPlayerNo(), nick:getNick(), picks, locked:true, savedAt: boot.serverTimestamp(), updatedAt: boot.serverTimestamp()}, {merge:true});
-  wcMarkPicksSavedLocal(state.activeRoundId);
-
-  await boot.setDoc(wcRoundRef(state.activeRoundId), {savedAt: boot.serverTimestamp(), status:'saved'}, {merge:true});
-  showToast(getLang()==='en'?'Round saved':'Zapisano kolejkę');
-  await openWorldCupEvent();
 }
 function wcAskTypingDeadlineMs(defaultMs){
   return new Promise(resolve=>{
@@ -4127,17 +4138,26 @@ async function openWorldCupAddRoundModal(){
     if(!pending.length){ showToast(getLang()==='en'?'Add at least one match':'Dodaj przynajmniej jeden mecz'); return; }
     const deadlineMs = await wcAskTypingDeadlineMs(wcDefaultDeadlineMs());
     if(!deadlineMs) return;
-    const state = await wcGetState();
-    const roundId = state.activeRoundId || `round_${Date.now()}`;
-    const roundNo = state.activeRoundId ? (state.currentRoundNo || state.nextRoundNo || 1) : (state.nextRoundNo || 1);
-    await boot.setDoc(wcRoundRef(roundId), {roundNo, typingDeadlineMs: deadlineMs, createdAt: boot.serverTimestamp(), closedAt: null}, {merge:true});
-    const existing = await wcFetchRoundMatches(roundId);
-    let order = existing.length + 1;
-    for(const m of pending){ await boot.addDoc(wcMatchesCol(roundId), {home:m.home, away:m.away, order:order++, createdAt: boot.serverTimestamp()}); }
-    await wcSetState({activeRoundId: roundId, currentRoundNo: roundNo, nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1), ended:false});
-    showToast(getLang()==='en' ? 'Round saved' : 'Zapisano kolejkę');
-    modalClose();
-    await openWorldCupEvent();
+    try{
+      save.disabled = true;
+      save.classList.add('wcBtnDisabled');
+      const state = await wcGetState();
+      const roundId = state.activeRoundId || `round_${Date.now()}`;
+      const roundNo = state.activeRoundId ? (state.currentRoundNo || state.nextRoundNo || 1) : (state.nextRoundNo || 1);
+      await boot.setDoc(wcRoundRef(roundId), {roundNo, typingDeadlineMs: deadlineMs, createdAt: boot.serverTimestamp(), updatedAt: boot.serverTimestamp(), savedAt: boot.serverTimestamp(), status:'saved', closedAt: null}, {merge:true});
+      const existing = await wcFetchRoundMatches(roundId);
+      let order = existing.length + 1;
+      for(const m of pending){ await boot.addDoc(wcMatchesCol(roundId), {home:m.home, away:m.away, order:order++, createdAt: boot.serverTimestamp()}); }
+      await wcSetState({activeRoundId: roundId, currentRoundNo: roundNo, nextRoundNo: Math.max(roundNo+1, state.nextRoundNo||1), ended:false});
+      showToast(getLang()==='en' ? 'Round saved' : 'Zapisano kolejkę');
+      modalClose();
+      await openWorldCupEvent();
+    }catch(err){
+      console.error('openWorldCupAddRoundModal save failed', err);
+      showToast(getLang()==='en' ? 'Could not save round' : 'Nie udało się zapisać kolejki');
+      save.disabled = false;
+      save.classList.remove('wcBtnDisabled');
+    }
   };
   modalOpen(getLang()==='en' ? 'World Cup round' : 'Kolejka MŚ', body);
 }
@@ -4325,7 +4345,8 @@ async function renderWorldCupEvent(){
   body._els.roomName().textContent = currentRoom?.name || currentRoomCode || '—';
   body._els.nick().textContent = getNick() || '—';
   body._els.adminPanel().style.display = isAdmin() ? 'flex' : 'none';
-  body._els.savePicksBtn().onclick = ()=> saveWorldCupRound();
+  body._els.saveRoundBtn().onclick = ()=> saveWorldCupRound();
+  body._els.savePicksBtn().onclick = ()=> saveWorldCupPicks();
   body._els.addRoundBtn().onclick = ()=> openWorldCupAddRoundModal();
   body._els.resultsBtn().onclick = ()=> openWorldCupResultsModal();
   body._els.endRoundBtn().onclick = ()=> endWorldCupRound();
@@ -4347,7 +4368,7 @@ async function renderWorldCupEvent(){
     node.classList.toggle('wcBtnDisabled', !(isAdmin() && enabled));
   };
   setAdminBtnState(body._els.addRoundBtn(), !state.ended && !matches.length);
-  setAdminBtnState(body._els.savePicksBtn(), false);
+  setAdminBtnState(body._els.saveRoundBtn(), !state.ended && !!matches.length && !roundIsSaved && !wcTypingClosed);
   setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && !allResultsSaved);
   setAdminBtnState(body._els.endRoundBtn(), !state.ended && !!matches.length && roundIsSaved && allResultsSaved);
   setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId);
@@ -4368,9 +4389,13 @@ async function renderWorldCupEvent(){
   body._els.matchesCount().textContent = String(matches.length);
   const list = body._els.matchesList();
   list.innerHTML='';
-  const updateWcSaveRoundButton = ()=>{
+  const updateWcSavePicksButton = ()=>{
     const btn = body._els.savePicksBtn();
-    if(!btn || !isAdmin() || !matches.length || roundIsSaved || wcTypingClosed) return;
+    if(!btn) return;
+    const canSee = !!matches.length && roundIsSaved && !wcTypingClosed && !myPicksSavedOrLocked && !allResultsSaved && !state.ended;
+    body._els.playerActions().style.display = canSee ? 'flex' : 'none';
+    btn.style.display = canSee ? 'inline-flex' : 'none';
+    if(!canSee){ btn.disabled = true; btn.classList.add('wcBtnDisabled'); return; }
     const inputs = Array.from(document.querySelectorAll('.wcPickHome,.wcPickAway'));
     const allFilled = inputs.length === matches.length * 2 && inputs.every(inp=>String(inp.value||'').trim() !== '');
     btn.disabled = !allFilled;
@@ -4399,10 +4424,10 @@ async function renderWorldCupEvent(){
       const row = document.createElement('div'); row.className='matchRow wcPickRow'; row.dataset.matchId = m.id; row.style.gridTemplateColumns='1fr 120px 140px';
       const teams = document.createElement('div'); teams.className='team'; teams.innerHTML = `<span class="teamName">${idx+1}. ${m.home} — ${m.away}</span>`;
       const pick = document.createElement('div'); pick.className='scoreBox';
-      const p1=document.createElement('input'); p1.type='text'; p1.inputMode='numeric'; p1.pattern='[0-9]*'; p1.maxLength=2; p1.className='scoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? ''; p1.oninput=()=>{ p1.value=String(p1.value||'').replace(/\D/g,'').slice(0,2); updateWcSaveRoundButton(); };
+      const p1=document.createElement('input'); p1.type='text'; p1.inputMode='numeric'; p1.pattern='[0-9]*'; p1.maxLength=2; p1.className='scoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? ''; p1.oninput=()=>{ p1.value=String(p1.value||'').replace(/\D/g,'').slice(0,2); updateWcSavePicksButton(); };
       const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
-      const p2=document.createElement('input'); p2.type='text'; p2.inputMode='numeric'; p2.pattern='[0-9]*'; p2.maxLength=2; p2.className='scoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? ''; p2.oninput=()=>{ p2.value=String(p2.value||'').replace(/\D/g,'').slice(0,2); updateWcSaveRoundButton(); };
-      if(wcTypingClosed || myPicksAlreadySaved || (m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null)){
+      const p2=document.createElement('input'); p2.type='text'; p2.inputMode='numeric'; p2.pattern='[0-9]*'; p2.maxLength=2; p2.className='scoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? ''; p2.oninput=()=>{ p2.value=String(p2.value||'').replace(/\D/g,'').slice(0,2); updateWcSavePicksButton(); };
+      if(!roundIsSaved || wcTypingClosed || myPicksAlreadySaved || (m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null)){
         p1.disabled=true; p2.disabled=true; p1.classList.add('wcPickLocked'); p2.classList.add('wcPickLocked');
       }
       pick.append(p1,sep,p2);
@@ -4424,7 +4449,7 @@ async function renderWorldCupEvent(){
       }
       row.append(teams,pick,info); list.appendChild(row);
     });
-    updateWcSaveRoundButton();
+    updateWcSavePicksButton();
   }
   const ranking = await wcComputeRanking();
   const tbody = body._els.rankingBody(); tbody.innerHTML='';
