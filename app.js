@@ -3565,6 +3565,30 @@ function wcEnsureEventStyles(){
       #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:38px !important;max-width:126px !important;}
       #modal.worldcupMode .wcAdminButtons .btn{min-height:32px !important;padding:5px 10px !important;font-size:12px !important;}
     }
+
+    /* v2096: EVENT MŚ mobile/landscape fix - przywrócone przewijanie bez nachodzenia przycisków */
+    @media (max-width:980px), (max-height:620px){
+      #modal.worldcupMode .modalCard{height:94vh !important;max-height:94vh !important;overflow:hidden !important;}
+      #modal.worldcupMode .modalBody{overflow-y:auto !important;overflow-x:hidden !important;-webkit-overflow-scrolling:touch !important;min-height:0 !important;}
+      #modal.worldcupMode .wcEventBody{height:auto !important;min-height:100% !important;overflow:visible !important;display:flex !important;flex-direction:column !important;}
+      #modal.worldcupMode .wcEventGrid{display:flex !important;flex-direction:column !important;overflow:visible !important;min-height:0 !important;flex:0 0 auto !important;}
+      #modal.worldcupMode .wcEventLeft{display:flex !important;flex-direction:column !important;overflow:visible !important;min-height:0 !important;flex:0 0 auto !important;}
+      #modal.worldcupMode #wcMatchesList{overflow:visible !important;max-height:none !important;min-height:0 !important;padding-bottom:8px !important;}
+      #modal.worldcupMode .wcBottomActions{position:relative !important;z-index:5 !important;flex:0 0 auto !important;margin-top:10px !important;}
+      #modal.worldcupMode .wcAdminButtons{display:flex !important;position:relative !important;z-index:6 !important;}
+      #modal.worldcupMode #wcResultsBtn{display:inline-flex !important;visibility:visible !important;}
+      #modal.worldcupMode .wcEventGrid > .col{overflow:visible !important;flex:0 0 auto !important;}
+      #modal.worldcupMode #wcRankingWrap{max-height:none !important;overflow:visible !important;}
+    }
+    @media (max-height:520px){
+      #modal.worldcupMode .wcEventBody>.row:first-child{flex:0 0 auto !important;}
+      #modal.worldcupMode .wcEventBody>.row:first-child .wcBtnImg img{height:36px !important;max-width:130px !important;}
+      #modal.worldcupMode .wcEventLeft{padding:10px !important;}
+      #modal.worldcupMode #wcMatchesList{overflow:visible !important;}
+      #modal.worldcupMode .wcBottomActions{min-height:46px !important;}
+      #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:34px !important;max-width:116px !important;}
+    }
+
     @media (max-height:520px){
       #modal.worldcupMode .modalCard{height:96vh !important;}
       #modal.worldcupMode .modalBody{padding:8px !important;}
