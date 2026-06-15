@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2108;
+const BUILD = 2109;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -4331,13 +4331,9 @@ async function saveWorldCupPicks(){
   const roundMeta = await wcFetchRoundMeta(roundId);
   if(!(roundMeta.savedAt || roundMeta.status === 'saved')){ showToast(getLang()==='en' ? 'Round is not saved yet' : 'Kolejka nie jest jeszcze zapisana'); return; }
   if(wcIsTypingClosed(roundMeta)){ showToast(getLang()==='en' ? 'Typing is closed' : 'Typowanie jest zakończone'); return; }
-  const alreadySaved = await wcFetchMyPicksDoc(roundId);
-  if(alreadySaved.exists || wcArePicksSavedLocal(roundId)){
-    if(saveBtn){ saveBtn.disabled = true; saveBtn.classList.add('wcPickLocked'); saveBtn.title = getLang()==='en' ? 'Picks saved' : 'Typy zapisane'; }
-    document.querySelectorAll('.wcPickHome,.wcPickAway').forEach(inp=>{ inp.disabled = true; inp.classList.add('wcPickLocked'); });
-    showToast(getLang()==='en' ? 'Picks are already saved' : 'Typy są już zapisane');
-    return;
-  }
+  // v2109: nie blokujemy pola tylko dlatego, że w Firebase/localStorage istnieje stary zapis typów.
+  // Jeśli wyniki nie są jeszcze wpisane i typowanie nie jest zamknięte, gracz może uzupełnić/poprawić typy.
+  // Zapis jest wykonywany merge na tym samym dokumencie, więc nie kasuje wyników ani danych eventu.
   const picks = {};
   document.querySelectorAll('.wcPickRow').forEach(row=>{
     const id = row.dataset.matchId;
@@ -4704,9 +4700,11 @@ async function renderWorldCupEvent(){
   setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists;
-  const myPicksSavedOrLocked = myPicksAlreadySaved; // v2104: o blokadzie typowania decyduje zapis w Firebase, nie lokalna blokada przeglądarki
+  // v2109: stary dokument typów nie może blokować wpisywania, dopóki nie ma wyników i typowanie nie jest zamknięte.
+  // Dzięki temu powrót do wcześniejszych wersji / stary wpis w Firebase nie zatrzymuje aktywnej kolejki.
+  const myPicksSavedOrLocked = false;
   const wcDeadlineBox = document.getElementById('wcDeadlineBox');
-  if(state.ended || myPicksSavedOrLocked){
+  if(state.ended){
     if(window.__wcDeadlineTimer){ clearInterval(window.__wcDeadlineTimer); window.__wcDeadlineTimer = null; }
     if(wcDeadlineBox) wcDeadlineBox.style.display = 'none';
   }else{
@@ -4720,7 +4718,7 @@ async function renderWorldCupEvent(){
   const updateWcSavePicksButton = ()=>{
     const btn = body._els.savePicksBtn();
     if(!btn) return;
-    const canSee = !!matches.length && roundIsSaved && !wcTypingClosed && !myPicksSavedOrLocked && !allResultsSaved && !state.ended;
+    const canSee = !!matches.length && roundIsSaved && !wcTypingClosed && !allResultsSaved && !state.ended;
     body._els.playerActions().style.display = canSee ? 'flex' : 'none';
     btn.style.display = canSee ? 'inline-flex' : 'none';
     if(!canSee){ btn.disabled = true; btn.classList.add('wcBtnDisabled'); return; }
@@ -4755,7 +4753,7 @@ async function renderWorldCupEvent(){
       const p1=document.createElement('input'); p1.type='text'; p1.inputMode='numeric'; p1.pattern='[0-9]*'; p1.maxLength=2; p1.className='scoreInput wcPickHome'; p1.value = myPicks[m.id]?.home ?? ''; p1.oninput=()=>{ p1.value=String(p1.value||'').replace(/\D/g,'').slice(0,2); updateWcSavePicksButton(); };
       const sep=document.createElement('span'); sep.className='sep'; sep.textContent=':';
       const p2=document.createElement('input'); p2.type='text'; p2.inputMode='numeric'; p2.pattern='[0-9]*'; p2.maxLength=2; p2.className='scoreInput wcPickAway'; p2.value = myPicks[m.id]?.away ?? ''; p2.oninput=()=>{ p2.value=String(p2.value||'').replace(/\D/g,'').slice(0,2); updateWcSavePicksButton(); };
-      if(!roundIsSaved || wcTypingClosed || myPicksAlreadySaved || (m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null)){
+      if(!roundIsSaved || wcTypingClosed || (m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null)){
         p1.disabled=true; p2.disabled=true; p1.classList.add('wcPickLocked'); p2.classList.add('wcPickLocked');
       }
       pick.append(p1,sep,p2);
