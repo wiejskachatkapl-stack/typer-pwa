@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2109;
+const BUILD = 2110;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -4695,7 +4695,7 @@ async function renderWorldCupEvent(){
   const wcAllPlayersSubmitted = !!(matches.length && visibleWcPlayers.length && visibleWcPlayers.every(p => wcHasCompletePicksForMatches(roundPicksByUid[p.uid]?.picks, matches)));
   setAdminBtnState(body._els.addRoundBtn(), !state.ended && !matches.length);
   setAdminBtnState(body._els.saveRoundBtn(), !state.ended && !!matches.length && !roundIsSaved && !wcTypingClosed);
-  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && wcAllPlayersSubmitted && !allResultsSaved); // v2108: bez błędu zmiennej przed inicjalizacją
+  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && !allResultsSaved); // v2110: admin może wejść w wyniki po zapisaniu kolejki; nie czekamy na wszystkich graczy
   setAdminBtnState(body._els.endRoundBtn(), !state.ended && !!matches.length && roundIsSaved && allResultsSaved);
   setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
