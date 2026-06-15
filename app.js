@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2019;
+const BUILD = 2100;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3802,6 +3802,148 @@ function wcPlayerRoundPoints(picks, matches){
   });
   return pts;
 }
+function wcResolvePlayerUid(player){
+  return player?.uid || player?.id || player?.playerUid || player?.playerId || '';
+}
+async function wcFetchRoundPicksForPlayer(roundId, player){
+  if(!roundId || !player) return {};
+  const uid = wcResolvePlayerUid(player);
+  const playerNo = player?.playerNo ? String(player.playerNo).trim().toUpperCase() : '';
+  try{
+    if(uid){
+      const snap = await boot.getDoc(boot.doc(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks', uid));
+      if(snap.exists()) return snap.data()?.picks || {};
+    }
+  }catch{}
+  if(playerNo){
+    try{
+      const qs = await boot.getDocs(boot.query(
+        boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks'),
+        boot.where('playerNo','==', playerNo)
+      ));
+      if(qs && qs.docs && qs.docs.length) return qs.docs[0].data()?.picks || {};
+    }catch{}
+  }
+  return {};
+}
+async function openWorldCupPlayerProfile(player){
+  const nick = player?.nick || '—';
+  const playerNo = player?.playerNo ? String(player.playerNo).trim().toUpperCase() : '';
+  const host = document.getElementById('modal') || document.body;
+  const overlay = document.createElement('div');
+  overlay.style.position = 'absolute';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '1000';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.background = 'rgba(0,0,0,.58)';
+  overlay.style.backdropFilter = 'blur(6px)';
+  overlay.style.webkitBackdropFilter = 'blur(6px)';
+
+  const card = document.createElement('div');
+  card.className = 'panel';
+  card.style.width = 'min(980px, 94vw)';
+  card.style.maxHeight = '88vh';
+  card.style.overflow = 'auto';
+  card.style.padding = '18px';
+  card.style.borderRadius = '22px';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'col';
+  wrap.style.gap = '12px';
+  card.appendChild(wrap);
+  overlay.appendChild(card);
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay){ try{ overlay.remove(); }catch{} } });
+  host.appendChild(overlay);
+
+  const top = document.createElement('div');
+  top.className = 'row';
+  top.style.flexWrap = 'wrap';
+  top.style.justifyContent = 'space-between';
+  top.style.gap = '10px';
+  const chips = document.createElement('div');
+  chips.className = 'row';
+  chips.style.flexWrap = 'wrap';
+  chips.style.gap = '10px';
+  const titleChip = document.createElement('div');
+  titleChip.className = 'chip';
+  titleChip.textContent = (getLang()==='en') ? `Player results: ${nick}` : `Profil wyników: ${nick}`;
+  chips.appendChild(titleChip);
+  if(playerNo){
+    const noChip = document.createElement('div');
+    noChip.className = 'chip';
+    noChip.textContent = `ID: ${playerNo}`;
+    chips.appendChild(noChip);
+  }
+  const closeBtn = wcMakeImgButton('btn_cofnij.png', null, getLang()==='en'?'Back':'Cofnij', ()=>{ try{ overlay.remove(); }catch{} });
+  top.append(chips, closeBtn);
+  wrap.appendChild(top);
+
+  const loading = document.createElement('div');
+  loading.className = 'sub';
+  loading.textContent = getLang()==='en' ? 'Loading player rounds…' : 'Wczytuję punktację gracza…';
+  wrap.appendChild(loading);
+
+  try{
+    const roundsQs = await boot.getDocs(boot.query(wcRoundsCol(), boot.orderBy('roundNo','asc')));
+    const rows = [];
+    for(const rdoc of roundsQs.docs){
+      const meta = rdoc.data() || {};
+      const matches = await wcFetchRoundMatches(rdoc.id);
+      if(!matches.length) continue;
+      const picks = await wcFetchRoundPicksForPlayer(rdoc.id, player);
+      const hasPicks = wcHasCompletePicksForMatches(picks, matches);
+      const resultsReady = matches.every(m=>m.resultHome!==undefined && m.resultHome!==null && m.resultAway!==undefined && m.resultAway!==null);
+      const pts = (hasPicks && resultsReady) ? wcPlayerRoundPoints(picks, matches) : null;
+      rows.push({roundId: rdoc.id, roundNo: meta.roundNo || rows.length+1, matches, picks, hasPicks, resultsReady, pts});
+    }
+    loading.remove();
+    const total = rows.reduce((sum,r)=> sum + (r.pts || 0), 0);
+    const totalChip = document.createElement('div');
+    totalChip.className = 'chip';
+    totalChip.textContent = (getLang()==='en') ? `Total points: ${total}` : `Punkty razem: ${total}`;
+    chips.appendChild(totalChip);
+
+    if(!rows.length){
+      const empty = document.createElement('div');
+      empty.className = 'sub';
+      empty.textContent = getLang()==='en' ? 'No World Cup rounds to display.' : 'Brak kolejek MŚ do wyświetlenia.';
+      wrap.appendChild(empty);
+      return;
+    }
+
+    const tableWrap = document.createElement('div');
+    tableWrap.style.overflow = 'auto';
+    tableWrap.style.borderRadius = '18px';
+    tableWrap.style.border = '1px solid rgba(255,255,255,.10)';
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.innerHTML = `<thead><tr><th style="width:95px">Kolejka</th><th style="width:95px">Mecze</th><th style="width:95px">Punkty</th><th>Status</th><th style="width:105px">Szczegóły</th></tr></thead><tbody></tbody>`;
+    const tb = table.querySelector('tbody');
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      const status = r.hasPicks
+        ? (r.resultsReady ? (getLang()==='en' ? 'Counted' : 'Policzona') : (getLang()==='en' ? 'Awaiting results' : 'Czeka na wyniki'))
+        : (getLang()==='en' ? 'No picks' : 'Brak typów');
+      tr.innerHTML = `<td>${r.roundNo}</td><td>${r.matches.length}</td><td>${r.pts === null ? '—' : r.pts}</td><td>${status}</td><td></td>`;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'eyeBtn';
+      btn.textContent = '👁';
+      btn.title = getLang()==='en' ? 'Show picks and points' : 'Pokaż typy i punkty';
+      btn.disabled = !r.hasPicks;
+      btn.onclick = ()=> openWorldCupPicksPreview(player, r.matches, r.picks);
+      tr.lastChild.appendChild(btn);
+      tb.appendChild(tr);
+    });
+    tableWrap.appendChild(table);
+    wrap.appendChild(tableWrap);
+  }catch(err){
+    console.error('openWorldCupPlayerProfile failed', err);
+    loading.textContent = getLang()==='en' ? 'Could not load player profile.' : 'Nie udało się wczytać profilu gracza.';
+  }
+}
 function openWorldCupPicksPreview(player, matches, picksObj){
   const nick = player?.nick || '—';
   const hasPicks = wcHasCompletePicksForMatches(picksObj, matches);
@@ -3984,7 +4126,7 @@ function wcBuildShell(){
 }
 async function wcComputeRanking(){
   const ranking = {};
-  (lastPlayers||[]).forEach(p=>{ const uid = p.uid||p.id||p.playerUid||p.playerId; if(uid) ranking[uid] = {uid, nick:p.nick||'—', points:0}; });
+  (lastPlayers||[]).forEach(p=>{ const uid = p.uid||p.id||p.playerUid||p.playerId; if(uid) ranking[uid] = {uid, nick:p.nick||'—', playerNo:p.playerNo||'', points:0}; });
   try{
     const roundsQs = await boot.getDocs(boot.query(wcRoundsCol(), boot.orderBy('roundNo','asc')));
     for(const rdoc of roundsQs.docs){
@@ -3992,10 +4134,12 @@ async function wcComputeRanking(){
       const matches = await wcFetchRoundMatches(rdoc.id);
       const picksQs = await boot.getDocs(boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', rdoc.id, 'picks'));
       picksQs.forEach(pd=>{
-        const uid = pd.id; const picks = pd.data()?.picks || {};
+        const data = pd.data() || {}; const uid = pd.id; const picks = data.picks || {};
         let pts = 0;
         matches.forEach(m=>{ const p = picks[m.id]||{}; const val = wcPointsForPick(p.home,p.away,m.resultHome,m.resultAway); if(val!=null) pts += val; });
-        if(!ranking[uid]) ranking[uid] = {uid, nick: uid, points:0};
+        if(!ranking[uid]) ranking[uid] = {uid, nick: data.nick || uid, playerNo:data.playerNo || '', points:0};
+        if(data.nick && (!ranking[uid].nick || ranking[uid].nick === uid)) ranking[uid].nick = data.nick;
+        if(data.playerNo && !ranking[uid].playerNo) ranking[uid].playerNo = data.playerNo;
         ranking[uid].points += pts;
       });
     }
@@ -4455,7 +4599,13 @@ async function renderWorldCupEvent(){
   const tbody = body._els.rankingBody(); tbody.innerHTML='';
   let myPoints = 0;
   ranking.forEach((r,idx)=>{
-    const tr=document.createElement('tr'); tr.innerHTML=`<td>${idx+1}</td><td>${r.nick}</td><td>${r.points}</td>`; tbody.appendChild(tr); if(r.uid===userUid) myPoints=r.points;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${idx+1}</td><td>${r.nick}</td><td>${r.points}</td>`;
+    tr.style.cursor = 'pointer';
+    tr.title = getLang()==='en' ? 'Open player results profile' : 'Otwórz profil wyników gracza';
+    tr.onclick = ()=> openWorldCupPlayerProfile(r);
+    tbody.appendChild(tr);
+    if(r.uid===userUid) myPoints=r.points;
   });
   if(!ranking.length){ tbody.innerHTML='<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>'; }
   body._els.myPoints().textContent = String(myPoints);
@@ -4525,6 +4675,13 @@ async function renderWorldCupEvent(){
           : ((getLang()==='en') ? 'Preview available after player submits picks' : 'Podgląd po oddaniu typów przez gracza');
         eye.onclick = ()=> openWorldCupPicksPreview(p, matches, roundPicksByUid[p.uid]?.picks || {});
         right.appendChild(eye);
+
+        const profileBtn = document.createElement('button');
+        profileBtn.className = 'eyeBtn';
+        profileBtn.textContent = '📊';
+        profileBtn.title = getLang()==='en' ? 'Player results profile' : 'Profil wyników gracza';
+        profileBtn.onclick = ()=> openWorldCupPlayerProfile(p);
+        right.appendChild(profileBtn);
 
         if(p.uid === adminUid){
           const b = document.createElement('div');
