@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2101;
+const BUILD = 2100;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3618,33 +3618,6 @@ function wcEnsureEventStyles(){
       #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:34px !important;max-width:116px !important;}
       #modal.worldcupMode .wcAdminButtons .btn{min-height:30px !important;font-size:12px !important;}
     }
-
-
-    /* v2101: EVENT MŚ - własna klawiatura cyfr tylko na telefonach, w górnym pasku */
-    #modal.worldcupMode .wcMobileKeypad{display:none;}
-    @media (hover:none) and (pointer:coarse), (max-width:980px){
-      #modal.worldcupMode .modalHead{display:flex !important;align-items:center !important;gap:10px !important;}
-      #modal.worldcupMode .wcMobileKeypad{
-        margin-left:auto;display:none;align-items:center;justify-content:center;gap:7px;flex-wrap:nowrap;
-        width:min(760px,72vw);min-height:48px;padding:6px 12px;border-radius:18px;
-        border:2px solid rgba(16,210,95,.82);background:rgba(4,23,55,.76);
-        box-shadow:0 0 18px rgba(16,210,95,.22), inset 0 0 0 1px rgba(255,255,255,.06);
-        backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:120;
-      }
-      #modal.worldcupMode .wcMobileKeypad.show{display:flex !important;}
-      #modal.worldcupMode .wcMobileKey{
-        min-width:34px;height:34px;padding:0 8px;border-radius:12px;border:1px solid rgba(255,255,255,.18);
-        background:rgba(255,255,255,.10);color:#fff;font-weight:1000;font-size:18px;line-height:1;
-        box-shadow:inset 0 0 0 1px rgba(255,255,255,.05), 0 5px 12px rgba(0,0,0,.24);
-      }
-      #modal.worldcupMode .wcMobileKeyClose{min-width:42px;background:rgba(255,55,80,.22);border-color:rgba(255,95,115,.55);}
-      #modal.worldcupMode input.wcMobileNoNativeKeyboard{caret-color:transparent;}
-    }
-    @media (hover:none) and (pointer:coarse) and (max-width:620px){
-      #modal.worldcupMode .wcMobileKeypad{width:100%;order:5;margin-left:0;gap:5px;padding:5px 7px;}
-      #modal.worldcupMode .wcMobileKey{min-width:28px;height:30px;font-size:16px;border-radius:10px;padding:0 6px;}
-      #modal.worldcupMode .wcMobileKeyClose{min-width:34px;}
-    }
   `;
   document.head.appendChild(st);
 }
@@ -3671,79 +3644,6 @@ function wcMakeTextButton(id, label, onClick){
   if(onClick) b.onclick = onClick;
   return b;
 }
-
-function wcIsMobileScoreKeyboardDevice(){
-  try{
-    return !!(window.matchMedia && (window.matchMedia('(hover:none) and (pointer:coarse)').matches || window.matchMedia('(max-width:980px)').matches));
-  }catch(e){ return window.innerWidth <= 980; }
-}
-let wcActiveMobileScoreInput = null;
-function wcEnsureMobileScoreKeyboard(){
-  if(!wcIsMobileScoreKeyboardDevice()) return null;
-  const modal = document.getElementById('modal');
-  if(!modal || !modal.classList.contains('worldcupMode')) return null;
-  let pad = document.getElementById('wcMobileScoreKeyboard');
-  if(pad) return pad;
-  pad = document.createElement('div');
-  pad.id = 'wcMobileScoreKeyboard';
-  pad.className = 'wcMobileKeypad';
-  pad.setAttribute('aria-label', 'Klawiatura wyników');
-  const addKey = (txt, cls, fn)=>{
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'wcMobileKey' + (cls ? ' ' + cls : '');
-    b.textContent = txt;
-    b.addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); });
-    b.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); fn(); });
-    pad.appendChild(b);
-  };
-  ['0','1','2','3','4','5','6','7','8','9'].forEach(n=>addKey(n, '', ()=>wcMobileScoreKey(n)));
-  addKey('×', 'wcMobileKeyClose', ()=>wcHideMobileScoreKeyboard());
-  const head = modal.querySelector('.modalHead') || modal.querySelector('.modalCard') || modal;
-  head.appendChild(pad);
-  return pad;
-}
-function wcShowMobileScoreKeyboard(input){
-  if(!wcIsMobileScoreKeyboardDevice() || !input || input.disabled) return;
-  wcActiveMobileScoreInput = input;
-  input.classList.add('wcMobileNoNativeKeyboard');
-  input.readOnly = true;
-  input.dataset.wcFreshFocus = '1';
-  const pad = wcEnsureMobileScoreKeyboard();
-  if(pad) pad.classList.add('show');
-}
-function wcHideMobileScoreKeyboard(){
-  const pad = document.getElementById('wcMobileScoreKeyboard');
-  if(pad) pad.classList.remove('show');
-  wcActiveMobileScoreInput = null;
-}
-function wcMobileScoreKey(n){
-  const input = wcActiveMobileScoreInput;
-  if(!input || input.disabled) return;
-  const current = String(input.value || '').replace(/\D/g,'').slice(0,2);
-  let next;
-  if(input.dataset.wcFreshFocus === '1'){
-    next = n;
-    input.dataset.wcFreshFocus = '0';
-  }else{
-    next = (current + n).slice(-2);
-  }
-  input.value = next;
-  input.dispatchEvent(new Event('input', {bubbles:true}));
-}
-function wcAttachMobileScoreKeyboard(root){
-  if(!wcIsMobileScoreKeyboardDevice()) return;
-  const host = root || document;
-  host.querySelectorAll('#modal.worldcupMode .scoreInput').forEach(inp=>{
-    if(inp.dataset.wcMobileKeypadAttached === '1') return;
-    inp.dataset.wcMobileKeypadAttached = '1';
-    inp.setAttribute('inputmode','none');
-    inp.addEventListener('focus', ()=>wcShowMobileScoreKeyboard(inp));
-    inp.addEventListener('click', ()=>wcShowMobileScoreKeyboard(inp));
-    inp.addEventListener('touchstart', ()=>wcShowMobileScoreKeyboard(inp), {passive:true});
-  });
-}
-
 function wcLocalPickLockKey(roundId){
   return `typer_wc_picks_saved_v1_${currentRoomCode||'room'}_${roundId||'round'}_${getPlayerNo()||userUid||'player'}`;
 }
@@ -4439,9 +4339,6 @@ async function openWorldCupResultsModal(){
     await openWorldCupEvent();
   };
   modalOpen(getLang()==='en' ? 'World Cup results' : 'Wyniki MŚ', body);
-  const wcModal = el('modal');
-  if(wcModal) wcModal.classList.add('worldcupMode');
-  wcAttachMobileScoreKeyboard(body);
 }
 async function endWorldCupRound(){
   if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
@@ -4697,7 +4594,6 @@ async function renderWorldCupEvent(){
       row.append(teams,pick,info); list.appendChild(row);
     });
     updateWcSavePicksButton();
-    wcAttachMobileScoreKeyboard(body);
   }
   const ranking = await wcComputeRanking();
   const tbody = body._els.rankingBody(); tbody.innerHTML='';
