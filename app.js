@@ -4695,11 +4695,13 @@ async function renderWorldCupEvent(){
   };
   setAdminBtnState(body._els.addRoundBtn(), !state.ended && !matches.length);
   setAdminBtnState(body._els.saveRoundBtn(), !state.ended && !!matches.length && !roundIsSaved && !wcTypingClosed);
-  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && !allResultsSaved && wcTypingClosed); // v2104: wyników nie wpisujemy od razu, dopiero po zakończeniu typowania
+  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && wcAllPlayersSubmitted && !allResultsSaved); // v2107: wyniki tylko dla admina dopiero po oddaniu typów przez wszystkich graczy
   setAdminBtnState(body._els.endRoundBtn(), !state.ended && !!matches.length && roundIsSaved && allResultsSaved);
   setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId);
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const roundPicksByUid = await wcFetchAllPicks(state.activeRoundId);
+  const visibleWcPlayers = (lastPlayers || []).filter(p => String(p?.playerNo || '').trim());
+  const wcAllPlayersSubmitted = !!(matches.length && visibleWcPlayers.length && visibleWcPlayers.every(p => wcHasCompletePicksForMatches(roundPicksByUid[p.uid]?.picks, matches)));
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists;
   const myPicksSavedOrLocked = myPicksAlreadySaved; // v2104: o blokadzie typowania decyduje zapis w Firebase, nie lokalna blokada przeglądarki
@@ -4796,7 +4798,7 @@ async function renderWorldCupEvent(){
   const playersBox = body._els.playersList ? body._els.playersList() : null;
   if(playersBox){
     playersBox.innerHTML = '';
-    const visiblePlayers = (lastPlayers || []).filter(p => String(p?.playerNo || '').trim());
+    const visiblePlayers = visibleWcPlayers;
     const adminUid = currentRoom?.adminUid;
     if(!visiblePlayers.length){
       const empty = document.createElement('div');
