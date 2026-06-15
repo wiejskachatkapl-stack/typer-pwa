@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2102;
+const BUILD = 2103;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3656,6 +3656,40 @@ function wcEnsureEventStyles(){
       #modal.worldcupMode .wcMobileKey{min-width:28px;height:30px;font-size:16px;border-radius:10px;padding:0 6px;}
       #modal.worldcupMode .wcMobileKeyBack,#modal.worldcupMode .wcMobileKeyClose{min-width:34px;}
     }
+
+
+    /* v2103: EVENT MŚ - tylko telefon: Ranking MŚ i Gracze MŚ na jednym poziomie */
+    @media (hover:none) and (pointer:coarse) and (orientation:landscape), (max-width:980px) and (max-height:620px){
+      #modal.worldcupMode .wcEventRight{
+        display:grid !important;
+        grid-template-columns:1fr 1fr !important;
+        gap:10px !important;
+        align-items:start !important;
+      }
+      #modal.worldcupMode .wcEventRight > .panel{
+        min-width:0 !important;
+        height:auto !important;
+        margin:0 !important;
+      }
+      #modal.worldcupMode .wcEventRight > .panel .title{
+        font-size:20px !important;
+        margin-bottom:8px !important;
+      }
+      #modal.worldcupMode #wcPlayersList{
+        min-height:0 !important;
+        max-height:260px !important;
+      }
+      #modal.worldcupMode #wcRankingWrap{
+        max-height:260px !important;
+        overflow:auto !important;
+      }
+    }
+    @media (hover:none) and (pointer:coarse) and (max-width:620px) and (orientation:portrait){
+      #modal.worldcupMode .wcEventRight{
+        display:flex !important;
+        flex-direction:column !important;
+      }
+    }
   `;
   document.head.appendChild(st);
 }
@@ -4217,7 +4251,7 @@ function wcBuildShell(){
   left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div><div id="wcPlayerActions" class="row wcPlayerActions" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
   const wcSaveRoundButton = wcMakeImgButton('btn_zapisz_kolejke.png', 'wcSaveRoundBtn', getLang()==='en'?'Save round':'Zapisz kolejkę');
   const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
-  const right = document.createElement('div'); right.className='col'; right.style.gap='14px';
+  const right = document.createElement('div'); right.className='col wcEventRight'; right.style.gap='14px';
   right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Gracze MŚ</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
   const adminBtns = left.querySelector('.wcAdminButtons');
   adminBtns.append(
