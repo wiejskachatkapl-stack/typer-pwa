@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2101;
+const BUILD = 2102;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3637,13 +3637,24 @@ function wcEnsureEventStyles(){
         background:rgba(255,255,255,.10);color:#fff;font-weight:1000;font-size:18px;line-height:1;
         box-shadow:inset 0 0 0 1px rgba(255,255,255,.05), 0 5px 12px rgba(0,0,0,.24);
       }
+      #modal.worldcupMode .wcMobileKeyBack{min-width:42px;background:rgba(255,180,35,.20);border-color:rgba(255,205,90,.55);}
       #modal.worldcupMode .wcMobileKeyClose{min-width:42px;background:rgba(255,55,80,.22);border-color:rgba(255,95,115,.55);}
       #modal.worldcupMode input.wcMobileNoNativeKeyboard{caret-color:transparent;}
+      #modal.worldcupMode input.wcScoreActiveInput{
+        border-color:rgba(60,220,120,.92) !important;
+        box-shadow:0 0 0 2px rgba(60,220,120,.18), inset 0 0 0 1px rgba(255,255,255,.08) !important;
+        background-image:linear-gradient(rgba(255,255,255,.96), rgba(255,255,255,.96));
+        background-size:2px 62%;
+        background-repeat:no-repeat;
+        background-position:calc(100% - 8px) 50%;
+        animation:wcScoreCaretBlink 1s steps(2,start) infinite;
+      }
+      @keyframes wcScoreCaretBlink{50%{background-size:0 62%;}}
     }
     @media (hover:none) and (pointer:coarse) and (max-width:620px){
       #modal.worldcupMode .wcMobileKeypad{width:100%;order:5;margin-left:0;gap:5px;padding:5px 7px;}
       #modal.worldcupMode .wcMobileKey{min-width:28px;height:30px;font-size:16px;border-radius:10px;padding:0 6px;}
-      #modal.worldcupMode .wcMobileKeyClose{min-width:34px;}
+      #modal.worldcupMode .wcMobileKeyBack,#modal.worldcupMode .wcMobileKeyClose{min-width:34px;}
     }
   `;
   document.head.appendChild(st);
@@ -3698,6 +3709,7 @@ function wcEnsureMobileScoreKeyboard(){
     pad.appendChild(b);
   };
   ['0','1','2','3','4','5','6','7','8','9'].forEach(n=>addKey(n, '', ()=>wcMobileScoreKey(n)));
+  addKey('⌫', 'wcMobileKeyBack', ()=>wcMobileScoreBackspace());
   addKey('×', 'wcMobileKeyClose', ()=>wcHideMobileScoreKeyboard());
   const head = modal.querySelector('.modalHead') || modal.querySelector('.modalCard') || modal;
   head.appendChild(pad);
@@ -3705,8 +3717,12 @@ function wcEnsureMobileScoreKeyboard(){
 }
 function wcShowMobileScoreKeyboard(input){
   if(!wcIsMobileScoreKeyboardDevice() || !input || input.disabled) return;
+  if(wcActiveMobileScoreInput && wcActiveMobileScoreInput !== input){
+    wcActiveMobileScoreInput.classList.remove('wcScoreActiveInput');
+  }
   wcActiveMobileScoreInput = input;
   input.classList.add('wcMobileNoNativeKeyboard');
+  input.classList.add('wcScoreActiveInput');
   input.readOnly = true;
   input.dataset.wcFreshFocus = '1';
   const pad = wcEnsureMobileScoreKeyboard();
@@ -3715,6 +3731,7 @@ function wcShowMobileScoreKeyboard(input){
 function wcHideMobileScoreKeyboard(){
   const pad = document.getElementById('wcMobileScoreKeyboard');
   if(pad) pad.classList.remove('show');
+  if(wcActiveMobileScoreInput) wcActiveMobileScoreInput.classList.remove('wcScoreActiveInput');
   wcActiveMobileScoreInput = null;
 }
 function wcMobileScoreKey(n){
@@ -3729,6 +3746,14 @@ function wcMobileScoreKey(n){
     next = (current + n).slice(-2);
   }
   input.value = next;
+  input.dispatchEvent(new Event('input', {bubbles:true}));
+}
+function wcMobileScoreBackspace(){
+  const input = wcActiveMobileScoreInput;
+  if(!input || input.disabled) return;
+  const current = String(input.value || '').replace(/\D/g,'').slice(0,2);
+  input.value = current.slice(0, -1);
+  input.dataset.wcFreshFocus = '0';
   input.dispatchEvent(new Event('input', {bubbles:true}));
 }
 function wcAttachMobileScoreKeyboard(root){
