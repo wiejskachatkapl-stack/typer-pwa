@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2103;
+const BUILD = 2101;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3629,7 +3629,7 @@ function wcEnsureEventStyles(){
         width:min(760px,72vw);min-height:48px;padding:6px 12px;border-radius:18px;
         border:2px solid rgba(16,210,95,.82);background:rgba(4,23,55,.76);
         box-shadow:0 0 18px rgba(16,210,95,.22), inset 0 0 0 1px rgba(255,255,255,.06);
-        backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:120;pointer-events:auto;
+        backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:120;
       }
       #modal.worldcupMode .wcMobileKeypad.show{display:flex !important;}
       #modal.worldcupMode .wcMobileKey{
@@ -3637,58 +3637,13 @@ function wcEnsureEventStyles(){
         background:rgba(255,255,255,.10);color:#fff;font-weight:1000;font-size:18px;line-height:1;
         box-shadow:inset 0 0 0 1px rgba(255,255,255,.05), 0 5px 12px rgba(0,0,0,.24);
       }
-      #modal.worldcupMode .wcMobileKeyBack{min-width:42px;background:rgba(255,180,35,.20);border-color:rgba(255,205,90,.55);}
       #modal.worldcupMode .wcMobileKeyClose{min-width:42px;background:rgba(255,55,80,.22);border-color:rgba(255,95,115,.55);}
       #modal.worldcupMode input.wcMobileNoNativeKeyboard{caret-color:transparent;}
-      #modal.worldcupMode input.wcScoreActiveInput{
-        border-color:rgba(60,220,120,.92) !important;
-        box-shadow:0 0 0 2px rgba(60,220,120,.18), inset 0 0 0 1px rgba(255,255,255,.08) !important;
-        background-image:linear-gradient(rgba(255,255,255,.96), rgba(255,255,255,.96));
-        background-size:2px 62%;
-        background-repeat:no-repeat;
-        background-position:calc(100% - 8px) 50%;
-        animation:wcScoreCaretBlink 1s steps(2,start) infinite;
-      }
-      @keyframes wcScoreCaretBlink{50%{background-size:0 62%;}}
     }
     @media (hover:none) and (pointer:coarse) and (max-width:620px){
       #modal.worldcupMode .wcMobileKeypad{width:100%;order:5;margin-left:0;gap:5px;padding:5px 7px;}
       #modal.worldcupMode .wcMobileKey{min-width:28px;height:30px;font-size:16px;border-radius:10px;padding:0 6px;}
-      #modal.worldcupMode .wcMobileKeyBack,#modal.worldcupMode .wcMobileKeyClose{min-width:34px;}
-    }
-
-
-    /* v2103: EVENT MŚ - tylko telefon: Ranking MŚ i Gracze MŚ na jednym poziomie */
-    @media (hover:none) and (pointer:coarse) and (orientation:landscape), (max-width:980px) and (max-height:620px){
-      #modal.worldcupMode .wcEventRight{
-        display:grid !important;
-        grid-template-columns:1fr 1fr !important;
-        gap:10px !important;
-        align-items:start !important;
-      }
-      #modal.worldcupMode .wcEventRight > .panel{
-        min-width:0 !important;
-        height:auto !important;
-        margin:0 !important;
-      }
-      #modal.worldcupMode .wcEventRight > .panel .title{
-        font-size:20px !important;
-        margin-bottom:8px !important;
-      }
-      #modal.worldcupMode #wcPlayersList{
-        min-height:0 !important;
-        max-height:260px !important;
-      }
-      #modal.worldcupMode #wcRankingWrap{
-        max-height:260px !important;
-        overflow:auto !important;
-      }
-    }
-    @media (hover:none) and (pointer:coarse) and (max-width:620px) and (orientation:portrait){
-      #modal.worldcupMode .wcEventRight{
-        display:flex !important;
-        flex-direction:column !important;
-      }
+      #modal.worldcupMode .wcMobileKeyClose{min-width:34px;}
     }
   `;
   document.head.appendChild(st);
@@ -3738,20 +3693,11 @@ function wcEnsureMobileScoreKeyboard(){
     b.type = 'button';
     b.className = 'wcMobileKey' + (cls ? ' ' + cls : '');
     b.textContent = txt;
-    const run = (e)=>{
-      if(e){ e.preventDefault(); e.stopPropagation(); }
-      const now = Date.now();
-      if(b.dataset.wcLastTap && now - Number(b.dataset.wcLastTap) < 220) return;
-      b.dataset.wcLastTap = String(now);
-      fn();
-    };
-    b.addEventListener('pointerup', run);
-    b.addEventListener('touchend', run, {passive:false});
-    b.addEventListener('click', run);
+    b.addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); });
+    b.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); fn(); });
     pad.appendChild(b);
   };
   ['0','1','2','3','4','5','6','7','8','9'].forEach(n=>addKey(n, '', ()=>wcMobileScoreKey(n)));
-  addKey('⌫', 'wcMobileKeyBack', ()=>wcMobileScoreBackspace());
   addKey('×', 'wcMobileKeyClose', ()=>wcHideMobileScoreKeyboard());
   const head = modal.querySelector('.modalHead') || modal.querySelector('.modalCard') || modal;
   head.appendChild(pad);
@@ -3759,22 +3705,16 @@ function wcEnsureMobileScoreKeyboard(){
 }
 function wcShowMobileScoreKeyboard(input){
   if(!wcIsMobileScoreKeyboardDevice() || !input || input.disabled) return;
-  if(wcActiveMobileScoreInput && wcActiveMobileScoreInput !== input){
-    wcActiveMobileScoreInput.classList.remove('wcScoreActiveInput');
-  }
   wcActiveMobileScoreInput = input;
   input.classList.add('wcMobileNoNativeKeyboard');
-  input.classList.add('wcScoreActiveInput');
   input.readOnly = true;
   input.dataset.wcFreshFocus = '1';
   const pad = wcEnsureMobileScoreKeyboard();
   if(pad) pad.classList.add('show');
-  try{ input.focus({preventScroll:true}); }catch(e){ try{ input.focus(); }catch(_){} }
 }
 function wcHideMobileScoreKeyboard(){
   const pad = document.getElementById('wcMobileScoreKeyboard');
   if(pad) pad.classList.remove('show');
-  if(wcActiveMobileScoreInput) wcActiveMobileScoreInput.classList.remove('wcScoreActiveInput');
   wcActiveMobileScoreInput = null;
 }
 function wcMobileScoreKey(n){
@@ -3791,34 +3731,16 @@ function wcMobileScoreKey(n){
   input.value = next;
   input.dispatchEvent(new Event('input', {bubbles:true}));
 }
-function wcMobileScoreBackspace(){
-  const input = wcActiveMobileScoreInput;
-  if(!input || input.disabled) return;
-  const current = String(input.value || '').replace(/\D/g,'').slice(0,2);
-  input.value = current.slice(0, -1);
-  input.dataset.wcFreshFocus = '0';
-  input.dispatchEvent(new Event('input', {bubbles:true}));
-}
 function wcAttachMobileScoreKeyboard(root){
   if(!wcIsMobileScoreKeyboardDevice()) return;
   const host = root || document;
-  host.querySelectorAll('.scoreInput').forEach(inp=>{
-    const insideWcModal = !!(inp.closest && inp.closest('#modal.worldcupMode'));
-    const isEventScoreInput = inp.classList.contains('wcPickHome') || inp.classList.contains('wcPickAway') || insideWcModal;
-    if(!isEventScoreInput) return;
+  host.querySelectorAll('#modal.worldcupMode .scoreInput').forEach(inp=>{
     if(inp.dataset.wcMobileKeypadAttached === '1') return;
     inp.dataset.wcMobileKeypadAttached = '1';
     inp.setAttribute('inputmode','none');
-    inp.setAttribute('autocomplete','off');
-    const openPad = (e)=>{
-      if(e && e.cancelable) e.preventDefault();
-      if(e) e.stopPropagation();
-      wcShowMobileScoreKeyboard(inp);
-    };
-    inp.addEventListener('focus', openPad);
-    inp.addEventListener('click', openPad);
-    inp.addEventListener('pointerdown', openPad);
-    inp.addEventListener('touchstart', openPad, {passive:false});
+    inp.addEventListener('focus', ()=>wcShowMobileScoreKeyboard(inp));
+    inp.addEventListener('click', ()=>wcShowMobileScoreKeyboard(inp));
+    inp.addEventListener('touchstart', ()=>wcShowMobileScoreKeyboard(inp), {passive:true});
   });
 }
 
@@ -4270,7 +4192,7 @@ function wcBuildShell(){
   left.innerHTML = `<div class="title" style="margin:0 0 10px 0">Mecze MŚ</div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div><div id="wcPlayerActions" class="row wcPlayerActions" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
   const wcSaveRoundButton = wcMakeImgButton('btn_zapisz_kolejke.png', 'wcSaveRoundBtn', getLang()==='en'?'Save round':'Zapisz kolejkę');
   const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
-  const right = document.createElement('div'); right.className='col wcEventRight'; right.style.gap='14px';
+  const right = document.createElement('div'); right.className='col'; right.style.gap='14px';
   right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Ranking MŚ</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">Gracze MŚ</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
   const adminBtns = left.querySelector('.wcAdminButtons');
   adminBtns.append(
@@ -4489,7 +4411,6 @@ async function openWorldCupResultsModal(){
   if(!state.activeRoundId){ showToast(getLang()==='en' ? 'No active round' : 'Brak aktywnej kolejki'); return; }
   const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
   if(!roundMeta.savedAt && roundMeta.status !== 'saved'){ showToast(getLang()==='en'?'Save round first':'Najpierw zapisz kolejkę'); return; }
-  if(!wcIsTypingClosed(roundMeta)){ showToast(getLang()==='en'?'Typing is still open':'Typowanie jest jeszcze aktywne'); return; }
   const matches = await wcFetchRoundMatches(state.activeRoundId);
   const body = document.createElement('div'); body.className='col'; body.style.gap='10px';
   matches.forEach(m=>{
@@ -4695,16 +4616,14 @@ async function renderWorldCupEvent(){
   };
   setAdminBtnState(body._els.addRoundBtn(), !state.ended && !matches.length);
   setAdminBtnState(body._els.saveRoundBtn(), !state.ended && !!matches.length && !roundIsSaved && !wcTypingClosed);
-  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && wcAllPlayersSubmitted && !allResultsSaved); // v2107: wyniki tylko dla admina dopiero po oddaniu typów przez wszystkich graczy
+  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && !allResultsSaved);
   setAdminBtnState(body._els.endRoundBtn(), !state.ended && !!matches.length && roundIsSaved && allResultsSaved);
   setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId);
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const roundPicksByUid = await wcFetchAllPicks(state.activeRoundId);
-  const visibleWcPlayers = (lastPlayers || []).filter(p => String(p?.playerNo || '').trim());
-  const wcAllPlayersSubmitted = !!(matches.length && visibleWcPlayers.length && visibleWcPlayers.every(p => wcHasCompletePicksForMatches(roundPicksByUid[p.uid]?.picks, matches)));
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists;
-  const myPicksSavedOrLocked = myPicksAlreadySaved; // v2104: o blokadzie typowania decyduje zapis w Firebase, nie lokalna blokada przeglądarki
+  const myPicksSavedOrLocked = myPicksAlreadySaved || wcArePicksSavedLocal(state.activeRoundId);
   const wcDeadlineBox = document.getElementById('wcDeadlineBox');
   if(state.ended || myPicksSavedOrLocked){
     if(window.__wcDeadlineTimer){ clearInterval(window.__wcDeadlineTimer); window.__wcDeadlineTimer = null; }
@@ -4798,7 +4717,7 @@ async function renderWorldCupEvent(){
   const playersBox = body._els.playersList ? body._els.playersList() : null;
   if(playersBox){
     playersBox.innerHTML = '';
-    const visiblePlayers = visibleWcPlayers;
+    const visiblePlayers = (lastPlayers || []).filter(p => String(p?.playerNo || '').trim());
     const adminUid = currentRoom?.adminUid;
     if(!visiblePlayers.length){
       const empty = document.createElement('div');
