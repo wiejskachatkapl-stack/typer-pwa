@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2110;
+const BUILD = 2111;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -4485,7 +4485,8 @@ async function openWorldCupResultsModal(){
   if(!state.activeRoundId){ showToast(getLang()==='en' ? 'No active round' : 'Brak aktywnej kolejki'); return; }
   const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
   if(!roundMeta.savedAt && roundMeta.status !== 'saved'){ showToast(getLang()==='en'?'Save round first':'Najpierw zapisz kolejkę'); return; }
-  if(!wcIsTypingClosed(roundMeta)){ showToast(getLang()==='en'?'Typing is still open':'Typowanie jest jeszcze aktywne'); return; }
+  // v2111: admin może otworzyć wpisywanie wyników po zapisaniu kolejki.
+  // Typowanie graczy pozostaje bez zmian; zapis wyników nadal tylko dla admina.
   const matches = await wcFetchRoundMatches(state.activeRoundId);
   const body = document.createElement('div'); body.className='col'; body.style.gap='10px';
   matches.forEach(m=>{
@@ -4683,21 +4684,24 @@ async function renderWorldCupEvent(){
   const roundIsSaved = !!(roundMeta.savedAt || roundMeta.status === 'saved');
   const wcDeadlineMs = wcParseMs(roundMeta.typingDeadlineMs ?? roundMeta.typingDeadline ?? null);
   const wcTypingClosed = !!(wcDeadlineMs && Date.now() >= wcDeadlineMs);
-  const setAdminBtnState = (node, enabled)=>{
+  const setAdminBtnState = (node, enabled, visible=true)=>{
     if(!node) return;
-    node.style.display = isAdmin() ? 'inline-flex' : 'none';
-    node.disabled = !(isAdmin() && enabled);
-    node.classList.toggle('wcBtnDisabled', !(isAdmin() && enabled));
+    const show = !!(isAdmin() && visible);
+    node.style.display = show ? 'inline-flex' : 'none';
+    node.disabled = !(show && enabled);
+    node.classList.toggle('wcBtnDisabled', !(show && enabled));
   };
   const myPicksDoc = await wcFetchMyPicksDoc(state.activeRoundId);
   const roundPicksByUid = await wcFetchAllPicks(state.activeRoundId);
   const visibleWcPlayers = (lastPlayers || []).filter(p => String(p?.playerNo || '').trim());
   const wcAllPlayersSubmitted = !!(matches.length && visibleWcPlayers.length && visibleWcPlayers.every(p => wcHasCompletePicksForMatches(roundPicksByUid[p.uid]?.picks, matches)));
-  setAdminBtnState(body._els.addRoundBtn(), !state.ended && !matches.length);
-  setAdminBtnState(body._els.saveRoundBtn(), !state.ended && !!matches.length && !roundIsSaved && !wcTypingClosed);
-  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && !allResultsSaved); // v2110: admin może wejść w wyniki po zapisaniu kolejki; nie czekamy na wszystkich graczy
-  setAdminBtnState(body._els.endRoundBtn(), !state.ended && !!matches.length && roundIsSaved && allResultsSaved);
-  setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId);
+  setAdminBtnState(body._els.addRoundBtn(), !state.ended && !matches.length, !matches.length);
+  setAdminBtnState(body._els.saveRoundBtn(), !state.ended && !!matches.length && !roundIsSaved && !wcTypingClosed, !!matches.length && !roundIsSaved);
+  // v2111: przycisk "Wpisz wyniki" u admina pojawia się dopiero po zapisaniu kolejki
+  // i pozostaje aktywny do czasu zapisania kompletu wyników. Nie zależy od tego, czy gracze jeszcze typują.
+  setAdminBtnState(body._els.resultsBtn(), !state.ended && !!matches.length && roundIsSaved && !allResultsSaved, !!matches.length && roundIsSaved && !allResultsSaved);
+  setAdminBtnState(body._els.endRoundBtn(), !state.ended && !!matches.length && roundIsSaved && allResultsSaved, !!matches.length && allResultsSaved);
+  setAdminBtnState(body._els.endEventBtn(), !state.ended && !state.activeRoundId, !state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
   const myPicksAlreadySaved = !!myPicksDoc.exists;
   // v2109: stary dokument typów nie może blokować wpisywania, dopóki nie ma wyników i typowanie nie jest zamknięte.

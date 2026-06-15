@@ -1,11 +1,11 @@
-// Typer PWA Service Worker (BUILD 2110)
-const CACHE_NAME = 'typer-cache-2110';
+// Typer PWA Service Worker (BUILD 2111)
+const CACHE_NAME = 'typer-cache-2111';
 
 // Core assets to pre-cache (keep minimal to avoid stale UI)
 const CORE = [
   './',
   './index.html',
-  './app.js?v=2110',
+  './app.js?v=2111',
   './manifest.json',
   './data/leagues.json'
 ];
