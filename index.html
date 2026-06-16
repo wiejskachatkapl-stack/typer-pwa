@@ -2039,6 +2039,21 @@
   pointer-events:none !important;
 }
 
+
+
+/* ===== BUILD 2112: mobile join-room button smaller only ===== */
+@media (max-width: 980px){
+  .joinRoom .rowRight{
+    justify-content:center;
+  }
+  .joinRoom .joinRoomEnterBtn img{
+    height:58px !important;
+    max-width:78vw !important;
+    width:auto !important;
+    object-fit:contain !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2125,7 +2140,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="panel block">
 <h2 id="t_join_title">Dołącz do pokoju</h2>
 <div class="row" style="margin-top:10px"><input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase"/>
-<button class="imgBtn sysBtn" data-btn="btn_wejdz_pokoj.png" id="btnJoinRoom" type="button" style="transform:scale(0.8);transform-origin:center;"><img alt="btnJoinRoom" data-btn="btn_wejdz_pokoj.png" src="ui/buttons/pl/btn_wejdz_pokoj.png"/></button>
+<button class="imgBtn sysBtn" data-btn="btn_wejdz_pokoj.png" id="btnJoinRoom" type="button"><img alt="btnJoinRoom" data-btn="btn_wejdz_pokoj.png" src="ui/buttons/pl/btn_wejdz_pokoj.png"/></button>
 </div>
 <div class="help" id="t_join_help" style="margin-top:8px">Wpisz kod od admina.</div>
 </div>
@@ -2566,7 +2581,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.2.111</div>
+<div id="buildCornerText">Mariusz Gębka v.2.112</div>
 </div>
 </body>
 </html>

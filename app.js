@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2111;
+const BUILD = 2112;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -780,7 +780,7 @@ const btnMenu = makeSysImgButton("btn_menu.png", {
 });
 
 const btnEnter = makeSysImgButton("btn_wejdz_pokoj.png", {
-  cls: "sysBtn",
+  cls: "sysBtn joinRoomEnterBtn",
   alt: "enter",
   title: (getLang()==="en") ? "Join" : "Dołącz",
   onClick: async ()=>{
