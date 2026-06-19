@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2114;
+const BUILD = 2116;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -4559,13 +4559,13 @@ async function wcConfirmEndEvent(){
     const title = document.createElement('div');
     title.className = 'title';
     title.style.margin = '0';
-    title.textContent = getLang()==='en' ? 'Confirm ending the event?' : 'Czy potwierdzasz zakończenie Eventu?';
+    title.textContent = getLang()==='en' ? 'End the whole Event?' : 'Czy zakończyć cały Event?';
 
     const info = document.createElement('div');
     info.className = 'sub';
     info.textContent = getLang()==='en'
-      ? 'This will definitively end the World Cup event and announce the final winners.'
-      : 'To definitywnie zakończy Event MŚ i ogłosi zwycięzców końcowych.';
+      ? 'After confirmation, the final winners screen will be shown for 10 seconds.'
+      : 'Po potwierdzeniu pojawi się na 10 sekund ekran zwycięzców i klasyfikacji końcowej.';
 
     const row = document.createElement('div');
     row.className = 'row';
@@ -4573,8 +4573,8 @@ async function wcConfirmEndEvent(){
     row.style.gap = '18px';
     row.style.flexWrap = 'wrap';
 
-    const yes = makeSysImgButton('btn_tak.png', {cls:'sysBtn', alt:getLang()==='en'?'Yes':'TAK', title:getLang()==='en'?'Yes':'TAK'});
-    const no = makeSysImgButton('btn_nie.png', {cls:'sysBtn', alt:getLang()==='en'?'No':'NIE', title:getLang()==='en'?'No':'NIE'});
+    const yes = makeSysImgButton('btn_tak.png', {cls:'sysBtn', alt:getLang()==='en'?'YES, END EVENT':'TAK, ZAKOŃCZ EVENT', title:getLang()==='en'?'YES, END EVENT':'TAK, ZAKOŃCZ EVENT'});
+    const no = makeSysImgButton('btn_nie.png', {cls:'sysBtn', alt:getLang()==='en'?'NO / CANCEL':'NIE / ANULUJ', title:getLang()==='en'?'NO / CANCEL':'NIE / ANULUJ'});
 
     const finish = (val)=>{ try{ overlay.remove(); }catch{} resolve(val); };
     yes.onclick = ()=> finish(true);
@@ -4587,51 +4587,173 @@ async function wcConfirmEndEvent(){
     host.appendChild(overlay);
   });
 }
-function wcShowFinalWinnersForFiveSeconds(winners){
+function wcShowFinalWinnersForFiveSeconds(ranking){
   return new Promise(resolve=>{
-    const wrap = document.createElement('div');
-    wrap.className = 'col';
-    wrap.style.gap = '16px';
-    wrap.style.alignItems = 'stretch';
+    const isEn = getLang && getLang()==='en';
+    const rows = Array.isArray(ranking) ? ranking.slice() : [];
+    const top = [rows[0], rows[1], rows[2]];
+    const restLeft = rows.slice(3,8);
+    const restRight = rows.slice(8,12);
+    const ptsLabel = (n)=> isEn ? `${Number(n||0)} pts` : `${Number(n||0)} pkt`;
+    const safe = (v)=> String(v ?? '—');
 
+    const screen = document.createElement('div');
+    screen.className = 'wcFinalScreen';
+    screen.style.cssText = [
+      'position:relative',
+      'width:min(1680px,96vw)',
+      'min-height:min(820px,86vh)',
+      'overflow:hidden',
+      'border-radius:26px',
+      'border:1px solid rgba(0,188,255,.75)',
+      'background:radial-gradient(circle at 50% 28%, rgba(14,82,150,.52), rgba(3,16,38,.96) 58%, rgba(0,7,18,.98) 100%)',
+      'box-shadow:0 22px 80px rgba(0,0,0,.68), inset 0 0 80px rgba(0,170,255,.16)',
+      'color:#fff',
+      'font-family:inherit',
+      'padding:28px 34px 22px',
+      'display:flex',
+      'flex-direction:column',
+      'gap:14px'
+    ].join(';');
+
+    const confetti = document.createElement('div');
+    confetti.style.cssText = 'position:absolute;inset:0;pointer-events:none;opacity:.85;background:radial-gradient(circle at 15% 12%, rgba(255,205,60,.45) 0 2px, transparent 3px),radial-gradient(circle at 32% 8%, rgba(42,185,255,.5) 0 2px, transparent 3px),radial-gradient(circle at 74% 11%, rgba(255,202,45,.55) 0 2px, transparent 3px),radial-gradient(circle at 88% 20%, rgba(65,170,255,.45) 0 2px, transparent 3px),radial-gradient(circle at 52% 15%, rgba(255,255,255,.35) 0 1px, transparent 3px);';
+    screen.appendChild(confetti);
+
+    const topBar = document.createElement('div');
+    topBar.style.cssText = 'position:relative;z-index:2;display:grid;grid-template-columns:180px 1fr 180px;align-items:start;gap:14px;';
+    const logo = document.createElement('div');
+    logo.style.cssText = 'font-size:42px;font-weight:1000;line-height:.85;color:#36c8ff;text-shadow:0 0 20px rgba(0,198,255,.75);letter-spacing:-2px;';
+    logo.innerHTML = 'RN<br>APP';
+    const titleWrap = document.createElement('div');
+    titleWrap.style.cssText = 'text-align:center;text-transform:uppercase;';
+    const eventSmall = document.createElement('div');
+    eventSmall.style.cssText = 'font-size:24px;letter-spacing:12px;color:#ffd36d;font-weight:900;margin-bottom:2px;';
+    eventSmall.textContent = 'EVENT';
     const title = document.createElement('div');
-    title.className = 'title';
-    title.style.textAlign = 'center';
-    title.textContent = getLang()==='en' ? 'Final event winners' : 'Zwycięzcy Eventu MŚ';
-    wrap.appendChild(title);
+    title.style.cssText = 'font-size:clamp(38px,5.2vw,78px);line-height:.95;font-weight:1000;letter-spacing:1px;text-shadow:0 5px 16px rgba(0,0,0,.8);';
+    title.innerHTML = '<span style="color:#f8fbff">MŚ 2026</span> <span style="color:#ffd35a">ZAKOŃCZONY</span>';
+    const sub = document.createElement('div');
+    sub.style.cssText = 'margin-top:8px;font-size:clamp(16px,1.6vw,26px);font-weight:900;letter-spacing:1px;color:#f5f8ff;';
+    sub.textContent = isEn ? 'THANK YOU ALL FOR PARTICIPATING!' : 'DZIĘKUJEMY WSZYSTKIM ZA UDZIAŁ!';
+    titleWrap.append(eventSmall,title,sub);
+    const badge = document.createElement('div');
+    badge.style.cssText = 'justify-self:end;text-align:center;border:1px solid rgba(255,211,90,.65);border-radius:0 0 18px 18px;padding:10px 12px;background:rgba(0,13,33,.7);box-shadow:inset 0 0 28px rgba(255,210,80,.08);font-weight:1000;';
+    badge.innerHTML = '<div style="font-size:34px">🏆</div><div>TYPER</div><div style="font-size:12px;color:#dbe8ff">MISTRZOSTWA ŚWIATA</div><div style="color:#ffd35a">2026</div>';
+    topBar.append(logo,titleWrap,badge);
+    screen.appendChild(topBar);
 
-    winners.forEach((r, idx)=>{
-      const row = document.createElement('div');
-      row.className = 'playerRow';
-      row.style.padding = '14px 16px';
-      row.style.fontSize = '18px';
-      row.style.minHeight = '58px';
-      const place = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : '🥉');
-      const left = document.createElement('div');
-      left.style.fontWeight = '1000';
-      left.textContent = `${place} ${idx+1}. ${r.nick}`;
-      const pts = document.createElement('div');
-      pts.className = 'badge';
-      pts.textContent = getLang()==='en' ? `${r.points} pts` : `${r.points} pkt`;
-      row.append(left, pts);
-      wrap.appendChild(row);
-    });
+    const main = document.createElement('div');
+    main.style.cssText = 'position:relative;z-index:2;display:grid;grid-template-columns:minmax(250px,360px) 1fr minmax(250px,360px);gap:22px;align-items:end;flex:1;min-height:360px;';
 
-    modalOpen(getLang()==='en' ? 'Event winners' : 'Zwycięzcy eventu', wrap);
+    const makeList = (items, startNo)=>{
+      const box = document.createElement('div');
+      box.style.cssText = 'align-self:center;border:1px solid rgba(0,190,255,.55);border-radius:18px;background:linear-gradient(180deg,rgba(4,20,49,.82),rgba(1,10,26,.7));box-shadow:inset 0 0 30px rgba(0,195,255,.09);padding:18px 20px;min-height:230px;';
+      const h = document.createElement('div');
+      h.style.cssText = 'font-size:22px;font-weight:1000;text-align:center;margin-bottom:12px;letter-spacing:.5px;';
+      h.textContent = isEn ? 'FINAL STANDINGS' : 'KLASYFIKACJA KOŃCOWA';
+      box.appendChild(h);
+      if(!items.length){
+        const empty = document.createElement('div');
+        empty.style.cssText = 'opacity:.7;text-align:center;padding:28px 0;font-weight:800;';
+        empty.textContent = '—';
+        box.appendChild(empty);
+        return box;
+      }
+      items.forEach((r,i)=>{
+        const row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid rgba(54,196,255,.18);font-size:20px;';
+        row.innerHTML = `<div style="color:#22c7ff;font-weight:1000">${startNo+i}.</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safe(r?.nick)}</div><div style="color:#22c7ff;font-weight:1000">${ptsLabel(r?.points)}</div>`;
+        box.appendChild(row);
+      });
+      if(rows.length > 12 && startNo >= 9){
+        const more = document.createElement('div');
+        more.style.cssText = 'text-align:center;color:#9fb6d8;font-weight:800;padding-top:10px;border-top:1px solid rgba(54,196,255,.14);';
+        more.textContent = isEn ? '... and other players' : '... i pozostali gracze';
+        box.appendChild(more);
+      }
+      return box;
+    };
+
+    const podium = document.createElement('div');
+    podium.style.cssText = 'display:flex;align-items:flex-end;justify-content:center;gap:18px;min-width:0;';
+    const makePodium = (r, place)=>{
+      const cfg = place===1
+        ? {h:215, w:260, c:'#ffd35a', glow:'rgba(255,205,45,.65)', medal:'🥇'}
+        : place===2
+          ? {h:165, w:230, c:'#dfe7f2', glow:'rgba(210,230,255,.42)', medal:'🥈'}
+          : {h:145, w:230, c:'#d88642', glow:'rgba(255,142,50,.42)', medal:'🥉'};
+      const card = document.createElement('div');
+      card.style.cssText = `width:${cfg.w}px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;`;
+      const avatar = document.createElement('div');
+      avatar.style.cssText = `width:${place===1?164:136}px;height:${place===1?164:136}px;border-radius:50%;border:5px solid ${cfg.c};background:radial-gradient(circle at 50% 35%,rgba(45,160,255,.55),rgba(1,14,32,.98));box-shadow:0 0 34px ${cfg.glow};display:flex;align-items:center;justify-content:center;font-size:${place===1?72:58}px;margin-bottom:8px;position:relative;`;
+      avatar.innerHTML = `<span style="filter:drop-shadow(0 4px 8px #000)">👤</span><span style="position:absolute;top:-30px;font-size:42px">${cfg.medal}</span>`;
+      const name = document.createElement('div');
+      name.style.cssText = `min-width:${Math.max(200,cfg.w-18)}px;background:linear-gradient(180deg,rgba(6,12,24,.95),rgba(0,3,12,.95));border:2px solid ${cfg.c};border-radius:12px;padding:10px 12px;margin-bottom:-8px;box-shadow:0 0 22px ${cfg.glow};font-size:${place===1?25:21}px;font-weight:1000;`;
+      name.innerHTML = `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safe(r?.nick)}</div><div style="color:${cfg.c};font-size:${place===1?27:22}px;margin-top:3px">${ptsLabel(r?.points)}</div>`;
+      const base = document.createElement('div');
+      base.style.cssText = `width:${cfg.w}px;height:${cfg.h}px;border-radius:18px 18px 0 0;background:linear-gradient(180deg,${cfg.c},rgba(70,45,10,.85));box-shadow:0 0 38px ${cfg.glow}, inset 0 18px 40px rgba(255,255,255,.22), inset 0 -24px 40px rgba(0,0,0,.32);display:flex;align-items:center;justify-content:center;color:white;text-shadow:0 4px 10px rgba(0,0,0,.8);font-size:${place===1?92:78}px;font-weight:1000;`;
+      base.textContent = String(place);
+      card.append(avatar,name,base);
+      return card;
+    };
+    podium.append(makePodium(top[1],2), makePodium(top[0],1), makePodium(top[2],3));
+
+    main.append(makeList(restLeft,4), podium, makeList(restRight,9));
+    screen.appendChild(main);
+
+    const bottom = document.createElement('div');
+    bottom.style.cssText = 'position:relative;z-index:2;border-top:1px solid rgba(0,185,255,.4);padding-top:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;';
+    const leftBtns = document.createElement('div');
+    leftBtns.style.cssText = 'justify-self:end;display:flex;gap:18px;';
+    const stats = document.createElement('div');
+    stats.style.cssText = 'min-width:250px;text-align:center;padding:12px 20px;border:1px solid rgba(92,180,255,.65);border-radius:14px;background:linear-gradient(180deg,rgba(9,35,75,.95),rgba(0,13,35,.95));font-weight:1000;font-size:22px;box-shadow:0 0 18px rgba(0,145,255,.22);';
+    stats.innerHTML = '▥ &nbsp; ' + (isEn ? 'EVENT STATS' : 'STATYSTYKI EVENTU');
+    const newEvent = document.createElement('div');
+    newEvent.style.cssText = 'min-width:260px;text-align:center;padding:13px 20px;border:2px solid rgba(255,205,70,.85);border-radius:14px;background:linear-gradient(180deg,rgba(70,48,8,.95),rgba(9,13,28,.95));font-weight:1000;font-size:23px;color:#ffd35a;box-shadow:0 0 24px rgba(255,200,40,.35);';
+    newEvent.innerHTML = '🏆 &nbsp; ' + (isEn ? 'NEW EVENT' : 'NOWY EVENT');
+    const exit = document.createElement('div');
+    exit.style.cssText = 'min-width:230px;text-align:center;padding:12px 20px;border:1px solid rgba(92,180,255,.65);border-radius:14px;background:linear-gradient(180deg,rgba(9,35,75,.95),rgba(0,13,35,.95));font-weight:1000;font-size:22px;box-shadow:0 0 18px rgba(0,145,255,.22);';
+    exit.innerHTML = '⇱ &nbsp; ' + (isEn ? 'EXIT' : 'WYJŚCIE');
+    leftBtns.append(stats);
+    const rightBtns = document.createElement('div');
+    rightBtns.style.cssText = 'justify-self:start;display:flex;gap:18px;';
+    rightBtns.append(exit);
+    const center = document.createElement('div');
+    center.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;';
+    center.appendChild(newEvent);
+    const timer = document.createElement('div');
+    timer.style.cssText = 'font-size:19px;color:#d9e5f8;font-weight:800;';
+    let left = 10;
+    timer.innerHTML = (isEn ? 'This screen will close in ' : 'Ten ekran zamknie się za ') + `<span style="color:#ffd35a;font-size:24px">${left}</span>` + (isEn ? ' seconds' : ' sekund');
+    center.appendChild(timer);
+    bottom.append(leftBtns, center, rightBtns);
+    screen.appendChild(bottom);
+
+    modalOpen(isEn ? 'World Cup Event finished' : 'EVENT MŚ 2026 ZAKOŃCZONY', screen);
     const m = document.getElementById('modal');
     const c = document.getElementById('modalClose');
-    if(m) m.classList.add('worldcupMode');
+    if(m){
+      m.classList.add('worldcupMode');
+      m.style.maxWidth = '98vw';
+    }
     if(c){
       c.style.setProperty('display','none','important');
       c.style.setProperty('visibility','hidden','important');
       c.style.setProperty('pointer-events','none','important');
     }
+    const intv = setInterval(()=>{
+      left = Math.max(0, left-1);
+      timer.innerHTML = (isEn ? 'This screen will close in ' : 'Ten ekran zamknie się za ') + `<span style="color:#ffd35a;font-size:24px">${left}</span>` + (isEn ? ' seconds' : ' sekund');
+    }, 1000);
     setTimeout(async ()=>{
+      try{ clearInterval(intv); }catch{}
       try{ modalClose(); }catch{}
       resolve();
-    }, 5000);
+    }, 10000);
   });
 }
+
 async function endWorldCupEvent(){
   if(!isAdmin()){ showToast(getLang()==='en'?'Only admin can do this':'Tylko admin może to wykonać'); return; }
   const state = await wcGetState();
@@ -4649,7 +4771,7 @@ async function endWorldCupEvent(){
   if(!ok) return;
 
   await wcSetState({ended:true, endedAt: boot.serverTimestamp(), activeRoundId:null});
-  await wcShowFinalWinnersForFiveSeconds(ranking.slice(0,3));
+  await wcShowFinalWinnersForFiveSeconds(ranking);
   await openWorldCupEvent();
 }
 
@@ -8275,7 +8397,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.114`);
+    setFooter(`Mariusz Gębka v.2.116`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
