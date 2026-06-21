@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2116;
+const BUILD = 2117;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3873,6 +3873,16 @@ function wcIsTypingClosed(roundMeta){
   return !!(ms && Date.now() >= ms);
 }
 
+// v2117: podgląd typów w Evencie MŚ jest dostępny dopiero po upływie czasu typowania danej kolejki.
+function wcCanPreviewRoundPicks(roundMeta, matches){
+  const deadlinePassed = wcIsTypingClosed(roundMeta);
+  const resultsReady = Array.isArray(matches) && matches.length && matches.every(m=>
+    m.resultHome!==undefined && m.resultHome!==null &&
+    m.resultAway!==undefined && m.resultAway!==null
+  );
+  return !!(deadlinePassed || resultsReady);
+}
+
 function wcEventStateRef(){
   return boot.doc(db, "rooms", currentRoomCode, "worldcup_event", "state");
 }
@@ -4073,8 +4083,9 @@ async function openWorldCupPlayerProfile(player){
       const picks = await wcFetchRoundPicksForPlayer(rdoc.id, player);
       const hasPicks = wcHasCompletePicksForMatches(picks, matches);
       const resultsReady = matches.every(m=>m.resultHome!==undefined && m.resultHome!==null && m.resultAway!==undefined && m.resultAway!==null);
+      const previewAllowed = wcCanPreviewRoundPicks(meta, matches);
       const pts = (hasPicks && resultsReady) ? wcPlayerRoundPoints(picks, matches) : null;
-      rows.push({roundId: rdoc.id, roundNo: meta.roundNo || rows.length+1, matches, picks, hasPicks, resultsReady, pts});
+      rows.push({roundId: rdoc.id, roundNo: meta.roundNo || rows.length+1, matches, picks, hasPicks, resultsReady, previewAllowed, pts});
     }
     loading.remove();
     const total = rows.reduce((sum,r)=> sum + (r.pts || 0), 0);
@@ -4109,9 +4120,13 @@ async function openWorldCupPlayerProfile(player){
       btn.type = 'button';
       btn.className = 'eyeBtn';
       btn.textContent = '👁';
-      btn.title = getLang()==='en' ? 'Show picks and points' : 'Pokaż typy i punkty';
-      btn.disabled = !r.hasPicks;
-      btn.onclick = ()=> openWorldCupPicksPreview(player, r.matches, r.picks);
+      btn.title = !r.hasPicks
+        ? (getLang()==='en' ? 'No saved picks' : 'Brak zapisanych typów')
+        : (r.previewAllowed
+          ? (getLang()==='en' ? 'Show picks and points' : 'Pokaż typy i punkty')
+          : (getLang()==='en' ? 'Preview available after typing time ends' : 'Podgląd dostępny po zakończeniu czasu typowania'));
+      btn.disabled = !(r.hasPicks && r.previewAllowed);
+      btn.onclick = ()=> openWorldCupPicksPreview(player, r.matches, r.picks, r.previewAllowed);
       tr.lastChild.appendChild(btn);
       tb.appendChild(tr);
     });
@@ -4122,7 +4137,7 @@ async function openWorldCupPlayerProfile(player){
     loading.textContent = getLang()==='en' ? 'Could not load player profile.' : 'Nie udało się wczytać profilu gracza.';
   }
 }
-function openWorldCupPicksPreview(player, matches, picksObj){
+function openWorldCupPicksPreview(player, matches, picksObj, canPreview=true){
   const nick = player?.nick || '—';
   const hasPicks = wcHasCompletePicksForMatches(picksObj, matches);
   const host = document.getElementById('modal') || document.body;
@@ -4178,6 +4193,17 @@ function openWorldCupPicksPreview(player, matches, picksObj){
   const closeBtn = wcMakeImgButton('btn_cofnij.png', null, getLang()==='en'?'Back':'Cofnij', ()=>{ try{ overlay.remove(); }catch{} });
   top.append(left, closeBtn);
   wrap.appendChild(top);
+
+  if(!canPreview){
+    const info = document.createElement('div');
+    info.className = 'sub';
+    info.textContent = (getLang()==='en')
+      ? 'Picks preview will be available after the typing time for this round ends.'
+      : 'Podgląd typów będzie dostępny dopiero po zakończeniu czasu typowania tej kolejki.';
+    wrap.appendChild(info);
+    card.appendChild(wrap); overlay.appendChild(card); host.appendChild(overlay);
+    return;
+  }
 
   if(!hasPicks){
     const info = document.createElement('div');
@@ -4959,6 +4985,7 @@ async function renderWorldCupEvent(){
         name.style.textOverflow = 'ellipsis';
 
         const submitted = wcHasCompletePicksForMatches(roundPicksByUid[p.uid]?.picks, matches);
+        const canPreviewPicks = wcTypingClosed || allResultsSaved || state.ended;
         const status = document.createElement('div');
         status.textContent = submitted ? '✓' : '✗';
         status.style.fontWeight = '1000';
@@ -4978,11 +5005,13 @@ async function renderWorldCupEvent(){
         const eye = document.createElement('button');
         eye.className = 'eyeBtn';
         eye.textContent = '👁';
-        eye.disabled = !submitted;
-        eye.title = submitted
-          ? ((getLang()==='en') ? 'Preview picks' : 'Podgląd typów')
-          : ((getLang()==='en') ? 'Preview available after player submits picks' : 'Podgląd po oddaniu typów przez gracza');
-        eye.onclick = ()=> openWorldCupPicksPreview(p, matches, roundPicksByUid[p.uid]?.picks || {});
+        eye.disabled = !(submitted && canPreviewPicks);
+        eye.title = !submitted
+          ? ((getLang()==='en') ? 'Preview available after player submits picks' : 'Podgląd po oddaniu typów przez gracza')
+          : (canPreviewPicks
+            ? ((getLang()==='en') ? 'Preview picks' : 'Podgląd typów')
+            : ((getLang()==='en') ? 'Preview available after typing time ends' : 'Podgląd dostępny po zakończeniu czasu typowania'));
+        eye.onclick = ()=> openWorldCupPicksPreview(p, matches, roundPicksByUid[p.uid]?.picks || {}, canPreviewPicks);
         right.appendChild(eye);
 
         const profileBtn = document.createElement('button');
@@ -8397,7 +8426,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.116`);
+    setFooter(`Mariusz Gębka v.2.117`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
