@@ -22,7 +22,7 @@
 .profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
-/* BUILD 3012: informacje o pokoju przeniesione do górnego profilu */
+/* BUILD 3013: informacje o pokoju przeniesione do górnego profilu */
 .roomTopDetails{
   width:100%;
   min-width:0;
@@ -811,7 +811,7 @@
     }
 
 
-    /* BUILD 3012: przewijanie okien Dodaj kolejkę na niskich ekranach */
+    /* BUILD 3013: przewijanie okien Dodaj kolejkę na niskich ekranach */
     @media (max-height:700px){
       #addQueueOverlay{align-items:flex-start;}
       .aqModal{justify-content:flex-start;}
@@ -2155,7 +2155,7 @@
 }
 
 
-/* BUILD 3012: kosmetyczny układ przycisków w pokoju */
+/* BUILD 3013: kosmetyczny układ przycisków w pokoju */
 #room .roomQuickMenu{
   display:flex;
   flex-direction:row;
@@ -2179,7 +2179,7 @@
 }
 
 
-/* BUILD 3012: profesjonalne, jednolite niebieskie przyciski z ikonami */
+/* BUILD 3013: profesjonalne, jednolite niebieskie przyciski z ikonami */
 #room .modernRoomBtn{
   --btn1:#1478e8;
   --btn2:#083f9e;
@@ -2272,6 +2272,75 @@ html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
   #room .rightBottomMessages .modernRoomBtn{min-height:44px}
 }
 
+
+/* BUILD 3013: wspólny niebieski styl przycisków na pozostałych ekranach */
+.modernAppBtn{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  min-height:50px;
+  min-width:150px;
+  padding:10px 18px;
+  border:1px solid rgba(107,196,255,.95);
+  border-radius:13px;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 35%),linear-gradient(180deg,#1478e8,#083f9e);
+  box-shadow:0 5px 0 #04275f,0 8px 18px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.22);
+  color:#fff;
+  font-size:15px;
+  line-height:1.05;
+  font-weight:1000;
+  letter-spacing:.15px;
+  text-align:center;
+  text-shadow:0 2px 3px rgba(0,0,0,.7);
+  cursor:pointer;
+  transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;
+}
+.modernAppBtn::after{content:"";position:absolute;inset:2px;border-radius:10px;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}
+.modernAppBtn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.modernAppBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #04275f,0 4px 10px rgba(0,0,0,.24)}
+.modernAppBtn:disabled{opacity:.48;filter:grayscale(.35);cursor:not-allowed;transform:none}
+.modernAppBtn .label-en{display:none}
+html[data-lang="en"] .modernAppBtn .label-pl{display:none}
+html[data-lang="en"] .modernAppBtn .label-en{display:inline}
+.appBtnIcon{width:28px;height:28px;flex:0 0 28px;display:inline-block;background:#fff;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));-webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat}
+.ico-check{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m9 16.2-4.2-4.2-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z'/%3E%3C/svg%3E")}
+.ico-no{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3 1.4 1.4Z'/%3E%3C/svg%3E")}
+.ico-back2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2Z'/%3E%3C/svg%3E")}
+.ico-join2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v-2H5V6h5V4Zm6.59 3.59L15.17 9l2 2H9v2h8.17l-2 2 1.42 1.41L21 12l-4.41-4.41Z'/%3E%3C/svg%3E")}
+.ico-create2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M11 2h2v9h9v2h-9v9h-2v-9H2v-2h9V2Z'/%3E%3C/svg%3E")}
+.ico-profile2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10ZM3 22c0-5 4-8 9-8s9 3 9 8H3Z'/%3E%3C/svg%3E")}
+.ico-random2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M16 3h5v5h-2V6.41l-4.3 4.3-1.4-1.42L17.59 5H16V3ZM3 6h4.5l9 12H21v-2h-3.5l-9-12H3v2Zm0 12h4.5l3.1-4.13-1.25-1.67L6.5 16H3v2Zm14.65-6.2 1.35 1.8V15h2v-5h-5v2h1.65Z'/%3E%3C/svg%3E")}
+.ico-manual2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 3h16v18H4V3Zm2 2v14h12V5H6Zm2 2h8v2H8V7Zm0 4h8v2H8v-2Zm0 4h5v2H8v-2Z'/%3E%3C/svg%3E")}
+.ico-save2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 3h13l3 3v15H4V3Zm3 2v5h9V5H7Zm0 9v5h10v-5H7Z'/%3E%3C/svg%3E")}
+
+/* Komputer: przyciski pokoju większe i lepiej ułożone, telefon pozostaje bez zmian */
+@media (min-width:901px){
+  #room .roomQuickMenu{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px}
+  #room .roomQuickMenu #btnSubstitute{grid-column:1 / -1}
+  #room .roomQuickMenu .modernRoomBtn{min-height:54px;font-size:13px;padding:9px 8px;line-height:1.12}
+  #room .roomQuickMenu #btnSubstitute{min-height:58px;font-size:14px}
+  #room .roomCodeActions{gap:7px !important}
+  #room .roomCodeActions #btnLeave,#room .roomCodeActions #btnDeleteRoom{min-height:52px;font-size:11px;padding:8px 4px;gap:6px}
+  #room .roomCodeActions .btnIcon{width:24px;height:24px;flex-basis:24px}
+  #room .matchActionsPanel .modernRoomBtn{font-size:14px;min-height:56px}
+  #room .rightBottomMessages .modernRoomBtn{font-size:13px;min-height:56px}
+  #room .playersHeader .modernRoomBtn{font-size:12px;min-height:46px}
+}
+
+.continueBtns .modernAppBtn{min-width:165px}
+#rooms .modernAppBtn{min-width:150px}
+#rooms .row .modernAppBtn{flex:0 0 auto}
+.aqBtns .modernAppBtn{min-width:190px}
+.mqFooter .modernAppBtn{min-width:180px}
+#btnMQAddMatch.modernAppBtn{min-width:170px;min-height:46px;padding:8px 14px}
+@media (max-width:900px){
+  .modernAppBtn{min-height:44px;min-width:125px;padding:7px 10px;font-size:12px;border-radius:10px;gap:7px;box-shadow:0 4px 0 #04275f,0 6px 12px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.35)}
+  .appBtnIcon{width:22px;height:22px;flex-basis:22px}
+  .continueBtns .modernAppBtn,.aqBtns .modernAppBtn,.mqFooter .modernAppBtn{min-width:125px}
+}
+
 </style>
 </head>
 <body>
@@ -2337,10 +2406,10 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <div class="bigQ" id="t_continue_q">Czy chcesz kontynuować grę w tym pokoju?</div>
 <div class="continueBtns">
-<button class="imgBtn sysBtn" data-btn="btn_tak.png" id="btnContYes" type="button"><img alt="btnContYes" data-btn="btn_tak.png" src="ui/buttons/pl/btn_tak.png"/></button>
-<button class="imgBtn sysBtn" data-btn="btn_nie.png" id="btnContNo" type="button"><img alt="btnContNo" data-btn="btn_nie.png" src="ui/buttons/pl/btn_nie.png"/></button>
+<button class="modernAppBtn" id="btnContYes" type="button"><span class="appBtnIcon ico-check" aria-hidden="true"></span><span class="label-pl">TAK</span><span class="label-en">YES</span></button>
+<button class="modernAppBtn" id="btnContNo" type="button"><span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">NIE</span><span class="label-en">NO</span></button>
 <div class="spacer"></div>
-<button class="imgBtn sysBtn small" data-btn="btn_zamknij_pokoj.png" id="btnContForget" type="button"><img alt="btnContForget" data-btn="btn_zamknij_pokoj.png" src="ui/buttons/pl/btn_opusc.png"/></button>
+<button class="modernAppBtn" id="btnContForget" type="button"><span class="appBtnIcon ico-back2" aria-hidden="true"></span><span class="label-pl">ZAPOMNIJ POKÓJ</span><span class="label-en">FORGET ROOM</span></button>
 </div>
 </div>
 </div>
@@ -2352,13 +2421,13 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="chip" id="t_rooms_title">Pokoje typerów</div>
 <div class="spacer"></div>
 <div class="chip"><span id="t_nick">Nick</span>: <span id="nickLabelRooms">—</span></div>
-<button class="imgBtn sysBtn small" data-btn="btn_dodaj_profil.png" id="btnChangeNickRooms" type="button"><img alt="btnChangeNickRooms" data-btn="btn_dodaj_profil.png" src="ui/buttons/pl/btn_dodaj_profil.png"/></button>
-<button class="imgBtn sysBtn small" data-btn="btn_cofnij.png" id="btnBackHomeFromRooms" type="button"><img alt="btnBackHomeFromRooms" data-btn="btn_cofnij.png" src="ui/buttons/pl/btn_cofnij.png"/></button>
+<button class="modernAppBtn" id="btnChangeNickRooms" type="button"><span class="appBtnIcon ico-profile2" aria-hidden="true"></span><span class="label-pl">Zmień profil</span><span class="label-en">Change profile</span></button>
+<button class="modernAppBtn" id="btnBackHomeFromRooms" type="button"><span class="appBtnIcon ico-back2" aria-hidden="true"></span><span class="label-pl">Menu</span><span class="label-en">Menu</span></button>
 </div>
 <div class="panel block">
 <h2 id="t_join_title">Dołącz do pokoju</h2>
 <div class="row" style="margin-top:10px"><input id="inpJoinCode" placeholder="Wpisz kod (np. AB12CD)" style="flex:1;text-transform:uppercase"/>
-<button class="imgBtn sysBtn" data-btn="btn_wejdz_pokoj.png" id="btnJoinRoom" type="button"><img alt="btnJoinRoom" data-btn="btn_wejdz_pokoj.png" src="ui/buttons/pl/btn_wejdz_pokoj.png"/></button>
+<button class="modernAppBtn" id="btnJoinRoom" type="button"><span class="appBtnIcon ico-join2" aria-hidden="true"></span><span class="label-pl">Dołącz do pokoju</span><span class="label-en">Join room</span></button>
 </div>
 <div class="help" id="t_join_help" style="margin-top:8px">Wpisz kod od admina.</div>
 </div>
@@ -2366,7 +2435,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <h2 id="t_create_title">Utwórz nowy pokój</h2>
 <div class="row" style="margin-top:10px">
 <input id="inpRoomName" placeholder="Nazwa pokoju (np. Domowy)" style="flex:1"/>
-<button class="imgBtn sysBtn" data-btn="btn_zaloz.png" id="btnCreateRoom" type="button"><img alt="btnCreateRoom" data-btn="btn_zaloz.png" src="ui/buttons/pl/btn_zaloz.png"/></button>
+<button class="modernAppBtn" id="btnCreateRoom" type="button"><span class="appBtnIcon ico-create2" aria-hidden="true"></span><span class="label-pl">Utwórz pokój</span><span class="label-en">Create room</span></button>
 </div>
 <div class="help" id="t_create_help" style="margin-top:8px">Kod pokoju ma 6 znaków. Adminem będzie osoba, która tworzy pokój.</div>
 </div>
@@ -2411,7 +2480,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     </div>
 </div>
 
-  <!-- BUILD 3012: Event + tabela ligi + ranking w jednym rzędzie -->
+  <!-- BUILD 3013: Event + tabela ligi + ranking w jednym rzędzie -->
   <div class="panel leftProfileInfo roomQuickMenu" id="roomProfileInfoCard">
     <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small modernRoomBtn event" id="btnSubstitute" title="Event MŚ 2026" type="button"><span class="btnIcon ico-event" aria-hidden="true"></span><span class="label-pl">EVENT MŚ 2026</span><span class="label-en">WORLD CUP 2026</span></button>
     <button class="imgBtn sysBtn small modernRoomBtn info" id="btnLeagueFromRoom" type="button"><span class="btnIcon ico-table" aria-hidden="true"></span><span class="label-pl">Tabela ligi</span><span class="label-en">League table</span></button>
@@ -2456,7 +2525,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <div class="playersList" id="playersList"></div>
 <div class="spacer"></div>
-<!-- BUILD 3012: Wiadomości i Wyjście w jednym kontenerze -->
+<!-- BUILD 3013: Wiadomości i Wyjście w jednym kontenerze -->
 <div class="rightBottomStack">
   <div class="panel rightBottomMessages">
     <button class="imgBtn sysBtn modernRoomBtn info" id="btnMessagesFromRoom" style="position:relative" type="button"><span class="msgBadge" id="msgBadge">!</span><span class="btnIcon ico-msg" aria-hidden="true"></span><span class="label-pl">Wiadomości</span><span class="label-en">Messages</span></button>
@@ -2469,15 +2538,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div aria-hidden="true" id="addQueueOverlay">
 <div aria-label="Add queue menu" class="aqModal panel" role="dialog">
 <div class="aqBtns">
-<button class="imgBtn sysBtn" data-btn="btn_random.png" id="btnAQRandom" type="button">
-<img alt="btn_random" data-btn="btn_random.png" src="ui/buttons/pl/btn_random.png"/>
-</button>
-<button class="imgBtn sysBtn" data-btn="btn_manual.png" id="btnAQManual" type="button">
-<img alt="btn_manual" data-btn="btn_manual.png" src="ui/buttons/pl/btn_manual.png"/>
-</button>
-<button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnAQBack" type="button">
-<img alt="btn_back" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
-</button>
+<button class="modernAppBtn" id="btnAQRandom" type="button"><span class="appBtnIcon ico-random2" aria-hidden="true"></span><span class="label-pl">Losowo</span><span class="label-en">Random</span></button>
+<button class="modernAppBtn" id="btnAQManual" type="button"><span class="appBtnIcon ico-manual2" aria-hidden="true"></span><span class="label-pl">Ręcznie</span><span class="label-en">Manual</span></button>
+<button class="modernAppBtn" id="btnAQBack" type="button"><span class="appBtnIcon ico-back2" aria-hidden="true"></span><span class="label-pl">Cofnij</span><span class="label-en">Back</span></button>
 </div>
 </div>
 </div>
@@ -2499,7 +2562,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     <div class="mqBuilderLabel">Gość:</div>
     <select class="mqClubSelect" id="manualAwaySelect"></select>
   </div>
-  <button class="mqAddMatchBtn" id="btnMQAddMatch" type="button">+ Dodaj mecz</button>
+  <button class="mqAddMatchBtn modernAppBtn" id="btnMQAddMatch" type="button"><span class="appBtnIcon ico-create2" aria-hidden="true"></span><span class="label-pl">Dodaj mecz</span><span class="label-en">Add match</span></button>
 </div>
 
 <div class="mqCount" id="manualMatchesCount">Mecze: 0/10</div>
@@ -2507,12 +2570,8 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="mqMatchesList" id="manualMatchesList"></div>
 
 <div class="mqFooter" id="manualQueueFooter">
-<button class="imgBtn sysBtn" data-btn="btn_save_queue.png" id="btnMQSave" type="button">
-<img alt="btnMQSave" data-btn="btn_save_queue.png" src="ui/buttons/pl/btn_save_queue.png"/>
-</button>
-<button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnMQBack" type="button">
-<img alt="btnMQBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
-</button>
+<button class="modernAppBtn" id="btnMQSave" type="button"><span class="appBtnIcon ico-save2" aria-hidden="true"></span><span class="label-pl">Zapisz kolejkę</span><span class="label-en">Save round</span></button>
+<button class="modernAppBtn" id="btnMQBack" type="button"><span class="appBtnIcon ico-back2" aria-hidden="true"></span><span class="label-pl">Cofnij</span><span class="label-en">Back</span></button>
 </div>
 </div>
 </div>
@@ -2736,7 +2795,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3012" type="module"></script>
+<script src="./app.js?v=3013" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2756,7 +2815,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3012', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3013', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -2782,6 +2841,75 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   #pwaInstallHelpCard p{margin:8px 0}
   #pwaInstallHelpClose{width:100%;margin-top:14px;min-height:44px;border:0;border-radius:13px;background:#e02831;color:#fff;font-weight:800;font-size:16px}
   @media (display-mode: standalone){#pwaInstallBtn{display:none!important}}
+
+/* BUILD 3013: wspólny niebieski styl przycisków na pozostałych ekranach */
+.modernAppBtn{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  min-height:50px;
+  min-width:150px;
+  padding:10px 18px;
+  border:1px solid rgba(107,196,255,.95);
+  border-radius:13px;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 35%),linear-gradient(180deg,#1478e8,#083f9e);
+  box-shadow:0 5px 0 #04275f,0 8px 18px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.22);
+  color:#fff;
+  font-size:15px;
+  line-height:1.05;
+  font-weight:1000;
+  letter-spacing:.15px;
+  text-align:center;
+  text-shadow:0 2px 3px rgba(0,0,0,.7);
+  cursor:pointer;
+  transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;
+}
+.modernAppBtn::after{content:"";position:absolute;inset:2px;border-radius:10px;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}
+.modernAppBtn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.modernAppBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #04275f,0 4px 10px rgba(0,0,0,.24)}
+.modernAppBtn:disabled{opacity:.48;filter:grayscale(.35);cursor:not-allowed;transform:none}
+.modernAppBtn .label-en{display:none}
+html[data-lang="en"] .modernAppBtn .label-pl{display:none}
+html[data-lang="en"] .modernAppBtn .label-en{display:inline}
+.appBtnIcon{width:28px;height:28px;flex:0 0 28px;display:inline-block;background:#fff;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));-webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat}
+.ico-check{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m9 16.2-4.2-4.2-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z'/%3E%3C/svg%3E")}
+.ico-no{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3 1.4 1.4Z'/%3E%3C/svg%3E")}
+.ico-back2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.42-1.41L7.83 13H20v-2Z'/%3E%3C/svg%3E")}
+.ico-join2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v-2H5V6h5V4Zm6.59 3.59L15.17 9l2 2H9v2h8.17l-2 2 1.42 1.41L21 12l-4.41-4.41Z'/%3E%3C/svg%3E")}
+.ico-create2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M11 2h2v9h9v2h-9v9h-2v-9H2v-2h9V2Z'/%3E%3C/svg%3E")}
+.ico-profile2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10ZM3 22c0-5 4-8 9-8s9 3 9 8H3Z'/%3E%3C/svg%3E")}
+.ico-random2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M16 3h5v5h-2V6.41l-4.3 4.3-1.4-1.42L17.59 5H16V3ZM3 6h4.5l9 12H21v-2h-3.5l-9-12H3v2Zm0 12h4.5l3.1-4.13-1.25-1.67L6.5 16H3v2Zm14.65-6.2 1.35 1.8V15h2v-5h-5v2h1.65Z'/%3E%3C/svg%3E")}
+.ico-manual2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 3h16v18H4V3Zm2 2v14h12V5H6Zm2 2h8v2H8V7Zm0 4h8v2H8v-2Zm0 4h5v2H8v-2Z'/%3E%3C/svg%3E")}
+.ico-save2{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 3h13l3 3v15H4V3Zm3 2v5h9V5H7Zm0 9v5h10v-5H7Z'/%3E%3C/svg%3E")}
+
+/* Komputer: przyciski pokoju większe i lepiej ułożone, telefon pozostaje bez zmian */
+@media (min-width:901px){
+  #room .roomQuickMenu{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:10px}
+  #room .roomQuickMenu #btnSubstitute{grid-column:1 / -1}
+  #room .roomQuickMenu .modernRoomBtn{min-height:54px;font-size:13px;padding:9px 8px;line-height:1.12}
+  #room .roomQuickMenu #btnSubstitute{min-height:58px;font-size:14px}
+  #room .roomCodeActions{gap:7px !important}
+  #room .roomCodeActions #btnLeave,#room .roomCodeActions #btnDeleteRoom{min-height:52px;font-size:11px;padding:8px 4px;gap:6px}
+  #room .roomCodeActions .btnIcon{width:24px;height:24px;flex-basis:24px}
+  #room .matchActionsPanel .modernRoomBtn{font-size:14px;min-height:56px}
+  #room .rightBottomMessages .modernRoomBtn{font-size:13px;min-height:56px}
+  #room .playersHeader .modernRoomBtn{font-size:12px;min-height:46px}
+}
+
+.continueBtns .modernAppBtn{min-width:165px}
+#rooms .modernAppBtn{min-width:150px}
+#rooms .row .modernAppBtn{flex:0 0 auto}
+.aqBtns .modernAppBtn{min-width:190px}
+.mqFooter .modernAppBtn{min-width:180px}
+#btnMQAddMatch.modernAppBtn{min-width:170px;min-height:46px;padding:8px 14px}
+@media (max-width:900px){
+  .modernAppBtn{min-height:44px;min-width:125px;padding:7px 10px;font-size:12px;border-radius:10px;gap:7px;box-shadow:0 4px 0 #04275f,0 6px 12px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.35)}
+  .appBtnIcon{width:22px;height:22px;flex-basis:22px}
+  .continueBtns .modernAppBtn,.aqBtns .modernAppBtn,.mqFooter .modernAppBtn{min-width:125px}
+}
+
 </style>
 <button id="pwaInstallBtn" type="button" aria-label="Zainstaluj aplikację TYPER">⬇ Zainstaluj TYPER</button>
 <div id="pwaInstallHelp" role="dialog" aria-modal="true" aria-labelledby="pwaInstallHelpTitle">

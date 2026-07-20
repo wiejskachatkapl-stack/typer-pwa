@@ -1,0 +1,7 @@
+TYPER v3012
+
+Naprawiono wyłącznie przewijanie okien „Dodaj kolejkę” i ręcznego dodawania kolejki:
+- okna można przewijać pionowo na telefonach i niskich ekranach,
+- przyciski wyboru są dostępne po przewinięciu,
+- dolne przyciski Zapisz/Cofnij w ręcznym dodawaniu pozostają dostępne,
+- nie zmieniono mechaniki gry ani Firebase.
