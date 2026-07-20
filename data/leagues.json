@@ -281,11 +281,36 @@
         "Piast Gliwice",
         "Zagłębie Lubin",
         "Wisła Płock",
-        "Puszcza Niepołomice",
-        "Lechia Gdańsk",
+        "Wisła Kraków",
+        "Wieczysta Kraków",
         "GKS Katowice",
         "Motor Lublin",
         "Śląsk Wrocław"
+      ]
+    },
+    {
+      "key": "PL1",
+      "name": "1 Liga",
+      "country": "Polska",
+      "teams": [
+        "Arka Gdynia",
+        "ŁKS Łódź",
+        "Lechia Gdańsk",
+        "Odra Opole",
+        "Podbeskidzie BB",
+        "Warta Poznań",
+        "Ruch Chorzów",
+        "Polonia Bydom",
+        "Polonia Warszawa",
+        "Miedź Legnica",
+        "Bruk-Bet Termalika",
+        "Stal Rzeszów",
+        "Puszcza Niepołomnice",
+        "Chrobry Głogów",
+        "Pogoń Siedlce",
+        "Unia Skierniewice",
+        "Stal Mielec",
+        "Pogoń Grodzisk Maz."
       ]
     },
     {
