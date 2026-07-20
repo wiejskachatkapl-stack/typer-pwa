@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3008;
+const BUILD = 3009;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -235,6 +235,14 @@ const I18N = {
     roomsTitle: "Pokoje typerów",
     stats: "Statystyki",
     exit: "Wyjście",
+    worldCupEvent: "Event MŚ 2026",
+    tipstersTable: "Tabela ligi typerów",
+    allTimeRanking: "Ranking wszechczasów",
+    leaveRoom: "Opuść pokój",
+    deleteRoom: "Usuń pokój",
+    messages: "Wiadomości",
+    addRound: "Dodaj kolejkę",
+    deletePlayer: "Usuń gracza",
 
     contTitle: "Kontynuować?",
     contSub: "Wykryto wcześniejszą rozgrywkę",
@@ -311,6 +319,14 @@ const I18N = {
     roomsTitle: "Typer rooms",
     stats: "Stats",
     exit: "Exit",
+    worldCupEvent: "World Cup 2026",
+    tipstersTable: "Tipsters league",
+    allTimeRanking: "All-time ranking",
+    leaveRoom: "Leave room",
+    deleteRoom: "Delete room",
+    messages: "Messages",
+    addRound: "Add round",
+    deletePlayer: "Remove player",
 
     contTitle: "Continue?",
     contSub: "Previous room detected",
@@ -460,6 +476,17 @@ function updateLangButtonsVisual(){
   en.classList.toggle("inactive", lang !== "en");
 }
 
+function updateRoomTextButtons(){
+  document.querySelectorAll('#room .roomTextBtn[data-label-key]').forEach(btn=>{
+    const key = btn.dataset.labelKey;
+    const label = t(key);
+    const text = btn.querySelector('.roomBtnText');
+    if(text) text.textContent = label;
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+  });
+}
+
 function applyLangToUI(){
   // HOME titles (tooltipy)
   const hs = el("btnHomeSettings");
@@ -475,6 +502,7 @@ function applyLangToUI(){
   updateHomeButtonsImages();
   refreshAllButtonImages();
   updateLangButtonsVisual();
+  updateRoomTextButtons();
 
   // Continue
   if(el("t_continue_title")) el("t_continue_title").textContent = t("contTitle");
@@ -8574,7 +8602,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.008`);
+    setFooter(`Mariusz Gębka v.3.009`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
