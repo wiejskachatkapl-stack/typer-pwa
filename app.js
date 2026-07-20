@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3031;
+const BUILD = 3032;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -146,24 +146,24 @@ function ensureLoadingVisualStyles(){
   st.id = "footballLoaderStyles";
   st.textContent = `
     .footballLoaderWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-    .footballLoader{display:flex;align-items:center;justify-content:center;gap:14px;min-height:52px}
+    .footballLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:64px}
     .footballLoader span{
-      width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;
-      background-image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222.5%22/%3E%0A%20%20%3Cpolygon%20points%3D%2232%2C18%2024%2C24%2027%2C34%2037%2C34%2040%2C24%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2220%2C25%2012%2C28%2015%2C40%2026%2C36%2023%2C26%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2244%2C25%2041%2C36%2052%2C40%2055%2C28%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2219%2C43%2026%2C38%2033%2C45%2029%2C54%2018%2C51%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2245%2C43%2035%2C45%2031%2C54%2046%2C51%22%20fill%3D%22%23111111%22/%3E%0A%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain;
+      width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
+      background-image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CclipPath%20id%3D%22c%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%2F%3E%3C%2FclipPath%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222.6%22%2F%3E%0A%20%20%3Cg%20clip-path%3D%22url%28%23c%29%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2232%2C17%2024%2C23%2027%2C33%2037%2C33%2040%2C23%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2214%2C24%2024%2C23%2027%2C33%2018%2C40%2010%2C32%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2250%2C24%2040%2C23%2037%2C33%2046%2C40%2054%2C32%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2219%2C42%2027%2C33%2032%2C38%2029%2C50%2018%2C50%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2245%2C42%2037%2C33%2032%2C38%2035%2C50%2046%2C50%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2232%22%20y1%3D%2217%22%20x2%3D%2232%22%20y2%3D%228%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2224%22%20y1%3D%2223%22%20x2%3D%2213%22%20y2%3D%2220%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2240%22%20y1%3D%2223%22%20x2%3D%2251%22%20y2%3D%2220%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2210%22%20y1%3D%2232%22%20x2%3D%227%22%20y2%3D%2243%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2254%22%20y1%3D%2232%22%20x2%3D%2257%22%20y2%3D%2243%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2218%22%20y1%3D%2250%22%20x2%3D%2215%22%20y2%3D%2258%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2246%22%20y1%3D%2250%22%20x2%3D%2249%22%20y2%3D%2258%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2229%22%20y1%3D%2250%22%20x2%3D%2227%22%20y2%3D%2259%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2235%22%20y1%3D%2250%22%20x2%3D%2237%22%20y2%3D%2259%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E");background-repeat:no-repeat;background-position:center;background-size:contain;
       color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(12px) scale(.68);
       animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28));
     }
-    .footballLoader span:nth-child(2){animation-delay:.45s}
-    .footballLoader span:nth-child(3){animation-delay:.9s}
-    .footballLoader span:nth-child(4){animation-delay:1.35s}
-    .footballLoader span:nth-child(5){animation-delay:1.8s}
+    .footballLoader span:nth-child(2){animation-delay:.5s}
+    .footballLoader span:nth-child(3){animation-delay:1s}
+    .footballLoader span:nth-child(4){animation-delay:1.5s}
+    .footballLoader span:nth-child(5){animation-delay:2s}
     .footballLoaderLabel{display:none}
-    .footballLoader.splashLoader span{width:42px;height:42px}
-    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(12px) scale(.68)} 20%,72%{opacity:1;transform:translateY(0) scale(1)} 84%{opacity:.4;transform:translateY(-3px) scale(.93)}}
+    .footballLoader.splashLoader span{width:54px;height:54px}
+    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(16px) scale(.6)} 18%,74%{opacity:1;transform:translateY(0) scale(1)} 86%{opacity:.35;transform:translateY(-4px) scale(.92)}}
     @media (max-width:720px){
-      .footballLoader{gap:10px;min-height:42px}
-      .footballLoader span{width:30px;height:30px}
-      .footballLoader.splashLoader span{width:34px;height:34px}
+      .footballLoader{gap:12px;min-height:54px}
+      .footballLoader span{width:38px;height:38px}
+      .footballLoader.splashLoader span{width:46px;height:46px}
     }
   `;
   document.head.appendChild(st);
