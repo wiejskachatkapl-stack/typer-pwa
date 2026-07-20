@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3030;
+const BUILD = 3031;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -145,21 +145,25 @@ function ensureLoadingVisualStyles(){
   const st = document.createElement("style");
   st.id = "footballLoaderStyles";
   st.textContent = `
-    .footballLoaderWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-    .footballLoader{display:flex;align-items:center;justify-content:center;gap:12px;min-height:40px}
-    .footballLoader span{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;opacity:0;transform:translateY(10px) scale(.7);animation:footballAppear 3s ease-in-out infinite}
-    .footballLoader span:nth-child(2){animation-delay:.18s}
-    .footballLoader span:nth-child(3){animation-delay:.36s}
-    .footballLoader span:nth-child(4){animation-delay:.54s}
-    .footballLoader span:nth-child(5){animation-delay:.72s}
-    .footballLoaderLabel{font-weight:900;font-size:13px;letter-spacing:.08em;color:rgba(255,255,255,.78);text-transform:uppercase}
-    .footballLoader.splashLoader span{font-size:26px;width:30px;height:30px}
-    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(10px) scale(.7)} 18%,70%{opacity:1;transform:translateY(0) scale(1)} 82%{opacity:.45;transform:translateY(-2px) scale(.92)}}
+    .footballLoaderWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+    .footballLoader{display:flex;align-items:center;justify-content:center;gap:14px;min-height:52px}
+    .footballLoader span{
+      width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;
+      background-image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222.5%22/%3E%0A%20%20%3Cpolygon%20points%3D%2232%2C18%2024%2C24%2027%2C34%2037%2C34%2040%2C24%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2220%2C25%2012%2C28%2015%2C40%2026%2C36%2023%2C26%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2244%2C25%2041%2C36%2052%2C40%2055%2C28%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2219%2C43%2026%2C38%2033%2C45%2029%2C54%2018%2C51%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2245%2C43%2035%2C45%2031%2C54%2046%2C51%22%20fill%3D%22%23111111%22/%3E%0A%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain;
+      color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(12px) scale(.68);
+      animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28));
+    }
+    .footballLoader span:nth-child(2){animation-delay:.45s}
+    .footballLoader span:nth-child(3){animation-delay:.9s}
+    .footballLoader span:nth-child(4){animation-delay:1.35s}
+    .footballLoader span:nth-child(5){animation-delay:1.8s}
+    .footballLoaderLabel{display:none}
+    .footballLoader.splashLoader span{width:42px;height:42px}
+    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(12px) scale(.68)} 20%,72%{opacity:1;transform:translateY(0) scale(1)} 84%{opacity:.4;transform:translateY(-3px) scale(.93)}}
     @media (max-width:720px){
-      .footballLoader{gap:8px;min-height:32px}
-      .footballLoader span{width:22px;height:22px;font-size:18px}
-      .footballLoader.splashLoader span{font-size:22px;width:24px;height:24px}
-      .footballLoaderLabel{font-size:11px}
+      .footballLoader{gap:10px;min-height:42px}
+      .footballLoader span{width:30px;height:30px}
+      .footballLoader.splashLoader span{width:34px;height:34px}
     }
   `;
   document.head.appendChild(st);
@@ -170,9 +174,9 @@ function getFootballLoaderMarkup(text){
   return `
     <div class="footballLoaderWrap">
       <div class="footballLoader" aria-hidden="true">
-        <span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span>
+        <span></span><span></span><span></span><span></span><span></span>
       </div>
-      <div class="footballLoaderLabel">${label}</div>
+      <div class="footballLoaderLabel" aria-label="${label}">${label}</div>
     </div>`;
 }
 

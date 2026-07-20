@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3030)</title>
-<link href="manifest.json?v=3030" rel="manifest"/>
-<link href="favicon-32x32.png?v=3030" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3030" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3030" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3031)</title>
+<link href="manifest.json?v=3031" rel="manifest"/>
+<link href="favicon-32x32.png?v=3031" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3031" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3031" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -186,19 +186,19 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     .hint{margin-top:8px;color:var(--muted);font-weight:800;white-space:pre-wrap}
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-    .splashLoaderWrap{margin-top:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-    .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:12px;min-height:40px}
-    .footballLoader.splashLoader span{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;opacity:0;transform:translateY(10px) scale(.7);animation:footballAppear 3s ease-in-out infinite}
-    .footballLoader.splashLoader span:nth-child(2){animation-delay:.18s}
-    .footballLoader.splashLoader span:nth-child(3){animation-delay:.36s}
-    .footballLoader.splashLoader span:nth-child(4){animation-delay:.54s}
-    .footballLoader.splashLoader span:nth-child(5){animation-delay:.72s}
-    .splashLoaderLabel{font-size:12px;font-weight:900;letter-spacing:.1em;color:rgba(255,255,255,.78);text-transform:uppercase}
-    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(10px) scale(.7)} 18%,70%{opacity:1;transform:translateY(0) scale(1)} 82%{opacity:.45;transform:translateY(-2px) scale(.92)}}
+    .splashLoaderWrap{margin-top:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+    .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:14px;min-height:56px}
+    .footballLoader.splashLoader span{width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;background-image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222.5%22/%3E%0A%20%20%3Cpolygon%20points%3D%2232%2C18%2024%2C24%2027%2C34%2037%2C34%2040%2C24%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2220%2C25%2012%2C28%2015%2C40%2026%2C36%2023%2C26%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2244%2C25%2041%2C36%2052%2C40%2055%2C28%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2219%2C43%2026%2C38%2033%2C45%2029%2C54%2018%2C51%22%20fill%3D%22%23111111%22/%3E%0A%20%20%3Cpolygon%20points%3D%2245%2C43%2035%2C45%2031%2C54%2046%2C51%22%20fill%3D%22%23111111%22/%3E%0A%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(12px) scale(.68);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span:nth-child(2){animation-delay:.45s}
+    .footballLoader.splashLoader span:nth-child(3){animation-delay:.9s}
+    .footballLoader.splashLoader span:nth-child(4){animation-delay:1.35s}
+    .footballLoader.splashLoader span:nth-child(5){animation-delay:1.8s}
+    .splashLoaderLabel{display:none}
+    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(12px) scale(.68)} 20%,72%{opacity:1;transform:translateY(0) scale(1)} 84%{opacity:.4;transform:translateY(-3px) scale(.93)}}
     @media (max-width:720px){
-      .footballLoader.splashLoader{gap:8px;min-height:32px}
-      .footballLoader.splashLoader span{font-size:22px;width:24px;height:24px}
-      .splashLoaderLabel{font-size:11px}
+      .footballLoader.splashLoader{gap:10px;min-height:46px}
+      .footballLoader.splashLoader span{width:34px;height:34px}
+      .splashLoaderLabel{display:none}
     }
     .err{
       margin-top:10px;padding:10px 12px;border-radius:14px;
@@ -2658,9 +2658,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="hint visuallyHidden" id="splashHint">Ładowanie…</div>
 <div class="splashLoaderWrap" aria-hidden="true">
   <div class="footballLoader splashLoader">
-    <span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span>
+    <span></span><span></span><span></span><span></span><span></span>
   </div>
-  <div class="splashLoaderLabel">Loading…</div>
+  <div class="splashLoaderLabel visuallyHidden">Loading…</div>
 </div>
 <div class="err" id="splashErr"></div>
 <div class="spinner"></div>
@@ -3107,7 +3107,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3030" type="module"></script>
+<script src="./app.js?v=3031" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3127,7 +3127,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3030', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3031', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3783,7 +3783,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3030-pin-login-buttons">
+<style id="build3031-pin-login-buttons">
 #pinLoginModal .pinLoginActions{
   display:flex;
   gap:16px;
