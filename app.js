@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3018;
+const BUILD = 3019;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -6644,7 +6644,7 @@ function renderMatches(){
     info.className = "sub";
     info.textContent = (getLang()==="en")
       ? "No active round. Admin can add a fixture."
-      : "Brak aktywnej kolejki.";
+      : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
     updateSaveButtonState();
     return;
