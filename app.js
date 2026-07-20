@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3015;
+const BUILD = 3016;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -8019,6 +8019,44 @@ async function loadLeagueFinishedRounds(code){
   }
 }
 
+// BUILD 3016: dodatkowe kryteria kolejności w tabeli ligi.
+// Przy równej liczbie punktów decyduje liczba 1. miejsc w zakończonych kolejkach,
+// następnie liczba 2. miejsc. Jeśli również te wartości są równe,
+// gracze zajmują to samo miejsce (ranking typu 1, 2, 2, 4).
+function computeLeaguePlacementCounts(){
+  const counts = new Map();
+  const ensure = (uid)=>{
+    if(!counts.has(uid)) counts.set(uid, { firstPlaces:0, secondPlaces:0 });
+    return counts.get(uid);
+  };
+
+  for(const rd of leagueState.roundCache.values()){
+    const ptsMap = rd?.pointsByUid || {};
+    const entries = Object.entries(ptsMap)
+      .filter(([,pts])=> Number.isFinite(Number(pts)))
+      .map(([uid,pts])=>({ uid, points:Number(pts) }));
+    if(!entries.length) continue;
+
+    const bestPoints = Math.max(...entries.map(x=>x.points));
+    const first = entries.filter(x=>x.points===bestPoints);
+    first.forEach(x=>{ ensure(x.uid).firstPlaces += 1; });
+
+    // W rankingu konkurencyjnym przy remisie na 1. miejscu nie ma 2. miejsca.
+    // Drugie miejsca liczymy więc tylko wtedy, gdy zwycięzca kolejki był jeden.
+    if(first.length===1){
+      const belowFirst = entries.filter(x=>x.points<bestPoints);
+      if(belowFirst.length){
+        const secondPoints = Math.max(...belowFirst.map(x=>x.points));
+        belowFirst
+          .filter(x=>x.points===secondPoints)
+          .forEach(x=>{ ensure(x.uid).secondPlaces += 1; });
+      }
+    }
+  }
+
+  return counts;
+}
+
 function updateLeagueHintForMode(){
   const hint = el("leagueHint");
   if(!hint) return;
@@ -8166,6 +8204,7 @@ async function openLeagueTable(roomCode, opts={}) {
       // ignore (player numbers are optional)
     }
 
+    const placementCounts = computeLeaguePlacementCounts();
     const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
     const qs = await boot.getDocs(q);
 
@@ -8174,12 +8213,16 @@ async function openLeagueTable(roomCode, opts={}) {
       const x = d.data();
       const playerNo = pnMap[x.uid || d.id] || "";
       if(!String(playerNo).trim()) return;
+      const uid = x.uid || d.id;
+      const placement = placementCounts.get(uid) || { firstPlaces:0, secondPlaces:0 };
       arr.push({
-        uid: x.uid || d.id,
+        uid,
         nick: x.nick || "—",
         playerNo,
         rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
         points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0),
+        firstPlaces: Number(placement.firstPlaces || 0),
+        secondPlaces: Number(placement.secondPlaces || 0),
         cupGold: Number(x.cupGold || 0),
         cupSilver: Number(x.cupSilver || 0),
         cupBronze: Number(x.cupBronze || 0),
@@ -8215,13 +8258,16 @@ function renderLeagueTable(){
   if(!body) return;
   body.innerHTML = "";
 
-  const source = (leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL" && Array.isArray(leagueState._displayRows))
-    ? leagueState._displayRows
-    : leagueState.rows;
+  const isRoundView = leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL" && Array.isArray(leagueState._displayRows);
+  const source = isRoundView ? leagueState._displayRows : leagueState.rows;
 
   const rows = [...(source||[])];
   rows.sort((a,b)=>{
     if(b.points !== a.points) return b.points - a.points;
+    if(!isRoundView){
+      if(Number(b.firstPlaces||0) !== Number(a.firstPlaces||0)) return Number(b.firstPlaces||0) - Number(a.firstPlaces||0);
+      if(Number(b.secondPlaces||0) !== Number(a.secondPlaces||0)) return Number(b.secondPlaces||0) - Number(a.secondPlaces||0);
+    }
     return String(a.nick).localeCompare(String(b.nick), "pl");
   });
 
@@ -8232,19 +8278,31 @@ function renderLeagueTable(){
     return;
   }
 
+  const sameRankingResult = (a,b)=>{
+    if(!a || !b) return false;
+    if(Number(a.points||0) !== Number(b.points||0)) return false;
+    if(isRoundView) return true;
+    return Number(a.firstPlaces||0) === Number(b.firstPlaces||0)
+      && Number(a.secondPlaces||0) === Number(b.secondPlaces||0);
+  };
+
+  let currentPlace = 0;
   rows.forEach((r, idx)=>{
-    const cupSrc = (idx===0) ? "ui/medale/puchar_1.png" : (idx===1) ? "ui/medale/puchar_2.png" : (idx===2) ? "ui/medale/puchar_3.png" : "";
+    if(idx===0) currentPlace = 1;
+    else if(!sameRankingResult(rows[idx-1], r)) currentPlace = idx + 1;
+
+    const cupSrc = (currentPlace===1) ? "ui/medale/puchar_1.png" : (currentPlace===2) ? "ui/medale/puchar_2.png" : (currentPlace===3) ? "ui/medale/puchar_3.png" : "";
     const cupHtml = cupSrc ? `<img alt="cup" src="${cupSrc}" style="width:22px;height:22px;vertical-align:middle;margin-right:6px"/>` : "";
     const pn = (isAdmin() && r.playerNo) ? ` <span style="opacity:.75;font-weight:800">[${escapeHtml(String(r.playerNo))}]</span>` : "";
     const tr = document.createElement("tr");
     tr.className = "linkRow";
     tr.innerHTML = `
-      <td>${idx+1}</td>
+      <td>${currentPlace}</td>
       <td>${cupHtml}${escapeHtml(r.nick)}${pn}${(r.uid===userUid) ? (getLang()==="en" ? " (YOU)" : " (TY)") : ""}</td>
       <td>${r.rounds}</td>
       <td>${r.points}</td>
     `;
-    if(leagueState.viewMode === "ROUND" && leagueState.selectedRound !== "ALL"){
+    if(isRoundView){
       tr.onclick = ()=> openArchivedPicksPreview(leagueState.roomCode, String(r._roundKey || leagueState.selectedRound), r.uid, r.nick);
     }else{
       tr.onclick = ()=> openPlayerStatsFromLeague(r.uid, r.nick);
