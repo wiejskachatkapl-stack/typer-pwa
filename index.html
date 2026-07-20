@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3017)</title>
-<link href="manifest.json?v=3017" rel="manifest"/>
-<link href="favicon-32x32.png?v=3017" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3017" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3017" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3018)</title>
+<link href="manifest.json?v=3018" rel="manifest"/>
+<link href="favicon-32x32.png?v=3018" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3018" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3018" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2460,7 +2460,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 </style>
 
 <style>
-/* BUILD 3017: dopracowanie przycisków pokoju na komputerze */
+/* BUILD 3018: dopracowanie przycisków pokoju na komputerze */
 @media (min-width: 901px){
   #room .leftBar{width:390px !important;min-width:390px !important;}
   #room #roomProfileCard{padding:14px !important;}
@@ -3013,7 +3013,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3017" type="module"></script>
+<script src="./app.js?v=3018" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3033,7 +3033,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3017', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3018', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3130,7 +3130,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 
 
 
-/* BUILD 3017: desktop alignment for room buttons */
+/* BUILD 3018: desktop alignment for room buttons */
 @media (min-width:981px){
   .leftBar{width:350px;min-width:350px;}
   #room .leftTopProfile{
@@ -3314,5 +3314,99 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
   html[data-lang="en"] #room .matchActionsPanel .label-en{display:inline-flex !important;}
 }
 </style>
+
+<style id="build3018-room-buttons-fix">
+/* BUILD 3018: poprawa kontenera i wyrównania przycisków Opuść/Usuń pokój na desktopie */
+@media (min-width: 901px){
+  #room .leftBar{width:390px !important;min-width:390px !important;}
+  #room #roomProfileCard{padding:14px !important;}
+  #room .leftTopProfile{
+    display:grid !important;
+    grid-template-columns:118px minmax(0,1fr) !important;
+    grid-template-areas:
+      "avatar top"
+      "details details" !important;
+    gap:12px 16px !important;
+    align-items:start !important;
+  }
+  #room .leftTopProfile .avatarBox{
+    grid-area:avatar !important;
+    width:118px !important;
+    height:118px !important;
+    flex:0 0 118px !important;
+  }
+  #room .leftTopProfile .profileTopText{
+    grid-area:top !important;
+    align-self:start !important;
+    min-width:0 !important;
+    gap:4px !important;
+    margin:0 !important;
+  }
+  #room .leftTopProfile .roomTopDetails{
+    grid-area:details !important;
+    width:100% !important;
+    min-width:0 !important;
+    border-top:1px solid rgba(255,255,255,.12) !important;
+    padding-top:10px !important;
+    margin-top:2px !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomCodeActions{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    width:100% !important;
+    gap:10px !important;
+    align-items:stretch !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomCodeActions > #btnLeave,
+  #room .leftTopProfile .roomTopDetails .roomCodeActions > #leftDeleteRoomCard{
+    width:100% !important;
+    min-width:0 !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomCodeActions #leftDeleteRoomCard{
+    display:flex !important;
+    align-items:stretch !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomCodeActions #btnLeave,
+  #room .leftTopProfile .roomTopDetails .roomCodeActions #btnDeleteRoom{
+    display:flex !important;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:52px !important;
+    padding:0 10px !important;
+    gap:7px !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:center !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomCodeActions .btnIcon{
+    width:18px !important;
+    height:18px !important;
+    flex:0 0 18px !important;
+    margin:0 !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomCodeActions .label-pl,
+  #room .leftTopProfile .roomTopDetails .roomCodeActions .label-en{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    white-space:nowrap !important;
+    line-height:1 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    min-width:0 !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomCodeActions .label-en{display:none !important;}
+  html[data-lang="en"] #room .leftTopProfile .roomTopDetails .roomCodeActions .label-pl{display:none !important;}
+  html[data-lang="en"] #room .leftTopProfile .roomTopDetails .roomCodeActions .label-en{display:inline-flex !important;}
+}
+</style>
+
 </body>
 </html>
