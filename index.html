@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3004)</title>
-<link href="manifest.json?v=3004" rel="manifest"/>
-<link href="favicon-32x32.png?v=3004" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3004" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3004" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3005)</title>
+<link href="manifest.json?v=3005" rel="manifest"/>
+<link href="favicon-32x32.png?v=3005" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3005" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3005" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -21,6 +21,54 @@
 .leftTopProfile{display:flex;align-items:center;gap:14px;}
 .profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
+
+/* BUILD 3005: informacje o pokoju przeniesione do górnego profilu */
+.roomTopDetails{
+  width:100%;
+  min-width:0;
+  padding-top:10px;
+  margin-top:4px;
+  border-top:1px solid rgba(255,255,255,.12);
+}
+.roomTopDetails .roomTopName{font-size:20px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.roomTopDetails .roomTopAdmin{font-size:13px;color:var(--muted);font-weight:800;margin-top:2px;}
+.roomTopDetails .roomCodeBlock{margin-top:7px !important;}
+.roomTopDetails .roomCodeActions{margin-top:7px !important;}
+
+@media (max-width:980px){
+  #room .leftTopProfile{
+    display:grid;
+    grid-template-columns:104px minmax(130px,.9fr) minmax(220px,1.35fr);
+    align-items:center;
+    gap:12px;
+    min-height:128px;
+  }
+  #room .roomTopDetails{
+    width:auto;
+    height:100%;
+    margin:0;
+    padding:4px 0 4px 14px;
+    border-top:0;
+    border-left:1px solid rgba(255,255,255,.14);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  #room .roomTopDetails .roomTopName{font-size:18px;}
+  #room .roomTopDetails .roomTopAdmin{font-size:12px;}
+  #room .roomTopDetails .roomCodeRow{justify-content:flex-start;}
+  #room .roomTopDetails .chip{font-size:13px;padding:7px 10px;}
+  #room .roomTopDetails .roomCodeActions{justify-content:flex-start !important;}
+  #room #btnLeave img{max-height:42px !important;width:auto !important;}
+  #room #btnSubstitute img{max-height:44px !important;width:auto !important;}
+  #room #btnDeleteRoom img{max-height:44px !important;width:auto !important;}
+  #room .leftProfileInfo{min-height:62px;}
+  #room .leftDeleteRoomCard{min-height:62px;}
+}
+@media (max-width:620px){
+  #room .leftTopProfile{grid-template-columns:96px minmax(110px,1fr);}
+  #room .roomTopDetails{grid-column:1 / -1;border-left:0;border-top:1px solid rgba(255,255,255,.14);padding:9px 0 0;margin-top:0;height:auto;}
+}
 
 :root{
       --bg:#071229;
@@ -2191,6 +2239,20 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       <div class="profileMeta" id="roomProfileCountry">—</div>
       <div class="profileMeta" id="roomProfileFav">—</div>
     </div>
+    <div class="roomTopDetails">
+      <div class="roomTopName" id="roomName">—</div>
+      <div class="roomTopAdmin"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
+      <div class="roomCodeBlock">
+        <div class="row roomCodeRow">
+          <div class="chip" style="flex:1;justify-content:space-between;">
+            <span id="t_code">Kod</span>: <span id="roomCode">—</span>
+          </div>
+        </div>
+        <div class="row roomCodeActions" style="gap:12px;justify-content:center;">
+          <button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button>
+        </div>
+      </div>
+    </div>
 </div>
 
   <!-- 6028: osobny kontener na Kraj/Klub + przycisk Podmiana -->
@@ -2211,19 +2273,6 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 
 <!-- 6016: dwa dolne kontenery dociśnięte do dołu -->
   <div class="leftBottomStack">
-  <div class="panel" style="padding:14px">
-<div class="title" id="roomName">—</div>
-<div class="sub"><span id="t_admin">Admin</span>: <span id="roomAdmin">—</span></div>
-<div class="roomCodeBlock" style="margin-top:10px">
-<div class="row roomCodeRow">
-<div class="chip" style="flex:1;justify-content:space-between;">
-<span id="t_code">Kod</span>: <span id="roomCode">—</span>
-</div>
-</div>
-<div class="row roomCodeActions" style="margin-top:10px; gap:12px; justify-content:center;">
-<button aria-label="Opuść" class="imgBtn sysBtn small" data-btn="btn_opusc.png" id="btnLeave" title="Opuść" type="button"><img alt="Opuść" data-btn="btn_opusc.png" src="ui/buttons/pl/btn_opusc.png"/></button> </div>
-</div>
-</div>
   <div class="panel" style="padding:14px">
 
 
@@ -2571,7 +2620,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3004" type="module"></script>
+<script src="./app.js?v=3005" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2598,7 +2647,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.004</div>
+<div id="buildCornerText">Mariusz Gębka v.3.005</div>
 </div>
 </body>
 </html>
