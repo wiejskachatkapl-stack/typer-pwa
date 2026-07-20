@@ -2342,6 +2342,122 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 }
 
 </style>
+<style>
+
+/* BUILD 3014: wyrównanie przycisków na komputerze i przywrócenie przycisków pokoi na telefonie */
+@media (min-width:901px){
+  #room .modernRoomBtn,
+  #room .modernRoomBtn .label-pl,
+  #room .modernRoomBtn .label-en{
+    white-space:nowrap;
+  }
+  #room .modernRoomBtn{
+    justify-content:center;
+    align-items:center;
+    flex-direction:row;
+    line-height:1;
+  }
+  #room .modernRoomBtn .btnIcon{
+    width:25px;
+    height:25px;
+    flex:0 0 25px;
+    margin:0;
+  }
+  #room .roomQuickMenu{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:9px !important;
+    padding:10px !important;
+  }
+  #room .roomQuickMenu .modernRoomBtn,
+  #room .roomQuickMenu #btnSubstitute{
+    grid-column:auto !important;
+    width:100% !important;
+    min-height:49px !important;
+    padding:9px 12px !important;
+    font-size:12px !important;
+  }
+  #room .roomCodeActions{
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+  }
+  #room .roomCodeActions #btnLeave,
+  #room .roomCodeActions #btnDeleteRoom{
+    min-height:48px !important;
+    padding:8px 5px !important;
+    font-size:10px !important;
+    gap:5px !important;
+  }
+  #room .roomCodeActions .btnIcon{
+    width:20px !important;
+    height:20px !important;
+    flex-basis:20px !important;
+  }
+  #room .roomTopBtns{
+    display:flex !important;
+    align-items:center !important;
+    gap:10px !important;
+    flex-wrap:nowrap !important;
+  }
+  #room .roomTopBtns .modernRoomBtn{
+    min-height:48px !important;
+    padding:8px 14px !important;
+  }
+  #room .matchActionsPanel{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:18px !important;
+  }
+  #room .matchActionsPanel .modernRoomBtn{
+    min-width:210px !important;
+    min-height:52px !important;
+    font-size:13px !important;
+  }
+  #room .playersHeader .modernRoomBtn,
+  #room .rightBottomMessages .modernRoomBtn{
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+}
+
+@media (max-width:900px){
+  #rooms .roomsBox > .row,
+  #rooms .panel.block > .row{
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:stretch !important;
+    gap:10px !important;
+  }
+  #rooms .panel.block > .row input{
+    flex:1 1 100% !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  #rooms .modernAppBtn{
+    display:inline-flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    position:relative !important;
+    flex:1 1 140px !important;
+    width:auto !important;
+    max-width:none !important;
+    min-width:0 !important;
+    min-height:46px !important;
+  }
+  #rooms #btnJoinRoom,
+  #rooms #btnCreateRoom{
+    flex:1 1 100% !important;
+    width:100% !important;
+  }
+  #rooms .modernAppBtn .appBtnIcon{
+    width:22px !important;
+    height:22px !important;
+    flex:0 0 22px !important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="bg"></div>
@@ -2795,7 +2911,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3013" type="module"></script>
+<script src="./app.js?v=3014" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2815,7 +2931,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3013', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3014', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
