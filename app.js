@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3002;
+const BUILD = 3003;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3822,6 +3822,141 @@ function wcAttachMobileScoreKeyboard(root){
   });
 }
 
+
+
+// v3003: główny TYPER - mobilny pasek cyfr u góry ekranu dla typów i wyników
+function mainIsMobileScoreKeyboardDevice(){
+  try{
+    return !!(window.matchMedia && (window.matchMedia('(hover:none) and (pointer:coarse)').matches || window.matchMedia('(max-width:980px)').matches));
+  }catch(e){ return window.innerWidth <= 980; }
+}
+let mainActiveMobileScoreInput = null;
+function mainEnsureMobileScoreKeyboardStyles(){
+  if(document.getElementById('mainMobileScoreKeyboardStyles')) return;
+  const st=document.createElement('style');
+  st.id='mainMobileScoreKeyboardStyles';
+  st.textContent=`
+    #mainMobileScoreKeyboard{display:none;}
+    @media (hover:none) and (pointer:coarse), (max-width:980px){
+      #mainMobileScoreKeyboard{
+        position:fixed;left:50%;top:calc(env(safe-area-inset-top, 0px) + 6px);transform:translateX(-50%);
+        z-index:100000;align-items:center;justify-content:center;gap:7px;flex-wrap:nowrap;
+        width:min(760px,94vw);min-height:48px;padding:6px 12px;border-radius:18px;
+        border:2px solid rgba(16,210,95,.82);background:rgba(4,23,55,.94);
+        box-shadow:0 0 18px rgba(16,210,95,.22), inset 0 0 0 1px rgba(255,255,255,.06);
+        backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;
+      }
+      #mainMobileScoreKeyboard.show{display:flex !important;}
+      #mainMobileScoreKeyboard .mainMobileKey{
+        min-width:34px;height:34px;padding:0 8px;border-radius:12px;border:1px solid rgba(255,255,255,.18);
+        background:rgba(255,255,255,.10);color:#fff;font-weight:1000;font-size:18px;line-height:1;
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.05), 0 5px 12px rgba(0,0,0,.24);
+      }
+      #mainMobileScoreKeyboard .mainMobileKeyBack{min-width:42px;background:rgba(255,180,35,.20);border-color:rgba(255,205,90,.55);}
+      #mainMobileScoreKeyboard .mainMobileKeyClose{min-width:42px;background:rgba(255,55,80,.22);border-color:rgba(255,95,115,.55);}
+      input.mainMobileNoNativeKeyboard{caret-color:transparent;}
+      input.mainScoreActiveInput{
+        border-color:rgba(60,220,120,.92) !important;
+        box-shadow:0 0 0 2px rgba(60,220,120,.18), inset 0 0 0 1px rgba(255,255,255,.08) !important;
+        background-image:linear-gradient(rgba(255,255,255,.96), rgba(255,255,255,.96));
+        background-size:2px 62%;background-repeat:no-repeat;background-position:calc(100% - 8px) 50%;
+        animation:mainScoreCaretBlink 1s steps(2,start) infinite;
+      }
+      @keyframes mainScoreCaretBlink{50%{background-size:0 62%;}}
+    }
+    @media (hover:none) and (pointer:coarse) and (max-width:620px){
+      #mainMobileScoreKeyboard{gap:5px;padding:5px 7px;width:96vw;}
+      #mainMobileScoreKeyboard .mainMobileKey{min-width:28px;height:30px;font-size:16px;border-radius:10px;padding:0 6px;}
+      #mainMobileScoreKeyboard .mainMobileKeyBack,#mainMobileScoreKeyboard .mainMobileKeyClose{min-width:34px;}
+    }
+  `;
+  document.head.appendChild(st);
+}
+function mainEnsureMobileScoreKeyboard(){
+  if(!mainIsMobileScoreKeyboardDevice()) return null;
+  mainEnsureMobileScoreKeyboardStyles();
+  let pad=document.getElementById('mainMobileScoreKeyboard');
+  if(pad) return pad;
+  pad=document.createElement('div');
+  pad.id='mainMobileScoreKeyboard';
+  pad.setAttribute('aria-label','Klawiatura typów i wyników');
+  const addKey=(txt,cls,fn)=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='mainMobileKey'+(cls?' '+cls:''); b.textContent=txt;
+    const run=(e)=>{
+      if(e){e.preventDefault();e.stopPropagation();}
+      const now=Date.now();
+      if(b.dataset.lastTap && now-Number(b.dataset.lastTap)<220) return;
+      b.dataset.lastTap=String(now); fn();
+    };
+    b.addEventListener('pointerup',run);
+    b.addEventListener('touchend',run,{passive:false});
+    b.addEventListener('click',run);
+    pad.appendChild(b);
+  };
+  ['0','1','2','3','4','5','6','7','8','9'].forEach(n=>addKey(n,'',()=>mainMobileScoreKey(n)));
+  addKey('⌫','mainMobileKeyBack',()=>mainMobileScoreBackspace());
+  addKey('×','mainMobileKeyClose',()=>mainHideMobileScoreKeyboard());
+  document.body.appendChild(pad);
+  return pad;
+}
+function mainShowMobileScoreKeyboard(input){
+  if(!mainIsMobileScoreKeyboardDevice() || !input || input.disabled) return;
+  if(input.closest && input.closest('#modal.worldcupMode')) return;
+  if(mainActiveMobileScoreInput && mainActiveMobileScoreInput!==input) mainActiveMobileScoreInput.classList.remove('mainScoreActiveInput');
+  mainActiveMobileScoreInput=input;
+  input.classList.add('mainMobileNoNativeKeyboard','mainScoreActiveInput');
+  input.readOnly=true;
+  input.dataset.mainFreshFocus='1';
+  const pad=mainEnsureMobileScoreKeyboard();
+  if(pad) pad.classList.add('show');
+  try{input.focus({preventScroll:true});}catch(e){try{input.focus();}catch(_){}}
+}
+function mainHideMobileScoreKeyboard(){
+  const pad=document.getElementById('mainMobileScoreKeyboard');
+  if(pad) pad.classList.remove('show');
+  if(mainActiveMobileScoreInput) mainActiveMobileScoreInput.classList.remove('mainScoreActiveInput');
+  mainActiveMobileScoreInput=null;
+}
+function mainMobileScoreKey(n){
+  const input=mainActiveMobileScoreInput;
+  if(!input || input.disabled) return;
+  const current=String(input.value||'').replace(/\D/g,'').slice(0,2);
+  let next;
+  if(input.dataset.mainFreshFocus==='1'){next=n;input.dataset.mainFreshFocus='0';}
+  else next=(current+n).slice(-2);
+  input.value=next;
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function mainMobileScoreBackspace(){
+  const input=mainActiveMobileScoreInput;
+  if(!input || input.disabled) return;
+  const current=String(input.value||'').replace(/\D/g,'').slice(0,2);
+  input.value=current.slice(0,-1);
+  input.dataset.mainFreshFocus='0';
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function mainAttachMobileScoreKeyboard(root){
+  if(!mainIsMobileScoreKeyboardDevice()) return;
+  const host=root||document;
+  host.querySelectorAll('.scoreInput').forEach(inp=>{
+    if(inp.closest && inp.closest('#modal.worldcupMode')) return;
+    if(inp.dataset.mainMobileKeypadAttached==='1') return;
+    inp.dataset.mainMobileKeypadAttached='1';
+    inp.setAttribute('inputmode','none');
+    inp.setAttribute('autocomplete','off');
+    const openPad=(e)=>{
+      if(e && e.cancelable) e.preventDefault();
+      if(e) e.stopPropagation();
+      mainShowMobileScoreKeyboard(inp);
+    };
+    inp.addEventListener('focus',openPad);
+    inp.addEventListener('click',openPad);
+    inp.addEventListener('pointerdown',openPad);
+    inp.addEventListener('touchstart',openPad,{passive:false});
+  });
+}
+
 function wcLocalPickLockKey(roundId){
   return `typer_wc_picks_saved_v1_${currentRoomCode||'room'}_${roundId||'round'}_${getPlayerNo()||userUid||'player'}`;
 }
@@ -6757,6 +6892,7 @@ function renderMatches(){
   cd.appendChild(leftWrap);
   cd.appendChild(settledBox);
   list.appendChild(cd);
+  mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
 }
 
@@ -7064,6 +7200,7 @@ function renderResultsList(){
 
     list.appendChild(card);
   }
+  mainAttachMobileScoreKeyboard(list);
 }
 
 async function saveResults(){
@@ -8437,7 +8574,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.002`);
+    setFooter(`Mariusz Gębka v.3.003`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
