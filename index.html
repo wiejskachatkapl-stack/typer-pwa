@@ -6,10 +6,10 @@
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
     <title>Typer (BUILD 3022)</title>
-<link href="manifest.json?v=3023" rel="manifest"/>
-<link href="favicon-32x32.png?v=3023" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3023" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3023" rel="apple-touch-icon" sizes="180x180"/>
+<link href="manifest.json?v=3024" rel="manifest"/>
+<link href="favicon-32x32.png?v=3024" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3024" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3024" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2183,7 +2183,7 @@
 }
 
 
-/* BUILD 3013: profesjonalne, jednolite niebieskie przyciski z ikonami */
+/* BUILD 3024: przycisk EVENT wyróżniony kolorystycznie z pucharem */
 #room .modernRoomBtn{
   --btn1:#1478e8;
   --btn2:#083f9e;
@@ -2225,13 +2225,24 @@
 #room .modernRoomBtn .label-en{display:none}
 html[data-lang="en"] #room .modernRoomBtn .label-pl{display:none}
 html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
-#room .modernRoomBtn.event,
 #room .modernRoomBtn.rank,
 #room .modernRoomBtn.info,
 #room .modernRoomBtn.success,
 #room .modernRoomBtn.warning,
 #room .modernRoomBtn.danger,
 #room .modernRoomBtn.neutral{--btn1:#1478e8;--btn2:#083f9e}
+#room .modernRoomBtn.event{
+  --btn1:#ffd44f;
+  --btn2:#ff7b00;
+  border-color:rgba(255,235,170,.95);
+  background:
+    radial-gradient(circle at 16% 18%,rgba(255,255,255,.28),rgba(255,255,255,0) 18%),
+    linear-gradient(90deg,#0d2f75 0%,#134db1 30%,#6f1431 66%,#ff7b00 100%);
+  box-shadow:0 5px 0 #7a3200,0 8px 18px rgba(0,0,0,.34),0 0 14px rgba(255,181,27,.24),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.22);
+}
+#room .modernRoomBtn.event::after{box-shadow:inset 0 0 0 1px rgba(255,247,215,.24)}
+#room .modernRoomBtn.event:hover{filter:brightness(1.08) saturate(1.06)}
+#room .modernRoomBtn.event .btnIcon{background:#ffe08a;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55)) drop-shadow(0 0 4px rgba(255,214,79,.4))}
 
 #room .btnIcon{
   width:28px;
@@ -3030,7 +3041,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3023" type="module"></script>
+<script src="./app.js?v=3024" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3050,7 +3061,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3023', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3024', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
