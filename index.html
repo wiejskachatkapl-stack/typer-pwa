@@ -6,10 +6,10 @@
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
     <title>Typer (BUILD 3022)</title>
-<link href="manifest.json?v=3024" rel="manifest"/>
-<link href="favicon-32x32.png?v=3024" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3024" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3024" rel="apple-touch-icon" sizes="180x180"/>
+<link href="manifest.json?v=3025" rel="manifest"/>
+<link href="favicon-32x32.png?v=3025" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3025" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3025" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2232,17 +2232,49 @@ html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
 #room .modernRoomBtn.danger,
 #room .modernRoomBtn.neutral{--btn1:#1478e8;--btn2:#083f9e}
 #room .modernRoomBtn.event{
-  --btn1:#ffd44f;
-  --btn2:#ff7b00;
-  border-color:rgba(255,235,170,.95);
+  position:relative;
+  isolation:isolate;
+  --btn1:#ffde68;
+  --btn2:#ff8c10;
+  color:#ffe9a9;
+  border-color:rgba(255,227,145,.98);
   background:
-    radial-gradient(circle at 16% 18%,rgba(255,255,255,.28),rgba(255,255,255,0) 18%),
-    linear-gradient(90deg,#0d2f75 0%,#134db1 30%,#6f1431 66%,#ff7b00 100%);
-  box-shadow:0 5px 0 #7a3200,0 8px 18px rgba(0,0,0,.34),0 0 14px rgba(255,181,27,.24),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.22);
+    radial-gradient(circle at 14% 18%,rgba(255,255,255,.34),rgba(255,255,255,0) 15%),
+    radial-gradient(circle at 84% 26%,rgba(255,208,94,.22),rgba(255,208,94,0) 18%),
+    linear-gradient(135deg,rgba(255,220,110,.24) 0%,rgba(255,220,110,0) 26%),
+    linear-gradient(90deg,#04132f 0%,#08275e 16%,#11489b 36%,#0a2359 54%,#4a102f 75%,#b44f0d 100%);
+  box-shadow:0 5px 0 #7b3200,0 10px 22px rgba(0,0,0,.38),0 0 18px rgba(255,187,54,.28),inset 0 1px 0 rgba(255,255,255,.48),inset 0 -1px 0 rgba(0,0,0,.28);
+  text-shadow:0 2px 6px rgba(0,0,0,.48);
 }
-#room .modernRoomBtn.event::after{box-shadow:inset 0 0 0 1px rgba(255,247,215,.24)}
-#room .modernRoomBtn.event:hover{filter:brightness(1.08) saturate(1.06)}
-#room .modernRoomBtn.event .btnIcon{background:#ffe08a;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55)) drop-shadow(0 0 4px rgba(255,214,79,.4))}
+#room .modernRoomBtn.event::before{
+  content:"";
+  position:absolute;
+  inset:4px;
+  border-radius:14px;
+  pointer-events:none;
+  background:
+    linear-gradient(145deg,rgba(255,221,130,.12),rgba(255,221,130,0) 34%),
+    linear-gradient(90deg,transparent 0%,rgba(255,255,255,.08) 14%,transparent 22%,transparent 74%,rgba(255,215,109,.18) 85%,transparent 100%);
+  opacity:.95;
+  z-index:0;
+}
+#room .modernRoomBtn.event::after{
+  box-shadow:inset 0 0 0 1px rgba(255,247,215,.26), inset 0 0 26px rgba(255,214,112,.08);
+}
+#room .modernRoomBtn.event:hover{filter:brightness(1.1) saturate(1.08)}
+#room .modernRoomBtn.event .btnIcon{
+  position:relative;
+  z-index:1;
+  background:#ffe08a;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.58)) drop-shadow(0 0 6px rgba(255,217,106,.48));
+}
+#room .modernRoomBtn.event .label-pl,
+#room .modernRoomBtn.event .label-en{
+  position:relative;
+  z-index:1;
+  font-weight:900;
+  letter-spacing:.02em;
+}
 
 #room .btnIcon{
   width:28px;
@@ -3041,7 +3073,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3024" type="module"></script>
+<script src="./app.js?v=3025" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3061,7 +3093,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3024', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3025', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
