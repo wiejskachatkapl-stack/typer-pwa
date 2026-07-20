@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3022;
+const BUILD = 3023;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -2998,8 +2998,9 @@ function updateRoomProfileLeagueMini(){
   if(placeEl) placeEl.textContent = myPlace;
 }
 
-async function loadRoomPlacementCounts(roomCode){
+async function loadRoomPlacementCounts(roomCode, seasonNo=currentSeasonNo){
   const code = String(roomCode || '').trim().toUpperCase();
+  const targetSeasonNo = Number(seasonNo || currentSeasonNo || 1);
   if(!code || !boot.getDocs) return;
   const seq = ++roomPlacementLoadSeq;
   const counts = new Map();
@@ -3014,6 +3015,8 @@ async function loadRoomPlacementCounts(roomCode){
     }
     qs.forEach(d=>{
       const rd = d.data() || {};
+      const sn = Number(rd?.seasonNo || 1);
+      if(sn !== targetSeasonNo) return;
       const ptsMap = rd?.pointsByUid || {};
       const entries = Object.entries(ptsMap)
         .filter(([,pts])=> Number.isFinite(Number(pts)))
@@ -3046,8 +3049,7 @@ function subscribeRoomLeagueMini(roomCode){
   const code = String(roomCode || '').trim().toUpperCase();
   if(!code || !boot.onSnapshot) return;
   try{
-    const q = boot.query(leagueCol(code), boot.orderBy('totalPoints','desc'));
-    unsubRoomLeague = boot.onSnapshot(q, (qs)=>{
+    unsubRoomLeague = boot.onSnapshot(leagueCol(code), (qs)=>{
       const rows = [];
       qs.forEach(d=>{
         const x = d.data() || {};
@@ -3055,16 +3057,16 @@ function subscribeRoomLeagueMini(roomCode){
           uid: x.uid || d.id,
           nick: x.nick || '—',
           playerNo: String(x.playerNo || '').trim().toUpperCase(),
-          points: Number(x.totalPoints || 0)
+          points: Number(x.seasonPoints || 0)
         });
       });
       roomLeagueRows = rows;
       updateRoomProfileLeagueMini();
-      loadRoomPlacementCounts(code);
+      loadRoomPlacementCounts(code, currentSeasonNo);
     });
   }catch(err){
     console.warn('subscribeRoomLeagueMini failed', err);
-    loadRoomPlacementCounts(code);
+    loadRoomPlacementCounts(code, currentSeasonNo);
   }
 }
 
@@ -6445,6 +6447,7 @@ async function openRoom(code, opts={}){
   currentRoundNo = currentRoom?.currentRoundNo || 1;
   currentSeasonNo = currentRoom?.currentSeasonNo || 1;
   refreshRoomSeasonLabels();
+  updateRoomProfileLeagueMini();
 
   el("roomName").textContent = currentRoom.name || "—";
   el("roomAdmin").textContent = currentRoom.adminNick || "—";
@@ -6467,9 +6470,12 @@ async function openRoom(code, opts={}){
     currentRoom = d.data();
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
+    const prevSeasonNo = currentSeasonNo;
     currentRoundNo = currentRoom?.currentRoundNo || 1;
     currentSeasonNo = currentRoom?.currentSeasonNo || 1;
     refreshRoomSeasonLabels();
+    updateRoomProfileLeagueMini();
+    if(prevSeasonNo !== currentSeasonNo) loadRoomPlacementCounts(code, currentSeasonNo);
 
     const adm2 = isAdmin();
     el("btnAddQueue").style.display = adm2 ? "block" : "none";
