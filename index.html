@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3020)</title>
-<link href="manifest.json?v=3020" rel="manifest"/>
-<link href="favicon-32x32.png?v=3020" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3020" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3020" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3021)</title>
+<link href="manifest.json?v=3021" rel="manifest"/>
+<link href="favicon-32x32.png?v=3021" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3021" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3021" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2460,7 +2460,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 </style>
 
 <style>
-/* BUILD 3020: dopracowanie przycisków pokoju na komputerze */
+/* BUILD 3021: dopracowanie przycisków pokoju na komputerze */
 @media (min-width: 901px){
   #room .leftBar{width:390px !important;min-width:390px !important;}
   #room #roomProfileCard{padding:14px !important;}
@@ -3013,7 +3013,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3020" type="module"></script>
+<script src="./app.js?v=3021" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3033,7 +3033,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3020', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3021', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3130,7 +3130,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 
 
 
-/* BUILD 3020: desktop alignment for room buttons */
+/* BUILD 3021: desktop alignment for room buttons */
 @media (min-width:981px){
   .leftBar{width:350px;min-width:350px;}
   #room .leftTopProfile{
@@ -3316,7 +3316,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 </style>
 
 <style id="build3018-room-buttons-fix">
-/* BUILD 3020: poprawa kontenera i wyrównania przycisków Opuść/Usuń pokój na desktopie */
+/* BUILD 3021: poprawa kontenera i wyrównania przycisków Opuść/Usuń pokój na desktopie */
 @media (min-width: 901px){
   #room .leftBar{width:390px !important;min-width:390px !important;}
   #room #roomProfileCard{padding:14px !important;}
@@ -3410,7 +3410,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 
 
 <style id="build3019-addqueue-fix">
-/* BUILD 3020: dopracowanie przycisku Dodaj kolejkę */
+/* BUILD 3021: dopracowanie przycisku Dodaj kolejkę */
 @media (min-width: 901px){
   #room .midHead .row{align-items:center !important;}
   #room .roomTopBtns{align-items:center !important;}
@@ -3447,7 +3447,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 
 
 <style id="build3020-topbar-fix">
-/* BUILD 3020: uporządkowanie górnego paska Spotkania na desktopie */
+/* BUILD 3021: uporządkowanie górnego paska Spotkania na desktopie */
 @media (min-width: 901px){
   #room .midHead .row{
     display:flex !important;
@@ -3508,6 +3508,105 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
     box-sizing:border-box !important;
     flex:0 0 auto !important;
   }
+}
+</style>
+
+
+<style id="build3021-mobile-room-fix">
+/* BUILD 3021: uporządkowanie przycisków i górnego paska na telefonie */
+@media (max-width: 980px){
+  #room .midHead{padding:12px !important;}
+  #room .midHead .row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    grid-template-areas:
+      "title add"
+      "round games"
+      "points points" !important;
+    gap:12px !important;
+    align-items:center !important;
+  }
+  #room .midHead .row > div:first-child{grid-area:title !important; min-width:0 !important;}
+  #room .midHead .row > .roomTopBtns{grid-area:add !important; justify-self:end !important; margin:0 !important;}
+  #room .midHead .row > .spacer{display:none !important;}
+  #room .midHead .row > .chip:nth-of-type(1){grid-area:round !important;}
+  #room .midHead .row > .chip:nth-of-type(2){grid-area:games !important;}
+  #room .midHead .row > .chip:nth-of-type(3){grid-area:points !important;}
+
+  #room .midHead .title{font-size:20px !important; white-space:nowrap !important; line-height:1.05 !important;}
+  #room .roomTopBtns{display:flex !important; align-items:center !important;}
+  #room #btnAddQueue{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex-direction:row !important;
+    min-height:48px !important;
+    padding:0 14px !important;
+    gap:8px !important;
+    min-width:168px !important;
+    width:auto !important;
+    max-width:44vw !important;
+    white-space:nowrap !important;
+    box-sizing:border-box !important;
+  }
+  #room #btnAddQueue .btnIcon{width:18px !important;height:18px !important;flex:0 0 18px !important;margin:0 !important;}
+  #room #btnAddQueue .label-pl,
+  #room #btnAddQueue .label-en{display:inline-flex !important;align-items:center !important;justify-content:center !important;line-height:1 !important;white-space:nowrap !important;}
+  #room #btnAddQueue .label-en{display:none !important;}
+  html[data-lang="en"] #room #btnAddQueue .label-pl{display:none !important;}
+  html[data-lang="en"] #room #btnAddQueue .label-en{display:inline-flex !important;}
+
+  #room .midHead .chip{
+    min-height:44px !important;
+    padding:8px 14px !important;
+    font-size:14px !important;
+    line-height:1.1 !important;
+    justify-content:center !important;
+  }
+
+  #room .matchActionsPanel{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:14px !important;
+    align-items:stretch !important;
+    min-height:unset !important;
+    padding:14px !important;
+  }
+  #room .matchActionsPanel .modernRoomBtn{
+    width:100% !important;
+    min-width:0 !important;
+    min-height:56px !important;
+    padding:0 14px !important;
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:10px !important;
+    font-size:14px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    box-sizing:border-box !important;
+  }
+  #room .matchActionsPanel .btnIcon{width:20px !important;height:20px !important;flex:0 0 20px !important;margin:0 !important;}
+  #room .matchActionsPanel .label-pl,
+  #room .matchActionsPanel .label-en{display:inline-flex !important;align-items:center !important;justify-content:center !important;line-height:1 !important;white-space:nowrap !important;}
+  #room .matchActionsPanel .label-en{display:none !important;}
+  html[data-lang="en"] #room .matchActionsPanel .label-pl{display:none !important;}
+  html[data-lang="en"] #room .matchActionsPanel .label-en{display:inline-flex !important;}
+}
+@media (max-width: 560px){
+  #room .midHead .row{
+    grid-template-columns:1fr !important;
+    grid-template-areas:
+      "title"
+      "add"
+      "round"
+      "games"
+      "points" !important;
+  }
+  #room .roomTopBtns{justify-content:flex-start !important;}
+  #room #btnAddQueue{max-width:100% !important; min-width:0 !important;}
+  #room .matchActionsPanel{grid-template-columns:1fr !important;}
 }
 </style>
 
