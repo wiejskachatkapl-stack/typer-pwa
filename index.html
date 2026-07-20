@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3019)</title>
-<link href="manifest.json?v=3019" rel="manifest"/>
-<link href="favicon-32x32.png?v=3019" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3019" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3019" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3020)</title>
+<link href="manifest.json?v=3020" rel="manifest"/>
+<link href="favicon-32x32.png?v=3020" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3020" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3020" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2460,7 +2460,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 </style>
 
 <style>
-/* BUILD 3019: dopracowanie przycisków pokoju na komputerze */
+/* BUILD 3020: dopracowanie przycisków pokoju na komputerze */
 @media (min-width: 901px){
   #room .leftBar{width:390px !important;min-width:390px !important;}
   #room #roomProfileCard{padding:14px !important;}
@@ -3013,7 +3013,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3019" type="module"></script>
+<script src="./app.js?v=3020" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3033,7 +3033,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3019', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3020', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3130,7 +3130,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 
 
 
-/* BUILD 3019: desktop alignment for room buttons */
+/* BUILD 3020: desktop alignment for room buttons */
 @media (min-width:981px){
   .leftBar{width:350px;min-width:350px;}
   #room .leftTopProfile{
@@ -3316,7 +3316,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 </style>
 
 <style id="build3018-room-buttons-fix">
-/* BUILD 3019: poprawa kontenera i wyrównania przycisków Opuść/Usuń pokój na desktopie */
+/* BUILD 3020: poprawa kontenera i wyrównania przycisków Opuść/Usuń pokój na desktopie */
 @media (min-width: 901px){
   #room .leftBar{width:390px !important;min-width:390px !important;}
   #room #roomProfileCard{padding:14px !important;}
@@ -3410,7 +3410,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 
 
 <style id="build3019-addqueue-fix">
-/* BUILD 3019: dopracowanie przycisku Dodaj kolejkę */
+/* BUILD 3020: dopracowanie przycisku Dodaj kolejkę */
 @media (min-width: 901px){
   #room .midHead .row{align-items:center !important;}
   #room .roomTopBtns{align-items:center !important;}
@@ -3441,6 +3441,72 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
     line-height:1 !important;
     white-space:nowrap !important;
     margin:0 !important;
+  }
+}
+</style>
+
+
+<style id="build3020-topbar-fix">
+/* BUILD 3020: uporządkowanie górnego paska Spotkania na desktopie */
+@media (min-width: 901px){
+  #room .midHead .row{
+    display:flex !important;
+    align-items:center !important;
+    gap:12px !important;
+    flex-wrap:nowrap !important;
+  }
+  #room .midHead .title{white-space:nowrap !important;}
+  #room .roomTopBtns{
+    display:flex !important;
+    align-items:center !important;
+    gap:12px !important;
+    flex:0 0 auto !important;
+  }
+  #room #btnAddQueue{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex-direction:row !important;
+    min-width:180px !important;
+    width:180px !important;
+    max-width:180px !important;
+    min-height:48px !important;
+    padding:0 14px !important;
+    gap:8px !important;
+    box-sizing:border-box !important;
+    white-space:nowrap !important;
+    line-height:1 !important;
+    overflow:hidden !important;
+  }
+  #room #btnAddQueue .btnIcon{
+    width:18px !important;
+    height:18px !important;
+    flex:0 0 18px !important;
+    margin:0 !important;
+  }
+  #room #btnAddQueue .label-pl,
+  #room #btnAddQueue .label-en{
+    align-items:center !important;
+    justify-content:center !important;
+    white-space:nowrap !important;
+    line-height:1 !important;
+    margin:0 !important;
+  }
+  #room #btnAddQueue .label-pl{display:inline-flex !important;}
+  #room #btnAddQueue .label-en{display:none !important;}
+  html[data-lang="en"] #room #btnAddQueue .label-pl{display:none !important;}
+  html[data-lang="en"] #room #btnAddQueue .label-en{display:inline-flex !important;}
+
+  #room .midHead .spacer{flex:1 1 auto !important;}
+  #room .midHead .chip{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    white-space:nowrap !important;
+    min-height:48px !important;
+    padding:0 16px !important;
+    box-sizing:border-box !important;
+    flex:0 0 auto !important;
   }
 }
 </style>
