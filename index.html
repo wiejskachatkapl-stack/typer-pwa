@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3011)</title>
-<link href="manifest.json?v=3011" rel="manifest"/>
-<link href="favicon-32x32.png?v=3011" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3011" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3011" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3012)</title>
+<link href="manifest.json?v=3012" rel="manifest"/>
+<link href="favicon-32x32.png?v=3012" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3012" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3012" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -22,7 +22,7 @@
 .profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
-/* BUILD 3011: informacje o pokoju przeniesione do górnego profilu */
+/* BUILD 3012: informacje o pokoju przeniesione do górnego profilu */
 .roomTopDetails{
   width:100%;
   min-width:0;
@@ -771,9 +771,17 @@
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       z-index:90;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      padding:16px 10px;
+      box-sizing:border-box;
     }
     .aqModal{
       width:min(620px,92vw);
+      max-height:calc(100dvh - 32px);
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
       padding:18px;
       border-radius:22px;
       border:1px solid rgba(255,255,255,.16);
@@ -802,21 +810,36 @@
       .aqBtns .imgBtn img{ width: min(240px, 70vw); }
     }
 
+
+    /* BUILD 3012: przewijanie okien Dodaj kolejkę na niskich ekranach */
+    @media (max-height:700px){
+      #addQueueOverlay{align-items:flex-start;}
+      .aqModal{justify-content:flex-start;}
+      .aqBtns{flex-direction:column; flex-wrap:nowrap;}
+      .aqBtns .imgBtn img{width:min(210px,62vw);}
+      .mqMatchesList{max-height:34vh;}
+    }
+
     /* ===== MANUAL QUEUE (modal) ===== */
     #manualQueueOverlay{
       position:absolute;
       inset:0;
       display:none;
-      align-items:center;
+      align-items:flex-start;
       justify-content:center;
       background:rgba(0,0,0,.55);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       z-index:91;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      padding:12px 8px;
+      box-sizing:border-box;
     }
     .mqModal{
       width:min(940px,94vw);
-      max-height:92vh;
+      max-height:calc(100dvh - 24px);
       padding:14px;
       border-radius:22px;
       border:1px solid rgba(255,255,255,.16);
@@ -826,7 +849,9 @@
       flex-direction:column;
       gap:8px;
       align-items:stretch;
-      overflow:hidden;
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
     }
     .mqTitle{
       font-weight:900;
@@ -912,7 +937,15 @@
       letter-spacing:.3px;
     }
     /* 7030: "Cofnij" ma być zawsze widoczny w ręcznym dodawaniu kolejki */
-    .mqFooter{display:flex;}
+    .mqFooter{
+      display:flex;
+      flex:0 0 auto;
+      position:sticky;
+      bottom:0;
+      z-index:3;
+      padding-top:8px;
+      background:linear-gradient(180deg, rgba(8,22,52,0), rgba(8,22,52,.98) 28%);
+    }
     .mqMatchRow{
       display:flex;
       align-items:center;
@@ -2122,7 +2155,7 @@
 }
 
 
-/* BUILD 3011: kosmetyczny układ przycisków w pokoju */
+/* BUILD 3012: kosmetyczny układ przycisków w pokoju */
 #room .roomQuickMenu{
   display:flex;
   flex-direction:row;
@@ -2146,7 +2179,7 @@
 }
 
 
-/* BUILD 3011: profesjonalne, jednolite niebieskie przyciski z ikonami */
+/* BUILD 3012: profesjonalne, jednolite niebieskie przyciski z ikonami */
 #room .modernRoomBtn{
   --btn1:#1478e8;
   --btn2:#083f9e;
@@ -2378,7 +2411,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     </div>
 </div>
 
-  <!-- BUILD 3011: Event + tabela ligi + ranking w jednym rzędzie -->
+  <!-- BUILD 3012: Event + tabela ligi + ranking w jednym rzędzie -->
   <div class="panel leftProfileInfo roomQuickMenu" id="roomProfileInfoCard">
     <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small modernRoomBtn event" id="btnSubstitute" title="Event MŚ 2026" type="button"><span class="btnIcon ico-event" aria-hidden="true"></span><span class="label-pl">EVENT MŚ 2026</span><span class="label-en">WORLD CUP 2026</span></button>
     <button class="imgBtn sysBtn small modernRoomBtn info" id="btnLeagueFromRoom" type="button"><span class="btnIcon ico-table" aria-hidden="true"></span><span class="label-pl">Tabela ligi</span><span class="label-en">League table</span></button>
@@ -2423,7 +2456,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <div class="playersList" id="playersList"></div>
 <div class="spacer"></div>
-<!-- BUILD 3011: Wiadomości i Wyjście w jednym kontenerze -->
+<!-- BUILD 3012: Wiadomości i Wyjście w jednym kontenerze -->
 <div class="rightBottomStack">
   <div class="panel rightBottomMessages">
     <button class="imgBtn sysBtn modernRoomBtn info" id="btnMessagesFromRoom" style="position:relative" type="button"><span class="msgBadge" id="msgBadge">!</span><span class="btnIcon ico-msg" aria-hidden="true"></span><span class="label-pl">Wiadomości</span><span class="label-en">Messages</span></button>
@@ -2703,7 +2736,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3011" type="module"></script>
+<script src="./app.js?v=3012" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2723,7 +2756,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3011', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3012', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
