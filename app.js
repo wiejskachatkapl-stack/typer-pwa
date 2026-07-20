@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3028;
+const BUILD = 3029;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -140,7 +140,42 @@ function showToast(msg){
 }
 
 
+function ensureLoadingVisualStyles(){
+  if(document.getElementById("footballLoaderStyles")) return;
+  const st = document.createElement("style");
+  st.id = "footballLoaderStyles";
+  st.textContent = `
+    .footballLoaderWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    .footballLoader{display:flex;align-items:center;justify-content:center;gap:12px;min-height:40px}
+    .footballLoader span{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;opacity:0;transform:translateY(10px) scale(.7);animation:footballAppear 3s ease-in-out infinite}
+    .footballLoader span:nth-child(2){animation-delay:.18s}
+    .footballLoader span:nth-child(3){animation-delay:.36s}
+    .footballLoader span:nth-child(4){animation-delay:.54s}
+    .footballLoader span:nth-child(5){animation-delay:.72s}
+    .footballLoaderLabel{font-weight:900;font-size:13px;letter-spacing:.08em;color:rgba(255,255,255,.78);text-transform:uppercase}
+    .footballLoader.splashLoader span{font-size:26px;width:30px;height:30px}
+    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(10px) scale(.7)} 18%,70%{opacity:1;transform:translateY(0) scale(1)} 82%{opacity:.45;transform:translateY(-2px) scale(.92)}}
+    @media (max-width:720px){
+      .footballLoader{gap:8px;min-height:32px}
+      .footballLoader span{width:22px;height:22px;font-size:18px}
+      .footballLoader.splashLoader span{font-size:22px;width:24px;height:24px}
+      .footballLoaderLabel{font-size:11px}
+    }
+  `;
+  document.head.appendChild(st);
+}
+
+function getFootballLoaderMarkup(){
+  return `
+    <div class="footballLoaderWrap">
+      <div class="footballLoader" aria-hidden="true">
+        <span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span>
+      </div>
+    </div>`;
+}
+
 function ensureCenterLoadingOverlay(){
+  ensureLoadingVisualStyles();
   let ov = document.getElementById("centerLoadingOverlay");
   if(ov) return ov;
   ov = document.createElement("div");
@@ -155,24 +190,24 @@ function ensureCenterLoadingOverlay(){
   card.style.cssText = [
     "padding:22px 34px","border-radius:22px","border:1px solid rgba(255,255,255,.14)",
     "background:rgba(7,18,41,.88)","box-shadow:0 18px 50px rgba(0,0,0,.42)",
-    "font-weight:1000","font-size:42px","letter-spacing:1.2px","color:#fff",
-    "text-align:center","text-shadow:0 2px 10px rgba(0,0,0,.45)"
+    "color:#fff","text-align:center","min-width:220px"
   ].join(";");
   const mobile = window.matchMedia && window.matchMedia("(max-width: 720px)").matches;
   if(mobile){
-    card.style.fontSize = "28px";
     card.style.padding = "18px 24px";
+    card.style.minWidth = "180px";
   }
-  card.textContent = getLang()==="en" ? "LOADING......" : "ŁADOWANIE......";
+  card.innerHTML = getFootballLoaderMarkup();
   ov.appendChild(card);
   document.body.appendChild(ov);
   return ov;
 }
 
 function showCenterLoading(text){
+  ensureLoadingVisualStyles();
   const ov = ensureCenterLoadingOverlay();
   const card = document.getElementById("centerLoadingCard");
-  if(card) card.textContent = text || (getLang()==="en" ? "LOADING......" : "ŁADOWANIE......");
+  if(card) card.innerHTML = getFootballLoaderMarkup();
   ov.style.display = "flex";
 }
 
@@ -592,15 +627,15 @@ function getModernBtnSpec(btnName){
     "btn_exit.png":             {pl:"Wyjście", en:"Exit", icon:"ico-exit2", variant:"blue"},
     "btn_profile.png":          {pl:"Profil", en:"Profile", icon:"ico-profile2", variant:"blue"},
     "btn_profil.png":           {pl:"Profil", en:"Profile", icon:"ico-profile2", variant:"blue"},
-    "btn_reset_profile.png":    {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"danger", wide:true},
-    "btn_reset_profil.png":     {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"danger", wide:true},
+    "btn_reset_profile.png":    {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"amber", wide:true},
+    "btn_reset_profil.png":     {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"amber", wide:true},
     "btn_add_profile.png":      {pl:"Dodaj profil", en:"Add profile", icon:"ico-profile2", variant:"blue", wide:true},
     "btn_add_profil.png":       {pl:"Dodaj profil", en:"Add profile", icon:"ico-profile2", variant:"blue", wide:true},
     "btn_avatar.png":           {pl:"Avatar", en:"Avatar", icon:"ico-profile2", variant:"blue"},
     "btn_my_profil.png":        {pl:"Mam profil", en:"My profile", icon:"ico-check", variant:"blue", wide:true},
     "btn_yes.png":              {pl:"TAK", en:"YES", icon:"ico-check", variant:"success", wide:true},
-    "btn_no.png":               {pl:"NIE", en:"NO", icon:"ico-no", variant:"danger", wide:true},
-    "btn_close.png":            {pl:"Zamknij", en:"Close", icon:"ico-no", variant:"danger"}
+    "btn_no.png":               {pl:"NIE", en:"NO", icon:"ico-no", variant:"amber", wide:true},
+    "btn_close.png":            {pl:"Zamknij", en:"Close", icon:"ico-no", variant:"amber"}
   };
   return map[n] || null;
 }
@@ -8810,10 +8845,11 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 
 // ===== START =====
 (async()=>{
+  const loadingStartedAt = Date.now();
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.008`);
-    setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
+    setFooter(`Mariusz Gębka v.3.029`);
+    setSplash(`BUILD ${BUILD}`);
 
     await initFirebase();
     bindUI();
@@ -8824,13 +8860,19 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     // zastosuj język od razu
     applyLangToUI();
 
+    // animacja 5 piłek jest widoczna minimum 3 sekundy
+    const loadingElapsed = Date.now() - loadingStartedAt;
+    if(loadingElapsed < 3000){
+      await new Promise(r=>setTimeout(r, 3000-loadingElapsed));
+    }
+
     // wymagane logowanie PIN przed wejściem — zawsze pokazuj okno logowania na starcie
     const okLogin = await ensurePinLogin(true);
     if(!okLogin) return;
 
     showScreen("home");
     showCenterLoading();
-    await new Promise(r=>setTimeout(r, 2000));
+    await new Promise(r=>setTimeout(r, 3000));
     openJoinRoomModal();
     hideCenterLoading();
   }catch(e){

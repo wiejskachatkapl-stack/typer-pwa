@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3022)</title>
-<link href="manifest.json?v=3028" rel="manifest"/>
-<link href="favicon-32x32.png?v=3028" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3028" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3028" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3029)</title>
+<link href="manifest.json?v=3029" rel="manifest"/>
+<link href="favicon-32x32.png?v=3029" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3029" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3029" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -182,14 +182,24 @@
       background:var(--glass2);
       padding:22px;
     }
-    .spinner{
-      width:26px;height:26px;border-radius:50%;
-      border:3px solid rgba(255,255,255,.25);
-      border-top-color:rgba(255,255,255,.9);
-      animation:spin 1s linear infinite;margin-top:12px;
-    }
+    .spinner{display:none}
     @keyframes spin{to{transform:rotate(360deg)}}
     .hint{margin-top:8px;color:var(--muted);font-weight:800;white-space:pre-wrap}
+    .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+    .splashLoaderWrap{margin-top:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+    .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:12px;min-height:40px}
+    .footballLoader.splashLoader span{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;opacity:0;transform:translateY(10px) scale(.7);animation:footballAppear 3s ease-in-out infinite}
+    .footballLoader.splashLoader span:nth-child(2){animation-delay:.18s}
+    .footballLoader.splashLoader span:nth-child(3){animation-delay:.36s}
+    .footballLoader.splashLoader span:nth-child(4){animation-delay:.54s}
+    .footballLoader.splashLoader span:nth-child(5){animation-delay:.72s}
+    .splashLoaderLabel{font-size:12px;font-weight:900;letter-spacing:.1em;color:rgba(255,255,255,.78);text-transform:uppercase}
+    @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(10px) scale(.7)} 18%,70%{opacity:1;transform:translateY(0) scale(1)} 82%{opacity:.45;transform:translateY(-2px) scale(.92)}}
+    @media (max-width:720px){
+      .footballLoader.splashLoader{gap:8px;min-height:32px}
+      .footballLoader.splashLoader span{font-size:22px;width:24px;height:24px}
+      .splashLoaderLabel{font-size:11px}
+    }
     .err{
       margin-top:10px;padding:10px 12px;border-radius:14px;
       border:1px solid rgba(255,120,120,.35);
@@ -2645,7 +2655,12 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <section class="screen active" id="splash">
 <div class="splashCard">
 <div style="font-size:22px;font-weight:1000;">Typer</div>
-<div class="hint" id="splashHint">Ładowanie…</div>
+<div class="hint visuallyHidden" id="splashHint">Ładowanie…</div>
+<div class="splashLoaderWrap" aria-hidden="true">
+  <div class="footballLoader splashLoader">
+    <span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span>
+  </div>
+</div>
 <div class="err" id="splashErr"></div>
 <div class="spinner"></div>
 </div>
@@ -3091,7 +3106,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3028" type="module"></script>
+<script src="./app.js?v=3029" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3111,7 +3126,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3028', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3029', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3711,7 +3726,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="v3028-modern-sys-buttons">
+<style id="v3029-modern-sys-buttons">
 .sysModernBtn{
   min-height:50px;
   min-width:168px;
@@ -3729,9 +3744,10 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 .sysModernBtn--wide{min-width:210px}
 .sysModernBtn--big{min-width:280px;min-height:62px;padding:12px 22px;font-size:18px;border-radius:16px}
 .sysModernBtn--big .appBtnIcon{width:28px;height:28px;flex-basis:28px}
-.sysModernBtn--danger{
-  background:linear-gradient(180deg,#ff766b 0%,#f5393f 45%,#b51220 100%) !important;
-  box-shadow:0 6px 0 #7d0913,0 10px 18px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.35) !important;
+.sysModernBtn--danger,
+.sysModernBtn--amber{
+  background:linear-gradient(180deg,#ffd56d 0%,#f4ad2f 48%,#b86d0b 100%) !important;
+  box-shadow:0 6px 0 #7b4908,0 10px 18px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.38) !important;
 }
 .sysModernBtn--success{
   background:linear-gradient(180deg,#75e07d 0%,#2abf4a 45%,#167b2d 100%) !important;
