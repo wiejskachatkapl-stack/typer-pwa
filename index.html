@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3009)</title>
-<link href="manifest.json?v=3009" rel="manifest"/>
-<link href="favicon-32x32.png?v=3009" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3009" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3009" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3010)</title>
+<link href="manifest.json?v=3010" rel="manifest"/>
+<link href="favicon-32x32.png?v=3010" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3010" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3010" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -22,7 +22,7 @@
 .profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
-/* BUILD 3009: informacje o pokoju przeniesione do górnego profilu */
+/* BUILD 3010: informacje o pokoju przeniesione do górnego profilu */
 .roomTopDetails{
   width:100%;
   min-width:0;
@@ -2122,7 +2122,7 @@
 }
 
 
-/* BUILD 3009: kosmetyczny układ przycisków w pokoju */
+/* BUILD 3010: kosmetyczny układ przycisków w pokoju */
 #room .roomQuickMenu{
   display:flex;
   flex-direction:row;
@@ -2146,53 +2146,72 @@
 }
 
 
-/* BUILD 3009: nowy lekki system przycisków CSS — tylko ekran główny pokoju */
-#room .roomTextBtn{
-  appearance:none;
-  -webkit-appearance:none;
-  min-height:54px;
-  padding:10px 14px;
-  border:1px solid rgba(255,255,255,.30);
-  border-radius:15px;
-  display:inline-flex;
+/* BUILD 3010: nowoczesne przyciski tekstowe w ekranie pokoju */
+#room .modernRoomBtn{
+  --btn1:#1266c9;
+  --btn2:#0a3f94;
+  position:relative;
+  display:flex;
   align-items:center;
   justify-content:center;
-  gap:9px;
+  min-width:0;
+  min-height:52px;
+  padding:10px 14px;
+  border:1px solid rgba(255,255,255,.42);
+  border-radius:13px;
+  background:linear-gradient(180deg,var(--btn1),var(--btn2));
+  box-shadow:0 5px 0 rgba(1,18,54,.72),0 8px 18px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.28);
   color:#fff;
-  font:900 clamp(12px,1.2vw,16px)/1.1 system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:14px;
+  line-height:1.05;
+  font-weight:1000;
   letter-spacing:.15px;
   text-align:center;
-  text-shadow:0 1px 2px rgba(0,0,0,.55);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 5px 12px rgba(0,0,0,.28);
+  text-shadow:0 1px 2px rgba(0,0,0,.65);
   cursor:pointer;
-  overflow:hidden;
   transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;
 }
-#room .roomTextBtn:hover{filter:brightness(1.08);}
-#room .roomTextBtn:active{transform:translateY(2px) scale(.985);box-shadow:inset 0 2px 5px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.24);}
-#room .roomTextBtn:disabled{opacity:.48;filter:saturate(.55);cursor:not-allowed;transform:none;}
-#room .roomTextBtn .roomBtnIcon{font-size:1.15em;line-height:1;flex:0 0 auto;}
-#room .roomTextBtn .roomBtnText{display:block;white-space:normal;}
-#room .roomBtnInfo{background:linear-gradient(180deg,#2385d8 0%,#075ba6 100%);}
-#room .roomBtnPositive{background:linear-gradient(180deg,#22a861 0%,#08763f 100%);}
-#room .roomBtnEvent{background:linear-gradient(180deg,#ef9a22 0%,#bd5e08 100%);}
-#room .roomBtnRank{background:linear-gradient(180deg,#875be1 0%,#5931a8 100%);}
-#room .roomBtnWarning{background:linear-gradient(180deg,#ef8b32 0%,#b94a12 100%);}
-#room .roomBtnDanger{background:linear-gradient(180deg,#db5260 0%,#a62231 100%);}
-#room .roomBtnDangerStrong{background:linear-gradient(180deg,#c83542 0%,#841823 100%);}
-#room .roomQuickMenu .roomTextBtn{flex:1 1 0;min-width:0;min-height:60px;}
-#room .roomCodeActions .roomTextBtn{min-width:132px;min-height:50px;padding:9px 13px;}
-#room .matchActionsPanel .roomTextBtn{flex:1 1 180px;min-width:150px;}
-#room .rightBottomMessages{display:grid !important;grid-template-columns:1fr 1fr;gap:10px;}
-#room .rightBottomMessages .roomTextBtn{width:100%;min-height:58px;}
-#room .roomTopBtns .roomTextBtn,#room .playersHeader .roomTextBtn{min-height:46px;padding:8px 12px;}
+#room .modernRoomBtn:hover{filter:brightness(1.09);transform:translateY(-1px)}
+#room .modernRoomBtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(1,18,54,.72),0 4px 10px rgba(0,0,0,.24)}
+#room .modernRoomBtn:disabled{opacity:.48;filter:grayscale(.35);cursor:not-allowed;transform:none}
+#room .modernRoomBtn .label-en{display:none}
+html[data-lang="en"] #room .modernRoomBtn .label-pl{display:none}
+html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
+#room .modernRoomBtn.event{--btn1:#f0a21b;--btn2:#b96405}
+#room .modernRoomBtn.rank{--btn1:#8d59dc;--btn2:#52309c}
+#room .modernRoomBtn.info{--btn1:#1297bc;--btn2:#07637e}
+#room .modernRoomBtn.success{--btn1:#26a96e;--btn2:#0b6f45}
+#room .modernRoomBtn.warning{--btn1:#f0a21b;--btn2:#b96405}
+#room .modernRoomBtn.danger{--btn1:#e74f57;--btn2:#9f202d}
+#room .modernRoomBtn.neutral{--btn1:#506782;--btn2:#293c55}
+
+/* Opuść/Usuń: dwie stałe, równe kolumny. U gracza druga zostaje pusta. */
+#room .roomCodeActions{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:8px !important;
+  width:100%;
+}
+#room .roomCodeActions > #btnLeave,
+#room .roomCodeActions > #leftDeleteRoomCard{width:100%;min-width:0}
+#room .roomCodeActions #leftDeleteRoomCard{display:flex;align-items:stretch}
+#room .roomCodeActions #btnLeave,
+#room .roomCodeActions #btnDeleteRoom{width:100%;min-height:44px;padding:8px 7px;font-size:12px}
+
+#room .roomQuickMenu .modernRoomBtn{flex:1 1 0;min-height:54px;padding:8px 7px;font-size:12px}
+#room .matchActionsPanel .modernRoomBtn{min-width:160px}
+#room .playersHeader .modernRoomBtn{min-height:42px;padding:8px 12px;font-size:12px}
+#room .rightBottomMessages{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch}
+#room .rightBottomMessages .modernRoomBtn{width:100%;min-height:54px}
+#room .msgBadge{z-index:3}
+
 @media (max-width:900px){
-  #room .roomTextBtn{min-height:48px;padding:8px 10px;border-radius:12px;font-size:12px;gap:6px;}
-  #room .roomQuickMenu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
-  #room .roomQuickMenu .roomTextBtn{min-height:54px;width:100%;}
-  #room .roomCodeActions .roomTextBtn{min-width:0;flex:1 1 0;min-height:48px;}
-  #room .rightBottomMessages{gap:7px;}
-  #room .rightBottomMessages .roomTextBtn{min-height:52px;}
+  #room .modernRoomBtn{min-height:44px;padding:7px 8px;font-size:11px;border-radius:10px;box-shadow:0 4px 0 rgba(1,18,54,.72),0 6px 12px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.25)}
+  #room .roomQuickMenu .modernRoomBtn{min-height:42px;font-size:10px;padding:6px 4px}
+  #room .roomCodeActions #btnLeave,
+  #room .roomCodeActions #btnDeleteRoom{min-height:40px;font-size:10px;padding:6px 3px}
+  #room .matchActionsPanel .modernRoomBtn{min-width:0;flex:1 1 0}
+  #room .rightBottomMessages .modernRoomBtn{min-height:44px}
 }
 
 </style>
@@ -2325,20 +2344,20 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
           </div>
         </div>
         <div class="row roomCodeActions" style="gap:10px;justify-content:flex-start;align-items:center;">
-          <button aria-label="Opuść pokój" class="imgBtn sysBtn small roomTextBtn roomBtnDanger" data-label-key="leaveRoom" id="btnLeave" title="Opuść pokój" type="button"><span class="roomBtnIcon">↩</span><span class="roomBtnText">Opuść pokój</span></button>
+          <button aria-label="Opuść pokój" class="imgBtn sysBtn small modernRoomBtn danger" id="btnLeave" title="Opuść pokój" type="button"><span class="label-pl">Opuść pokój</span><span class="label-en">Leave room</span></button>
           <div class="leftDeleteRoomCard" id="leftDeleteRoomCard" style="display:none">
-            <button aria-label="Usuń pokój" class="imgBtn sysBtn small roomTextBtn roomBtnDangerStrong" data-label-key="deleteRoom" id="btnDeleteRoom" title="Usuń pokój" type="button"><span class="roomBtnIcon">🗑</span><span class="roomBtnText">Usuń pokój</span></button>
+            <button aria-label="Usuń pokój" class="imgBtn sysBtn small modernRoomBtn danger" id="btnDeleteRoom" title="Usuń pokój" type="button"><span class="label-pl">Usuń pokój</span><span class="label-en">Delete room</span></button>
           </div>
         </div>
       </div>
     </div>
 </div>
 
-  <!-- BUILD 3009: Event + tabela ligi + ranking w jednym rzędzie -->
+  <!-- BUILD 3010: Event + tabela ligi + ranking w jednym rzędzie -->
   <div class="panel leftProfileInfo roomQuickMenu" id="roomProfileInfoCard">
-    <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small roomTextBtn roomBtnEvent" data-label-key="worldCupEvent" id="btnSubstitute" title="Event MŚ 2026" type="button"><span class="roomBtnIcon">🏆</span><span class="roomBtnText">Event MŚ 2026</span></button>
-    <button class="imgBtn sysBtn small roomTextBtn roomBtnInfo" data-label-key="tipstersTable" id="btnLeagueFromRoom" type="button"><span class="roomBtnIcon">📊</span><span class="roomBtnText">Tabela ligi typerów</span></button>
-    <button class="imgBtn sysBtn small roomTextBtn roomBtnRank" data-label-key="allTimeRanking" id="btnAllRankingFromRoom" type="button"><span class="roomBtnIcon">🥇</span><span class="roomBtnText">Ranking wszechczasów</span></button>
+    <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small modernRoomBtn event" id="btnSubstitute" title="Event MŚ 2026" type="button"><span class="label-pl">EVENT MŚ 2026</span><span class="label-en">WORLD CUP 2026</span></button>
+    <button class="imgBtn sysBtn small modernRoomBtn info" id="btnLeagueFromRoom" type="button"><span class="label-pl">Tabela ligi</span><span class="label-en">League table</span></button>
+    <button class="imgBtn sysBtn small modernRoomBtn rank" id="btnAllRankingFromRoom" type="button"><span class="label-pl">Ranking wszechczasów</span><span class="label-en">All-time ranking</span></button>
   </div>
   <!-- back button removed (back is now on the right as "Wyjście") -->
 </div>
@@ -2351,7 +2370,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <!-- ADMIN: przeniesione z lewego panelu (Akcje) na górę, obok nagłówka Spotkań -->
 <div class="roomTopBtns">
-<button class="imgBtn sysBtn actionSmall roomTextBtn roomBtnPositive" data-label-key="addRound" id="btnAddQueue" style="display:none" type="button"><span class="roomBtnIcon">＋</span><span class="roomBtnText">Dodaj kolejkę</span></button>
+<button class="imgBtn sysBtn actionSmall modernRoomBtn success" id="btnAddQueue" style="display:none" type="button"><span class="label-pl">Dodaj kolejkę</span><span class="label-en">Add round</span></button>
 </div>
 <div class="spacer"></div>
 <div class="chip"><span id="t_round">KOLEJKA</span><span class="chipSep" id="sep_round">: </span><span id="roundLabel">—</span></div>
@@ -2363,9 +2382,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- 6001: panel pod meczami na przyciski (Wpisz Wyniki / Zakończ kolejkę) -->
 <div class="panel matchActionsPanel" id="matchActionsPanel">
 <!-- 6004: przeniesiono "Zapisz typy" (btn_save_picks.png / #btnSaveAll) z lewego panelu do dolnego kontenera -->
-<button class="imgBtn sysBtn roomTextBtn roomBtnPositive" data-label-key="savePicks" disabled="" id="btnSaveAll" type="button"><span class="roomBtnIcon">✓</span><span class="roomBtnText">Zapisz typy</span></button>
-<button class="imgBtn sysBtn roomTextBtn roomBtnInfo" data-label-key="enterResults" id="btnEnterResults" style="display:none" type="button"><span class="roomBtnIcon">✎</span><span class="roomBtnText">Wpisz wyniki</span></button>
-<button class="imgBtn sysBtn roomTextBtn roomBtnWarning" data-label-key="endRound" disabled="" id="btnEndRound" style="display:none" type="button"><span class="roomBtnIcon">■</span><span class="roomBtnText">Zakończ kolejkę</span></button>
+<button class="imgBtn sysBtn modernRoomBtn success" disabled="" id="btnSaveAll" type="button"><span class="label-pl">Zapisz typy</span><span class="label-en">Save picks</span></button>
+<button class="imgBtn sysBtn modernRoomBtn warning" id="btnEnterResults" style="display:none" type="button"><span class="label-pl">Wpisz wyniki</span><span class="label-en">Enter results</span></button>
+<button class="imgBtn sysBtn modernRoomBtn danger" disabled="" id="btnEndRound" style="display:none" type="button"><span class="label-pl">Zakończ kolejkę</span><span class="label-en">End round</span></button>
 </div>
 </div>
 <!-- RIGHT -->
@@ -2375,15 +2394,15 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     <div class="title" id="t_players">Gracze</div>
     <div class="sub" id="t_players_sub"></div>
   </div>
-  <button class="imgBtn sysBtn actionSmall roomTextBtn roomBtnDanger" data-label-key="deletePlayer" id="btnDeletePlayer" style="display:none" type="button"><span class="roomBtnIcon">−</span><span class="roomBtnText">Usuń gracza</span></button>
+  <button class="imgBtn sysBtn actionSmall modernRoomBtn danger" id="btnDeletePlayer" style="display:none" type="button"><span class="label-pl">Usuń gracza</span><span class="label-en">Delete player</span></button>
 </div>
 <div class="playersList" id="playersList"></div>
 <div class="spacer"></div>
-<!-- BUILD 3009: Wiadomości i Wyjście w jednym kontenerze -->
+<!-- BUILD 3010: Wiadomości i Wyjście w jednym kontenerze -->
 <div class="rightBottomStack">
   <div class="panel rightBottomMessages">
-    <button class="imgBtn sysBtn roomTextBtn roomBtnInfo" data-label-key="messages" id="btnMessagesFromRoom" style="position:relative" type="button"><span class="msgBadge" id="msgBadge">!</span><span class="roomBtnIcon">✉</span><span class="roomBtnText">Wiadomości</span></button>
-    <button class="imgBtn sysBtn roomTextBtn roomBtnDanger" data-label-key="exit" id="btnExitFromRoomRight" type="button"><span class="roomBtnIcon">⏻</span><span class="roomBtnText">Wyjście</span></button>
+    <button class="imgBtn sysBtn modernRoomBtn info" id="btnMessagesFromRoom" style="position:relative" type="button"><span class="msgBadge" id="msgBadge">!</span><span class="label-pl">Wiadomości</span><span class="label-en">Messages</span></button>
+    <button class="imgBtn sysBtn modernRoomBtn danger" id="btnExitFromRoomRight" type="button"><span class="label-pl">Wyjście</span><span class="label-en">Exit</span></button>
   </div>
 </div>
 </div>
@@ -2659,7 +2678,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3009" type="module"></script>
+<script src="./app.js?v=3010" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2679,14 +2698,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3009', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3010', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.009</div>
+<div id="buildCornerText">Mariusz Gębka v.3.008</div>
 </div>
 
 <style>
