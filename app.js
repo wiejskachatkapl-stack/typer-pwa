@@ -6644,7 +6644,7 @@ function renderMatches(){
     info.className = "sub";
     info.textContent = (getLang()==="en")
       ? "No active round. Admin can add a fixture."
-      : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
+      : "Brak aktywnej kolejki.";
     list.appendChild(info);
     updateSaveButtonState();
     return;
