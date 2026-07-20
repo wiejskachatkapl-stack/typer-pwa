@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3026;
+const BUILD = 3027;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -577,20 +577,59 @@ function modalClose(){
 
 /** ROOMS MENU MODALS **/
 
+function getModernBtnSpec(btnName){
+  const n = String(btnName||"").trim();
+  const map = {
+    "btn_join.png":             {pl:"Dołącz do pokoju", en:"Join room", icon:"ico-join2", variant:"blue", wide:true},
+    "btn_wejdz_pokoj.png":      {pl:"Dołącz do pokoju", en:"Join room", icon:"ico-join2", variant:"blue", wide:true},
+    "btn_enter_room.png":       {pl:"Dołącz do pokoju", en:"Join room", icon:"ico-join2", variant:"blue", wide:true},
+    "btn_create.png":           {pl:"Załóż nowy pokój", en:"Create room", icon:"ico-create2", variant:"blue", wide:true},
+    "btn_zaloz.png":            {pl:"Załóż nowy pokój", en:"Create room", icon:"ico-create2", variant:"blue", wide:true},
+    "btn_create_room.png":      {pl:"Załóż nowy pokój", en:"Create room", icon:"ico-create2", variant:"blue", wide:true},
+    "btn_new_login.png":        {pl:"Nowe logowanie", en:"New login", icon:"ico-profile2", variant:"blue", wide:true},
+    "btn_menu.png":             {pl:"Menu", en:"Menu", icon:"ico-back2", variant:"blue"},
+    "btn_back.png":             {pl:"Cofnij", en:"Back", icon:"ico-back2", variant:"blue"},
+    "btn_exit.png":             {pl:"Wyjście", en:"Exit", icon:"ico-exit2", variant:"blue"},
+    "btn_profile.png":          {pl:"Profil", en:"Profile", icon:"ico-profile2", variant:"blue"},
+    "btn_profil.png":           {pl:"Profil", en:"Profile", icon:"ico-profile2", variant:"blue"},
+    "btn_reset_profile.png":    {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"danger", wide:true},
+    "btn_reset_profil.png":     {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"danger", wide:true},
+    "btn_add_profile.png":      {pl:"Dodaj profil", en:"Add profile", icon:"ico-profile2", variant:"blue", wide:true},
+    "btn_add_profil.png":       {pl:"Dodaj profil", en:"Add profile", icon:"ico-profile2", variant:"blue", wide:true},
+    "btn_avatar.png":           {pl:"Avatar", en:"Avatar", icon:"ico-profile2", variant:"blue"},
+    "btn_my_profil.png":        {pl:"Mam profil", en:"My profile", icon:"ico-check", variant:"blue", wide:true},
+    "btn_yes.png":              {pl:"TAK", en:"YES", icon:"ico-check", variant:"success", wide:true},
+    "btn_no.png":               {pl:"NIE", en:"NO", icon:"ico-no", variant:"danger", wide:true},
+    "btn_close.png":            {pl:"Zamknij", en:"Close", icon:"ico-no", variant:"danger"}
+  };
+  return map[n] || null;
+}
+
 function makeSysImgButton(btnName, {cls="sysBtn", alt="btn", title="", onClick=null} = {}){
+  const spec = getModernBtnSpec(btnName);
   const b = document.createElement("button");
   b.type = "button";
-  b.className = `imgBtn ${cls}`.trim();
-  if(title) b.title = title;
 
-  const img = document.createElement("img");
-  img.dataset.btn = btnName;
-  img.alt = alt;
+  if(spec){
+    const lang = getLang && typeof getLang === 'function' ? getLang() : 'pl';
+    b.className = [`imgBtn`, cls, `modernAppBtn`, `sysModernBtn`, `sysModernBtn--${spec.variant||'blue'}`].join(' ').trim();
+    if(String(cls||'').includes('sysBtnBig')) b.classList.add('sysModernBtn--big');
+    if(String(cls||'').includes('small')) b.classList.add('sysModernBtn--small');
+    if(spec.wide) b.classList.add('sysModernBtn--wide');
+    const label = lang === 'en' ? spec.en : spec.pl;
+    b.innerHTML = `<span class="appBtnIcon ${spec.icon}" aria-hidden="true"></span><span class="label-pl">${spec.pl}</span><span class="label-en">${spec.en}</span>`;
+    b.setAttribute('aria-label', label);
+    b.title = title || label;
+  }else{
+    b.className = `imgBtn ${cls}`.trim();
+    if(title) b.title = title;
+    const img = document.createElement("img");
+    img.dataset.btn = btnName;
+    img.alt = alt;
+    img.src = getBtnDir() + mapBtnName(btnName);
+    b.appendChild(img);
+  }
 
-  // Ustaw src od razu (żeby nie było pustki przed refresh)
-  img.src = getBtnDir() + mapBtnName(btnName);
-
-  b.appendChild(img);
   if(onClick) b.onclick = onClick;
   return b;
 }
@@ -2047,8 +2086,8 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
       <div class="avatarPickerHeader">
         <div class="avatarPickerTitle">${title}</div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <button type="button" class="avatarPickerUpload">${lang==="en"?"Add JPG":"Dodaj JPG"}</button>
-          <button type="button" class="avatarPickerClose">${closeTxt}</button>
+          <button type="button" class="avatarPickerUpload modernAppBtn sysModernBtn sysModernBtn--blue sysModernBtn--small"><span class="appBtnIcon ico-profile2" aria-hidden="true"></span><span class="label-pl">Dodaj JPG</span><span class="label-en">Add JPG</span></button>
+          <button type="button" class="avatarPickerClose modernAppBtn sysModernBtn sysModernBtn--danger sysModernBtn--small"><span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">Zamknij</span><span class="label-en">Close</span></button>
         </div>
       </div>
       <div class="avatarPickerBody">
