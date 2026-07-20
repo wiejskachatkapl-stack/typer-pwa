@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3016)</title>
-<link href="manifest.json?v=3016" rel="manifest"/>
-<link href="favicon-32x32.png?v=3016" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3016" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3016" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3017)</title>
+<link href="manifest.json?v=3017" rel="manifest"/>
+<link href="favicon-32x32.png?v=3017" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3017" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3017" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2458,6 +2458,108 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
   }
 }
 </style>
+
+<style>
+/* BUILD 3017: dopracowanie przycisków pokoju na komputerze */
+@media (min-width: 901px){
+  #room .leftBar{width:390px !important;min-width:390px !important;}
+  #room #roomProfileCard{padding:14px !important;}
+  #room .leftTopProfile{
+    display:grid !important;
+    grid-template-columns:118px minmax(0,1fr) !important;
+    grid-template-areas:
+      "avatar top"
+      "avatar details" !important;
+    gap:12px 16px !important;
+    align-items:start !important;
+    min-height:auto !important;
+  }
+  #room .leftTopProfile .avatarBox{
+    grid-area:avatar !important;
+    width:118px !important;height:118px !important;flex:0 0 118px !important;
+    border-radius:22px !important;
+  }
+  #room .leftTopProfile .profileTopText{
+    grid-area:top !important;
+    align-self:start !important;
+    gap:4px !important;
+    margin:0 !important;
+    min-width:0 !important;
+  }
+  #room .leftTopProfile .profileNick{font-size:18px !important;line-height:1.05 !important;}
+  #room .leftTopProfile .profileMeta{font-size:13px !important;line-height:1.12 !important;}
+  #room .leftTopProfile .roomTopDetails{
+    grid-area:details !important;
+    border-top:1px solid rgba(255,255,255,.12) !important;
+    padding-top:10px !important;
+    margin-top:2px !important;
+    min-width:0 !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomTopName{font-size:18px !important;line-height:1.08 !important;}
+  #room .leftTopProfile .roomTopDetails .roomTopAdmin{font-size:12px !important;line-height:1.1 !important;}
+  #room .leftTopProfile .roomTopDetails .chip{padding:8px 12px !important;font-size:14px !important;}
+
+  #room .roomCodeActions{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:10px !important;
+    width:100% !important;
+    align-items:stretch !important;
+  }
+  #room .roomCodeActions > #btnLeave,
+  #room .roomCodeActions > #leftDeleteRoomCard{width:100% !important;min-width:0 !important;}
+  #room .roomCodeActions #leftDeleteRoomCard{display:flex;align-items:stretch;justify-content:stretch;}
+  #room .roomCodeActions #btnLeave,
+  #room .roomCodeActions #btnDeleteRoom{
+    display:inline-flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:100% !important;
+    min-height:54px !important;
+    padding:0 14px !important;
+    gap:9px !important;
+    font-size:14px !important;
+    font-weight:900 !important;
+    border-radius:14px !important;
+    line-height:1 !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+  }
+  #room .roomCodeActions .btnIcon{
+    width:20px !important;height:20px !important;flex:0 0 20px !important;margin:0 !important;
+  }
+  #room .roomCodeActions .label-pl,
+  #room .roomCodeActions .label-en{
+    display:inline-flex;align-items:center;line-height:1 !important;white-space:nowrap !important;
+  }
+  #room .roomCodeActions .label-en{display:none !important;}
+  html[data-lang="en"] #room .roomCodeActions .label-pl{display:none !important;}
+  html[data-lang="en"] #room .roomCodeActions .label-en{display:inline-flex !important;}
+
+  #room .matchActionsPanel{gap:18px !important;}
+  #room .matchActionsPanel .modernRoomBtn{
+    display:inline-flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    justify-content:center !important;
+    min-width:230px !important;
+    min-height:54px !important;
+    padding:0 18px !important;
+    gap:10px !important;
+    font-size:14px !important;
+    line-height:1 !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+  }
+  #room .matchActionsPanel .btnIcon{width:22px !important;height:22px !important;flex:0 0 22px !important;margin:0 !important;}
+  #room .matchActionsPanel .label-pl,
+  #room .matchActionsPanel .label-en{display:inline-flex;align-items:center;line-height:1 !important;white-space:nowrap !important;}
+  #room .matchActionsPanel .label-en{display:none !important;}
+  html[data-lang="en"] #room .matchActionsPanel .label-pl{display:none !important;}
+  html[data-lang="en"] #room .matchActionsPanel .label-en{display:inline-flex !important;}
+}
+</style>
 </head>
 <body>
 <div id="bg"></div>
@@ -2911,7 +3013,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3016" type="module"></script>
+<script src="./app.js?v=3017" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2931,7 +3033,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3016', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3017', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3028,7 +3130,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 
 
 
-/* BUILD 3016: desktop alignment for room buttons */
+/* BUILD 3017: desktop alignment for room buttons */
 @media (min-width:981px){
   .leftBar{width:350px;min-width:350px;}
   #room .leftTopProfile{
@@ -3180,5 +3282,37 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
 })();
 </script>
 
+
+<style id="build3017-final-overrides">
+@media (min-width: 901px){
+  #room .leftBar{width:390px !important;min-width:390px !important;}
+  #room #roomProfileCard{padding:14px !important;}
+  #room .leftTopProfile{display:grid !important;grid-template-columns:118px minmax(0,1fr) !important;grid-template-areas:"avatar top" "avatar details" !important;gap:12px 16px !important;align-items:start !important;min-height:auto !important;}
+  #room .leftTopProfile .avatarBox{grid-area:avatar !important;width:118px !important;height:118px !important;flex:0 0 118px !important;border-radius:22px !important;}
+  #room .leftTopProfile .profileTopText{grid-area:top !important;align-self:start !important;gap:4px !important;margin:0 !important;min-width:0 !important;}
+  #room .leftTopProfile .profileNick{font-size:18px !important;line-height:1.05 !important;}
+  #room .leftTopProfile .profileMeta{font-size:13px !important;line-height:1.12 !important;}
+  #room .leftTopProfile .roomTopDetails{grid-area:details !important;border-top:1px solid rgba(255,255,255,.12) !important;padding-top:10px !important;margin-top:2px !important;min-width:0 !important;width:100% !important;}
+  #room .leftTopProfile .roomTopDetails .roomTopName{font-size:18px !important;line-height:1.08 !important;}
+  #room .leftTopProfile .roomTopDetails .roomTopAdmin{font-size:12px !important;line-height:1.1 !important;}
+  #room .leftTopProfile .roomTopDetails .chip{padding:8px 12px !important;font-size:14px !important;}
+  #room .roomCodeActions{display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;width:100% !important;align-items:stretch !important;}
+  #room .roomCodeActions > #btnLeave,#room .roomCodeActions > #leftDeleteRoomCard{width:100% !important;min-width:0 !important;}
+  #room .roomCodeActions #leftDeleteRoomCard{display:flex;align-items:stretch;justify-content:stretch;}
+  #room .roomCodeActions #btnLeave,#room .roomCodeActions #btnDeleteRoom{display:inline-flex !important;flex-direction:row !important;align-items:center !important;justify-content:center !important;width:100% !important;min-height:54px !important;padding:0 14px !important;gap:9px !important;font-size:14px !important;font-weight:900 !important;border-radius:14px !important;line-height:1 !important;text-align:center !important;white-space:nowrap !important;}
+  #room .roomCodeActions .btnIcon{width:20px !important;height:20px !important;flex:0 0 20px !important;margin:0 !important;}
+  #room .roomCodeActions .label-pl,#room .roomCodeActions .label-en{align-items:center !important;line-height:1 !important;white-space:nowrap !important;}
+  #room .roomCodeActions .label-en{display:none !important;}
+  html[data-lang="en"] #room .roomCodeActions .label-pl{display:none !important;}
+  html[data-lang="en"] #room .roomCodeActions .label-en{display:inline-flex !important;}
+  #room .matchActionsPanel{display:flex !important;align-items:center !important;justify-content:center !important;gap:18px !important;flex-wrap:nowrap !important;}
+  #room .matchActionsPanel .modernRoomBtn{display:inline-flex !important;flex-direction:row !important;align-items:center !important;justify-content:center !important;min-width:230px !important;min-height:54px !important;padding:0 18px !important;gap:10px !important;font-size:14px !important;line-height:1 !important;text-align:center !important;white-space:nowrap !important;}
+  #room .matchActionsPanel .btnIcon{width:22px !important;height:22px !important;flex:0 0 22px !important;margin:0 !important;}
+  #room .matchActionsPanel .label-pl,#room .matchActionsPanel .label-en{align-items:center !important;line-height:1 !important;white-space:nowrap !important;}
+  #room .matchActionsPanel .label-en{display:none !important;}
+  html[data-lang="en"] #room .matchActionsPanel .label-pl{display:none !important;}
+  html[data-lang="en"] #room .matchActionsPanel .label-en{display:inline-flex !important;}
+}
+</style>
 </body>
 </html>
