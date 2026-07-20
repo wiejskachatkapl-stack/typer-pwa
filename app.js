@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3025;
+const BUILD = 3026;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1481,35 +1481,33 @@ function openSettings(){
 
   // Przyciski: Profil + Reset profilu (bez avatara i bez opisów)
   const btnRow = document.createElement("div");
-  btnRow.style.display = "flex";
-  btnRow.style.gap = "14px";
-  btnRow.style.flexWrap = "wrap";
+  btnRow.className = "settingsActionRow";
 
-  const btnProfil = document.createElement("button");
-  btnProfil.className = "imgBtn sysBtn sysBtnBig";
-  btnProfil.type = "button";
-  btnProfil.title = (getLang()==="pl") ? "Profil" : "Profile";
-  btnProfil.setAttribute("aria-label", btnProfil.title);
-  const imgProfil = document.createElement("img");
-  imgProfil.dataset.btn = "btn_profil.png";
-  imgProfil.alt = btnProfil.title;
-  imgProfil.src = getBtnDir() + mapBtnName("btn_profil.png");
-  btnProfil.appendChild(imgProfil);
-  btnProfil.onclick = ()=> openProfileModal({required:false});
+  const makeSettingsActionBtn = ({iconCls, pl, en, onClick})=>{
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "imgBtn modernAppBtn settingsActionBtn";
+    b.innerHTML = `<span class="appBtnIcon ${iconCls}" aria-hidden="true"></span><span class="label-pl">${pl}</span><span class="label-en">${en}</span>`;
+    b.title = getLang()==="en" ? en : pl;
+    b.setAttribute("aria-label", b.title);
+    if(onClick) b.onclick = onClick;
+    return b;
+  };
+
+  const btnProfil = makeSettingsActionBtn({
+    iconCls: "ico-profile2",
+    pl: "Profil",
+    en: "Profile",
+    onClick: ()=> openProfileModal({required:false})
+  });
   btnRow.appendChild(btnProfil);
 
-  const btnClear = document.createElement("button");
-  btnClear.className = "imgBtn sysBtn sysBtnBig";
-  btnClear.type = "button";
-  btnClear.title = t("clearProfile");
-  btnClear.setAttribute("aria-label", t("clearProfile"));
-  const img = document.createElement("img");
-  img.dataset.btn = "btn_reset_profilu.png";
-  img.alt = t("clearProfile");
-  img.src = getBtnDir() + mapBtnName("btn_reset_profilu.png");
-  btnClear.appendChild(img);
-  btnClear.onclick = () => clearProfile();
-  // reset obok Profil
+  const btnClear = makeSettingsActionBtn({
+    iconCls: "ico-trash2",
+    pl: "Skasuj profil",
+    en: "Delete profile",
+    onClick: ()=> clearProfile()
+  });
   btnRow.appendChild(btnClear);
 
   wrap.appendChild(btnRow);
