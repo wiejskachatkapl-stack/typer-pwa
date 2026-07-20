@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3005)</title>
-<link href="manifest.json?v=3005" rel="manifest"/>
-<link href="favicon-32x32.png?v=3005" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3005" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3005" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3006)</title>
+<link href="manifest.json?v=3006" rel="manifest"/>
+<link href="favicon-32x32.png?v=3006" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3006" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3006" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -22,7 +22,7 @@
 .profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
-/* BUILD 3005: informacje o pokoju przeniesione do górnego profilu */
+/* BUILD 3006: informacje o pokoju przeniesione do górnego profilu */
 .roomTopDetails{
   width:100%;
   min-width:0;
@@ -2620,7 +2620,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3005" type="module"></script>
+<script src="./app.js?v=3006" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2640,14 +2640,80 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=2020').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3006', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.005</div>
+<div id="buildCornerText">Mariusz Gębka v.3.006</div>
 </div>
+
+<style>
+  #pwaInstallBtn{
+    position:fixed;left:14px;bottom:14px;z-index:10050;
+    display:none;align-items:center;gap:8px;
+    min-height:46px;padding:10px 16px;border:2px solid rgba(255,255,255,.55);
+    border-radius:16px;background:linear-gradient(180deg,#1d78e8,#06469d);
+    color:#fff;font:800 15px/1.1 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.45);
+  }
+  #pwaInstallBtn:active{transform:translateY(1px)}
+  #pwaInstallHelp{position:fixed;inset:0;z-index:10060;display:none;place-items:center;background:rgba(0,0,0,.72);padding:18px}
+  #pwaInstallHelp.is-open{display:grid}
+  #pwaInstallHelpCard{max-width:460px;width:100%;border-radius:20px;padding:20px;background:#091a3b;color:#fff;border:1px solid rgba(255,255,255,.22);box-shadow:0 20px 60px rgba(0,0,0,.6);font:600 16px/1.45 system-ui,sans-serif}
+  #pwaInstallHelpCard h3{margin:0 0 12px;font-size:21px}
+  #pwaInstallHelpCard p{margin:8px 0}
+  #pwaInstallHelpClose{width:100%;margin-top:14px;min-height:44px;border:0;border-radius:13px;background:#e02831;color:#fff;font-weight:800;font-size:16px}
+  @media (display-mode: standalone){#pwaInstallBtn{display:none!important}}
+</style>
+<button id="pwaInstallBtn" type="button" aria-label="Zainstaluj aplikację TYPER">⬇ Zainstaluj TYPER</button>
+<div id="pwaInstallHelp" role="dialog" aria-modal="true" aria-labelledby="pwaInstallHelpTitle">
+  <div id="pwaInstallHelpCard">
+    <h3 id="pwaInstallHelpTitle">Instalacja TYPERA</h3>
+    <p><b>Samsung Internet:</b> otwórz menu przeglądarki i wybierz <b>Dodaj stronę do → Ekran aplikacji</b> albo ikonę instalacji przy pasku adresu.</p>
+    <p><b>Google Chrome:</b> otwórz menu ⋮ i wybierz <b>Zainstaluj aplikację</b> lub <b>Dodaj do ekranu głównego</b>.</p>
+    <p>Strona musi być otwarta bezpośrednio w Samsung Internet lub Chrome, nie w wewnętrznej przeglądarce Facebooka/Messengera.</p>
+    <button id="pwaInstallHelpClose" type="button">Zamknij</button>
+  </div>
+</div>
+<script>
+(() => {
+  let deferredPrompt = null;
+  const btn = document.getElementById('pwaInstallBtn');
+  const help = document.getElementById('pwaInstallHelp');
+  const close = document.getElementById('pwaInstallHelpClose');
+  const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const showButton = () => { if (isMobile() && !isStandalone()) btn.style.display = 'flex'; };
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    showButton();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    btn.style.display = 'none';
+    help.classList.remove('is-open');
+  });
+
+  btn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch (_) {}
+      deferredPrompt = null;
+      if (!isStandalone()) setTimeout(() => help.classList.add('is-open'), 500);
+    } else {
+      help.classList.add('is-open');
+    }
+  });
+  close.addEventListener('click', () => help.classList.remove('is-open'));
+  help.addEventListener('click', (e) => { if (e.target === help) help.classList.remove('is-open'); });
+  window.addEventListener('load', showButton);
+})();
+</script>
+
 </body>
 </html>
