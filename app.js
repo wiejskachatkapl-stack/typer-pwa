@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3021;
+const BUILD = 3022;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -2510,6 +2510,8 @@ function refreshNickLabels(){
 
     const fav = String(p.favClub || "").trim();
     if(el("roomProfileFav")) el("roomProfileFav").textContent = (fav || "—");
+    if(el("roomProfilePointsText")) el("roomProfilePointsText").textContent = (lang === "en") ? "Points" : "Punkty";
+    if(el("roomProfilePlaceText")) el("roomProfilePlaceText").textContent = (lang === "en") ? "Place" : "Miejsce";
 
     const avatarFile = String(p.avatar || "").trim();
     const avatarImg = el("roomAvatarImg");
@@ -2525,6 +2527,7 @@ function refreshNickLabels(){
         if(avatarFallback) avatarFallback.style.display = "block";
       }
     }
+    updateRoomProfileLeagueMini();
   }catch(e){/* ignore */}
 }
 
@@ -2555,6 +2558,7 @@ let unsubRoomDoc = null;
 let unsubPlayers = null;
 let unsubMatches = null;
 let unsubPicks = null;
+let unsubRoomLeague = null;
 
 let currentRoomCode = null;
 let currentRoom = null;
@@ -2643,6 +2647,9 @@ function formatCountdown(msLeft){
 
 let pointsByUid = {};
 let myPoints = null;
+let roomLeagueRows = [];
+let roomPlacementCounts = new Map();
+let roomPlacementLoadSeq = 0;
 
 function roomRef(code){ return boot.doc(db, "rooms", code); }
 function playersCol(code){ return boot.collection(db, "rooms", code, "players"); }
@@ -2936,6 +2943,129 @@ function recomputePoints(){
 
   myPoints = pointsByUid[userUid] ?? 0;
   if(el("myPointsLabel")) el("myPointsLabel").textContent = String(myPoints);
+}
+
+function _roomProfileRankRows(){
+  const rows = [...(roomLeagueRows||[])].map(r=>({
+    uid: r.uid,
+    nick: String(r.nick || "—"),
+    playerNo: String(r.playerNo || "").trim().toUpperCase(),
+    points: Number(r.points || 0),
+    firstPlaces: Number((roomPlacementCounts.get(r.uid) || {}).firstPlaces || 0),
+    secondPlaces: Number((roomPlacementCounts.get(r.uid) || {}).secondPlaces || 0)
+  }));
+  rows.sort((a,b)=>{
+    if(b.points !== a.points) return b.points - a.points;
+    if(b.firstPlaces !== a.firstPlaces) return b.firstPlaces - a.firstPlaces;
+    if(b.secondPlaces !== a.secondPlaces) return b.secondPlaces - a.secondPlaces;
+    return String(a.nick).localeCompare(String(b.nick), "pl");
+  });
+  return rows;
+}
+
+function updateRoomProfileLeagueMini(){
+  const pointsEl = el("roomProfilePoints");
+  const placeEl = el("roomProfilePlace");
+  if(!pointsEl && !placeEl) return;
+
+  const rows = _roomProfileRankRows();
+  const profile = getProfile() || {};
+  const myPlayerNo = String(getPlayerNo() || profile.playerNo || "").trim().toUpperCase();
+  let myRow = rows.find(r => r.uid === userUid);
+  if(!myRow && myPlayerNo) myRow = rows.find(r => String(r.playerNo || "").trim().toUpperCase() === myPlayerNo);
+
+  if(!myRow){
+    if(pointsEl) pointsEl.textContent = rows.length ? '0' : '—';
+    if(placeEl) placeEl.textContent = '—';
+    return;
+  }
+
+  let currentPlace = 0;
+  let myPlace = '—';
+  rows.forEach((r, idx)=>{
+    if(idx === 0) currentPlace = 1;
+    else {
+      const prev = rows[idx-1];
+      const same = Number(prev.points||0) === Number(r.points||0)
+        && Number(prev.firstPlaces||0) === Number(r.firstPlaces||0)
+        && Number(prev.secondPlaces||0) === Number(r.secondPlaces||0);
+      if(!same) currentPlace = idx + 1;
+    }
+    if(r.uid === myRow.uid) myPlace = String(currentPlace);
+  });
+
+  if(pointsEl) pointsEl.textContent = String(Number(myRow.points || 0));
+  if(placeEl) placeEl.textContent = myPlace;
+}
+
+async function loadRoomPlacementCounts(roomCode){
+  const code = String(roomCode || '').trim().toUpperCase();
+  if(!code || !boot.getDocs) return;
+  const seq = ++roomPlacementLoadSeq;
+  const counts = new Map();
+  const ensure = (uid)=>{
+    if(!counts.has(uid)) counts.set(uid, { firstPlaces:0, secondPlaces:0 });
+    return counts.get(uid);
+  };
+  try{
+    let qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy('archiveIndex','desc')));
+    if(qs.empty){
+      qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy('roundNo','desc')));
+    }
+    qs.forEach(d=>{
+      const rd = d.data() || {};
+      const ptsMap = rd?.pointsByUid || {};
+      const entries = Object.entries(ptsMap)
+        .filter(([,pts])=> Number.isFinite(Number(pts)))
+        .map(([uid,pts])=>({ uid, points:Number(pts) }));
+      if(!entries.length) return;
+      const bestPoints = Math.max(...entries.map(x=>x.points));
+      const first = entries.filter(x=> x.points === bestPoints);
+      first.forEach(x=>{ ensure(x.uid).firstPlaces += 1; });
+      if(first.length === 1){
+        const belowFirst = entries.filter(x=> x.points < bestPoints);
+        if(belowFirst.length){
+          const secondPoints = Math.max(...belowFirst.map(x=>x.points));
+          belowFirst.filter(x=> x.points === secondPoints).forEach(x=>{ ensure(x.uid).secondPlaces += 1; });
+        }
+      }
+    });
+    if(seq !== roomPlacementLoadSeq) return;
+    roomPlacementCounts = counts;
+    updateRoomProfileLeagueMini();
+  }catch(err){
+    console.warn('loadRoomPlacementCounts failed', err);
+  }
+}
+
+function subscribeRoomLeagueMini(roomCode){
+  if(unsubRoomLeague){ try{ unsubRoomLeague(); }catch{} unsubRoomLeague = null; }
+  roomLeagueRows = [];
+  roomPlacementCounts = new Map();
+  updateRoomProfileLeagueMini();
+  const code = String(roomCode || '').trim().toUpperCase();
+  if(!code || !boot.onSnapshot) return;
+  try{
+    const q = boot.query(leagueCol(code), boot.orderBy('totalPoints','desc'));
+    unsubRoomLeague = boot.onSnapshot(q, (qs)=>{
+      const rows = [];
+      qs.forEach(d=>{
+        const x = d.data() || {};
+        rows.push({
+          uid: x.uid || d.id,
+          nick: x.nick || '—',
+          playerNo: String(x.playerNo || '').trim().toUpperCase(),
+          points: Number(x.totalPoints || 0)
+        });
+      });
+      roomLeagueRows = rows;
+      updateRoomProfileLeagueMini();
+      loadRoomPlacementCounts(code);
+    });
+  }catch(err){
+    console.warn('subscribeRoomLeagueMini failed', err);
+    loadRoomPlacementCounts(code);
+  }
 }
 
 async function initFirebase(){
@@ -6259,6 +6389,8 @@ async function leaveRoom(){
   lastPlayers = [];
   pointsByUid = {};
   myPoints = null;
+  roomLeagueRows = [];
+  roomPlacementCounts = new Map();
 
   renderMatches();
   renderPlayers([]);
@@ -6272,6 +6404,7 @@ function cleanupRoomListeners(){
   if(unsubPlayers){ unsubPlayers(); unsubPlayers=null; }
   if(unsubMatches){ unsubMatches(); unsubMatches=null; }
   if(unsubPicks){ unsubPicks(); unsubPicks=null; }
+  if(unsubRoomLeague){ unsubRoomLeague(); unsubRoomLeague=null; }
   stopMessagesListener();
 }
 
@@ -6297,6 +6430,8 @@ async function openRoom(code, opts={}){
   lastPlayers = [];
   pointsByUid = {};
   myPoints = null;
+  roomLeagueRows = [];
+  roomPlacementCounts = new Map();
 
   renderMatches();
   renderPlayers([]);
@@ -6316,6 +6451,7 @@ async function openRoom(code, opts={}){
   el("roomCode").textContent = code;
 
   refreshNickLabels();
+  subscribeRoomLeagueMini(code);
 
   const adm = isAdmin();
   el("btnAddQueue").style.display = adm ? "block" : "none";

@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3021)</title>
-<link href="manifest.json?v=3021" rel="manifest"/>
-<link href="favicon-32x32.png?v=3021" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3021" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3021" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3022)</title>
+<link href="manifest.json?v=3022" rel="manifest"/>
+<link href="favicon-32x32.png?v=3022" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3022" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3022" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -506,6 +506,10 @@
     .profileTopText{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1;margin-top:6px}
     .profileTopText .profileNick{font-weight:1000;font-size:20px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
     .profileTopText .profileMeta{display:block;font-weight:900;font-size:15px;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .profileStatsMini{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;width:100%}
+    .profileStatMini{flex:1 1 92px;min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,rgba(18,53,116,.95),rgba(5,23,59,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 16px rgba(0,0,0,.18)}
+    .profileStatMini .statLabel{font-size:10px;line-height:1;font-weight:1000;letter-spacing:.55px;text-transform:uppercase;color:rgba(255,255,255,.72)}
+    .profileStatMini .statValue{font-size:20px;line-height:1.05;font-weight:1000;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .leftTopProfile .avatarBox{
       width:132px;height:132px;border-radius:28px;
       border:1px solid rgba(255,255,255,.14);
@@ -2488,6 +2492,10 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
   }
   #room .leftTopProfile .profileNick{font-size:18px !important;line-height:1.05 !important;}
   #room .leftTopProfile .profileMeta{font-size:13px !important;line-height:1.12 !important;}
+  #room .leftTopProfile .profileStatsMini{gap:6px !important;margin-top:4px !important;}
+  #room .leftTopProfile .profileStatMini{padding:7px 8px !important;flex:1 1 78px !important;border-radius:10px !important;}
+  #room .leftTopProfile .profileStatMini .statLabel{font-size:9px !important;}
+  #room .leftTopProfile .profileStatMini .statValue{font-size:16px !important;}
   #room .leftTopProfile .roomTopDetails{
     grid-area:details !important;
     border-top:1px solid rgba(255,255,255,.12) !important;
@@ -2678,6 +2686,16 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       <div class="profileNick profileNickTop" id="roomProfileNick">—</div>
       <div class="profileMeta" id="roomProfileCountry">—</div>
       <div class="profileMeta" id="roomProfileFav">—</div>
+      <div class="profileStatsMini" id="roomProfileStatsMini">
+        <div class="profileStatMini">
+          <span class="statLabel" id="roomProfilePointsText">Punkty</span>
+          <span class="statValue" id="roomProfilePoints">—</span>
+        </div>
+        <div class="profileStatMini">
+          <span class="statLabel" id="roomProfilePlaceText">Miejsce</span>
+          <span class="statValue" id="roomProfilePlace">—</span>
+        </div>
+      </div>
     </div>
     <div class="roomTopDetails">
       <div class="roomTopName" id="roomName">—</div>
@@ -2720,7 +2738,6 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="spacer"></div>
 <div class="chip"><span id="t_round">KOLEJKA</span><span class="chipSep" id="sep_round">: </span><span id="roundLabel">—</span></div>
 <div class="chip"><span id="t_games">Mecze</span>: <span id="matchesCount">0</span></div>
-<div class="chip"><span id="t_points_round">PUNKTY</span><span class="chipSep" id="sep_points_round">: </span><span id="myPointsLabel">—</span></div>
 </div>
 </div>
 <div class="panel matchesWrap" id="matchesList"></div>
@@ -3013,7 +3030,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3021" type="module"></script>
+<script src="./app.js?v=3022" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3033,7 +3050,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3021', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3022', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3292,6 +3309,10 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
   #room .leftTopProfile .profileTopText{grid-area:top !important;align-self:start !important;gap:4px !important;margin:0 !important;min-width:0 !important;}
   #room .leftTopProfile .profileNick{font-size:18px !important;line-height:1.05 !important;}
   #room .leftTopProfile .profileMeta{font-size:13px !important;line-height:1.12 !important;}
+  #room .leftTopProfile .profileStatsMini{gap:6px !important;margin-top:4px !important;}
+  #room .leftTopProfile .profileStatMini{padding:7px 8px !important;flex:1 1 78px !important;border-radius:10px !important;}
+  #room .leftTopProfile .profileStatMini .statLabel{font-size:9px !important;}
+  #room .leftTopProfile .profileStatMini .statValue{font-size:16px !important;}
   #room .leftTopProfile .roomTopDetails{grid-area:details !important;border-top:1px solid rgba(255,255,255,.12) !important;padding-top:10px !important;margin-top:2px !important;min-width:0 !important;width:100% !important;}
   #room .leftTopProfile .roomTopDetails .roomTopName{font-size:18px !important;line-height:1.08 !important;}
   #room .leftTopProfile .roomTopDetails .roomTopAdmin{font-size:12px !important;line-height:1.1 !important;}
