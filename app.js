@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 2117;
+const BUILD = 3000;
 const SEASON_ROUNDS = 12;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5527,16 +5527,27 @@ async function confirmMQDeadline(){
 
 // Manual: ligi i kluby — domyślne dane awaryjne, docelowo ładowane z data/leagues.json
 let MANUAL_LEAGUES = [
-  { key: "PL", label: "Ekstraklasa - POLSKA" },
-  { key: "BEL", label: "Jupiter League - BELGIA" },
-  { key: "FL1", label: "Ligue 1 - FRANCJA" },
-  { key: "PD", label: "LaLiga - HISZPANIA" },
-  { key: "DED", label: "Eredivisie - HOLANDIA" },
-  { key: "BL1", label: "Bundesliga - NIEMCY" },
-  { key: "SA", label: "Serie A - WŁOCHY" },
-  { key: "PPL", label: "Liga Portugal - PORTUGALIA" },
-  { key: "EPL", label: "Premier League - ANGLIA" },
-  { key: "AUT", label: "Bundesliga Austria - AUSTRIA" }
+  { key: "EPL", label: "ANGLIA - Premier League" },
+  { key: "AUT", label: "AUSTRIA - Liga Austrii" },
+  { key: "BEL", label: "BELGIA - Jupiter League" },
+  { key: "FL1", label: "FRANCJA - Ligue 1" },
+  { key: "CDF", label: "FRANCJA - Puchar Francji" },
+  { key: "PD", label: "HISZPANIA - LaLiga" },
+  { key: "CDR", label: "HISZPANIA - Puchar Hiszpanii" },
+  { key: "DED", label: "HOLANDIA - Eredivisie" },
+  { key: "KNVB", label: "HOLANDIA - Puchar Holandii" },
+  { key: "BL1", label: "NIEMCY - Bundesliga" },
+  { key: "DFB", label: "NIEMCY - Puchar Niemiec" },
+  { key: "PL", label: "POLSKA - Ekstraklasa" },
+  { key: "PP", label: "POLSKA - Puchar Polski" },
+  { key: "PPL", label: "PORTUGALIA - Liga Portugal" },
+  { key: "SA", label: "WŁOCHY - Serie A" },
+  { key: "COPPA", label: "WŁOCHY - Puchar Włoch" },
+  { key: "WCQ", label: "EUROPA - Eliminacje MŚ" },
+  { key: "U21Q", label: "EUROPA - Eliminacje U21" },
+  { key: "UCL", label: "EUROPA - Liga Mistrzów" },
+  { key: "UEL", label: "EUROPA - Liga Europy" },
+  { key: "UECL", label: "EUROPA - Liga Konferencji" }
 ];
 
 let CLUBS_BY_LEAGUE = {
@@ -5578,7 +5589,7 @@ let __leaguesDataPromise = null;
 function __leagueLabelFromEntry(entry){
   const name = String(entry?.name || entry?.label || entry?.key || "Liga").trim();
   const country = String(entry?.country || "").trim();
-  return country ? `${name} - ${country.toUpperCase()}` : name;
+  return country ? `${country.toUpperCase()} - ${name}` : name;
 }
 
 async function ensureLeaguesDataLoaded(){
@@ -8426,7 +8437,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.2.117`);
+    setFooter(`Mariusz Gębka v.3.000`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
