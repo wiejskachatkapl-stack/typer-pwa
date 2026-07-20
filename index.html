@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3012)</title>
-<link href="manifest.json?v=3012" rel="manifest"/>
-<link href="favicon-32x32.png?v=3012" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3012" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3012" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3015)</title>
+<link href="manifest.json?v=3015" rel="manifest"/>
+<link href="favicon-32x32.png?v=3015" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3015" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3015" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2911,7 +2911,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3014" type="module"></script>
+<script src="./app.js?v=3015" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2931,7 +2931,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3014', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3015', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3026,6 +3026,111 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline}
   .continueBtns .modernAppBtn,.aqBtns .modernAppBtn,.mqFooter .modernAppBtn{min-width:125px}
 }
 
+
+
+/* BUILD 3015: desktop alignment for room buttons */
+@media (min-width:981px){
+  .leftBar{width:350px;min-width:350px;}
+  #room .leftTopProfile{
+    display:grid !important;
+    grid-template-columns:104px minmax(0,1fr) !important;
+    grid-template-areas:
+      "avatar top"
+      "avatar details";
+    align-items:start !important;
+    column-gap:14px !important;
+    row-gap:10px !important;
+    min-height:156px !important;
+    padding:14px !important;
+  }
+  #room .leftTopProfile .avatarBox{
+    grid-area:avatar;
+    width:104px !important;
+    height:104px !important;
+    flex:0 0 104px !important;
+    border-radius:22px !important;
+  }
+  #room .leftTopProfile .profileTopText{
+    grid-area:top;
+    margin-top:0 !important;
+    gap:6px !important;
+    align-self:start !important;
+  }
+  #room .leftTopProfile .profileNick{font-size:18px !important;}
+  #room .leftTopProfile .profileMeta{font-size:14px !important;}
+  #room .leftTopProfile .roomTopDetails{
+    grid-area:details;
+    width:100% !important;
+    min-width:0 !important;
+    padding:8px 0 0 !important;
+    margin-top:0 !important;
+    border-top:1px solid rgba(255,255,255,.12) !important;
+  }
+  #room .leftTopProfile .roomTopDetails .roomTopName{font-size:18px !important;}
+  #room .leftTopProfile .roomTopDetails .roomTopAdmin{font-size:12px !important;}
+  #room .leftTopProfile .roomTopDetails .chip{font-size:13px !important;padding:7px 10px !important;}
+
+  #room .roomCodeActions{
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+    align-items:stretch !important;
+  }
+  #room .roomCodeActions > #btnLeave,
+  #room .roomCodeActions > #leftDeleteRoomCard{width:100% !important;min-width:0 !important;}
+  #room .roomCodeActions #leftDeleteRoomCard{display:flex;align-items:stretch;}
+  #room .roomCodeActions #btnLeave,
+  #room .roomCodeActions #btnDeleteRoom{
+    width:100% !important;
+    min-height:44px !important;
+    padding:8px 8px !important;
+    font-size:11px !important;
+    gap:7px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    flex-direction:row !important;
+    line-height:1 !important;
+  }
+  #room .roomCodeActions .btnIcon{
+    width:18px !important;
+    height:18px !important;
+    flex:0 0 18px !important;
+    margin:0 !important;
+  }
+  #room .roomCodeActions .label-pl,
+  #room .roomCodeActions .label-en,
+  #room .matchActionsPanel .label-pl,
+  #room .matchActionsPanel .label-en{
+    display:inline-flex !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    line-height:1 !important;
+  }
+
+  #room .matchActionsPanel{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:18px !important;
+    flex-wrap:nowrap !important;
+  }
+  #room .matchActionsPanel .modernRoomBtn{
+    min-width:230px !important;
+    min-height:52px !important;
+    padding:10px 16px !important;
+    font-size:14px !important;
+    gap:10px !important;
+    flex-direction:row !important;
+    justify-content:center !important;
+    align-items:center !important;
+    line-height:1 !important;
+  }
+  #room .matchActionsPanel .btnIcon{
+    width:22px !important;
+    height:22px !important;
+    flex:0 0 22px !important;
+    margin:0 !important;
+  }
+}
 </style>
 <button id="pwaInstallBtn" type="button" aria-label="Zainstaluj aplikację TYPER">⬇ Zainstaluj TYPER</button>
 <div id="pwaInstallHelp" role="dialog" aria-modal="true" aria-labelledby="pwaInstallHelpTitle">
