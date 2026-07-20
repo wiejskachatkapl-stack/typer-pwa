@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3007)</title>
-<link href="manifest.json?v=3007" rel="manifest"/>
-<link href="favicon-32x32.png?v=3007" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3007" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3007" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3008)</title>
+<link href="manifest.json?v=3008" rel="manifest"/>
+<link href="favicon-32x32.png?v=3008" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3008" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3008" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -22,7 +22,7 @@
 .profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
-/* BUILD 3007: informacje o pokoju przeniesione do górnego profilu */
+/* BUILD 3008: informacje o pokoju przeniesione do górnego profilu */
 .roomTopDetails{
   width:100%;
   min-width:0;
@@ -541,7 +541,9 @@
     /* 6016: prawy dół - osobny kontener na Wyjście */
     .rightBottomExit{padding:14px;display:flex;justify-content:center;align-items:center}
     .rightBottomStack{display:flex;flex-direction:column;gap:12px}
-    .rightBottomMessages{padding:14px;display:flex;justify-content:center;align-items:center}
+    .rightBottomMessages{padding:14px;display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:nowrap}
+    .rightBottomMessages .imgBtn{flex:1 1 0;min-width:0;margin:0}
+    .rightBottomMessages .imgBtn img{max-height:58px;width:100%;object-fit:contain}
 
     /* ===== ROOM (RESPONSIVE) =====
        Na telefonie/przy wąskim ekranie układ 3-kolumnowy nie może wypychać elementów poza ekran.
@@ -2120,7 +2122,7 @@
 }
 
 
-/* BUILD 3007: kosmetyczny układ przycisków w pokoju */
+/* BUILD 3008: kosmetyczny układ przycisków w pokoju */
 #room .roomQuickMenu{
   display:flex;
   flex-direction:row;
@@ -2134,13 +2136,13 @@
 #room .roomQuickMenu .imgBtn img{width:100%;height:auto;max-height:54px;object-fit:contain;}
 #room .roomCodeActions .leftDeleteRoomCard{padding:0;margin:0;background:none;border:0;box-shadow:none;align-items:center;}
 #room .roomCodeActions #btnLeave img,
-#room .roomCodeActions #btnDeleteRoom img{max-height:42px;width:auto;object-fit:contain;}
+#room .roomCodeActions #btnDeleteRoom img{max-height:50px;width:auto;object-fit:contain;}
 @media (max-width:900px){
   #room .roomQuickMenu{gap:6px;padding:6px 8px;}
   #room .roomQuickMenu .imgBtn img{max-height:42px !important;}
   #room .roomCodeActions{flex-wrap:nowrap !important;}
   #room .roomCodeActions #btnLeave img,
-  #room .roomCodeActions #btnDeleteRoom img{max-height:36px !important;max-width:150px;width:auto !important;}
+  #room .roomCodeActions #btnDeleteRoom img{max-height:44px !important;max-width:180px;width:auto !important;}
 }
 </style>
 </head>
@@ -2283,7 +2285,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     </div>
 </div>
 
-  <!-- BUILD 3007: Event + tabela ligi + ranking w jednym rzędzie -->
+  <!-- BUILD 3008: Event + tabela ligi + ranking w jednym rzędzie -->
   <div class="panel leftProfileInfo roomQuickMenu" id="roomProfileInfoCard">
     <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small" data-btn="btn_event_worldcup.png" id="btnSubstitute" title="Event MŚ 2026" type="button">
       <img alt="Event MŚ 2026" data-btn="btn_event_worldcup.png" src="ui/buttons/pl/btn_event_worldcup.png"/>
@@ -2342,15 +2344,13 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <div class="playersList" id="playersList"></div>
 <div class="spacer"></div>
-<!-- 6017: dwa osobne kontenery na dole po prawej (Wyjście + Wiadomości) -->
+<!-- BUILD 3008: Wiadomości i Wyjście w jednym kontenerze -->
 <div class="rightBottomStack">
   <div class="panel rightBottomMessages">
     <button class="imgBtn sysBtn" data-btn="btn_messages.png" id="btnMessagesFromRoom" style="position:relative" type="button">
       <span class="msgBadge" id="msgBadge">!</span>
       <img alt="btnMessagesFromRoom" data-btn="btn_messages.png" src="ui/buttons/pl/btn_messages.png"/>
     </button>
-  </div>
-  <div class="panel rightBottomExit">
     <button class="imgBtn sysBtn" data-btn="btn_exit.png" id="btnExitFromRoomRight" type="button">
       <img alt="btnExitFromRoomRight" data-btn="btn_exit.png" src="ui/buttons/pl/btn_exit.png"/>
     </button>
@@ -2629,7 +2629,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3007" type="module"></script>
+<script src="./app.js?v=3008" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2649,14 +2649,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3007', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3008', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.007</div>
+<div id="buildCornerText">Mariusz Gębka v.3.008</div>
 </div>
 
 <style>
