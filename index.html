@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3029)</title>
-<link href="manifest.json?v=3029" rel="manifest"/>
-<link href="favicon-32x32.png?v=3029" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3029" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3029" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3030)</title>
+<link href="manifest.json?v=3030" rel="manifest"/>
+<link href="favicon-32x32.png?v=3030" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3030" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3030" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -2660,6 +2660,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <div class="footballLoader splashLoader">
     <span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span>
   </div>
+  <div class="splashLoaderLabel">Loading…</div>
 </div>
 <div class="err" id="splashErr"></div>
 <div class="spinner"></div>
@@ -3106,7 +3107,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3029" type="module"></script>
+<script src="./app.js?v=3030" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3126,7 +3127,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3029', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3030', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3726,7 +3727,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="v3029-modern-sys-buttons">
+<style id="v3028-modern-sys-buttons">
 .sysModernBtn{
   min-height:50px;
   min-width:168px;
@@ -3744,10 +3745,9 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 .sysModernBtn--wide{min-width:210px}
 .sysModernBtn--big{min-width:280px;min-height:62px;padding:12px 22px;font-size:18px;border-radius:16px}
 .sysModernBtn--big .appBtnIcon{width:28px;height:28px;flex-basis:28px}
-.sysModernBtn--danger,
-.sysModernBtn--amber{
-  background:linear-gradient(180deg,#ffd56d 0%,#f4ad2f 48%,#b86d0b 100%) !important;
-  box-shadow:0 6px 0 #7b4908,0 10px 18px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.38) !important;
+.sysModernBtn--danger{
+  background:linear-gradient(180deg,#ff766b 0%,#f5393f 45%,#b51220 100%) !important;
+  box-shadow:0 6px 0 #7d0913,0 10px 18px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.35) !important;
 }
 .sysModernBtn--success{
   background:linear-gradient(180deg,#75e07d 0%,#2abf4a 45%,#167b2d 100%) !important;
@@ -3779,6 +3779,40 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
   .roomsChoiceBtns .sysModernBtn{min-width:170px}
   .joinRoom .rowRight .sysModernBtn,.createRoom .rowRight .sysModernBtn{min-width:150px}
   .profileAvatarBtnSlot .sysModernBtn,.profileAvatarBtnSlot .profileAvatarBtn{min-width:158px}
+}
+</style>
+
+
+<style id="build3030-pin-login-buttons">
+#pinLoginModal .pinLoginActions{
+  display:flex;
+  gap:16px;
+  justify-content:center;
+  align-items:center;
+  margin-top:8px;
+  flex-wrap:wrap;
+}
+#pinLoginModal .pinLoginActionBtn{
+  min-width:150px;
+  min-height:50px;
+  padding:9px 18px;
+  gap:9px;
+  border-radius:13px;
+  font-size:15px;
+  line-height:1;
+  background:linear-gradient(180deg,#2f9eff 0%,#1164d4 52%,#083e9c 100%);
+  border:1px solid rgba(135,220,255,.92);
+  box-shadow:0 5px 0 #052f77,0 8px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.4);
+}
+#pinLoginModal .pinLoginActionBtn:hover{filter:brightness(1.1)}
+#pinLoginModal .pinLoginActionBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #052f77,0 4px 9px rgba(0,0,0,.24)}
+#pinLoginModal .pinLoginActionBtn .appBtnIcon{width:23px;height:23px;flex:0 0 23px}
+#pinLoginModal .pinLoginActionBtn .label-pl,
+#pinLoginModal .pinLoginActionBtn .label-en{font-weight:1000;white-space:nowrap}
+@media (max-width:560px){
+  #pinLoginModal .pinLoginActions{gap:10px}
+  #pinLoginModal .pinLoginActionBtn{min-width:125px;min-height:46px;padding:8px 13px;font-size:13px}
+  #pinLoginModal .pinLoginActionBtn .appBtnIcon{width:20px;height:20px;flex-basis:20px}
 }
 </style>
 

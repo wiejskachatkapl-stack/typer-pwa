@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3029;
+const BUILD = 3030;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -165,12 +165,14 @@ function ensureLoadingVisualStyles(){
   document.head.appendChild(st);
 }
 
-function getFootballLoaderMarkup(){
+function getFootballLoaderMarkup(text){
+  const label = text || (getLang()==="en" ? "Loading application" : "Ładowanie aplikacji");
   return `
     <div class="footballLoaderWrap">
       <div class="footballLoader" aria-hidden="true">
         <span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span><span>⚽</span>
       </div>
+      <div class="footballLoaderLabel">${label}</div>
     </div>`;
 }
 
@@ -207,7 +209,7 @@ function showCenterLoading(text){
   ensureLoadingVisualStyles();
   const ov = ensureCenterLoadingOverlay();
   const card = document.getElementById("centerLoadingCard");
-  if(card) card.innerHTML = getFootballLoaderMarkup();
+  if(card) card.innerHTML = getFootballLoaderMarkup(text);
   ov.style.display = "flex";
 }
 
@@ -627,15 +629,15 @@ function getModernBtnSpec(btnName){
     "btn_exit.png":             {pl:"Wyjście", en:"Exit", icon:"ico-exit2", variant:"blue"},
     "btn_profile.png":          {pl:"Profil", en:"Profile", icon:"ico-profile2", variant:"blue"},
     "btn_profil.png":           {pl:"Profil", en:"Profile", icon:"ico-profile2", variant:"blue"},
-    "btn_reset_profile.png":    {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"amber", wide:true},
-    "btn_reset_profil.png":     {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"amber", wide:true},
+    "btn_reset_profile.png":    {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"danger", wide:true},
+    "btn_reset_profil.png":     {pl:"Skasuj profil", en:"Delete profile", icon:"ico-trash2", variant:"danger", wide:true},
     "btn_add_profile.png":      {pl:"Dodaj profil", en:"Add profile", icon:"ico-profile2", variant:"blue", wide:true},
     "btn_add_profil.png":       {pl:"Dodaj profil", en:"Add profile", icon:"ico-profile2", variant:"blue", wide:true},
     "btn_avatar.png":           {pl:"Avatar", en:"Avatar", icon:"ico-profile2", variant:"blue"},
     "btn_my_profil.png":        {pl:"Mam profil", en:"My profile", icon:"ico-check", variant:"blue", wide:true},
     "btn_yes.png":              {pl:"TAK", en:"YES", icon:"ico-check", variant:"success", wide:true},
-    "btn_no.png":               {pl:"NIE", en:"NO", icon:"ico-no", variant:"amber", wide:true},
-    "btn_close.png":            {pl:"Zamknij", en:"Close", icon:"ico-no", variant:"amber"}
+    "btn_no.png":               {pl:"NIE", en:"NO", icon:"ico-no", variant:"danger", wide:true},
+    "btn_close.png":            {pl:"Zamknij", en:"Close", icon:"ico-no", variant:"danger"}
   };
   return map[n] || null;
 }
@@ -1714,9 +1716,15 @@ function __makeLoginModal(){
 
         <div id="pinLoginError" style="display:none;color:#ff9b9b;font-weight:700;"></div>
 
-        <div style="display:flex;gap:14px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
-          <img id="pinLoginYes" class="imgBtn" alt="YES" src="${getBtnDir()}/btn_yes.png" style="height:54px;cursor:pointer;"/>
-          <img id="pinLoginNo" class="imgBtn" alt="NO" src="${getBtnDir()}/btn_no.png" style="height:54px;cursor:pointer;"/>
+        <div class="pinLoginActions">
+          <button id="pinLoginYes" class="modernAppBtn pinLoginActionBtn" type="button" aria-label="${(getLang()==="en")?"Yes":"Tak"}">
+            <span class="appBtnIcon ico-check" aria-hidden="true"></span>
+            <span class="label-pl">TAK</span><span class="label-en">YES</span>
+          </button>
+          <button id="pinLoginNo" class="modernAppBtn pinLoginActionBtn" type="button" aria-label="${(getLang()==="en")?"No":"Nie"}">
+            <span class="appBtnIcon ico-no" aria-hidden="true"></span>
+            <span class="label-pl">NIE</span><span class="label-en">NO</span>
+          </button>
         </div>
       </div>
     </div>
@@ -8845,11 +8853,10 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 
 // ===== START =====
 (async()=>{
-  const loadingStartedAt = Date.now();
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.029`);
-    setSplash(`BUILD ${BUILD}`);
+    setFooter(`Mariusz Gębka v.3.008`);
+    setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
     bindUI();
@@ -8860,19 +8867,13 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     // zastosuj język od razu
     applyLangToUI();
 
-    // animacja 5 piłek jest widoczna minimum 3 sekundy
-    const loadingElapsed = Date.now() - loadingStartedAt;
-    if(loadingElapsed < 3000){
-      await new Promise(r=>setTimeout(r, 3000-loadingElapsed));
-    }
-
     // wymagane logowanie PIN przed wejściem — zawsze pokazuj okno logowania na starcie
     const okLogin = await ensurePinLogin(true);
     if(!okLogin) return;
 
     showScreen("home");
     showCenterLoading();
-    await new Promise(r=>setTimeout(r, 3000));
+    await new Promise(r=>setTimeout(r, 2000));
     openJoinRoomModal();
     hideCenterLoading();
   }catch(e){
