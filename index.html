@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3010)</title>
-<link href="manifest.json?v=3010" rel="manifest"/>
-<link href="favicon-32x32.png?v=3010" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3010" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3010" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3011)</title>
+<link href="manifest.json?v=3011" rel="manifest"/>
+<link href="favicon-32x32.png?v=3011" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3011" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3011" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -22,7 +22,7 @@
 .profileNickTop{font-weight:1000;font-size:26px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 .substituteRow{display:flex;justify-content:center;align-items:center;margin-top:6px;}
 
-/* BUILD 3010: informacje o pokoju przeniesione do górnego profilu */
+/* BUILD 3011: informacje o pokoju przeniesione do górnego profilu */
 .roomTopDetails{
   width:100%;
   min-width:0;
@@ -2122,7 +2122,7 @@
 }
 
 
-/* BUILD 3010: kosmetyczny układ przycisków w pokoju */
+/* BUILD 3011: kosmetyczny układ przycisków w pokoju */
 #room .roomQuickMenu{
   display:flex;
   flex-direction:row;
@@ -2146,70 +2146,95 @@
 }
 
 
-/* BUILD 3010: nowoczesne przyciski tekstowe w ekranie pokoju */
+/* BUILD 3011: profesjonalne, jednolite niebieskie przyciski z ikonami */
 #room .modernRoomBtn{
-  --btn1:#1266c9;
-  --btn2:#0a3f94;
+  --btn1:#1478e8;
+  --btn2:#083f9e;
   position:relative;
   display:flex;
   align-items:center;
   justify-content:center;
+  gap:10px;
   min-width:0;
   min-height:52px;
   padding:10px 14px;
-  border:1px solid rgba(255,255,255,.42);
+  border:1px solid rgba(107,196,255,.95);
   border-radius:13px;
-  background:linear-gradient(180deg,var(--btn1),var(--btn2));
-  box-shadow:0 5px 0 rgba(1,18,54,.72),0 8px 18px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.28);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 35%),
+    linear-gradient(180deg,var(--btn1),var(--btn2));
+  box-shadow:0 5px 0 #04275f,0 8px 18px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.22);
   color:#fff;
   font-size:14px;
   line-height:1.05;
   font-weight:1000;
   letter-spacing:.15px;
   text-align:center;
-  text-shadow:0 1px 2px rgba(0,0,0,.65);
+  text-shadow:0 2px 3px rgba(0,0,0,.7);
   cursor:pointer;
   transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;
 }
-#room .modernRoomBtn:hover{filter:brightness(1.09);transform:translateY(-1px)}
-#room .modernRoomBtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(1,18,54,.72),0 4px 10px rgba(0,0,0,.24)}
+#room .modernRoomBtn::after{
+  content:"";
+  position:absolute;
+  inset:2px;
+  border-radius:10px;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
+}
+#room .modernRoomBtn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+#room .modernRoomBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #04275f,0 4px 10px rgba(0,0,0,.24)}
 #room .modernRoomBtn:disabled{opacity:.48;filter:grayscale(.35);cursor:not-allowed;transform:none}
 #room .modernRoomBtn .label-en{display:none}
 html[data-lang="en"] #room .modernRoomBtn .label-pl{display:none}
 html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
-#room .modernRoomBtn.event{--btn1:#f0a21b;--btn2:#b96405}
-#room .modernRoomBtn.rank{--btn1:#8d59dc;--btn2:#52309c}
-#room .modernRoomBtn.info{--btn1:#1297bc;--btn2:#07637e}
-#room .modernRoomBtn.success{--btn1:#26a96e;--btn2:#0b6f45}
-#room .modernRoomBtn.warning{--btn1:#f0a21b;--btn2:#b96405}
-#room .modernRoomBtn.danger{--btn1:#e74f57;--btn2:#9f202d}
-#room .modernRoomBtn.neutral{--btn1:#506782;--btn2:#293c55}
+#room .modernRoomBtn.event,
+#room .modernRoomBtn.rank,
+#room .modernRoomBtn.info,
+#room .modernRoomBtn.success,
+#room .modernRoomBtn.warning,
+#room .modernRoomBtn.danger,
+#room .modernRoomBtn.neutral{--btn1:#1478e8;--btn2:#083f9e}
+
+#room .btnIcon{
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  display:inline-block;
+  background:#fff;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));
+  -webkit-mask:var(--icon) center/contain no-repeat;
+  mask:var(--icon) center/contain no-repeat;
+}
+#room .ico-leave{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v-2H5V6h5V4Zm6.59 3.59L15.17 9l2 2H9v2h8.17l-2 2 1.42 1.41L21 12l-4.41-4.41Z'/%3E%3C/svg%3E")}
+#room .ico-trash{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-1 12H7L6 9Zm3 2v7h2v-7H9Zm4 0v7h2v-7h-2Z'/%3E%3C/svg%3E")}
+#room .ico-event{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M7 3h10v2h3v4c0 3.31-2.69 6-6 6h-1v3h4v2H7v-2h4v-3h-1c-3.31 0-6-2.69-6-6V5h3V3Zm0 4H6v2c0 1.86 1.28 3.41 3 3.86V5H7v2Zm10 0V5h-2v7.86c1.72-.45 3-2 3-3.86V7h-1Z'/%3E%3C/svg%3E")}
+#room .ico-table{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16v16H4V4Zm2 2v3h12V6H6Zm0 5v3h5v-3H6Zm7 0v3h5v-3h-5Zm-7 5v2h5v-2H6Zm7 0v2h5v-2h-5Z'/%3E%3C/svg%3E")}
+#room .ico-rank{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 4h6v16H9V4ZM3 10h5v10H3V10Zm13-3h5v13h-5V7Z'/%3E%3C/svg%3E")}
+#room .ico-add{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2Zm13 8H4v10h16V10Zm-9 2h2v3h3v2h-3v3h-2v-3H8v-2h3v-3Z'/%3E%3C/svg%3E")}
+#room .ico-save{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 3h13l3 3v15H4V3Zm3 2v5h9V5H7Zm0 9v5h10v-5H7Zm2-8h5v2H9V6Z'/%3E%3C/svg%3E")}
+#room .ico-edit{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m4 16.5 10.5-10.5 3.5 3.5L7.5 20H4v-3.5ZM16 4.5l1.5-1.5a1.41 1.41 0 0 1 2 0l1.5 1.5a1.41 1.41 0 0 1 0 2L19.5 8 16 4.5ZM3 22h18v-2H9l-2 2H3Z'/%3E%3C/svg%3E")}
+#room .ico-finish{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M5 3h2v18H5V3Zm3 1h11l-2 4 2 4H8V4Zm2 2v4h6l-1-2 1-2h-6Z'/%3E%3C/svg%3E")}
+#room .ico-player{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm6.5 7a3 3 0 1 1 0-6 3 3 0 0 1 0 6ZM2 20c0-4 3.13-7 7-7s7 3 7 7H2Zm13.5-7c3.3 0 6 2.46 6.5 5.65V20h-4c0-2.7-1.08-5.04-2.81-6.65.1-.12.2-.24.31-.35Z'/%3E%3C/svg%3E")}
+#room .ico-msg{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 3h16a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 7h2V8H7v2Zm4 0h2V8h-2v2Zm4 0h2V8h-2v2Z'/%3E%3C/svg%3E")}
+#room .ico-exit{--icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 3h10v2H6v14h8v2H4V3Zm12.59 4.59L15.17 9l2 2H9v2h8.17l-2 2 1.42 1.41L21 12l-4.41-4.41Z'/%3E%3C/svg%3E")}
 
 /* Opuść/Usuń: dwie stałe, równe kolumny. U gracza druga zostaje pusta. */
-#room .roomCodeActions{
-  display:grid !important;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  gap:8px !important;
-  width:100%;
-}
-#room .roomCodeActions > #btnLeave,
-#room .roomCodeActions > #leftDeleteRoomCard{width:100%;min-width:0}
+#room .roomCodeActions{display:grid !important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px !important;width:100%}
+#room .roomCodeActions > #btnLeave,#room .roomCodeActions > #leftDeleteRoomCard{width:100%;min-width:0}
 #room .roomCodeActions #leftDeleteRoomCard{display:flex;align-items:stretch}
-#room .roomCodeActions #btnLeave,
-#room .roomCodeActions #btnDeleteRoom{width:100%;min-height:44px;padding:8px 7px;font-size:12px}
-
+#room .roomCodeActions #btnLeave,#room .roomCodeActions #btnDeleteRoom{width:100%;min-height:44px;padding:8px 7px;font-size:12px}
 #room .roomQuickMenu .modernRoomBtn{flex:1 1 0;min-height:54px;padding:8px 7px;font-size:12px}
 #room .matchActionsPanel .modernRoomBtn{min-width:160px}
 #room .playersHeader .modernRoomBtn{min-height:42px;padding:8px 12px;font-size:12px}
 #room .rightBottomMessages{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch}
 #room .rightBottomMessages .modernRoomBtn{width:100%;min-height:54px}
 #room .msgBadge{z-index:3}
-
 @media (max-width:900px){
-  #room .modernRoomBtn{min-height:44px;padding:7px 8px;font-size:11px;border-radius:10px;box-shadow:0 4px 0 rgba(1,18,54,.72),0 6px 12px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.25)}
+  #room .modernRoomBtn{min-height:44px;padding:7px 8px;font-size:11px;border-radius:10px;gap:6px;box-shadow:0 4px 0 #04275f,0 6px 12px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.35)}
+  #room .btnIcon{width:22px;height:22px;flex-basis:22px}
   #room .roomQuickMenu .modernRoomBtn{min-height:42px;font-size:10px;padding:6px 4px}
-  #room .roomCodeActions #btnLeave,
-  #room .roomCodeActions #btnDeleteRoom{min-height:40px;font-size:10px;padding:6px 3px}
+  #room .roomCodeActions #btnLeave,#room .roomCodeActions #btnDeleteRoom{min-height:40px;font-size:10px;padding:6px 3px}
   #room .matchActionsPanel .modernRoomBtn{min-width:0;flex:1 1 0}
   #room .rightBottomMessages .modernRoomBtn{min-height:44px}
 }
@@ -2344,20 +2369,20 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
           </div>
         </div>
         <div class="row roomCodeActions" style="gap:10px;justify-content:flex-start;align-items:center;">
-          <button aria-label="Opuść pokój" class="imgBtn sysBtn small modernRoomBtn danger" id="btnLeave" title="Opuść pokój" type="button"><span class="label-pl">Opuść pokój</span><span class="label-en">Leave room</span></button>
+          <button aria-label="Opuść pokój" class="imgBtn sysBtn small modernRoomBtn danger" id="btnLeave" title="Opuść pokój" type="button"><span class="btnIcon ico-leave" aria-hidden="true"></span><span class="label-pl">Opuść pokój</span><span class="label-en">Leave room</span></button>
           <div class="leftDeleteRoomCard" id="leftDeleteRoomCard" style="display:none">
-            <button aria-label="Usuń pokój" class="imgBtn sysBtn small modernRoomBtn danger" id="btnDeleteRoom" title="Usuń pokój" type="button"><span class="label-pl">Usuń pokój</span><span class="label-en">Delete room</span></button>
+            <button aria-label="Usuń pokój" class="imgBtn sysBtn small modernRoomBtn danger" id="btnDeleteRoom" title="Usuń pokój" type="button"><span class="btnIcon ico-trash" aria-hidden="true"></span><span class="label-pl">Usuń pokój</span><span class="label-en">Delete room</span></button>
           </div>
         </div>
       </div>
     </div>
 </div>
 
-  <!-- BUILD 3010: Event + tabela ligi + ranking w jednym rzędzie -->
+  <!-- BUILD 3011: Event + tabela ligi + ranking w jednym rzędzie -->
   <div class="panel leftProfileInfo roomQuickMenu" id="roomProfileInfoCard">
-    <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small modernRoomBtn event" id="btnSubstitute" title="Event MŚ 2026" type="button"><span class="label-pl">EVENT MŚ 2026</span><span class="label-en">WORLD CUP 2026</span></button>
-    <button class="imgBtn sysBtn small modernRoomBtn info" id="btnLeagueFromRoom" type="button"><span class="label-pl">Tabela ligi</span><span class="label-en">League table</span></button>
-    <button class="imgBtn sysBtn small modernRoomBtn rank" id="btnAllRankingFromRoom" type="button"><span class="label-pl">Ranking wszechczasów</span><span class="label-en">All-time ranking</span></button>
+    <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small modernRoomBtn event" id="btnSubstitute" title="Event MŚ 2026" type="button"><span class="btnIcon ico-event" aria-hidden="true"></span><span class="label-pl">EVENT MŚ 2026</span><span class="label-en">WORLD CUP 2026</span></button>
+    <button class="imgBtn sysBtn small modernRoomBtn info" id="btnLeagueFromRoom" type="button"><span class="btnIcon ico-table" aria-hidden="true"></span><span class="label-pl">Tabela ligi</span><span class="label-en">League table</span></button>
+    <button class="imgBtn sysBtn small modernRoomBtn rank" id="btnAllRankingFromRoom" type="button"><span class="btnIcon ico-rank" aria-hidden="true"></span><span class="label-pl">Ranking wszechczasów</span><span class="label-en">All-time ranking</span></button>
   </div>
   <!-- back button removed (back is now on the right as "Wyjście") -->
 </div>
@@ -2370,7 +2395,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <!-- ADMIN: przeniesione z lewego panelu (Akcje) na górę, obok nagłówka Spotkań -->
 <div class="roomTopBtns">
-<button class="imgBtn sysBtn actionSmall modernRoomBtn success" id="btnAddQueue" style="display:none" type="button"><span class="label-pl">Dodaj kolejkę</span><span class="label-en">Add round</span></button>
+<button class="imgBtn sysBtn actionSmall modernRoomBtn success" id="btnAddQueue" style="display:none" type="button"><span class="btnIcon ico-add" aria-hidden="true"></span><span class="label-pl">Dodaj kolejkę</span><span class="label-en">Add round</span></button>
 </div>
 <div class="spacer"></div>
 <div class="chip"><span id="t_round">KOLEJKA</span><span class="chipSep" id="sep_round">: </span><span id="roundLabel">—</span></div>
@@ -2382,9 +2407,9 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <!-- 6001: panel pod meczami na przyciski (Wpisz Wyniki / Zakończ kolejkę) -->
 <div class="panel matchActionsPanel" id="matchActionsPanel">
 <!-- 6004: przeniesiono "Zapisz typy" (btn_save_picks.png / #btnSaveAll) z lewego panelu do dolnego kontenera -->
-<button class="imgBtn sysBtn modernRoomBtn success" disabled="" id="btnSaveAll" type="button"><span class="label-pl">Zapisz typy</span><span class="label-en">Save picks</span></button>
-<button class="imgBtn sysBtn modernRoomBtn warning" id="btnEnterResults" style="display:none" type="button"><span class="label-pl">Wpisz wyniki</span><span class="label-en">Enter results</span></button>
-<button class="imgBtn sysBtn modernRoomBtn danger" disabled="" id="btnEndRound" style="display:none" type="button"><span class="label-pl">Zakończ kolejkę</span><span class="label-en">End round</span></button>
+<button class="imgBtn sysBtn modernRoomBtn success" disabled="" id="btnSaveAll" type="button"><span class="btnIcon ico-save" aria-hidden="true"></span><span class="label-pl">Zapisz typy</span><span class="label-en">Save picks</span></button>
+<button class="imgBtn sysBtn modernRoomBtn warning" id="btnEnterResults" style="display:none" type="button"><span class="btnIcon ico-edit" aria-hidden="true"></span><span class="label-pl">Wpisz wyniki</span><span class="label-en">Enter results</span></button>
+<button class="imgBtn sysBtn modernRoomBtn danger" disabled="" id="btnEndRound" style="display:none" type="button"><span class="btnIcon ico-finish" aria-hidden="true"></span><span class="label-pl">Zakończ kolejkę</span><span class="label-en">End round</span></button>
 </div>
 </div>
 <!-- RIGHT -->
@@ -2394,15 +2419,15 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
     <div class="title" id="t_players">Gracze</div>
     <div class="sub" id="t_players_sub"></div>
   </div>
-  <button class="imgBtn sysBtn actionSmall modernRoomBtn danger" id="btnDeletePlayer" style="display:none" type="button"><span class="label-pl">Usuń gracza</span><span class="label-en">Delete player</span></button>
+  <button class="imgBtn sysBtn actionSmall modernRoomBtn danger" id="btnDeletePlayer" style="display:none" type="button"><span class="btnIcon ico-player" aria-hidden="true"></span><span class="label-pl">Usuń gracza</span><span class="label-en">Delete player</span></button>
 </div>
 <div class="playersList" id="playersList"></div>
 <div class="spacer"></div>
-<!-- BUILD 3010: Wiadomości i Wyjście w jednym kontenerze -->
+<!-- BUILD 3011: Wiadomości i Wyjście w jednym kontenerze -->
 <div class="rightBottomStack">
   <div class="panel rightBottomMessages">
-    <button class="imgBtn sysBtn modernRoomBtn info" id="btnMessagesFromRoom" style="position:relative" type="button"><span class="msgBadge" id="msgBadge">!</span><span class="label-pl">Wiadomości</span><span class="label-en">Messages</span></button>
-    <button class="imgBtn sysBtn modernRoomBtn danger" id="btnExitFromRoomRight" type="button"><span class="label-pl">Wyjście</span><span class="label-en">Exit</span></button>
+    <button class="imgBtn sysBtn modernRoomBtn info" id="btnMessagesFromRoom" style="position:relative" type="button"><span class="msgBadge" id="msgBadge">!</span><span class="btnIcon ico-msg" aria-hidden="true"></span><span class="label-pl">Wiadomości</span><span class="label-en">Messages</span></button>
+    <button class="imgBtn sysBtn modernRoomBtn danger" id="btnExitFromRoomRight" type="button"><span class="btnIcon ico-exit" aria-hidden="true"></span><span class="label-pl">Wyjście</span><span class="label-en">Exit</span></button>
   </div>
 </div>
 </div>
@@ -2678,7 +2703,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3010" type="module"></script>
+<script src="./app.js?v=3011" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -2698,7 +2723,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3010', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3011', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
