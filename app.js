@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3056;
+const BUILD = 3057;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3056 =====
+// ===== MODUŁY EVENTÓW — BUILD 3057 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1628,7 +1628,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3056: system buttons consistent with the rest of the game
+// BUILD 3057: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1745,7 +1745,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3056 =====
+// ===== Regulamin TYPERA — BUILD 3057 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3458,7 +3458,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.056` : "TYPER v.3.056",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.057` : "TYPER v.3.057",800,850);
   return canvas;
 }
 
@@ -8000,19 +8000,17 @@ const resultsCancelSelected = new Set();
 let _cancelMatchConfirmModal = null;
 function ensureCancelMatchConfirmModal(){
   if(_cancelMatchConfirmModal) return _cancelMatchConfirmModal;
+  ensureSystemConfirmStyles();
 
   if(!document.getElementById('cancelMatchConfirmStyles')){
     const st = document.createElement('style');
     st.id = 'cancelMatchConfirmStyles';
     st.textContent = `
-      .cancelMatchOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+      .cancelMatchOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;}
       .cancelMatchBox{width:min(760px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
       .cancelMatchTitle{font-weight:800;font-size:22px;margin:0 0 10px 0;color:#fff;}
       .cancelMatchText{font-weight:600;line-height:1.35;font-size:15px;color:rgba(255,255,255,.88);}
-      .cancelMatchActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .cancelMatchBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-      .cancelMatchBtnImg:active{transform:translateY(1px);}
-      @media (max-width:520px){.cancelMatchBtnImg{height:52px;}}
+      .cancelMatchActions.systemConfirmActions{margin-top:18px;}
     `;
     document.head.appendChild(st);
   }
@@ -8023,9 +8021,13 @@ function ensureCancelMatchConfirmModal(){
     <div class="cancelMatchBox" role="dialog" aria-modal="true">
       <div class="cancelMatchTitle">${getLang()==='en' ? 'Cancelled match' : 'Mecz odwołany'}</div>
       <div class="cancelMatchText" id="cancelMatchConfirmText"></div>
-      <div class="cancelMatchActions">
-        <img id="cancelMatchBtnYes" class="cancelMatchBtnImg" alt="YES" />
-        <img id="cancelMatchBtnNo" class="cancelMatchBtnImg" alt="NO" />
+      <div class="cancelMatchActions systemConfirmActions">
+        <button id="cancelMatchBtnYes" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-check" aria-hidden="true"></span><span class="label-pl">TAK</span><span class="label-en">YES</span>
+        </button>
+        <button id="cancelMatchBtnNo" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">NIE</span><span class="label-en">NO</span>
+        </button>
       </div>
     </div>
   `;
@@ -8048,10 +8050,10 @@ function ensureCancelMatchConfirmModal(){
 
   _cancelMatchConfirmModal = {
     open: (text)=>{
-      const lang = getLang()==='en' ? 'en' : 'pl';
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      const en = getLang()==='en';
       elText.textContent = text;
+      btnYes.setAttribute('aria-label', en ? 'Yes' : 'Tak');
+      btnNo.setAttribute('aria-label', en ? 'No' : 'Nie');
       overlay.style.display = 'flex';
       return new Promise(resolve=>{ _resolver = resolve; });
     }
@@ -8367,7 +8369,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3056: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3057: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
