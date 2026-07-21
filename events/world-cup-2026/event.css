@@ -1,10 +1,60 @@
 /*
-  EVENT MŚ 2026 — moduł v1.
-  Obecny wygląd pozostaje zgodny z dotychczasowym Eventem.
-  Kolejne zmiany wizualne Eventu można umieszczać w tym pliku
-  bez przebudowy głównego arkusza gry.
+  EVENT MŚ 2026 — moduł v2.
+  Przyciski Eventu używają wspólnego systemowego stylu TYPERA.
 */
 #modal.worldcupMode{
-  --event-accent:#1f87ff;
-  --event-panel:rgba(7,22,52,.88);
+  --event-accent:#49a9ff;
+  --event-panel:rgba(7,22,52,.92);
+}
+#modal.worldcupMode .wcBottomActions{
+  display:flex !important;
+  visibility:visible !important;
+}
+#modal.worldcupMode .wcAdminButtons,
+#modal.worldcupMode .wcPlayerActions{
+  display:flex !important;
+  visibility:visible !important;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#modal.worldcupMode .wcBtnImg.modernAppBtn{
+  display:inline-flex !important;
+  visibility:visible !important;
+  min-width:158px;
+  min-height:46px;
+  padding:8px 13px;
+  font-size:12px;
+  gap:8px;
+}
+#modal.worldcupMode .wcBtnImg.modernAppBtn .appBtnIcon{
+  width:22px;
+  height:22px;
+  flex:0 0 22px;
+}
+#modal.worldcupMode #wcEndEventBtn{
+  min-width:170px;
+}
+#modal.worldcupMode .wcBtnDisabled,
+#modal.worldcupMode .wcBtnImg:disabled{
+  opacity:.38 !important;
+  filter:grayscale(.55) brightness(.82);
+  pointer-events:none;
+}
+@media (max-width:700px){
+  #modal.worldcupMode .wcAdminButtons,
+  #modal.worldcupMode .wcPlayerActions{gap:7px;}
+  #modal.worldcupMode .wcBtnImg.modernAppBtn{
+    min-width:132px;
+    min-height:42px;
+    padding:7px 9px;
+    font-size:11px;
+    gap:6px;
+  }
+  #modal.worldcupMode .wcBtnImg.modernAppBtn .appBtnIcon{
+    width:19px;
+    height:19px;
+    flex-basis:19px;
+  }
 }

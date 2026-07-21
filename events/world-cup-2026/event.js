@@ -10,7 +10,7 @@ async function loadConfig(){
       })
       .catch(() => ({
         id: 'world-cup-2026',
-        moduleVersion: 1,
+        moduleVersion: 2,
         compatibilityMode: 'legacy-worldcup-v1'
       }));
   }
