@@ -1,16 +1,16 @@
-// Typer PWA Service Worker (BUILD 3049)
-const CACHE_NAME = 'typer-cache-3049';
+// Typer PWA Service Worker (BUILD 3050)
+const CACHE_NAME = 'typer-cache-3050';
 
 // Core assets to pre-cache. leagues.json is intentionally NOT pre-cached,
 // because it should update immediately after edits on GitHub.
 const CORE = [
   './',
   './index.html',
-  './app.js?v=3049',
-  './manifest.json?v=3049',
-  './apple-touch-icon.png?v=3049',
-  './favicon-32x32.png?v=3049',
-  './favicon-16x16.png?v=3049',
+  './app.js?v=3050',
+  './manifest.json?v=3050',
+  './apple-touch-icon.png?v=3050',
+  './favicon-32x32.png?v=3050',
+  './favicon-16x16.png?v=3050',
   './ui/loader_ball.webp',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png'
@@ -42,6 +42,7 @@ self.addEventListener('fetch', (event) => {
   const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
   const isJS = url.pathname.endsWith('.js');
   const isLeaguesJSON = url.pathname.endsWith('/data/leagues.json');
+  const isEventAsset = url.pathname.includes('/events/');
 
   // leagues.json: always try GitHub/network first so edits are visible immediately.
   // The last good copy is kept only as an offline fallback.
@@ -60,8 +61,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML/JS to avoid stale UI.
-  if (isHTML || isJS) {
+  // Network-first for HTML/JS and modular Event files to avoid stale UI.
+  if (isHTML || isJS || isEventAsset) {
     event.respondWith((async () => {
       try {
         const fresh = await fetch(req, { cache: 'no-store' });

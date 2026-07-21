@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3049;
+const BUILD = 3050;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -428,6 +428,154 @@ function setLang(lang){
   applyLangToUI();
 }
 
+
+// ===== MODUŁY EVENTÓW — BUILD 3050 =====
+const EVENT_CATALOG_URL = './events/events.json';
+const EVENT_FALLBACK_DEFINITION = Object.freeze({
+  id: 'world-cup-2026',
+  enabled: true,
+  module: './events/world-cup-2026/event.js',
+  style: './events/world-cup-2026/event.css',
+  config: './events/world-cup-2026/config.json',
+  title: { pl: 'EVENT MŚ 2026', en: 'WORLD CUP 2026' },
+  buttonTitle: { pl: 'Event MŚ 2026', en: 'World Cup 2026 Event' },
+  fallback: true
+});
+
+let activeEventDefinition = EVENT_FALLBACK_DEFINITION;
+let activeEventModulePromise = null;
+let eventCatalogLoaded = false;
+
+function normalizeEventDefinition(raw){
+  if(!raw || typeof raw !== 'object' || !raw.id || !raw.module) return null;
+  return {
+    id: String(raw.id),
+    enabled: raw.enabled !== false,
+    module: String(raw.module),
+    style: raw.style ? String(raw.style) : '',
+    config: raw.config ? String(raw.config) : '',
+    title: {
+      pl: String(raw.title?.pl || raw.titlePL || 'EVENT'),
+      en: String(raw.title?.en || raw.titleEN || 'EVENT')
+    },
+    buttonTitle: {
+      pl: String(raw.buttonTitle?.pl || raw.title?.pl || raw.titlePL || 'Event'),
+      en: String(raw.buttonTitle?.en || raw.title?.en || raw.titleEN || 'Event')
+    }
+  };
+}
+
+function updateActiveEventButton(){
+  const btn = el('btnSubstitute');
+  if(!btn) return;
+  const def = activeEventDefinition;
+  const visible = !!(def && def.enabled !== false);
+  btn.hidden = !visible;
+  btn.style.display = visible ? '' : 'none';
+  if(!visible) return;
+
+  const labelPl = btn.querySelector('.label-pl');
+  const labelEn = btn.querySelector('.label-en');
+  if(labelPl) labelPl.textContent = def.title?.pl || 'EVENT';
+  if(labelEn) labelEn.textContent = def.title?.en || 'EVENT';
+
+  const lang = getLang();
+  const title = def.buttonTitle?.[lang] || def.title?.[lang] || 'Event';
+  btn.title = title;
+  btn.setAttribute('aria-label', title);
+}
+
+function ensureActiveEventStyle(def){
+  if(!def?.style) return;
+  const id = `typer-event-style-${String(def.id).replace(/[^a-z0-9_-]/gi,'-')}`;
+  let link = document.getElementById(id);
+  const href = new URL(def.style, document.baseURI);
+  href.searchParams.set('v', String(BUILD));
+  if(!link){
+    link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+  if(link.href !== href.href) link.href = href.href;
+}
+
+async function loadEventCatalog(){
+  try{
+    const url = new URL(EVENT_CATALOG_URL, document.baseURI);
+    url.searchParams.set('v', String(BUILD));
+    const response = await fetch(url.href, { cache:'no-store' });
+    if(!response.ok) throw new Error(`Events catalog HTTP ${response.status}`);
+    const catalog = await response.json();
+    const activeId = catalog?.activeEvent;
+    if(activeId === null || activeId === false || activeId === ''){
+      activeEventDefinition = null;
+    }else{
+      const found = Array.isArray(catalog?.events)
+        ? catalog.events.find(item => String(item?.id) === String(activeId) && item?.enabled !== false)
+        : null;
+      activeEventDefinition = normalizeEventDefinition(found);
+    }
+  }catch(error){
+    console.warn('Nie udało się pobrać katalogu Eventów. Używam Eventu zgodności.', error);
+    activeEventDefinition = EVENT_FALLBACK_DEFINITION;
+  }
+  eventCatalogLoaded = true;
+  activeEventModulePromise = null;
+  updateActiveEventButton();
+  if(activeEventDefinition) ensureActiveEventStyle(activeEventDefinition);
+  return activeEventDefinition;
+}
+
+async function initActiveEventModule(){
+  return loadEventCatalog();
+}
+
+async function importActiveEventModule(def){
+  if(!def) return null;
+  if(!activeEventModulePromise){
+    const url = new URL(def.module, document.baseURI);
+    url.searchParams.set('v', String(BUILD));
+    activeEventModulePromise = import(url.href).catch(error => {
+      activeEventModulePromise = null;
+      throw error;
+    });
+  }
+  return activeEventModulePromise;
+}
+
+async function openActiveEventModule(){
+  if(!eventCatalogLoaded) await loadEventCatalog();
+  const def = activeEventDefinition;
+  if(!def || def.enabled === false){
+    showToast(getLang()==='en' ? 'No active Event.' : 'Brak aktywnego Eventu.');
+    return;
+  }
+  ensureActiveEventStyle(def);
+  try{
+    const module = await importActiveEventModule(def);
+    const opener = module?.openEvent || module?.default?.openEvent || module?.default?.open;
+    if(typeof opener !== 'function') throw new Error('Moduł Eventu nie udostępnia funkcji openEvent().');
+    await opener({
+      build: BUILD,
+      event: def,
+      getLang,
+      getCurrentRoomCode: () => currentRoomCode,
+      getCurrentRoom: () => currentRoom,
+      getCurrentUser: () => ({ uid:userUid, nick:getNick(), playerNo:getPlayerNo?.() || '' }),
+      showToast,
+      openLegacyWorldCup: openWorldCupEvent
+    });
+  }catch(error){
+    console.error('Błąd modułu Eventu:', error);
+    if(def.id === 'world-cup-2026'){
+      await openWorldCupEvent();
+      return;
+    }
+    showToast(getLang()==='en' ? 'The Event could not be opened.' : 'Nie udało się otworzyć Eventu.');
+  }
+}
+
 // ===== Buttons (grafiki) =====
 function getBtnDir(){
   return (getLang() === "en") ? "ui/buttons/en/" : "ui/buttons/pl/";
@@ -586,6 +734,7 @@ function applyLangToUI(){
   if(el("t_player_col")) el("t_player_col").textContent = t("playerCol");
   if(el("t_rounds_col")) el("t_rounds_col").textContent = t("roundsCol");
   if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
+  updateActiveEventButton();
 }
 
 // ===== Modal =====
@@ -1466,7 +1615,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3049: system buttons consistent with the rest of the game
+// BUILD 3050: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1583,7 +1732,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3049 =====
+// ===== Regulamin TYPERA — BUILD 3050 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -5650,9 +5799,9 @@ function bindUI(){
       : (deletePlayerMode ? "Zaznacz gracza do usunięcia" : "Tryb usuwania wyłączony"));
   };
 
-  // 8004: zastępstwo
+  // Aktywny moduł Eventu wskazany w events/events.json
   const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openWorldCupEvent();
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openActiveEventModule();
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
@@ -9017,11 +9166,12 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.049`);
+    setFooter(`Mariusz Gębka v.3.050`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
     bindUI();
+    initActiveEventModule().catch(error => console.warn("Event module init failed:", error));
     ensurePlayersPanelFillFix();
 
     if(getNick()) refreshNickLabels();
