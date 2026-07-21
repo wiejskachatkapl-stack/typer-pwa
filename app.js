@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3032;
+const BUILD = 3033;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -148,8 +148,8 @@ function ensureLoadingVisualStyles(){
     .footballLoaderWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
     .footballLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:64px}
     .footballLoader span{
-      width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
-      background-image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CclipPath%20id%3D%22c%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%2F%3E%3C%2FclipPath%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2230%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222.6%22%2F%3E%0A%20%20%3Cg%20clip-path%3D%22url%28%23c%29%22%20stroke%3D%22%23111111%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2232%2C17%2024%2C23%2027%2C33%2037%2C33%2040%2C23%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2214%2C24%2024%2C23%2027%2C33%2018%2C40%2010%2C32%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2250%2C24%2040%2C23%2037%2C33%2046%2C40%2054%2C32%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2219%2C42%2027%2C33%2032%2C38%2029%2C50%2018%2C50%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2245%2C42%2037%2C33%2032%2C38%2035%2C50%2046%2C50%22%20fill%3D%22%23111111%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2232%22%20y1%3D%2217%22%20x2%3D%2232%22%20y2%3D%228%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2224%22%20y1%3D%2223%22%20x2%3D%2213%22%20y2%3D%2220%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2240%22%20y1%3D%2223%22%20x2%3D%2251%22%20y2%3D%2220%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2210%22%20y1%3D%2232%22%20x2%3D%227%22%20y2%3D%2243%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2254%22%20y1%3D%2232%22%20x2%3D%2257%22%20y2%3D%2243%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2218%22%20y1%3D%2250%22%20x2%3D%2215%22%20y2%3D%2258%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2246%22%20y1%3D%2250%22%20x2%3D%2249%22%20y2%3D%2258%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2229%22%20y1%3D%2250%22%20x2%3D%2227%22%20y2%3D%2259%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2235%22%20y1%3D%2250%22%20x2%3D%2237%22%20y2%3D%2259%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E");background-repeat:no-repeat;background-position:center;background-size:contain;
+      width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;
+      background-image:url("./ui/loader_ball.webp?v=${BUILD}");background-repeat:no-repeat;background-position:center;background-size:contain;
       color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(12px) scale(.68);
       animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28));
     }
@@ -158,12 +158,12 @@ function ensureLoadingVisualStyles(){
     .footballLoader span:nth-child(4){animation-delay:1.5s}
     .footballLoader span:nth-child(5){animation-delay:2s}
     .footballLoaderLabel{display:none}
-    .footballLoader.splashLoader span{width:54px;height:54px}
+    .footballLoader.splashLoader span{width:60px;height:60px}
     @keyframes footballAppear{0%,100%{opacity:0;transform:translateY(16px) scale(.6)} 18%,74%{opacity:1;transform:translateY(0) scale(1)} 86%{opacity:.35;transform:translateY(-4px) scale(.92)}}
     @media (max-width:720px){
       .footballLoader{gap:12px;min-height:54px}
-      .footballLoader span{width:38px;height:38px}
-      .footballLoader.splashLoader span{width:46px;height:46px}
+      .footballLoader span{width:42px;height:42px}
+      .footballLoader.splashLoader span{width:52px;height:52px}
     }
   `;
   document.head.appendChild(st);
