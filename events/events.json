@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "activeEvent": "world-cup-2026",
+  "events": [
+    {
+      "id": "world-cup-2026",
+      "enabled": true,
+      "module": "./events/world-cup-2026/event.js",
+      "style": "./events/world-cup-2026/event.css",
+      "config": "./events/world-cup-2026/config.json",
+      "title": {
+        "pl": "EVENT MŚ 2026",
+        "en": "WORLD CUP 2026"
+      },
+      "buttonTitle": {
+        "pl": "Event MŚ 2026",
+        "en": "World Cup 2026 Event"
+      }
+    }
+  ]
+}
