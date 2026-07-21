@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3033)</title>
-<link href="manifest.json?v=3033" rel="manifest"/>
-<link href="favicon-32x32.png?v=3033" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3033" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3033" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3034)</title>
+<link href="manifest.json?v=3034" rel="manifest"/>
+<link href="favicon-32x32.png?v=3034" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3034" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3034" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -188,7 +188,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{margin-top:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3033");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3034");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -3107,7 +3107,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3033" type="module"></script>
+<script src="./app.js?v=3034" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3127,7 +3127,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3033', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3034', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3783,7 +3783,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3033-pin-login-buttons">
+<style id="build3034-pin-login-buttons">
 #pinLoginModal .pinLoginActions{
   display:flex;
   gap:16px;
@@ -3813,6 +3813,57 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
   #pinLoginModal .pinLoginActions{gap:10px}
   #pinLoginModal .pinLoginActionBtn{min-width:125px;min-height:46px;padding:8px 13px;font-size:13px}
   #pinLoginModal .pinLoginActionBtn .appBtnIcon{width:20px;height:20px;flex-basis:20px}
+}
+</style>
+
+
+<style id="build3034-mobile-join-buttons">
+/* BUILD 3034: delikatne zmniejszenie dwóch przycisków w oknie Dołącz do pokoju na telefonie */
+@media (max-width: 980px){
+  .joinRoom .rowRight{
+    width:100% !important;
+    box-sizing:border-box !important;
+    padding:0 6px !important;
+    gap:12px !important;
+    justify-content:center !important;
+    flex-wrap:nowrap !important;
+  }
+  .joinRoom .rowRight .sysModernBtn,
+  .joinRoom .rowRight .sysBtn,
+  .joinRoom .rowRight .joinRoomEnterBtn{
+    flex:1 1 0 !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:calc(50% - 6px) !important;
+    min-height:46px !important;
+    padding:8px 10px !important;
+    gap:7px !important;
+    font-size:12px !important;
+    line-height:1 !important;
+    box-sizing:border-box !important;
+    white-space:nowrap !important;
+  }
+  .joinRoom .rowRight .appBtnIcon{
+    width:20px !important;
+    height:20px !important;
+    flex:0 0 20px !important;
+  }
+}
+@media (max-width: 420px){
+  .joinRoom .rowRight{gap:8px !important;padding:0 4px !important;}
+  .joinRoom .rowRight .sysModernBtn,
+  .joinRoom .rowRight .sysBtn,
+  .joinRoom .rowRight .joinRoomEnterBtn{
+    max-width:calc(50% - 4px) !important;
+    padding:7px 8px !important;
+    gap:5px !important;
+    font-size:11px !important;
+  }
+  .joinRoom .rowRight .appBtnIcon{
+    width:18px !important;
+    height:18px !important;
+    flex-basis:18px !important;
+  }
 }
 </style>
 
