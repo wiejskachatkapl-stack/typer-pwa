@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3037)</title>
-<link href="manifest.json?v=3037" rel="manifest"/>
-<link href="favicon-32x32.png?v=3037" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3037" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3037" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3038)</title>
+<link href="manifest.json?v=3038" rel="manifest"/>
+<link href="favicon-32x32.png?v=3038" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3038" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3038" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -188,7 +188,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{margin-top:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3037");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3038");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2652,6 +2652,139 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
   html[data-lang="en"] #room .matchActionsPanel .label-en{display:inline-flex !important;}
 }
 </style>
+
+
+/* ===== REGULAMIN TYPERA — BUILD 3038 ===== */
+.homeRules{
+  position:absolute;
+  left:50%;
+  bottom:26px;
+  transform:translateX(-50%);
+  z-index:50;
+}
+.homeRulesBtn{
+  min-width:180px !important;
+  min-height:46px !important;
+  padding:9px 18px !important;
+  font-size:14px !important;
+  border-radius:13px !important;
+  gap:9px !important;
+}
+.homeRulesBtn .appBtnIcon{
+  width:22px !important;
+  height:22px !important;
+  flex:0 0 22px !important;
+}
+.ico-rules{
+  --icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M6 2h9l3 3v17H6V2Zm2 2v16h8V6h-3V4H8Zm2 5h4v2h-4V9Zm0 4h4v2h-4v-2Z'/%3E%3C/svg%3E");
+}
+#rulesOverlay{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.64);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  z-index:150;
+}
+#rulesOverlay.show{display:flex;}
+.rulesModal{
+  width:min(900px,95vw);
+  max-height:min(88vh,820px);
+  display:flex;
+  flex-direction:column;
+  border-radius:22px;
+  border:1px solid rgba(150,215,255,.30);
+  background:linear-gradient(180deg,rgba(8,30,72,.97),rgba(5,18,44,.98));
+  box-shadow:0 24px 70px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.12);
+  overflow:hidden;
+}
+.rulesHeader{
+  padding:18px 22px 14px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+.rulesTitle{
+  margin:0;
+  font-size:24px;
+  line-height:1.1;
+  font-weight:1000;
+  color:#fff;
+}
+.rulesContent{
+  min-height:0;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:18px 26px 8px;
+  color:rgba(255,255,255,.94);
+  font-size:15px;
+  line-height:1.46;
+}
+.rulesContent ol{
+  margin:0;
+  padding-left:28px;
+}
+.rulesContent li{
+  margin:0 0 12px 0;
+  padding-left:4px;
+}
+.rules-en{display:none;}
+html[data-lang="en"] .rules-pl{display:none;}
+html[data-lang="en"] .rules-en{display:block;}
+.rulesActions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+  padding:16px 20px 20px;
+  border-top:1px solid rgba(255,255,255,.12);
+  background:rgba(3,13,33,.72);
+}
+.rulesActionBtn{
+  min-width:210px !important;
+  min-height:50px !important;
+  padding:10px 18px !important;
+  font-size:14px !important;
+  gap:10px !important;
+}
+.rulesActionBtn .appBtnIcon{
+  width:24px !important;
+  height:24px !important;
+  flex:0 0 24px !important;
+}
+@media (max-width:700px){
+  .homeRules{bottom:24px;}
+  .homeRulesBtn{
+    min-width:150px !important;
+    min-height:42px !important;
+    padding:8px 14px !important;
+    font-size:12px !important;
+  }
+  .rulesModal{max-height:90vh;border-radius:18px;}
+  .rulesHeader{padding:15px 17px 12px;}
+  .rulesTitle{font-size:20px;}
+  .rulesContent{padding:15px 18px 6px;font-size:13px;line-height:1.42;}
+  .rulesContent ol{padding-left:23px;}
+  .rulesContent li{margin-bottom:10px;}
+  .rulesActions{gap:10px;padding:12px 14px 15px;}
+  .rulesActionBtn{
+    flex:1 1 0;
+    min-width:0 !important;
+    min-height:46px !important;
+    padding:8px 10px !important;
+    font-size:12px !important;
+    gap:7px !important;
+  }
+  .rulesActionBtn .appBtnIcon{
+    width:21px !important;
+    height:21px !important;
+    flex-basis:21px !important;
+  }
+}
+
 </head>
 <body>
 <div id="bg"></div>
@@ -2690,6 +2823,15 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <div class="homeGear" id="btnHomeSettings" title="Ustawienia">
 <img alt="Ustawienia" class="homeGearImg" src="ui/logo/btn_ustawienia.png"/>
 </div>
+
+<div class="homeRules">
+  <button class="modernAppBtn homeRulesBtn" id="btnHomeRules" type="button">
+    <span class="appBtnIcon ico-rules" aria-hidden="true"></span>
+    <span class="label-pl">Regulamin</span>
+    <span class="label-en">Rules</span>
+  </button>
+</div>
+
 <div aria-label="Menu" class="homeBtns">
 <button class="imgBtn" data-btn="btn_tipster_room.png" id="btnHomeRooms" title="Pokoje typerów">
 <img alt="Pokoje typerów" data-btn="btn_tipster_room.png" src="ui/buttons/pl/btn_tipster_room.png"/>
@@ -2699,6 +2841,61 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </button>
 </div>
 </section>
+
+<!-- REGULAMIN TYPERA — BUILD 3038 -->
+<div aria-hidden="true" id="rulesOverlay">
+  <div aria-labelledby="rulesTitle" aria-modal="true" class="rulesModal" role="dialog">
+    <div class="rulesHeader">
+      <h2 class="rulesTitle" id="rulesTitle">
+        <span class="rules-pl">Regulamin TYPERA</span>
+        <span class="rules-en">TYPER Rules</span>
+      </h2>
+    </div>
+    <div class="rulesContent">
+      <ol class="rules-pl">
+        <li>Gra w TYPERA jest w pełni darmowa. Gracz nie ponosi kosztów za użytkowanie. Mogą zostać naliczone koszty tylko za używanie sieci internetowej poprzez dane komórkowe.</li>
+        <li>W trakcie gry mogą pojawiać się reklamy.</li>
+        <li>Osoba zakładająca pokój staje się prowadzącym ten pokój zwanym dalej „Adminem”.</li>
+        <li>Admin ustala, jakie pojedynki mają znaleźć się w kolejce, wpisuje wyniki i zamyka kolejki po skończonych pojedynkach.</li>
+        <li>Jedna kolejka to 10 meczy.</li>
+        <li>Jeden sezon to 20 kolejek.</li>
+        <li>Typujemy dokładne wyniki meczy do końca podstawowego czasu gry, bez dogrywek i rzutów karnych, chyba że tak zostanie ustalone przez Admina.</li>
+        <li>Za dokładnie wytypowany wynik gracz dostaje 3 punkty, za wytypowanie rozstrzygnięcia gracz dostaje 1 punkt, a w pozostałych przypadkach 0 punktów.</li>
+        <li>Punkty są sumowane w sezonie i gracz z największą ilością punktów zwycięża. Tworzony jest również ranking wszech czasów ze wszystkich sezonów.</li>
+        <li>Jeśli kilku graczy posiada taką samą ilość punktów, o miejscu decyduje w pierwszej kolejności większa ilość wytypowanych dokładnych wyników, a następnie ilość rozstrzygnięć.</li>
+        <li>Cyklicznie co pewien czas mogą pojawiać się sezonowe Eventy specjalne.</li>
+        <li>Gra wykorzystuje pliki cookie.</li>
+      </ol>
+      <ol class="rules-en">
+        <li>TYPER is completely free to play. The player does not pay for using the game. Charges may only be incurred for internet access through mobile data.</li>
+        <li>Advertisements may appear during the game.</li>
+        <li>The person who creates a room becomes the host of that room, hereinafter referred to as the “Admin”.</li>
+        <li>The Admin decides which matches are included in a round, enters the results and closes the round after the matches have finished.</li>
+        <li>One round consists of 10 matches.</li>
+        <li>One season consists of 20 rounds.</li>
+        <li>Players predict the exact scores at the end of regulation time, excluding extra time and penalty shoot-outs, unless the Admin decides otherwise.</li>
+        <li>A player receives 3 points for predicting the exact score, 1 point for predicting the correct outcome and 0 points in all other cases.</li>
+        <li>Points are added throughout the season and the player with the highest number of points wins. An all-time ranking covering all seasons is also maintained.</li>
+        <li>If several players have the same number of points, the higher position is decided first by the greater number of exact scores and then by the number of correctly predicted outcomes.</li>
+        <li>Special seasonal Events may appear periodically.</li>
+        <li>The game uses cookies.</li>
+      </ol>
+    </div>
+    <div class="rulesActions">
+      <button class="modernAppBtn rulesActionBtn" id="btnRulesAgree" type="button">
+        <span class="appBtnIcon ico-check" aria-hidden="true"></span>
+        <span class="label-pl">Zgadzam się</span>
+        <span class="label-en">I agree</span>
+      </button>
+      <button class="modernAppBtn rulesActionBtn" id="btnRulesDisagree" type="button">
+        <span class="appBtnIcon ico-no" aria-hidden="true"></span>
+        <span class="label-pl">Nie zgadzam się</span>
+        <span class="label-en">I disagree</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- CONTINUE -->
 <section class="screen" id="continue">
 <div class="continueBox panel">
@@ -3120,7 +3317,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3037" type="module"></script>
+<script src="./app.js?v=3038" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3140,7 +3337,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3037', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3038', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3796,7 +3993,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3037-pin-login-buttons">
+<style id="build3038-pin-login-buttons">
 #pinLoginModal .pinLoginActions{
   display:flex;
   gap:16px;
@@ -3830,7 +4027,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3037-mobile-join-buttons">
+<style id="build3038-mobile-join-buttons">
 /* BUILD 3035: nowe spójne przyciski w oknie Wiadomości + zachowane zmniejszenie przycisków Dołącz do pokoju na telefonie */
 @media (max-width: 980px){
   .joinRoom .rowRight{
@@ -3881,8 +4078,8 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3037-add-match-fix">
-/* BUILD 3037: korekta przycisku Dodaj mecz */
+<style id="build3038-add-match-fix">
+/* BUILD 3038: korekta przycisku Dodaj mecz */
 #btnMQAddMatch.modernAppBtn{
   display:inline-flex;
   align-items:center;

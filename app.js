@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3037;
+const BUILD = 3038;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1542,6 +1542,31 @@ async function askAndSetPlayerNoFromMyProfile(){
   // Next join action will use playerNo-based login (restore profile from room).
   window.__pendingPlayerNoLogin = true;
   try{ openRoomsChoiceModal(); }catch{}
+}
+
+
+
+// ===== Regulamin TYPERA — BUILD 3038 =====
+function openRulesModal(){
+  const ov = el("rulesOverlay");
+  if(!ov) return;
+  const content = ov.querySelector(".rulesContent");
+  if(content) content.scrollTop = 0;
+  ov.classList.add("show");
+  ov.setAttribute("aria-hidden", "false");
+}
+
+function closeRulesModal(accepted=false){
+  if(accepted){
+    try{
+      localStorage.setItem("typerRulesAccepted", "3038");
+      localStorage.setItem("typerRulesAcceptedAt", new Date().toISOString());
+    }catch{}
+  }
+  const ov = el("rulesOverlay");
+  if(!ov) return;
+  ov.classList.remove("show");
+  ov.setAttribute("aria-hidden", "true");
 }
 
 // ===== Settings modal =====
@@ -5426,6 +5451,21 @@ function bindUI(){
   // HOME: settings
   const btnSet = el("btnHomeSettings");
   if(btnSet) btnSet.onclick = () => openSettings();
+
+
+  // HOME: regulamin
+  const btnRules = el("btnHomeRules");
+  if(btnRules) btnRules.onclick = () => openRulesModal();
+  const rulesAgree = el("btnRulesAgree");
+  if(rulesAgree) rulesAgree.onclick = () => closeRulesModal(true);
+  const rulesDisagree = el("btnRulesDisagree");
+  if(rulesDisagree) rulesDisagree.onclick = () => closeRulesModal(false);
+  const rulesOverlay = el("rulesOverlay");
+  if(rulesOverlay){
+    rulesOverlay.addEventListener("click", (e)=>{
+      if(e.target === rulesOverlay) closeRulesModal(false);
+    });
+  }
 
 
   // HOME language flags
