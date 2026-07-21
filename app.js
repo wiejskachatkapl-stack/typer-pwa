@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3039;
+const BUILD = 3040;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1338,24 +1338,46 @@ async function customConfirmClearProfile(){
 }
 
 
+function ensureSystemConfirmStyles(){
+  if(document.getElementById('systemConfirmButtonStyles')) return;
+  const st = document.createElement('style');
+  st.id = 'systemConfirmButtonStyles';
+  st.textContent = `
+    .systemConfirmActions{display:flex;gap:18px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:20px;}
+    .systemConfirmBtn.modernAppBtn{
+      min-width:172px;
+      min-height:52px;
+      padding:9px 18px;
+      border-radius:14px;
+      gap:10px;
+      font-size:16px;
+      line-height:1;
+    }
+    .systemConfirmBtn.modernAppBtn .appBtnIcon{width:25px;height:25px;flex:0 0 25px;}
+    @media (max-width:520px){
+      .systemConfirmActions{gap:12px;}
+      .systemConfirmBtn.modernAppBtn{min-width:132px;min-height:46px;padding:8px 13px;font-size:14px;}
+      .systemConfirmBtn.modernAppBtn .appBtnIcon{width:22px;height:22px;flex-basis:22px;}
+    }
+  `;
+  document.head.appendChild(st);
+}
+
 // ===== Delete player (admin) confirm modal (YES/NO) =====
 // Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
 let _deletePlayerConfirmModal = null;
 function ensureDeletePlayerConfirmModal(){
   if(_deletePlayerConfirmModal) return _deletePlayerConfirmModal;
+  ensureSystemConfirmStyles();
 
   if(!document.getElementById('deletePlayerConfirmStyles')){
     const st = document.createElement('style');
     st.id = 'deletePlayerConfirmStyles';
     st.textContent = `
-      .deletePlayerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
-      .deletePlayerBox{width:min(820px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .deletePlayerOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;}
+      .deletePlayerBox{width:min(820px,92vw);background:rgba(6,18,40,.94);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
       .deletePlayerTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
       .deletePlayerText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
-      .deletePlayerActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .deletePlayerBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-      .deletePlayerBtnImg:active{transform:translateY(1px);} 
-      @media (max-width:520px){.deletePlayerBtnImg{height:52px;}}
     `;
     document.head.appendChild(st);
   }
@@ -1364,16 +1386,21 @@ function ensureDeletePlayerConfirmModal(){
   overlay.className = 'deletePlayerOverlay';
   overlay.innerHTML = `
     <div class="deletePlayerBox" role="dialog" aria-modal="true">
-      <div class="deletePlayerTitle">${getLang()==='en' ? 'Delete player' : 'Usuń gracza'}</div>
+      <div class="deletePlayerTitle" id="deletePlayerConfirmTitle"></div>
       <div class="deletePlayerText" id="deletePlayerConfirmText"></div>
-      <div class="deletePlayerActions">
-        <img id="deletePlayerBtnYes" class="deletePlayerBtnImg" alt="YES" />
-        <img id="deletePlayerBtnNo" class="deletePlayerBtnImg" alt="NO" />
+      <div class="deletePlayerActions systemConfirmActions">
+        <button id="deletePlayerBtnYes" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-check" aria-hidden="true"></span><span class="label-pl">TAK</span><span class="label-en">YES</span>
+        </button>
+        <button id="deletePlayerBtnNo" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">NIE</span><span class="label-en">NO</span>
+        </button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
 
+  const elTitle = overlay.querySelector('#deletePlayerConfirmTitle');
   const elText = overlay.querySelector('#deletePlayerConfirmText');
   const btnYes = overlay.querySelector('#deletePlayerBtnYes');
   const btnNo = overlay.querySelector('#deletePlayerBtnNo');
@@ -1391,9 +1418,10 @@ function ensureDeletePlayerConfirmModal(){
 
   _deletePlayerConfirmModal = {
     open: (text)=>{
-      const lang = getLang()==='en' ? 'en' : 'pl';
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      const en = getLang()==='en';
+      elTitle.textContent = en ? 'Delete player' : 'Usuń gracza';
+      btnYes.setAttribute('aria-label', en ? 'Yes' : 'Tak');
+      btnNo.setAttribute('aria-label', en ? 'No' : 'Nie');
       elText.textContent = text;
       overlay.style.display = 'flex';
       return new Promise(resolve=>{ _resolver = resolve; });
@@ -1546,7 +1574,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3039 =====
+// ===== Regulamin TYPERA — BUILD 3040 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -1568,7 +1596,7 @@ function openRulesModal(){
 function closeRulesModal(accepted=false){
   if(accepted){
     try{
-      localStorage.setItem("typerRulesAccepted", "3039");
+      localStorage.setItem("typerRulesAccepted", "3040");
       localStorage.setItem("typerRulesAcceptedAt", new Date().toISOString());
     }catch{}
   }
@@ -5463,9 +5491,11 @@ function bindUI(){
   if(btnSet) btnSet.onclick = () => openSettings();
 
 
-  // HOME: regulamin
+  // HOME + ROOM: regulamin
   const btnRules = el("btnHomeRules");
   if(btnRules) btnRules.onclick = () => openRulesModal();
+  const btnRulesFromRoom = el("btnRulesFromRoom");
+  if(btnRulesFromRoom) btnRulesFromRoom.onclick = () => openRulesModal();
   const rulesAgree = el("btnRulesAgree");
   if(rulesAgree) rulesAgree.onclick = () => closeRulesModal(true);
   const rulesDisagree = el("btnRulesDisagree");
@@ -7761,19 +7791,16 @@ async function customConfirmEndRound(){
 let _leaveRoomConfirmModal = null;
 function ensureLeaveRoomConfirmModal(){
   if(_leaveRoomConfirmModal) return _leaveRoomConfirmModal;
+  ensureSystemConfirmStyles();
 
   if(!document.getElementById("leaveRoomConfirmStyles")){
     const st = document.createElement('style');
     st.id = "leaveRoomConfirmStyles";
     st.textContent = `
-      .leaveRoomOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
-      .leaveRoomBox{width:min(820px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .leaveRoomOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;}
+      .leaveRoomBox{width:min(820px,92vw);background:rgba(6,18,40,.94);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
       .leaveRoomTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
       .leaveRoomText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
-      .leaveRoomActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .leaveRoomBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-      .leaveRoomBtnImg:active{transform:translateY(1px);} 
-      @media (max-width:520px){.leaveRoomBtnImg{height:52px;}}
     `;
     document.head.appendChild(st);
   }
@@ -7782,16 +7809,21 @@ function ensureLeaveRoomConfirmModal(){
   overlay.className = 'leaveRoomOverlay';
   overlay.innerHTML = `
     <div class="leaveRoomBox" role="dialog" aria-modal="true">
-      <div class="leaveRoomTitle">${getLang()==='en' ? 'Leave room' : 'Opuść pokój'}</div>
+      <div class="leaveRoomTitle" id="leaveRoomConfirmTitle"></div>
       <div class="leaveRoomText" id="leaveRoomConfirmText"></div>
-      <div class="leaveRoomActions">
-        <img id="leaveRoomBtnYes" class="leaveRoomBtnImg" alt="YES" />
-        <img id="leaveRoomBtnNo" class="leaveRoomBtnImg" alt="NO" />
+      <div class="leaveRoomActions systemConfirmActions">
+        <button id="leaveRoomBtnYes" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-check" aria-hidden="true"></span><span class="label-pl">TAK</span><span class="label-en">YES</span>
+        </button>
+        <button id="leaveRoomBtnNo" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">NIE</span><span class="label-en">NO</span>
+        </button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
 
+  const elTitle = overlay.querySelector('#leaveRoomConfirmTitle');
   const elText = overlay.querySelector('#leaveRoomConfirmText');
   const btnYes = overlay.querySelector('#leaveRoomBtnYes');
   const btnNo = overlay.querySelector('#leaveRoomBtnNo');
@@ -7809,9 +7841,10 @@ function ensureLeaveRoomConfirmModal(){
 
   _leaveRoomConfirmModal = {
     open: (text)=>{
-      const lang = getLang()==='en' ? 'en' : 'pl';
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      const en = getLang()==='en';
+      elTitle.textContent = en ? 'Leave room' : 'Opuść pokój';
+      btnYes.setAttribute('aria-label', en ? 'Yes' : 'Tak');
+      btnNo.setAttribute('aria-label', en ? 'No' : 'Nie');
       elText.textContent = text;
       overlay.style.display = 'flex';
       return new Promise(resolve=>{ _resolver = resolve; });
@@ -7833,19 +7866,16 @@ async function customConfirmLeaveRoom(){
 let _deleteRoomConfirmModal = null;
 function ensureDeleteRoomConfirmModal(){
   if(_deleteRoomConfirmModal) return _deleteRoomConfirmModal;
+  ensureSystemConfirmStyles();
 
   if(!document.getElementById('deleteRoomConfirmStyles')){
     const st = document.createElement('style');
     st.id = 'deleteRoomConfirmStyles';
     st.textContent = `
-      .deleteRoomOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;}
+      .deleteRoomOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:16px;}
       .deleteRoomBox{width:min(900px,92vw);background:rgba(6,18,40,.94);border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.6);padding:24px 22px 18px;}
       .deleteRoomTitle{font-weight:950;font-size:22px;margin:0 0 10px 0;color:#fff;}
       .deleteRoomText{font-weight:700;line-height:1.35;font-size:15px;color:rgba(255,255,255,.92);white-space:pre-wrap;}
-      .deleteRoomActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .deleteRoomBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-      .deleteRoomBtnImg:active{transform:translateY(1px);} 
-      @media (max-width:520px){.deleteRoomBtnImg{height:52px;}}
     `;
     document.head.appendChild(st);
   }
@@ -7854,19 +7884,24 @@ function ensureDeleteRoomConfirmModal(){
   overlay.className = 'deleteRoomOverlay';
   overlay.innerHTML = `
     <div class="deleteRoomBox" role="dialog" aria-modal="true">
-      <div class="deleteRoomTitle">${getLang()==='en' ? 'Delete room' : 'Usuń pokój'}</div>
+      <div class="deleteRoomTitle" id="deleteRoomConfirmTitle"></div>
       <div class="deleteRoomText" id="deleteRoomConfirmText"></div>
-      <div class="deleteRoomActions">
-        <img id="deleteRoomBtnYes" class="deleteRoomBtnImg" alt="YES" />
-        <img id="deleteRoomBtnNo" class="deleteRoomBtnImg" alt="NO" />
+      <div class="deleteRoomActions systemConfirmActions">
+        <button id="deleteRoomBtnYes" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-check" aria-hidden="true"></span><span class="label-pl">TAK</span><span class="label-en">YES</span>
+        </button>
+        <button id="deleteRoomBtnNo" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">NIE</span><span class="label-en">NO</span>
+        </button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
 
+  const elTitle = overlay.querySelector('#deleteRoomConfirmTitle');
   const elText = overlay.querySelector('#deleteRoomConfirmText');
   const btnYes = overlay.querySelector('#deleteRoomBtnYes');
-  const btnNo  = overlay.querySelector('#deleteRoomBtnNo');
+  const btnNo = overlay.querySelector('#deleteRoomBtnNo');
 
   let _resolver = null;
   function close(val){
@@ -7881,9 +7916,10 @@ function ensureDeleteRoomConfirmModal(){
 
   _deleteRoomConfirmModal = {
     open: (text)=>{
-      const lang = getLang()==='en' ? 'en' : 'pl';
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      const en = getLang()==='en';
+      elTitle.textContent = en ? 'Delete room' : 'Usuń pokój';
+      btnYes.setAttribute('aria-label', en ? 'Yes' : 'Tak');
+      btnNo.setAttribute('aria-label', en ? 'No' : 'Nie');
       elText.textContent = text;
       overlay.style.display = 'flex';
       return new Promise(resolve=>{ _resolver = resolve; });
@@ -8932,7 +8968,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.008`);
+    setFooter(`Mariusz Gębka v.3.040`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
@@ -8949,10 +8985,6 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     if(!okLogin) return;
 
     showScreen("home");
-    showCenterLoading();
-    await new Promise(r=>setTimeout(r, 2000));
-    openJoinRoomModal();
-    hideCenterLoading();
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));
