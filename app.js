@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3050;
+const BUILD = 3051;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -429,7 +429,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3050 =====
+// ===== MODUŁY EVENTÓW — BUILD 3051 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -790,7 +790,17 @@ function getModernBtnSpec(btnName){
     "btn_my_profil.png":        {pl:"Mam profil", en:"My profile", icon:"ico-check", variant:"blue", wide:true},
     "btn_yes.png":              {pl:"TAK", en:"YES", icon:"ico-check", variant:"success", wide:true},
     "btn_no.png":               {pl:"NIE", en:"NO", icon:"ico-no", variant:"danger", wide:true},
-    "btn_close.png":            {pl:"Zamknij", en:"Close", icon:"ico-no", variant:"danger"}
+    "btn_close.png":            {pl:"Zamknij", en:"Close", icon:"ico-no", variant:"danger"},
+
+    // EVENT MŚ 2026 — przyciski w nowym, systemowym stylu
+    "btn_cofnij.png":           {pl:"Cofnij", en:"Back", icon:"ico-back2", variant:"blue"},
+    "btn_wyjscie.png":          {pl:"Wyjście", en:"Exit", icon:"ico-exit2", variant:"blue"},
+    "btn_dodaj_kolejke.png":    {pl:"Dodaj kolejkę", en:"Add round", icon:"ico-create2", variant:"blue", wide:true},
+    "btn_zapisz_kolejke.png":   {pl:"Zapisz kolejkę", en:"Save round", icon:"ico-save2", variant:"blue", wide:true},
+    "btn_zapisz_typy.png":      {pl:"Zapisz typy", en:"Save picks", icon:"ico-save2", variant:"success", wide:true},
+    "btn_dodaj_wyniki.png":     {pl:"Wpisz wyniki", en:"Enter results", icon:"ico-manual2", variant:"blue", wide:true},
+    "btn_zapisz_wyniki.png":    {pl:"Zapisz wyniki", en:"Save results", icon:"ico-save2", variant:"success", wide:true},
+    "btn_zakoncz_kolejke.png":  {pl:"Zakończ kolejkę", en:"End round", icon:"ico-no", variant:"danger", wide:true}
   };
   return map[n] || null;
 }
@@ -1615,7 +1625,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3050: system buttons consistent with the rest of the game
+// BUILD 3051: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1732,7 +1742,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3050 =====
+// ===== Regulamin TYPERA — BUILD 3051 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -4187,17 +4197,12 @@ function wcMakeTextButton(id, label, onClick){
   const b = document.createElement('button');
   b.type = 'button';
   b.id = id;
-  b.className = 'btn';
-  b.textContent = label;
-  b.style.borderRadius = '14px';
-  b.style.padding = '8px 14px';
-  b.style.minHeight = '38px';
-  b.style.fontWeight = '1000';
-  b.style.whiteSpace = 'nowrap';
-  b.style.background = 'rgba(34,52,94,.78)';
-  b.style.border = '1px solid rgba(255,255,255,.16)';
-  b.style.color = '#fff';
-  b.style.boxShadow = 'inset 0 0 0 1px rgba(255,255,255,.04), 0 8px 18px rgba(0,0,0,.25)';
+  b.className = 'modernAppBtn sysModernBtn sysModernBtn--danger sysModernBtn--small sysModernBtn--wide wcBtnImg';
+  const pl = id === 'wcEndEventBtn' ? 'Zakończ Event' : label;
+  const en = id === 'wcEndEventBtn' ? 'End Event' : label;
+  b.innerHTML = `<span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">${pl}</span><span class="label-en">${en}</span>`;
+  b.setAttribute('aria-label', label);
+  b.title = label;
   if(onClick) b.onclick = onClick;
   return b;
 }
@@ -9166,7 +9171,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.050`);
+    setFooter(`Mariusz Gębka v.3.051`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
