@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3046;
+const BUILD = 3047;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1247,23 +1247,20 @@ async function clearProfile(){
 }
 
 // Custom confirm modal for clearing profile (instead of system confirm)
-// Uses ui/buttons/{lang}/btn_yes.png and btn_no.png
+// ===== Clear profile confirm modal — system buttons consistent with the game =====
 let _clearProfileConfirmModal = null;
 function ensureClearProfileConfirmModal(){
   if(_clearProfileConfirmModal) return _clearProfileConfirmModal;
+  ensureSystemConfirmStyles();
 
   if(!document.getElementById('clearProfileConfirmStyles')){
     const st = document.createElement('style');
     st.id = 'clearProfileConfirmStyles';
     st.textContent = `
-      .clearProfileOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
-      .clearProfileBox{width:min(860px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .clearProfileOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;}
+      .clearProfileBox{width:min(860px,92vw);background:rgba(6,18,40,.94);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
       .clearProfileTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
       .clearProfileText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
-      .clearProfileActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .clearProfileBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-      .clearProfileBtnImg:active{transform:translateY(1px);} 
-      @media (max-width:520px){.clearProfileBtnImg{height:52px;}}
     `;
     document.head.appendChild(st);
   }
@@ -1272,16 +1269,21 @@ function ensureClearProfileConfirmModal(){
   overlay.className = 'clearProfileOverlay';
   overlay.innerHTML = `
     <div class="clearProfileBox" role="dialog" aria-modal="true">
-      <div class="clearProfileTitle">${getLang()==='en' ? 'Delete profile' : 'Skasuj profil'}</div>
+      <div class="clearProfileTitle" id="clearProfileConfirmTitle"></div>
       <div class="clearProfileText" id="clearProfileConfirmText"></div>
-      <div class="clearProfileActions">
-        <img id="clearProfileBtnYes" class="clearProfileBtnImg" alt="YES" />
-        <img id="clearProfileBtnNo" class="clearProfileBtnImg" alt="NO" />
+      <div class="clearProfileActions systemConfirmActions">
+        <button id="clearProfileBtnYes" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-check" aria-hidden="true"></span><span class="label-pl">TAK</span><span class="label-en">YES</span>
+        </button>
+        <button id="clearProfileBtnNo" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">NIE</span><span class="label-en">NO</span>
+        </button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
 
+  const elTitle = overlay.querySelector('#clearProfileConfirmTitle');
   const elText = overlay.querySelector('#clearProfileConfirmText');
   const btnYes = overlay.querySelector('#clearProfileBtnYes');
   const btnNo = overlay.querySelector('#clearProfileBtnNo');
@@ -1299,9 +1301,10 @@ function ensureClearProfileConfirmModal(){
 
   _clearProfileConfirmModal = {
     open: (text)=>{
-      const lang = getLang()==='en' ? 'en' : 'pl';
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      const en = getLang()==='en';
+      elTitle.textContent = en ? 'Delete profile' : 'Skasuj profil';
+      btnYes.setAttribute('aria-label', en ? 'Yes' : 'Tak');
+      btnNo.setAttribute('aria-label', en ? 'No' : 'Nie');
       elText.textContent = text;
       overlay.style.display = 'flex';
       return new Promise(resolve=>{ _resolver = resolve; });
@@ -1574,7 +1577,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3046 =====
+// ===== Regulamin TYPERA — BUILD 3047 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -9008,7 +9011,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.046`);
+    setFooter(`Mariusz Gębka v.3.047`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
