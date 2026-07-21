@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3051;
+const BUILD = 3052;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -429,7 +429,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3051 =====
+// ===== MODUŁY EVENTÓW — BUILD 3052 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1625,7 +1625,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3051: system buttons consistent with the rest of the game
+// BUILD 3052: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1742,7 +1742,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3051 =====
+// ===== Regulamin TYPERA — BUILD 3052 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3096,46 +3096,81 @@ function showRoundWinnersAnnouncement(ev){
   return new Promise(resolve=>{
     const ov = ensureAnnouncementOverlay();
     ov.innerHTML = "";
+    ov.classList.add("roundWinnerOverlay");
     ov.style.display = "flex";
-    const box = document.createElement("div");
-    box.style.width = "min(980px,92vw)";
-    box.style.borderRadius = "28px";
-    box.style.padding = "24px";
-    box.style.background = "linear-gradient(180deg, rgba(8,32,76,.98), rgba(3,17,46,.98))";
-    box.style.border = "1px solid rgba(255,255,255,.16)";
-    box.style.boxShadow = "0 24px 80px rgba(0,0,0,.45)";
-    const title = document.createElement("div");
-    title.style.fontSize = "34px";
-    title.style.fontWeight = "1000";
-    title.style.textAlign = "center";
-    title.style.marginBottom = "8px";
-    title.textContent = (getLang()==="en") ? `Round ${ev.roundNo} winners` : `Zwycięzcy kolejki ${ev.roundNo}`;
-    const sub = document.createElement("div");
-    sub.style.textAlign = "center";
-    sub.style.opacity = ".9";
-    sub.style.fontWeight = "900";
-    sub.style.marginBottom = "18px";
-    sub.textContent = (getLang()==="en") ? `Season ${ev.seasonNo}` : `Sezon ${ev.seasonNo}`;
-    const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.justifyContent = "center";
-    row.style.alignItems = "flex-end";
-    row.style.gap = "24px";
-    row.style.flexWrap = "wrap";
-    (ev.winners||[]).forEach((w, idx)=>{
-      const col = buildAnnouncementPlayerCard(w, idx===0);
-      col.style.minWidth = idx===0 ? "180px" : "150px";
-      const cup = document.createElement("img");
-      cup.src = idx===0 ? "ui/medale/puchar_1.png" : idx===1 ? "ui/medale/puchar_2.png" : "ui/medale/puchar_3.png";
-      cup.alt = "cup";
-      cup.style.width = idx===0 ? "48px" : "42px";
-      cup.style.height = idx===0 ? "48px" : "42px";
-      cup.style.marginBottom = "8px";
-      col.insertBefore(cup, col.firstChild);
-      row.appendChild(col);
-    });
-    box.appendChild(title); box.appendChild(sub); box.appendChild(row); ov.appendChild(box);
-    setTimeout(()=>{ ov.style.display = "none"; ov.innerHTML=""; resolve(); }, 5000);
+
+    const winner = Array.isArray(ev?.winners) && ev.winners.length ? ev.winners[0] : null;
+    if(!winner){
+      ov.style.display = "none";
+      ov.classList.remove("roundWinnerOverlay");
+      resolve();
+      return;
+    }
+
+    const card = document.createElement("div");
+    card.className = "roundWinnerCard";
+
+    const heading = document.createElement("div");
+    heading.className = "roundWinnerHeading";
+    heading.innerHTML = `<span class="roundWinnerLaurel" aria-hidden="true">❧</span><span>${getLang()==="en" ? `ROUND ${ev.roundNo} WINNER` : `ZWYCIĘZCA KOLEJKI ${ev.roundNo}`}</span><span class="roundWinnerLaurel mirror" aria-hidden="true">❧</span>`;
+
+    const trophy = document.createElement("div");
+    trophy.className = "roundWinnerTrophy";
+    trophy.innerHTML = `<img src="ui/medale/puchar_1.png" alt="${getLang()==="en" ? "Winner trophy" : "Puchar zwycięzcy"}">`;
+
+    const avatar = document.createElement("div");
+    avatar.className = "roundWinnerAvatar";
+    const av = __normalizeAvatarValue(String(winner?.avatar||"").trim());
+    if(av){
+      const img = document.createElement("img");
+      img.src = __avatarSrc(av);
+      img.alt = String(winner?.nick||"avatar");
+      img.onerror = ()=>{ avatar.innerHTML = '<span aria-hidden="true">🙂</span>'; };
+      avatar.appendChild(img);
+    }else{
+      avatar.innerHTML = '<span aria-hidden="true">🙂</span>';
+    }
+
+    const nick = document.createElement("div");
+    nick.className = "roundWinnerNick";
+    nick.textContent = String(winner?.nick||"—");
+
+    const points = document.createElement("div");
+    points.className = "roundWinnerPoints";
+    const pts = Number(winner?.points||0);
+    points.textContent = getLang()==="en" ? `${pts} POINTS` : `${pts} PUNKTÓW`;
+
+    const details = document.createElement("div");
+    details.className = "roundWinnerDetails";
+    const exact = Number(winner?.exactCount||0);
+    const outcomes = Number(winner?.outcomeCount||0);
+    if(exact || outcomes){
+      details.textContent = getLang()==="en"
+        ? `${exact} exact scores  •  ${outcomes} correct outcomes`
+        : `${exact} dokładne wyniki  •  ${outcomes} rozstrzygnięć`;
+    }else{
+      details.textContent = getLang()==="en" ? `Season ${ev.seasonNo}` : `Sezon ${ev.seasonNo}`;
+    }
+
+    const footer = document.createElement("div");
+    footer.className = "roundWinnerFooter";
+    footer.textContent = getLang()==="en"
+      ? "Congratulations! The best result of this round."
+      : "Gratulacje! Najlepszy wynik tej kolejki.";
+
+    card.append(heading, trophy, avatar, nick, points, details, footer);
+    ov.appendChild(card);
+
+    const close = ()=>{
+      card.classList.add("isClosing");
+      setTimeout(()=>{
+        ov.style.display = "none";
+        ov.classList.remove("roundWinnerOverlay");
+        ov.innerHTML = "";
+        resolve();
+      }, 220);
+    };
+    setTimeout(close, 3000);
   });
 }
 function showSeasonPodiumAnnouncement(ev){
@@ -8247,12 +8282,25 @@ async function archiveCurrentRound(){
   const playersByUid = {};
   (lastPlayers||[]).forEach(p=>{ playersByUid[p.uid] = p; });
 
-  const roundRanking = Object.entries(pointsMap).map(([uid, pts])=>({
-    uid,
-    points: Number(pts||0),
-    nick: String(nickByUid[uid] || playersByUid[uid]?.nick || "—"),
-    avatar: String(playersByUid[uid]?.avatar || "")
-  })).sort((a,b)=>{
+  const roundRanking = Object.entries(pointsMap).map(([uid, pts])=>{
+    let exactCount = 0;
+    let outcomeCount = 0;
+    const picksObj = picksByUid[uid] || {};
+    for(const m of matchesCache){
+      const p = picksObj?.[m.id];
+      const matchPoints = scoreOneMatch(p?.h, p?.a, m.resultH, m.resultA);
+      if(matchPoints === 3) exactCount += 1;
+      else if(matchPoints === 1) outcomeCount += 1;
+    }
+    return {
+      uid,
+      points: Number(pts||0),
+      exactCount,
+      outcomeCount,
+      nick: String(nickByUid[uid] || playersByUid[uid]?.nick || "—"),
+      avatar: String(playersByUid[uid]?.avatar || "")
+    };
+  }).sort((a,b)=>{
     if(b.points !== a.points) return b.points - a.points;
     return String(a.nick).localeCompare(String(b.nick), "pl");
   });
@@ -9171,7 +9219,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.051`);
+    setFooter(`Mariusz Gębka v.3.052`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
