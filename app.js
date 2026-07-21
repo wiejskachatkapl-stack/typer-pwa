@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3054;
+const BUILD = 3055;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3054 =====
+// ===== MODUŁY EVENTÓW — BUILD 3055 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1628,7 +1628,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3054: system buttons consistent with the rest of the game
+// BUILD 3055: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1745,7 +1745,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3054 =====
+// ===== Regulamin TYPERA — BUILD 3055 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -7958,20 +7958,18 @@ function generateFreshPlayerNo(countryCode){
 
 function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
+  ensureSystemConfirmStyles();
 
-  // styles (once)
+  // BUILD 3055: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
     st.textContent = `
-      .endRoundOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
-      .endRoundBox{width:min(720px,92vw);background:rgba(6,18,40,.92);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
-      .endRoundTitle{font-weight:800;font-size:22px;margin:0 0 10px 0;color:#fff;}
-      .endRoundText{font-weight:600;line-height:1.35;font-size:15px;color:rgba(255,255,255,.88);}
-      .endRoundActions{display:flex;gap:18px;justify-content:center;align-items:center;margin-top:18px;}
-      .endRoundBtnImg{height:58px;cursor:pointer;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
-      .endRoundBtnImg:active{transform:translateY(1px);}
-      @media (max-width:520px){.endRoundBtnImg{height:52px;}}
+      .endRoundOverlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;}
+      .endRoundBox{width:min(720px,92vw);background:rgba(6,18,40,.94);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:22px 22px 18px;}
+      .endRoundTitle{font-weight:900;font-size:22px;margin:0 0 10px 0;color:#fff;}
+      .endRoundText{font-weight:650;line-height:1.35;font-size:15px;color:rgba(255,255,255,.90);white-space:pre-wrap;}
+      .endRoundActions.systemConfirmActions{margin-top:20px;}
     `;
     document.head.appendChild(st);
   }
@@ -7979,17 +7977,22 @@ function ensureEndRoundConfirmModal(){
   const overlay = document.createElement('div');
   overlay.className = 'endRoundOverlay';
   overlay.innerHTML = `
-    <div class="endRoundBox" role="dialog" aria-modal="true">
-      <div class="endRoundTitle">${getLang()==='en' ? 'End round' : 'Zakończ kolejkę'}</div>
+    <div class="endRoundBox" role="dialog" aria-modal="true" aria-labelledby="endRoundConfirmTitle">
+      <div class="endRoundTitle" id="endRoundConfirmTitle"></div>
       <div class="endRoundText" id="endRoundConfirmText"></div>
-      <div class="endRoundActions">
-        <img id="endRoundBtnYes" class="endRoundBtnImg" alt="YES" />
-        <img id="endRoundBtnNo" class="endRoundBtnImg" alt="NO" />
+      <div class="endRoundActions systemConfirmActions">
+        <button id="endRoundBtnYes" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-check" aria-hidden="true"></span><span class="label-pl">TAK</span><span class="label-en">YES</span>
+        </button>
+        <button id="endRoundBtnNo" class="modernAppBtn systemConfirmBtn" type="button">
+          <span class="appBtnIcon ico-no" aria-hidden="true"></span><span class="label-pl">NIE</span><span class="label-en">NO</span>
+        </button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
 
+  const elTitle = overlay.querySelector('#endRoundConfirmTitle');
   const elText = overlay.querySelector('#endRoundConfirmText');
   const btnYes = overlay.querySelector('#endRoundBtnYes');
   const btnNo = overlay.querySelector('#endRoundBtnNo');
@@ -8009,10 +8012,11 @@ function ensureEndRoundConfirmModal(){
 
   _endRoundConfirmModal = {
     open: (text)=>{
-      const lang = getLang()==='en' ? 'en' : 'pl';
-      btnYes.src = `ui/buttons/${lang}/btn_yes.png`;
-      btnNo.src  = `ui/buttons/${lang}/btn_no.png`;
+      const en = getLang()==='en';
+      elTitle.textContent = en ? 'End round' : 'Zakończ kolejkę';
       elText.textContent = text;
+      btnYes.setAttribute('aria-label', en ? 'Yes' : 'Tak');
+      btnNo.setAttribute('aria-label', en ? 'No' : 'Nie');
       overlay.style.display = 'flex';
       return new Promise(resolve=>{ _resolver = resolve; });
     }
@@ -9222,7 +9226,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.054`);
+    setFooter(`Mariusz Gębka v.3.055`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
