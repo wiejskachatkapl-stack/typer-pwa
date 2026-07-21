@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3057;
+const BUILD = 3058;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3057 =====
+// ===== MODUŁY EVENTÓW — BUILD 3058 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1628,7 +1628,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3057: system buttons consistent with the rest of the game
+// BUILD 3058: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1745,7 +1745,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3057 =====
+// ===== Regulamin TYPERA — BUILD 3058 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3458,7 +3458,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.057` : "TYPER v.3.057",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.058` : "TYPER v.3.058",800,850);
   return canvas;
 }
 
@@ -8369,7 +8369,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3057: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3058: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
@@ -8675,7 +8675,8 @@ async function archiveCurrentRound(){
     home: m.home || "",
     away: m.away || "",
     resultH: m.resultH,
-    resultA: m.resultA
+    resultA: m.resultA,
+    cancelled: m.cancelled === true
   }));
 
   const pointsMap = {};
@@ -9599,7 +9600,10 @@ async function openArchivedPicksPreview(code, roundKey, uid, nick){
     const resPill = document.createElement("div");
     resPill.className="resultPill";
     // Jeśli mecz był odwołany, nie pokazuj "Wynik: null:null" tylko "Odwołany".
-    if(isCancelled && (m.resultH==null) && (m.resultA==null)){
+    // Archiwum zamkniętej kolejki: brak obu wyników oznacza mecz oznaczony jako odwołany.
+    // Dodatkowo od v3058 zapisujemy flagę cancelled w archiwum kolejki.
+    const archivedCancelled = isCancelled || ((m.resultH==null) && (m.resultA==null));
+    if(archivedCancelled){
       resPill.textContent = (getLang()==="en") ? 'Cancelled' : 'Odwołany';
     }else if((m.resultH==null) || (m.resultA==null)){
       resPill.textContent = (getLang()==="en") ? 'Result: —' : 'Wynik: —';
