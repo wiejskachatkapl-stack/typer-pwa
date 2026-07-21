@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3041;
+const BUILD = 3042;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1156,7 +1156,7 @@ async function performNewLogin(playerNo, roomCode){
 
     window.__pendingPlayerNoLogin = false;
     modalClose();
-    await openRoom(code, {force:true});
+    await openRoomWithEntryLoader(code, {force:true});
   }catch(e){
     console.error(e);
     showToast(getLang()==="en" ? "Cannot login" : "Nie udało się zalogować");
@@ -6477,6 +6477,16 @@ async function createRoom(roomName){
     : "Nie udało się wygenerować wolnego kodu (spróbuj ponownie).";
 }
 
+async function openRoomWithEntryLoader(code, opts={}){
+  showCenterLoading();
+  const minimumLoaderTime = new Promise(resolve=>setTimeout(resolve, 5000));
+  try{
+    await Promise.all([openRoom(code, opts), minimumLoaderTime]);
+  }finally{
+    hideCenterLoading();
+  }
+}
+
 async function joinRoom(code){
   const nick = getNick();
   el("debugRooms").textContent = (getLang()==="en") ? "Joining…" : "Dołączam…";
@@ -6511,7 +6521,7 @@ async function joinRoom(code){
       localStorage.setItem(KEY_ACTIVE_ROOM, code);
       pushRoomHistory(code);
       el("debugRooms").textContent = (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`;
-      await openRoom(code);
+      await openRoomWithEntryLoader(code);
       return;
     }
   }
@@ -6532,7 +6542,7 @@ async function joinRoom(code){
   pushRoomHistory(code);
 
   el("debugRooms").textContent = (getLang()==="en") ? `Joined ${code}` : `Dołączono do ${code}`;
-  await openRoom(code);
+  await openRoomWithEntryLoader(code);
 }
 
 // Aktualizuj dane profilu gracza w bieżącym pokoju (jeśli jest otwarty)
@@ -8968,7 +8978,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.041`);
+    setFooter(`Mariusz Gębka v.3.042`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
