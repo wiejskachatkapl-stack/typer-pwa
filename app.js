@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3055;
+const BUILD = 3056;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3055 =====
+// ===== MODUŁY EVENTÓW — BUILD 3056 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1628,7 +1628,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3055: system buttons consistent with the rest of the game
+// BUILD 3056: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1745,7 +1745,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3055 =====
+// ===== Regulamin TYPERA — BUILD 3056 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3176,49 +3176,456 @@ function showRoundWinnersAnnouncement(ev){
     setTimeout(close, 3000);
   });
 }
-function showSeasonPodiumAnnouncement(ev){
-  return new Promise(resolve=>{
-    const ov = ensureAnnouncementOverlay();
-    ov.innerHTML = "";
-    ov.style.display = "flex";
-    const box = document.createElement("div");
-    box.style.width = "min(1100px,94vw)";
-    box.style.padding = "18px 18px 10px";
-    box.style.borderRadius = "28px";
-    box.style.background = "linear-gradient(180deg, rgba(8,32,76,.98), rgba(3,17,46,.98))";
-    box.style.border = "1px solid rgba(255,255,255,.16)";
-    box.style.boxShadow = "0 24px 80px rgba(0,0,0,.45)";
-    const title = document.createElement("div");
-    title.style.fontSize = "34px";
-    title.style.fontWeight = "1000";
-    title.style.textAlign = "center";
-    title.style.marginBottom = "8px";
-    title.textContent = (getLang()==="en") ? `Season ${ev.seasonNo} podium` : `Podium sezonu ${ev.seasonNo}`;
-    const stage = document.createElement("div");
-    stage.style.position = "relative";
-    stage.style.width = "100%";
-    stage.style.aspectRatio = "16 / 9";
-    stage.style.background = 'center/contain no-repeat url("ui/medale/podium.png")';
-    stage.style.marginTop = "8px";
-    const coords = [
-      { left:"50%", top:"8%", big:true, trans:"translateX(-50%)" },
-      { left:"24%", top:"22%", big:false, trans:"translateX(-50%)" },
-      { left:"76%", top:"24%", big:false, trans:"translateX(-50%)" }
-    ];
-    (ev.podium||[]).slice(0,3).forEach((w, idx)=>{
-      const wrap = document.createElement("div");
-      wrap.style.position = "absolute";
-      wrap.style.left = coords[idx].left;
-      wrap.style.top = coords[idx].top;
-      wrap.style.transform = coords[idx].trans;
-      const card = buildAnnouncementPlayerCard(w, !!coords[idx].big);
-      wrap.appendChild(card);
-      stage.appendChild(wrap);
+function normalizeSeasonPodiumPlaces(ev){
+  const normalized = [];
+  if(Array.isArray(ev?.podiumPlaces) && ev.podiumPlaces.length){
+    ev.podiumPlaces.forEach(group=>{
+      const place = Number(group?.place || 0);
+      const players = Array.isArray(group?.players) ? group.players.filter(Boolean) : [];
+      if(place >= 1 && place <= 3 && players.length) normalized.push({ place, players });
     });
-    box.appendChild(title); box.appendChild(stage); ov.appendChild(box);
-    setTimeout(()=>{ ov.style.display = "none"; ov.innerHTML=""; resolve(); }, 5000);
+  }else if(Array.isArray(ev?.podium)){
+    ev.podium.slice(0,3).forEach((player, idx)=>{
+      if(player) normalized.push({ place:idx+1, players:[player] });
+    });
+  }
+  normalized.sort((a,b)=>a.place-b.place);
+  return normalized;
+}
+
+function seasonPodiumInitials(nick){
+  const parts = String(nick||"?").trim().split(/\s+/).filter(Boolean);
+  return (parts.slice(0,2).map(x=>x[0]||"").join("") || "?").toUpperCase();
+}
+
+function buildSeasonPodiumAvatar(player, place, compact=false){
+  const avatar = document.createElement("div");
+  avatar.className = `seasonPodiumAvatar place${place}${compact ? " compact" : ""}`;
+  const av = __normalizeAvatarValue(String(player?.avatar||"").trim());
+  if(av){
+    const img = document.createElement("img");
+    img.src = __avatarSrc(av);
+    img.alt = String(player?.nick||"avatar");
+    img.onerror = ()=>{ avatar.innerHTML = `<span>${escapeHtml(seasonPodiumInitials(player?.nick))}</span>`; };
+    avatar.appendChild(img);
+  }else{
+    avatar.innerHTML = `<span>${escapeHtml(seasonPodiumInitials(player?.nick))}</span>`;
+  }
+  return avatar;
+}
+
+function buildSeasonPodiumPlace(group){
+  const place = Number(group?.place||0);
+  const players = Array.isArray(group?.players) ? group.players : [];
+  const col = document.createElement("div");
+  col.className = `seasonPodiumPlace seasonPodiumPlace${place}`;
+
+  const medal = document.createElement("div");
+  medal.className = `seasonPodiumMedal medal${place}`;
+  medal.textContent = String(place);
+
+  const avatars = document.createElement("div");
+  avatars.className = `seasonPodiumAvatars count${Math.min(players.length,3)}`;
+  players.slice(0,3).forEach(player=>avatars.appendChild(buildSeasonPodiumAvatar(player, place, players.length>1)));
+
+  const podium = document.createElement("div");
+  podium.className = `seasonPodiumBlock place${place}`;
+  const names = document.createElement("div");
+  names.className = "seasonPodiumNames";
+  if(!players.length){
+    names.innerHTML = '<div class="seasonPodiumEmpty">—</div>';
+  }else{
+    players.slice(0,3).forEach(player=>{
+      const row = document.createElement("div");
+      row.className = "seasonPodiumNameRow";
+      const name = document.createElement("strong");
+      name.textContent = String(player?.nick||"—");
+      const pts = document.createElement("span");
+      const points = Number(player?.points||0);
+      pts.textContent = getLang()==="en" ? `${points} pts` : `${points} pkt`;
+      row.append(name, pts);
+      names.appendChild(row);
+    });
+  }
+  podium.appendChild(names);
+  col.append(medal, avatars, podium);
+  return col;
+}
+
+function loadCanvasImage(src){
+  return new Promise(resolve=>{
+    if(!src){ resolve(null); return; }
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    let settled = false;
+    const finish = value=>{ if(settled) return; settled=true; clearTimeout(timer); resolve(value); };
+    const timer = setTimeout(()=>finish(null), 3500);
+    img.onload = ()=>finish(img);
+    img.onerror = ()=>finish(null);
+    img.src = src;
   });
 }
+
+function canvasRoundRect(ctx,x,y,w,h,r){
+  const rr = Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+}
+
+function canvasFitText(ctx,text,maxWidth,startSize,minSize=18){
+  let size=startSize;
+  while(size>minSize){
+    ctx.font=`900 ${size}px Arial, sans-serif`;
+    if(ctx.measureText(text).width<=maxWidth) return size;
+    size-=2;
+  }
+  return minSize;
+}
+
+async function drawSeasonPdfAvatar(ctx, player, cx, cy, radius, place){
+  const colors = place===1 ? ["#ffe07b","#9c6700"] : place===2 ? ["#eaf2ff","#77859b"] : ["#efb07d","#88451d"];
+  ctx.save();
+  ctx.shadowColor="rgba(0,0,0,.45)";
+  ctx.shadowBlur=18;
+  ctx.beginPath();
+  ctx.arc(cx,cy,radius+7,0,Math.PI*2);
+  ctx.fillStyle=colors[0];
+  ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.beginPath();
+  ctx.arc(cx,cy,radius,0,Math.PI*2);
+  ctx.clip();
+  const av = __normalizeAvatarValue(String(player?.avatar||"").trim());
+  const img = av ? await loadCanvasImage(__avatarSrc(av)) : null;
+  if(img){
+    const scale=Math.max((radius*2)/img.width,(radius*2)/img.height);
+    const w=img.width*scale,h=img.height*scale;
+    ctx.drawImage(img,cx-w/2,cy-h/2,w,h);
+  }else{
+    const grad=ctx.createLinearGradient(cx-radius,cy-radius,cx+radius,cy+radius);
+    grad.addColorStop(0,"#173b68");
+    grad.addColorStop(1,"#081b3e");
+    ctx.fillStyle=grad;
+    ctx.fillRect(cx-radius,cy-radius,radius*2,radius*2);
+    ctx.fillStyle="#ffffff";
+    ctx.font=`900 ${Math.round(radius*.72)}px Arial, sans-serif`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText(seasonPodiumInitials(player?.nick),cx,cy+2);
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,radius+3,0,Math.PI*2);
+  ctx.strokeStyle=colors[1];
+  ctx.lineWidth=5;
+  ctx.stroke();
+  ctx.restore();
+}
+
+async function buildSeasonPodiumCanvas(ev){
+  const canvas=document.createElement("canvas");
+  canvas.width=1600;
+  canvas.height=900;
+  const ctx=canvas.getContext("2d");
+  const lang=getLang();
+  const groups=normalizeSeasonPodiumPlaces(ev);
+  const byPlace=new Map(groups.map(g=>[g.place,g]));
+
+  const bg=ctx.createLinearGradient(0,0,1600,900);
+  bg.addColorStop(0,"#06142f");
+  bg.addColorStop(.55,"#0a2b61");
+  bg.addColorStop(1,"#071128");
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,1600,900);
+  const glow=ctx.createRadialGradient(800,340,20,800,340,560);
+  glow.addColorStop(0,"rgba(40,117,255,.25)");
+  glow.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,1600,900);
+
+  const confettiColors=["#f4c64d","#2f8fff","#ffffff","#d79637"];
+  for(let i=0;i<54;i++){
+    const x=(i*197)%1540+30;
+    const y=(i*89)%420+30;
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate((i%8)*.35);
+    ctx.fillStyle=confettiColors[i%confettiColors.length];
+    ctx.globalAlpha=.4+(i%5)*.12;
+    ctx.fillRect(-4,-8,8,16);
+    ctx.restore();
+  }
+
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.shadowColor="rgba(0,0,0,.55)";
+  ctx.shadowBlur=12;
+  ctx.fillStyle="#ffffff";
+  ctx.font="900 76px Arial, sans-serif";
+  ctx.fillText(lang==="en" ? "SEASON COMPLETE" : "KONIEC SEZONU",800,90);
+  ctx.shadowBlur=0;
+  ctx.fillStyle="#e9f2ff";
+  ctx.font="500 34px Arial, sans-serif";
+  ctx.fillText(lang==="en" ? `Season ${ev?.seasonNo||1} completed after 20 rounds` : `Sezon ${ev?.seasonNo||1} zakończony po 20 kolejkach`,800,150);
+
+  const positions={
+    1:{x:800,avatarY:330,r:106,blockY:485,blockW:430,blockH:255,top:"#ffc93c",bottom:"#9f6100"},
+    2:{x:420,avatarY:390,r:82,blockY:545,blockW:360,blockH:195,top:"#e7edf7",bottom:"#7d8a9c"},
+    3:{x:1180,avatarY:410,r:78,blockY:575,blockW:360,blockH:165,top:"#e59857",bottom:"#85431d"}
+  };
+
+  for(const place of [2,1,3]){
+    const cfg=positions[place];
+    const group=byPlace.get(place);
+    const players=group?.players||[];
+    const count=Math.max(1,Math.min(players.length,3));
+    const avatarRadius=players.length>1 ? Math.round(cfg.r*.68) : cfg.r;
+    const spacing=players.length>1 ? avatarRadius*1.55 : 0;
+    if(players.length){
+      for(let i=0;i<Math.min(players.length,3);i++){
+        const offset=(i-(count-1)/2)*spacing;
+        await drawSeasonPdfAvatar(ctx,players[i],cfg.x+offset,cfg.avatarY,avatarRadius,place);
+      }
+    }
+
+    const badgeX=cfg.x-(players.length>1 ? spacing*.72 : cfg.r*.82);
+    const badgeY=cfg.avatarY-cfg.r*.75;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(badgeX,badgeY,40,0,Math.PI*2);
+    const mg=ctx.createLinearGradient(badgeX,badgeY-40,badgeX,badgeY+40);
+    mg.addColorStop(0,cfg.top);
+    mg.addColorStop(1,cfg.bottom);
+    ctx.fillStyle=mg;
+    ctx.shadowColor="rgba(0,0,0,.45)";
+    ctx.shadowBlur=15;
+    ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle="#fff1b4";
+    ctx.lineWidth=4;
+    ctx.stroke();
+    ctx.fillStyle="#fff";
+    ctx.font="900 40px Arial, sans-serif";
+    ctx.fillText(String(place),badgeX,badgeY+2);
+    ctx.restore();
+
+    ctx.save();
+    const x=cfg.x-cfg.blockW/2;
+    const y=cfg.blockY;
+    canvasRoundRect(ctx,x,y,cfg.blockW,cfg.blockH,24);
+    const pg=ctx.createLinearGradient(x,y,x,y+cfg.blockH);
+    pg.addColorStop(0,cfg.top);
+    pg.addColorStop(.12,"#152544");
+    pg.addColorStop(1,"#07142f");
+    ctx.fillStyle=pg;
+    ctx.shadowColor="rgba(0,0,0,.55)";
+    ctx.shadowBlur=22;
+    ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.strokeStyle=cfg.top;
+    ctx.lineWidth=4;
+    ctx.stroke();
+    if(!players.length){
+      ctx.fillStyle="rgba(255,255,255,.45)";
+      ctx.font="900 42px Arial, sans-serif";
+      ctx.fillText("—",cfg.x,y+cfg.blockH/2);
+    }else{
+      let lineY=y+48;
+      players.slice(0,3).forEach(p=>{
+        const name=String(p?.nick||"—");
+        const size=canvasFitText(ctx,name,cfg.blockW-45,place===1?38:31,20);
+        ctx.font=`900 ${size}px Arial, sans-serif`;
+        ctx.fillStyle="#fff";
+        ctx.fillText(name,cfg.x,lineY);
+        ctx.font=`900 ${place===1?31:26}px Arial, sans-serif`;
+        ctx.fillStyle=cfg.top;
+        ctx.fillText(lang==="en" ? `${Number(p?.points||0)} pts` : `${Number(p?.points||0)} pkt`,cfg.x,lineY+38);
+        lineY += place===1 ? 78 : 68;
+      });
+    }
+    ctx.restore();
+  }
+
+  ctx.fillStyle="#eaf3ff";
+  ctx.font="600 29px Arial, sans-serif";
+  ctx.fillText(lang==="en" ? "Congratulations to the best tipsters of the season!" : "Gratulacje dla najlepszych typerów sezonu!",800,800);
+  ctx.fillStyle="rgba(255,255,255,.68)";
+  ctx.font="500 20px Arial, sans-serif";
+  const room=String(ev?.roomName||currentRoom?.name||"").trim();
+  ctx.fillText(room ? `${room}  •  TYPER v.3.056` : "TYPER v.3.056",800,850);
+  return canvas;
+}
+
+function canvasJpegToPdfBlob(canvas){
+  const dataUrl=canvas.toDataURL("image/jpeg",.94);
+  const raw=atob(dataUrl.split(",")[1]);
+  const jpg=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) jpg[i]=raw.charCodeAt(i);
+
+  const enc=new TextEncoder();
+  const chunks=[];
+  const offsets=[0];
+  let length=0;
+  const pushBytes=(bytes)=>{ chunks.push(bytes); length+=bytes.length; };
+  const push=(s)=>pushBytes(enc.encode(s));
+  push("%PDF-1.4\n%TYPER\n");
+
+  const obj=(n,body)=>{ offsets[n]=length; push(`${n} 0 obj\n${body}\nendobj\n`); };
+  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  const pageW=842;
+  const pageH=595;
+  const margin=18;
+  const scale=Math.min((pageW-margin*2)/canvas.width,(pageH-margin*2)/canvas.height);
+  const w=canvas.width*scale;
+  const h=canvas.height*scale;
+  const x=(pageW-w)/2;
+  const y=(pageH-h)/2;
+  obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`);
+  offsets[4]=length;
+  push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`);
+  pushBytes(jpg);
+  push("\nendstream\nendobj\n");
+  const content=`q\n${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm\n/Im0 Do\nQ\n`;
+  obj(5,`<< /Length ${enc.encode(content).length} >>\nstream\n${content}endstream`);
+
+  const xref=length;
+  push("xref\n0 6\n0000000000 65535 f \n");
+  for(let i=1;i<=5;i++) push(`${String(offsets[i]).padStart(10,"0")} 00000 n \n`);
+  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks,{type:"application/pdf"});
+}
+
+async function downloadSeasonPodiumPdf(ev){
+  const canvas=await buildSeasonPodiumCanvas(ev);
+  const blob=canvasJpegToPdfBlob(canvas);
+  const safeRoom=String(ev?.roomName||currentRoom?.name||"TYPER")
+    .replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ_-]+/g,"_")
+    .replace(/^_+|_+$/g,"");
+  const filename=`${safeRoom||"TYPER"}_sezon_${Number(ev?.seasonNo||1)}_podium.pdf`;
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=filename;
+  a.rel="noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+
+function showSeasonPodiumAnnouncement(ev){
+  return new Promise(resolve=>{
+    const ov=ensureAnnouncementOverlay();
+    ov.innerHTML="";
+    ov.className="seasonPodiumOverlay";
+    ov.style.display="flex";
+
+    const card=document.createElement("div");
+    card.className="seasonPodiumCard";
+    const confetti=document.createElement("div");
+    confetti.className="seasonPodiumConfetti";
+    for(let i=0;i<28;i++){
+      const piece=document.createElement("i");
+      piece.style.setProperty("--x",`${(i*37)%100}%`);
+      piece.style.setProperty("--d",`${(i%7)*.16}s`);
+      piece.style.setProperty("--r",`${(i*43)%180}deg`);
+      confetti.appendChild(piece);
+    }
+
+    const header=document.createElement("div");
+    header.className="seasonPodiumHeader";
+    const title=document.createElement("div");
+    title.className="seasonPodiumTitle";
+    title.textContent=getLang()==="en" ? "SEASON COMPLETE" : "KONIEC SEZONU";
+    const subtitle=document.createElement("div");
+    subtitle.className="seasonPodiumSubtitle";
+    subtitle.innerHTML=getLang()==="en"
+      ? `Season <b>${Number(ev?.seasonNo||1)}</b> completed after <strong>20</strong> rounds`
+      : `Sezon <b>${Number(ev?.seasonNo||1)}</b> zakończony po <strong>20</strong> kolejkach`;
+    header.append(title,subtitle);
+
+    const stage=document.createElement("div");
+    stage.className="seasonPodiumStage";
+    const groups=normalizeSeasonPodiumPlaces(ev);
+    const byPlace=new Map(groups.map(g=>[g.place,g]));
+    [2,1,3].forEach(place=>stage.appendChild(buildSeasonPodiumPlace(byPlace.get(place)||{place,players:[]})));
+
+    const congrats=document.createElement("div");
+    congrats.className="seasonPodiumCongrats";
+    congrats.textContent=getLang()==="en"
+      ? "Congratulations to the best tipsters of the season!"
+      : "Gratulacje dla najlepszych typerów sezonu!";
+
+    const timer=document.createElement("div");
+    timer.className="seasonPodiumTimer";
+    timer.innerHTML='<span></span>';
+
+    const pdfPrompt=document.createElement("div");
+    pdfPrompt.className="seasonPdfPrompt";
+    const question=document.createElement("div");
+    question.className="seasonPdfQuestion";
+    question.textContent=getLang()==="en"
+      ? "Save the final winners screen as a PDF?"
+      : "Czy zapisać końcowy ekran zwycięzców w PDF?";
+    const actions=document.createElement("div");
+    actions.className="seasonPdfActions";
+    const yes=document.createElement("button");
+    yes.type="button";
+    yes.className="seasonPdfBtn seasonPdfYes";
+    yes.innerHTML=`<span class="seasonPdfIcon">⇩</span><span>${getLang()==="en" ? "SAVE PDF" : "ZAPISZ PDF"}</span>`;
+    const no=document.createElement("button");
+    no.type="button";
+    no.className="seasonPdfBtn seasonPdfNo";
+    no.innerHTML=`<span class="seasonPdfIcon">×</span><span>${getLang()==="en" ? "NOT NOW" : "NIE TERAZ"}</span>`;
+    actions.append(yes,no);
+    pdfPrompt.append(question,actions);
+
+    card.append(confetti,header,stage,congrats,timer,pdfPrompt);
+    ov.appendChild(card);
+
+    let finished=false;
+    const close=()=>{
+      if(finished) return;
+      finished=true;
+      card.classList.add("isClosing");
+      setTimeout(()=>{
+        ov.style.display="none";
+        ov.className="";
+        ov.innerHTML="";
+        resolve();
+      },260);
+    };
+    no.onclick=close;
+    yes.onclick=async()=>{
+      yes.disabled=true;
+      no.disabled=true;
+      const label=yes.querySelector("span:last-child");
+      if(label) label.textContent=getLang()==="en" ? "CREATING…" : "TWORZENIE…";
+      try{
+        await downloadSeasonPodiumPdf(ev);
+        showToast(getLang()==="en" ? "PDF saved" : "PDF został przygotowany");
+      }catch(err){
+        console.error("Season podium PDF failed",err);
+        showToast(getLang()==="en" ? "Could not create PDF" : "Nie udało się utworzyć PDF");
+      }
+      close();
+    };
+
+    setTimeout(()=>{
+      timer.classList.add("done");
+      pdfPrompt.classList.add("show");
+      pdfPrompt.scrollIntoView({block:"nearest",behavior:"smooth"});
+    },7000);
+  });
+}
+
 async function maybeShowPendingEvents(){
   if(!currentRoomCode || announcementShowing || announcementChecking) return;
   const playerNo = getPlayerNo();
@@ -7960,7 +8367,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3055: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3056: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
@@ -8332,12 +8739,65 @@ async function archiveCurrentRound(){
       rounds: Number(ld.seasonRoundsPlayed || 0) + (Object.prototype.hasOwnProperty.call(pointsMap, uid) ? 1 : 0)
     };
   });
-  const seasonRanking = Object.values(seasonScoreMap).sort((a,b)=>{
+  const seasonEnd = roundNo >= SEASON_ROUNDS;
+  const seasonPlacementCounts = new Map();
+  const ensureSeasonPlacement = (uid)=>{
+    if(!seasonPlacementCounts.has(uid)) seasonPlacementCounts.set(uid,{firstPlaces:0,secondPlaces:0});
+    return seasonPlacementCounts.get(uid);
+  };
+  const addRoundPlacements = (ptsMap)=>{
+    const entries = Object.entries(ptsMap||{})
+      .filter(([,pts])=>Number.isFinite(Number(pts)))
+      .map(([uid,pts])=>({uid,points:Number(pts)}));
+    if(!entries.length) return;
+    const best=Math.max(...entries.map(x=>x.points));
+    const first=entries.filter(x=>x.points===best);
+    first.forEach(x=>{ ensureSeasonPlacement(x.uid).firstPlaces += 1; });
+    if(first.length===1){
+      const below=entries.filter(x=>x.points<best);
+      if(below.length){
+        const second=Math.max(...below.map(x=>x.points));
+        below.filter(x=>x.points===second).forEach(x=>{ ensureSeasonPlacement(x.uid).secondPlaces += 1; });
+      }
+    }
+  };
+  if(seasonEnd){
+    try{
+      const archivedSeasonRounds = await boot.getDocs(roundsCol(code));
+      archivedSeasonRounds.forEach(d=>{
+        const rd=d.data()||{};
+        if(Number(rd.seasonNo||1)===Number(seasonNo)) addRoundPlacements(rd.pointsByUid||{});
+      });
+    }catch(err){
+      console.warn("Season placement history load failed",err);
+    }
+    addRoundPlacements(pointsMap);
+  }
+  const seasonRanking = Object.values(seasonScoreMap).map(row=>{
+    const places=seasonPlacementCounts.get(row.uid)||{firstPlaces:0,secondPlaces:0};
+    return {...row,firstPlaces:Number(places.firstPlaces||0),secondPlaces:Number(places.secondPlaces||0)};
+  }).sort((a,b)=>{
     if(b.points !== a.points) return b.points - a.points;
+    if(b.firstPlaces !== a.firstPlaces) return b.firstPlaces - a.firstPlaces;
+    if(b.secondPlaces !== a.secondPlaces) return b.secondPlaces - a.secondPlaces;
     return String(a.nick).localeCompare(String(b.nick), "pl");
   });
-  const seasonEnd = roundNo >= SEASON_ROUNDS;
-  const seasonTop3 = seasonRanking.slice(0,3);
+  let seasonPlace=0;
+  seasonRanking.forEach((row,idx)=>{
+    if(idx===0) seasonPlace=1;
+    else{
+      const prev=seasonRanking[idx-1];
+      const same=Number(prev.points||0)===Number(row.points||0)
+        && Number(prev.firstPlaces||0)===Number(row.firstPlaces||0)
+        && Number(prev.secondPlaces||0)===Number(row.secondPlaces||0);
+      if(!same) seasonPlace=idx+1;
+    }
+    row.place=seasonPlace;
+  });
+  const seasonPodiumPlaces=[1,2,3]
+    .map(place=>({place,players:seasonRanking.filter(x=>Number(x.place)===place)}))
+    .filter(group=>group.players.length);
+  const seasonTop3=seasonPodiumPlaces.flatMap(group=>group.players);
 
   const b = boot.writeBatch(db);
 
@@ -8361,7 +8821,9 @@ async function archiveCurrentRound(){
 
   const cupByUid = {};
   if(seasonEnd){
-    seasonTop3.forEach((x, idx)=>{ cupByUid[x.uid] = idx + 1; });
+    seasonPodiumPlaces.forEach(group=>{
+      group.players.forEach(player=>{ cupByUid[player.uid]=group.place; });
+    });
   }
 
   allUids.forEach(uid=>{
@@ -8411,7 +8873,10 @@ async function archiveCurrentRound(){
       eventOrder: nextArchiveIndex * 10 + 2,
       seasonNo,
       archiveIndex: nextArchiveIndex,
+      roomName: currentRoom?.name || "",
+      seasonRounds: SEASON_ROUNDS,
       podium: seasonTop3,
+      podiumPlaces: seasonPodiumPlaces,
       createdAt: boot.serverTimestamp()
     }, { merge:false });
   }
@@ -9226,7 +9691,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.055`);
+    setFooter(`Mariusz Gębka v.3.056`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
