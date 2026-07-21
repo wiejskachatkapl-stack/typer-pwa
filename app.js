@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3038;
+const BUILD = 3039;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1546,12 +1546,21 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3038 =====
+// ===== Regulamin TYPERA — BUILD 3039 =====
+function syncRulesLanguage(){
+  const ov = el("rulesOverlay");
+  if(!ov) return;
+  const lang = getLang()==="en" ? "en" : "pl";
+  ov.dataset.rulesLang = lang;
+}
+
 function openRulesModal(){
   const ov = el("rulesOverlay");
   if(!ov) return;
+  syncRulesLanguage();
   const content = ov.querySelector(".rulesContent");
   if(content) content.scrollTop = 0;
+  ov.hidden = false;
   ov.classList.add("show");
   ov.setAttribute("aria-hidden", "false");
 }
@@ -1559,7 +1568,7 @@ function openRulesModal(){
 function closeRulesModal(accepted=false){
   if(accepted){
     try{
-      localStorage.setItem("typerRulesAccepted", "3038");
+      localStorage.setItem("typerRulesAccepted", "3039");
       localStorage.setItem("typerRulesAcceptedAt", new Date().toISOString());
     }catch{}
   }
@@ -1567,6 +1576,7 @@ function closeRulesModal(accepted=false){
   if(!ov) return;
   ov.classList.remove("show");
   ov.setAttribute("aria-hidden", "true");
+  ov.hidden = true;
 }
 
 // ===== Settings modal =====
