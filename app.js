@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3040;
+const BUILD = 3041;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1574,7 +1574,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3040 =====
+// ===== Regulamin TYPERA — BUILD 3041 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -1596,7 +1596,7 @@ function openRulesModal(){
 function closeRulesModal(accepted=false){
   if(accepted){
     try{
-      localStorage.setItem("typerRulesAccepted", "3040");
+      localStorage.setItem("typerRulesAccepted", "3041");
       localStorage.setItem("typerRulesAcceptedAt", new Date().toISOString());
     }catch{}
   }
@@ -8968,7 +8968,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.040`);
+    setFooter(`Mariusz Gębka v.3.041`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
@@ -8985,6 +8985,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     if(!okLogin) return;
 
     showScreen("home");
+    openJoinRoomModal();
   }catch(e){
     console.error(e);
     setSplash("BŁĄD:\n" + (e?.message || String(e)));

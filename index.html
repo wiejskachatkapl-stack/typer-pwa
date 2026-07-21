@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3040)</title>
-<link href="manifest.json?v=3040" rel="manifest"/>
-<link href="favicon-32x32.png?v=3040" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3040" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3040" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3041)</title>
+<link href="manifest.json?v=3041" rel="manifest"/>
+<link href="favicon-32x32.png?v=3041" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3041" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3041" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -188,7 +188,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3040");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3041");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2654,8 +2654,8 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3040-rules">
-/* ===== REGULAMIN TYPERA — BUILD 3040 ===== */
+<style id="build3041-rules">
+/* ===== REGULAMIN TYPERA — BUILD 3041 ===== */
 .homeRules{
   position:absolute;
   left:50%;
@@ -2837,7 +2837,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </section>
 
-<!-- REGULAMIN TYPERA — BUILD 3040 -->
+<!-- REGULAMIN TYPERA — BUILD 3041 -->
 <div aria-hidden="true" hidden id="rulesOverlay" data-rules-lang="pl">
   <div aria-labelledby="rulesTitle" aria-modal="true" class="rulesModal" role="dialog">
     <div class="rulesHeader">
@@ -3313,7 +3313,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3040" type="module"></script>
+<script src="./app.js?v=3041" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3333,14 +3333,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3040', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3041', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.040</div>
+<div id="buildCornerText">Mariusz Gębka v.3.041</div>
 </div>
 
 <style>
@@ -4075,7 +4075,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 
 
 <style id="build3038-add-match-fix">
-/* BUILD 3040: korekta przycisku Dodaj mecz */
+/* BUILD 3041: korekta przycisku Dodaj mecz */
 #btnMQAddMatch.modernAppBtn{
   display:inline-flex;
   align-items:center;
@@ -4115,8 +4115,8 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3040-final-fixes">
-/* v3040: Regulamin pod rankingiem i bez piłek na starcie */
+<style id="build3041-final-fixes">
+/* v3041: po logowaniu bezpośrednio otwierane jest okno Dołącz do pokoju */
 #room #btnRulesFromRoom{grid-column:1 / -1;width:100%;}
 </style>
 </body>
