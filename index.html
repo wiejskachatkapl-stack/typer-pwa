@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3034)</title>
-<link href="manifest.json?v=3034" rel="manifest"/>
-<link href="favicon-32x32.png?v=3034" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3034" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3034" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3035)</title>
+<link href="manifest.json?v=3035" rel="manifest"/>
+<link href="favicon-32x32.png?v=3035" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3035" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3035" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -188,7 +188,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{margin-top:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3034");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3035");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -1150,76 +1150,89 @@
       .msgDeleteBtn .msgBtnImg{ width:min(180px, 55vw); }
     }
 
-    
-    .msgHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 6px;}
+    .msgHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:0 6px;}
+    .msgHeaderActions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
 
-    .msgDeleteBtn{
-      height:34px;
-      padding:0 14px;
-      border-radius:12px;
-      border:1px solid rgba(255,90,90,.35);
-      background:rgba(255,40,40,.18);
-      color:rgba(255,255,255,.95);
-      font-weight:1000;
-      cursor:pointer;
-      display:none;
+    .msgBtnImg{display:none !important;}
+
+    .msgActionBtn,
+    .msgTab{
+      display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:10px;
+      min-height:44px;
+      padding:0 18px;
+      border-radius:14px;
+      border:1px solid rgba(130,205,255,.42);
+      background:
+        linear-gradient(180deg, rgba(70,170,255,.98) 0%, rgba(25,110,230,.98) 52%, rgba(12,74,180,.98) 100%);
+      color:#ffffff;
+      font-weight:1000;
+      letter-spacing:.01em;
+      text-shadow:0 1px 2px rgba(0,0,0,.30);
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,.30),
+        inset 0 -2px 0 rgba(0,0,0,.16),
+        0 8px 18px rgba(0,0,0,.20);
+      cursor:pointer;
       white-space:nowrap;
+      transition:transform .12s ease, filter .12s ease, box-shadow .12s ease;
     }
-    .msgDeleteBtn.show{display:inline-flex;}
+    .msgActionBtn:hover,
+    .msgTab:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+    .msgActionBtn:active,
+    .msgTab:active{ transform:translateY(0); filter:brightness(.98); }
+    .msgActionBtn:disabled,
+    .msgTab:disabled{ opacity:.55; cursor:default; transform:none; }
 
-    /* obrazkowe przyciski w wiadomościach */
-    .msgBtnImg{display:block; width:220px; height:auto; object-fit:contain;}
-    .msgSendBtn{background:transparent; border:none; padding:0; min-width:auto;}
-    .msgDeleteBtn{background:transparent; border:none; padding:0; height:auto; position:relative;}
-    .msgDeleteBtn .msgBtnImg{width:160px;}
-    .msgDeleteCount{
+    .msgActionBtn .msgBtnIco{font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-width:20px;}
+    .msgActionBtn .msgBtnTxt{display:inline-block;}
+
+    .msgDeleteBtn{display:none; position:relative;}
+    .msgDeleteBtn.show{display:inline-flex;}
+    .msgDeleteBtn .msgDeleteCount{
       position:absolute;
-      top:-6px;
-      right:-6px;
+      top:-8px;
+      right:-8px;
       min-width:22px;
       height:22px;
       padding:0 6px;
       border-radius:999px;
-      background:#ff2b2b;
-      color:#fff;
+      background:#ffffff;
+      color:#0a4ed1;
       font-size:12px;
-      font-weight:900;
+      font-weight:1000;
       display:none;
       align-items:center;
       justify-content:center;
       line-height:22px;
-      box-shadow:0 0 10px rgba(0,0,0,.35);
+      text-shadow:none;
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
     }
-    .msgChk{
-      width:18px;height:18px;
-      accent-color:#ff3b3b;
-      cursor:pointer;
-    }
-    .msgItemSel{
-      outline:2px solid rgba(255,80,80,.35);
-      background:rgba(90,10,10,.25) !important;
-    }
+    .msgSendBtn{min-width:220px;}
+    .msgChk{width:18px;height:18px;accent-color:#1f7cff;cursor:pointer;}
+    .msgItemSel{outline:2px solid rgba(76,170,255,.42);background:rgba(19,77,160,.30) !important;}
 
-    .msgTabs{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px;}
-    .msgTab{
-      height:34px;
-      padding:0 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.22);
-      color:rgba(255,255,255,.92);
-      font-weight:1000;
-      cursor:pointer;
-    }
+    .msgTabs{display:flex;gap:10px;flex-wrap:wrap;padding:0 6px;}
+    .msgTab{min-width:108px;padding:0 16px;}
     .msgTab.active{
-      background:rgba(30,110,255,.22);
-      border-color:rgba(120,190,255,.35);
+      border-color:rgba(255,255,255,.55);
+      background:linear-gradient(180deg, rgba(95,190,255,1) 0%, rgba(36,128,244,1) 52%, rgba(18,85,198,1) 100%);
+      box-shadow:inset 0 2px 0 rgba(255,255,255,.36), inset 0 -2px 0 rgba(0,0,0,.18), 0 10px 20px rgba(0,0,0,.24), 0 0 0 2px rgba(120,195,255,.22);
     }
     .msgBody{padding:0 6px 6px 6px;}
     .msgPane{display:none;}
     .msgPane.show{display:block;}
+    @media (max-width:700px){
+      .msgHeader{align-items:stretch;flex-direction:column;}
+      .msgHeaderActions{justify-content:flex-start;}
+      .msgActionBtn,.msgTab{min-height:42px;padding:0 14px;font-size:14px;}
+      .msgTab{min-width:unset;flex:1 1 calc(50% - 10px);}
+      .msgSendBtn{min-width:min(240px, 70vw);}
+    }
+
+
     .msgSplit{display:grid;grid-template-columns: 1fr 1.2fr;gap:12px;}
     .msgList{
       border:1px solid rgba(255,255,255,.12);
@@ -2949,10 +2962,10 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <div aria-label="Messages" class="msgModal panel" role="dialog">
     <div class="msgHeader">
       <div class="msgTitle" id="msgTitle">Wiadomości</div>
-      <button class="msgDeleteBtn" id="btnMsgDelete" type="button">Usuń</button>
-      <button class="imgBtn sysBtn" data-btn="btn_back.png" id="btnMsgBack" type="button">
-        <img alt="btnMsgBack" data-btn="btn_back.png" src="ui/buttons/pl/btn_back.png"/>
-      </button>
+      <div class="msgHeaderActions">
+        <button class="msgActionBtn msgDeleteBtn" id="btnMsgDelete" type="button"><span class="msgBtnIco">🗑</span><span class="msgBtnTxt">Usuń</span></button>
+        <button class="msgActionBtn" id="btnMsgBack" type="button"><span class="msgBtnIco">↩</span><span class="msgBtnTxt">Cofnij</span></button>
+      </div>
     </div>
 
     <div class="msgTabs" role="tablist">
@@ -3010,7 +3023,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
           </div>
           <textarea class="msgText" id="msgText" placeholder="Napisz wiadomość..."></textarea>
           <div class="msgFooter">
-            <button class="btn msgSendBtn" id="btnMsgSend" type="button">Wyślij</button>
+            <button class="msgActionBtn msgSendBtn" id="btnMsgSend" type="button"><span class="msgBtnIco">➤</span><span class="msgBtnTxt">Wyślij</span></button>
           </div>
         </div>
       </div>
@@ -3107,7 +3120,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3034" type="module"></script>
+<script src="./app.js?v=3035" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3127,7 +3140,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3034', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3035', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -3783,7 +3796,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3034-pin-login-buttons">
+<style id="build3035-pin-login-buttons">
 #pinLoginModal .pinLoginActions{
   display:flex;
   gap:16px;
@@ -3817,8 +3830,8 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3034-mobile-join-buttons">
-/* BUILD 3034: delikatne zmniejszenie dwóch przycisków w oknie Dołącz do pokoju na telefonie */
+<style id="build3035-mobile-join-buttons">
+/* BUILD 3035: nowe spójne przyciski w oknie Wiadomości + zachowane zmniejszenie przycisków Dołącz do pokoju na telefonie */
 @media (max-width: 980px){
   .joinRoom .rowRight{
     width:100% !important;

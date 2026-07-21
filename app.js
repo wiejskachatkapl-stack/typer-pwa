@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3034;
+const BUILD = 3035;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3272,23 +3272,46 @@ function _updateMsgDeleteBtn(){
   }
 }
 
+function _setMsgActionButton(node, icon, label){
+  if(!node) return;
+  node.innerHTML = `<span class="msgBtnIco">${icon}</span><span class="msgBtnTxt">${label}</span>`;
+  node.title = label;
+  node.setAttribute("aria-label", label);
+}
+
 function _applyMessagesBtnSkins(){
-  const lang = (getLang()==="en") ? "en" : "pl";
+  const en = (getLang()==="en");
+  const t = en
+    ? {
+        title:"Messages", del:"Delete", back:"Back", send:"Send",
+        inbox:"Inbox", sent:"Sent", system:"System", compose:"New",
+        to:"To:", ph:"Write message...", choose:"Select a message from the list."
+      }
+    : {
+        title:"Wiadomości", del:"Usuń", back:"Cofnij", send:"Wyślij",
+        inbox:"Odebrane", sent:"Wysłane", system:"Systemowe", compose:"Nowa",
+        to:"Do:", ph:"Napisz wiadomość...", choose:"Wybierz wiadomość z listy."
+      };
 
-  const del = el("btnMsgDelete");
-  if(del){
-    // zachowaj licznik (span) dodawany w _updateMsgDeleteBtn
-    const badge = del.querySelector(".msgDeleteCount");
-    del.innerHTML = `<img class="msgBtnImg" src="ui/buttons/${lang}/btn_delete.png" alt=""/>`;
-    if(badge) del.appendChild(badge);
-  }
+  const title = el("msgTitle");
+  if(title) title.textContent = t.title;
+  const toLabel = el("msgToLabel");
+  if(toLabel) toLabel.textContent = t.to;
+  const ta = el("msgText");
+  if(ta) ta.placeholder = t.ph;
+  ["msgViewEmpty","msgSentEmpty","msgSystemEmpty"].forEach(id=>{ const n = el(id); if(n) n.textContent = t.choose; });
 
-  const send = el("btnMsgSend");
-  if(send){
-    send.innerHTML = `<img class="msgBtnImg" src="ui/buttons/${lang}/btn_send.png" alt=""/>`;
-    send.title = (getLang()==="en") ? "Send" : "Wyślij";
-    send.setAttribute("aria-label", send.title);
-  }
+  const tabs = {
+    tabInbox:t.inbox,
+    tabSent:t.sent,
+    tabSystem:t.system,
+    tabCompose:t.compose
+  };
+  Object.entries(tabs).forEach(([id,label])=>{ const n = el(id); if(n) n.textContent = label; });
+
+  _setMsgActionButton(el("btnMsgDelete"), "🗑", t.del);
+  _setMsgActionButton(el("btnMsgBack"), "↩", t.back);
+  _setMsgActionButton(el("btnMsgSend"), "➤", t.send);
 }
 
 async function _deleteSelectedMessages(){
