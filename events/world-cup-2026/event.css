@@ -1,0 +1,10 @@
+/*
+  EVENT MŚ 2026 — moduł v1.
+  Obecny wygląd pozostaje zgodny z dotychczasowym Eventem.
+  Kolejne zmiany wizualne Eventu można umieszczać w tym pliku
+  bez przebudowy głównego arkusza gry.
+*/
+#modal.worldcupMode{
+  --event-accent:#1f87ff;
+  --event-panel:rgba(7,22,52,.88);
+}

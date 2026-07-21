@@ -1,0 +1,14 @@
+{
+  "id": "world-cup-2026",
+  "moduleVersion": 1,
+  "name": {
+    "pl": "Mistrzostwa Świata 2026",
+    "en": "World Cup 2026"
+  },
+  "compatibilityMode": "legacy-worldcup-v1",
+  "firebaseStorage": {
+    "state": "worldcup_event/state",
+    "rounds": "worldcup_rounds"
+  },
+  "notes": "Moduł zachowuje dotychczasową mechanikę i istniejące dane Firebase Eventu MŚ 2026."
+}
