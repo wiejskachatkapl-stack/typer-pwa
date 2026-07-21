@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3044)</title>
-<link href="manifest.json?v=3044" rel="manifest"/>
-<link href="favicon-32x32.png?v=3044" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3044" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3044" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3045)</title>
+<link href="manifest.json?v=3045" rel="manifest"/>
+<link href="favicon-32x32.png?v=3045" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3045" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3045" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -188,7 +188,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3044");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3045");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2654,8 +2654,8 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3044-rules">
-/* ===== REGULAMIN TYPERA — BUILD 3044 ===== */
+<style id="build3045-rules">
+/* ===== REGULAMIN TYPERA — BUILD 3045 ===== */
 .homeRules{
   position:absolute;
   left:50%;
@@ -2837,7 +2837,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </section>
 
-<!-- REGULAMIN TYPERA — BUILD 3044 -->
+<!-- REGULAMIN TYPERA — BUILD 3045 -->
 <div aria-hidden="true" hidden id="rulesOverlay" data-rules-lang="pl">
   <div aria-labelledby="rulesTitle" aria-modal="true" class="rulesModal" role="dialog">
     <div class="rulesHeader">
@@ -2877,15 +2877,23 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       </ol>
     </div>
     <div class="rulesActions">
-      <button class="modernAppBtn rulesActionBtn" id="btnRulesAgree" type="button">
-        <span class="appBtnIcon ico-check" aria-hidden="true"></span>
-        <span class="label-pl">Zgadzam się</span>
-        <span class="label-en">I agree</span>
+      <button class="rulesDecisionBtn rulesAcceptBtn" id="btnRulesAgree" type="button">
+        <span class="rulesDecisionIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false"><path d="M9.2 16.6 4.7 12.1l1.8-1.8 2.7 2.7 8.3-8.3 1.8 1.8-10.1 10.1Z"/></svg>
+        </span>
+        <span class="rulesDecisionText">
+          <span class="label-pl">Zgadzam się</span>
+          <span class="label-en">I agree</span>
+        </span>
       </button>
-      <button class="modernAppBtn rulesActionBtn" id="btnRulesDisagree" type="button">
-        <span class="appBtnIcon ico-no" aria-hidden="true"></span>
-        <span class="label-pl">Nie zatwierdzam</span>
-        <span class="label-en">I do not accept</span>
+      <button class="rulesDecisionBtn rulesRejectBtn" id="btnRulesDisagree" type="button">
+        <span class="rulesDecisionIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false"><path d="m7.4 5.6 4.6 4.6 4.6-4.6 1.8 1.8-4.6 4.6 4.6 4.6-1.8 1.8-4.6-4.6-4.6 4.6-1.8-1.8 4.6-4.6-4.6-4.6 1.8-1.8Z"/></svg>
+        </span>
+        <span class="rulesDecisionText">
+          <span class="label-pl">Nie zatwierdzam</span>
+          <span class="label-en">I do not accept</span>
+        </span>
       </button>
     </div>
   </div>
@@ -3313,7 +3321,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3044" type="module"></script>
+<script src="./app.js?v=3045" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3333,14 +3341,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3044', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3045', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.044</div>
+<div id="buildCornerText">Mariusz Gębka v.3.045</div>
 </div>
 
 <style>
@@ -4075,7 +4083,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 
 
 <style id="build3038-add-match-fix">
-/* BUILD 3044: korekta przycisku Dodaj mecz */
+/* BUILD 3045: korekta przycisku Dodaj mecz */
 #btnMQAddMatch.modernAppBtn{
   display:inline-flex;
   align-items:center;
@@ -4115,93 +4123,94 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3044-final-fixes">
-/* v3044: po dołączeniu do pokoju wyświetla się 5-sekundowy loader z piłkami */
+<style id="build3045-final-fixes">
+/* v3045: po dołączeniu do pokoju wyświetla się 5-sekundowy loader z piłkami */
 #room #btnRulesFromRoom{grid-column:1 / -1;width:100%;}
 </style>
 
-<style id="build3044-rules-buttons">
-/* BUILD 3044: bardziej profesjonalne przyciski w oknie regulaminu */
+
+
+
+<style id="build3045-rules-buttons">
+/* BUILD 3045: niezależne, profesjonalne przyciski decyzji regulaminu */
 .rulesActions{
-  gap:18px;
-  padding:18px 22px 22px;
-  background:linear-gradient(180deg,rgba(5,20,48,.82),rgba(2,10,27,.94));
+  gap:18px !important;
+  padding:18px 22px 22px !important;
+  background:linear-gradient(180deg,rgba(7,24,54,.88),rgba(2,10,27,.96)) !important;
 }
-.rulesActionBtn{
+.rulesDecisionBtn{
+  appearance:none;
+  -webkit-appearance:none;
   position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-width:230px;
+  min-height:56px;
+  padding:11px 22px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;
+  color:#f7fbff;
+  font-family:inherit;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.15px;
+  line-height:1;
+  cursor:pointer;
   overflow:hidden;
-  min-width:228px !important;
-  min-height:54px !important;
-  padding:11px 20px !important;
-  border-radius:14px !important;
-  font-size:14px !important;
-  letter-spacing:.12px !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.26),
-    inset 0 -1px 0 rgba(0,0,0,.28),
-    0 5px 0 rgba(2,36,94,.94),
-    0 10px 22px rgba(0,0,0,.34) !important;
+  isolation:isolate;
+  box-shadow:0 10px 24px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.16);
+  transition:transform .14s ease,filter .14s ease,box-shadow .14s ease,border-color .14s ease;
 }
-.rulesActionBtn::before{
+.rulesDecisionBtn::before{
   content:"";
   position:absolute;
-  left:0;right:0;top:0;
-  height:42%;
-  background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0));
-  pointer-events:none;
+  inset:0;
+  z-index:-2;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,0) 45%);
 }
-.rulesActionBtn .appBtnIcon,
-.rulesActionBtn .label-pl,
-.rulesActionBtn .label-en{position:relative;z-index:1;}
-
-#btnRulesAgree{
-  border-color:rgba(106,224,190,.72) !important;
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,0) 36%),
-    linear-gradient(135deg,#126aa6 0%,#0b5f8f 48%,#08715f 100%) !important;
+.rulesDecisionBtn::after{
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:7px;
+  height:1px;
+  z-index:-1;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.26),transparent);
 }
-#btnRulesAgree .appBtnIcon{
-  background:#78f0b3 !important;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.48)) !important;
+.rulesDecisionIcon{
+  width:31px;
+  height:31px;
+  flex:0 0 31px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 10px rgba(0,0,0,.22);
 }
-#btnRulesAgree:hover{filter:brightness(1.08) saturate(1.06);}
-
-#btnRulesDisagree{
-  border-color:rgba(232,196,112,.66) !important;
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,0) 36%),
-    linear-gradient(135deg,#1a568e 0%,#173f70 52%,#4d421f 100%) !important;
+.rulesDecisionIcon svg{width:19px;height:19px;display:block;fill:currentColor;}
+.rulesDecisionText{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;}
+.rulesAcceptBtn{
+  background:linear-gradient(135deg,#0f4274 0%,#0c5f7b 52%,#08715f 100%);
+  border-color:rgba(91,222,187,.64);
 }
-#btnRulesDisagree .appBtnIcon{
-  background:#ffd06a !important;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.48)) !important;
+.rulesAcceptBtn .rulesDecisionIcon{color:#8ff4c0;background:rgba(30,172,127,.18);border-color:rgba(113,239,198,.46);}
+.rulesRejectBtn{
+  background:linear-gradient(135deg,#172f55 0%,#263e68 56%,#4b3f24 100%);
+  border-color:rgba(231,191,97,.56);
 }
-#btnRulesDisagree:hover{filter:brightness(1.08) saturate(1.04);}
-
-.rulesActionBtn:active{
-  transform:translateY(3px) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.18),
-    inset 0 -1px 0 rgba(0,0,0,.25),
-    0 2px 0 rgba(2,36,94,.94),
-    0 5px 12px rgba(0,0,0,.30) !important;
-}
-
+.rulesRejectBtn .rulesDecisionIcon{color:#ffd374;background:rgba(196,145,37,.16);border-color:rgba(244,202,106,.42);}
+.rulesDecisionBtn:hover{filter:brightness(1.10);transform:translateY(-1px);box-shadow:0 13px 28px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.20);}
+.rulesDecisionBtn:active{transform:translateY(2px);filter:brightness(.98);box-shadow:0 5px 12px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.13);}
+.rulesDecisionBtn:focus-visible{outline:3px solid rgba(118,207,255,.42);outline-offset:3px;}
 @media (max-width:700px){
-  .rulesActions{gap:10px;padding:13px 14px 16px;}
-  .rulesActionBtn{
-    min-width:0 !important;
-    min-height:48px !important;
-    padding:9px 11px !important;
-    font-size:12px !important;
-    gap:8px !important;
-    border-radius:12px !important;
-  }
-  .rulesActionBtn .appBtnIcon{
-    width:21px !important;
-    height:21px !important;
-    flex-basis:21px !important;
-  }
+  .rulesActions{gap:10px !important;padding:13px 14px 16px !important;}
+  .rulesDecisionBtn{flex:1 1 0;min-width:0;min-height:50px;padding:9px 11px;gap:8px;border-radius:12px;font-size:12px;}
+  .rulesDecisionIcon{width:27px;height:27px;flex-basis:27px;border-radius:8px;}
+  .rulesDecisionIcon svg{width:17px;height:17px;}
 }
 </style>
 
