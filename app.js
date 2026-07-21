@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3053;
+const BUILD = 3054;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -323,6 +323,7 @@ const I18N = {
     results: "Wyniki",
     hintResults: "Podpowiedź: wpisz wszystkie wyniki i kliknij „Zapisz wyniki”.",
     saveResults: "Zapisz wyniki",
+    cancelMatches: "Mecze odwołane",
 
     league: "Tabela ligi typerów",
     afterRound: "Po kolejce",
@@ -399,6 +400,7 @@ const I18N = {
     results: "Results",
     hintResults: "Tip: fill all results and click “Save results”.",
     saveResults: "Save results",
+    cancelMatches: "Cancelled matches",
 
     league: "League table",
     afterRound: "After round",
@@ -429,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3053 =====
+// ===== MODUŁY EVENTÓW — BUILD 3054 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -721,6 +723,7 @@ function applyLangToUI(){
   if(el("t_round2")) el("t_round2").textContent = t("round");
   setBtnLabelSafe("btnResBack", t("back"));
   setBtnLabelSafe("btnResSave", t("saveResults"));
+  setBtnLabelSafe("btnResCancelMatches", t("cancelMatches"));
   if(el("t_results_hint")) el("t_results_hint").textContent = t("hintResults");
 
   // League
@@ -1625,7 +1628,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3053: system buttons consistent with the rest of the game
+// BUILD 3054: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1742,7 +1745,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3053 =====
+// ===== Regulamin TYPERA — BUILD 3054 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -9219,7 +9222,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.053`);
+    setFooter(`Mariusz Gębka v.3.054`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
