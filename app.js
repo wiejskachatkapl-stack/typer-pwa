@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3042;
+const BUILD = 3043;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -1574,12 +1574,30 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3041 =====
+// ===== Regulamin TYPERA — BUILD 3043 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
   const lang = getLang()==="en" ? "en" : "pl";
   ov.dataset.rulesLang = lang;
+}
+
+let _rulesPromptShownThisLogin = false;
+
+function getRulesAcceptanceKey(){
+  const prof = getProfile() || {};
+  const playerNo = String(prof.playerNo || getPlayerNo() || "").trim().toUpperCase();
+  return /^[A-Z0-9]{7}$/.test(playerNo)
+    ? `typerRulesAccepted:${playerNo}`
+    : "typerRulesAccepted:current";
+}
+
+function hasAcceptedRules(){
+  try{
+    return localStorage.getItem(getRulesAcceptanceKey()) === "1";
+  }catch{
+    return false;
+  }
 }
 
 function openRulesModal(){
@@ -1596,8 +1614,8 @@ function openRulesModal(){
 function closeRulesModal(accepted=false){
   if(accepted){
     try{
-      localStorage.setItem("typerRulesAccepted", "3041");
-      localStorage.setItem("typerRulesAcceptedAt", new Date().toISOString());
+      localStorage.setItem(getRulesAcceptanceKey(), "1");
+      localStorage.setItem(`${getRulesAcceptanceKey()}:acceptedAt`, new Date().toISOString());
     }catch{}
   }
   const ov = el("rulesOverlay");
@@ -1605,6 +1623,12 @@ function closeRulesModal(accepted=false){
   ov.classList.remove("show");
   ov.setAttribute("aria-hidden", "true");
   ov.hidden = true;
+}
+
+function maybeShowRulesAfterRoomLogin(){
+  if(_rulesPromptShownThisLogin || hasAcceptedRules()) return;
+  _rulesPromptShownThisLogin = true;
+  setTimeout(()=>openRulesModal(), 120);
 }
 
 // ===== Settings modal =====
@@ -6470,6 +6494,7 @@ async function createRoom(roomName){
 
     el("debugRooms").textContent = (getLang()==="en") ? `Room created ${code}` : `Utworzono pokój ${code}`;
     await openRoom(code);
+    maybeShowRulesAfterRoomLogin();
     return;
   }
   el("debugRooms").textContent = (getLang()==="en")
@@ -6480,11 +6505,16 @@ async function createRoom(roomName){
 async function openRoomWithEntryLoader(code, opts={}){
   showCenterLoading();
   const minimumLoaderTime = new Promise(resolve=>setTimeout(resolve, 5000));
+  let roomOpened = false;
   try{
-    await Promise.all([openRoom(code, opts), minimumLoaderTime]);
+    await Promise.all([
+      openRoom(code, opts).then(()=>{ roomOpened = true; }),
+      minimumLoaderTime
+    ]);
   }finally{
     hideCenterLoading();
   }
+  if(roomOpened) maybeShowRulesAfterRoomLogin();
 }
 
 async function joinRoom(code){
@@ -8978,7 +9008,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.042`);
+    setFooter(`Mariusz Gębka v.3.043`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
