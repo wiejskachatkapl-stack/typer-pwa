@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3059;
+const BUILD = 3060;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3059 =====
+// ===== MODUŁY EVENTÓW — BUILD 3060 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1628,7 +1628,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3059: system buttons consistent with the rest of the game
+// BUILD 3060: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1745,7 +1745,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3059 =====
+// ===== Regulamin TYPERA — BUILD 3060 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -2976,36 +2976,43 @@ function recomputeTypingDeadline(){
 }
 
 function updateTypingDeadlineUI(){
-  const topChip = el("typingDeadlineTopChip");
-  const topLabel = el("typingDeadlineTopLabel");
-  const topValue = el("typingDeadlineTopValue");
+  const bar = el("typingCountdownBar");
   const bottomValue = el("typingCountdownValue");
   const bottomLabel = el("typingCountdownLabel");
+  const settledBox = el("typingSettledPoints");
   const en = getLang()==="en";
 
   if(bottomLabel){
     bottomLabel.textContent = en ? "Time left for typing:" : "Do końca typowania pozostało:";
   }
 
-  if(typingDeadlineMs == null){
-    if(topChip) topChip.style.display = "none";
+  const settledPtsSum = matchesCache.reduce((acc, mm)=>{
+    const pp = picksCache[mm.id] || {};
+    const one = scoreOneMatch(pp.h, pp.a, mm.resultH, mm.resultA);
+    return acc + (Number.isInteger(one) ? one : 0);
+  }, 0);
+  if(settledBox){
+    settledBox.textContent = en ? `Settled pts: ${settledPtsSum}` : `Suma pkt: ${settledPtsSum}`;
+  }
+
+  if(typingDeadlineMs == null || !matchesCache.length){
+    if(bar) bar.style.display = "none";
     return;
   }
 
   const left = typingDeadlineMs - Date.now();
   if(left <= 0) typingClosed = true;
-  const txt = typingClosed ? (en ? "CLOSED" : "ZAKOŃCZONE") : formatCountdown(left);
 
-  if(topChip){
-    topChip.style.display = "inline-flex";
-    topChip.classList.toggle("typingClosed", typingClosed);
-    topChip.title = en
+  if(bar){
+    bar.style.display = "flex";
+    bar.classList.toggle("typingClosed", typingClosed);
+    bar.title = en
       ? `Typing deadline: ${new Date(typingDeadlineMs).toLocaleString("en-GB")}`
       : `Koniec typowania: ${new Date(typingDeadlineMs).toLocaleString("pl-PL")}`;
   }
-  if(topLabel) topLabel.textContent = en ? "Typing" : "Typowanie";
-  if(topValue) topValue.textContent = txt;
-  if(bottomValue) bottomValue.textContent = typingClosed ? "00:00:00" : formatCountdown(left);
+  if(bottomValue){
+    bottomValue.textContent = typingClosed ? "00:00:00" : formatCountdown(left);
+  }
 }
 
 function formatCountdown(msLeft){
@@ -3491,7 +3498,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.059` : "TYPER v.3.059",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.060` : "TYPER v.3.060",800,850);
   return canvas;
 }
 
@@ -7690,34 +7697,7 @@ function renderMatches(){
       : "Czas typowania minął. Nie zapisano Twoich typów.";
     list.appendChild(info);
 
-    // nadal pokazujemy pasek licznika (00:00:00), żeby było jasne dlaczego zniknęły mecze
-    const cd = document.createElement("div");
-    cd.className = "typingCountdown";
-    cd.style.marginTop = "auto";
-    cd.style.padding = "10px 12px";
-    cd.style.borderRadius = "16px";
-    cd.style.border = "1px solid rgba(255,255,255,.12)";
-    cd.style.background = "rgba(0,0,0,.18)";
-    cd.style.display = "flex";
-    cd.style.alignItems = "center";
-    cd.style.justifyContent = "center";
-    cd.style.gap = "10px";
-
-    const label = document.createElement("div");
-    label.id = "typingCountdownLabel";
-    label.style.fontWeight = "950";
-    label.style.color = "rgba(255,255,255,.92)";
-    label.textContent = (getLang()==="en") ? "Time left for typing:" : "Do końca typowania pozostało:";
-
-    const val = document.createElement("div");
-    val.id = "typingCountdownValue";
-    val.style.fontWeight = "1000";
-    val.style.letterSpacing = ".5px";
-    val.textContent = "00:00:00";
-
-    cd.appendChild(label);
-    cd.appendChild(val);
-    list.appendChild(cd);
+    // Stały dolny pasek licznika pozostaje widoczny także po zamknięciu typowania.
     updateTypingDeadlineUI();
 
     updateSaveButtonState();
@@ -7862,63 +7842,7 @@ function renderMatches(){
 
 
 
-  // ===== 6008: licznik do końca typowania (1 min przed pierwszym meczem) + suma rozliczonych punktów =====
-  const cd = document.createElement("div");
-  cd.className = "typingCountdown";
-  cd.style.marginTop = "auto";
-  cd.style.padding = "10px 12px";
-  cd.style.borderRadius = "16px";
-  cd.style.border = "1px solid rgba(255,255,255,.12)";
-  cd.style.background = "rgba(0,0,0,.18)";
-  cd.style.display = "flex";
-  cd.style.alignItems = "center";
-  cd.style.justifyContent = "space-between";
-  cd.style.gap = "10px";
-
-  const label = document.createElement("div");
-  label.id = "typingCountdownLabel";
-  label.style.fontWeight = "950";
-  label.style.color = "rgba(255,255,255,.92)";
-  label.textContent = (getLang()==="en") ? "Time left for typing:" : "Do końca typowania pozostało:";
-
-  const val = document.createElement("div");
-  val.id = "typingCountdownValue";
-  val.style.fontWeight = "1000";
-  val.style.letterSpacing = ".5px";
-
-  if(typingDeadlineMs == null){
-    cd.style.display = "none";
-  }else{
-    const left = typingDeadlineMs - Date.now();
-    val.textContent = formatCountdown(left);
-    if(left <= 0){
-      typingClosed = true;
-      val.textContent = "00:00:00";
-    }
-  }
-
-  const settledPtsSum = matchesCache.reduce((acc, mm)=>{
-    const pp = picksCache[mm.id] || {};
-    const one = scoreOneMatch(pp.h, pp.a, mm.resultH, mm.resultA);
-    return acc + (Number.isInteger(one) ? one : 0);
-  }, 0);
-
-  const leftWrap = document.createElement("div");
-  leftWrap.style.display = "flex";
-  leftWrap.style.alignItems = "center";
-  leftWrap.style.justifyContent = "center";
-  leftWrap.style.gap = "10px";
-  leftWrap.style.flex = "1 1 auto";
-  leftWrap.appendChild(label);
-  leftWrap.appendChild(val);
-
-  const settledBox = document.createElement("div");
-  settledBox.className = "settledPointsBox";
-  settledBox.textContent = (getLang()==="en") ? `Settled pts: ${settledPtsSum}` : `Suma pkt: ${settledPtsSum}`;
-
-  cd.appendChild(leftWrap);
-  cd.appendChild(settledBox);
-  list.appendChild(cd);
+  // BUILD 3060: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8426,7 +8350,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3059: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3060: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
