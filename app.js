@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3062;
+const BUILD = 3063;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3062 =====
+// ===== MODUŁY EVENTÓW — BUILD 3063 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1629,7 +1629,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3062: system buttons consistent with the rest of the game
+// BUILD 3063: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1746,7 +1746,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3062 =====
+// ===== Regulamin TYPERA — BUILD 3063 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -2913,6 +2913,7 @@ let announcementChecking = false;
 let matchesCache = [];
 let picksCache = {};
 let picksDocByUid = {};
+let picksNickByUid = {};
 let submittedByUid = {};
 let lastPlayers = [];
 let deletePlayerMode = false;
@@ -3499,7 +3500,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.062` : "TYPER v.3.062",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.063` : "TYPER v.3.063",800,850);
   return canvas;
 }
 
@@ -3758,7 +3759,10 @@ function buildLiveRoundRanking(){
   if(!settled.length) return [];
 
   const playersByUid = {};
-  (lastPlayers || []).forEach(p=>{ if(p?.uid) playersByUid[p.uid] = p; });
+  (lastPlayers || []).forEach(p=>{
+    const pid = p?.uid || p?.id || p?.playerUid || p?.playerId;
+    if(pid) playersByUid[String(pid)] = p;
+  });
 
   const rows = [];
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
@@ -3775,7 +3779,7 @@ function buildLiveRoundRanking(){
     }
     rows.push({
       uid,
-      nick: String(playersByUid[uid]?.nick || uid || "—"),
+      nick: String(playersByUid[uid]?.nick || picksNickByUid[uid] || (uid===userUid ? getNick() : "") || (getLang()==="en" ? "Player" : "Gracz")),
       points,
       exactCount,
       outcomeCount
@@ -7381,6 +7385,7 @@ async function leaveRoom(){
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
+  picksNickByUid = {};
   submittedByUid = {};
   lastPlayers = [];
   pointsByUid = {};
@@ -7422,6 +7427,7 @@ async function openRoom(code, opts={}){
   matchesCache = [];
   picksCache = {};
   picksDocByUid = {};
+  picksNickByUid = {};
   submittedByUid = {};
   lastPlayers = [];
   pointsByUid = {};
@@ -7488,16 +7494,21 @@ async function openRoom(code, opts={}){
   const pq = boot.query(playersCol(code), boot.orderBy("joinedAt","asc"));
   unsubPlayers = boot.onSnapshot(pq, (qs)=>{
     const arr = [];
-    qs.forEach(docu=> arr.push(docu.data()));
+    qs.forEach(docu=>{
+      const data = docu.data() || {};
+      arr.push({ id: docu.id, ...data, uid: data.uid || docu.id });
+    });
     lastPlayers = arr;
     renderPlayers(arr);
   });
 
   unsubPicks = boot.onSnapshot(picksCol(code), (qs)=>{
     picksDocByUid = {};
+    picksNickByUid = {};
     qs.forEach(d=>{
-      const data = d.data();
-      picksDocByUid[d.id] = data?.picks || {};
+      const data = d.data() || {};
+      picksDocByUid[d.id] = data.picks || {};
+      if(data.nick) picksNickByUid[d.id] = String(data.nick);
     });
     recomputeSubmittedMap();
     recomputePoints();
@@ -7959,7 +7970,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3062: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3063: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8476,7 +8487,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3062: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3063: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
