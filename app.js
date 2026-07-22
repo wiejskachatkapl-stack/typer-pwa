@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3060;
+const BUILD = 3061;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3060 =====
+// ===== MODUŁY EVENTÓW — BUILD 3061 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -738,6 +738,7 @@ function applyLangToUI(){
   if(el("t_rounds_col")) el("t_rounds_col").textContent = t("roundsCol");
   if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
   updateActiveEventButton();
+  renderLiveRoundTop3();
 }
 
 // ===== Modal =====
@@ -1628,7 +1629,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3060: system buttons consistent with the rest of the game
+// BUILD 3061: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1745,7 +1746,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3060 =====
+// ===== Regulamin TYPERA — BUILD 3061 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3498,7 +3499,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.060` : "TYPER v.3.060",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.061` : "TYPER v.3.061",800,850);
   return canvas;
 }
 
@@ -3720,9 +3721,16 @@ function allPlayersSubmitted(){
   if(!Array.isArray(lastPlayers) || !lastPlayers.length) return false;
   return lastPlayers.every(p => !!submittedByUid[p.uid]);
 }
+function isMatchResultLocked(m){
+  if(!m) return false;
+  return m.cancelled === true || m.resultLocked === true || (Number.isInteger(m.resultH) && Number.isInteger(m.resultA));
+}
+function hasAnySettledResult(){
+  return matchesCache.some(m => !m?.cancelled && Number.isInteger(m?.resultH) && Number.isInteger(m?.resultA));
+}
 function allResultsComplete(){
   if(!matchesCache.length) return false;
-  return matchesCache.every(m => (m && m.cancelled) || (Number.isInteger(m.resultH) && Number.isInteger(m.resultA)));
+  return matchesCache.every(m => isMatchResultLocked(m));
 }
 
 // scoring: 3 exact, 1 outcome, 0 else
@@ -3745,19 +3753,107 @@ function dotClassFor(pH,pA,rH,rA){
   return "red";
 }
 
+function buildLiveRoundRanking(){
+  const settled = matchesCache.filter(m => !m?.cancelled && Number.isInteger(m?.resultH) && Number.isInteger(m?.resultA));
+  if(!settled.length) return [];
+
+  const playersByUid = {};
+  (lastPlayers || []).forEach(p=>{ if(p?.uid) playersByUid[p.uid] = p; });
+
+  const rows = [];
+  for(const [uid, picksObj] of Object.entries(picksDocByUid)){
+    if(!isCompletePicksObject(picksObj)) continue;
+    let points = 0;
+    let exactCount = 0;
+    let outcomeCount = 0;
+    for(const m of settled){
+      const p = picksObj[m.id];
+      const pts = scoreOneMatch(p?.h, p?.a, m.resultH, m.resultA);
+      if(pts === 3) exactCount += 1;
+      else if(pts === 1) outcomeCount += 1;
+      if(Number.isInteger(pts)) points += pts;
+    }
+    rows.push({
+      uid,
+      nick: String(playersByUid[uid]?.nick || uid || "—"),
+      points,
+      exactCount,
+      outcomeCount
+    });
+  }
+
+  rows.sort((a,b)=>{
+    if(b.points !== a.points) return b.points - a.points;
+    if(b.exactCount !== a.exactCount) return b.exactCount - a.exactCount;
+    if(b.outcomeCount !== a.outcomeCount) return b.outcomeCount - a.outcomeCount;
+    return a.nick.localeCompare(b.nick, "pl");
+  });
+
+  let lastKey = null;
+  let place = 0;
+  rows.forEach((row,idx)=>{
+    const key = `${row.points}|${row.exactCount}|${row.outcomeCount}`;
+    if(key !== lastKey) place = idx + 1;
+    row.place = place;
+    lastKey = key;
+  });
+  return rows;
+}
+
+function renderLiveRoundTop3(){
+  const panel = el("liveRoundTop3");
+  const list = el("liveRoundTop3List");
+  const title = el("liveRoundTop3Title");
+  const sub = el("liveRoundTop3Sub");
+  if(!panel || !list) return;
+
+  const en = getLang()==="en";
+  const resolvedCount = matchesCache.filter(m => isMatchResultLocked(m)).length;
+  const totalCount = matchesCache.length;
+  if(title) title.textContent = en ? `ROUND ${currentRoundNo} • TOP 3` : `KOLEJKA ${currentRoundNo} • TOP 3`;
+  if(sub){
+    sub.textContent = resolvedCount
+      ? (en ? `Settled matches: ${resolvedCount}/${totalCount}` : `Rozliczone mecze: ${resolvedCount}/${totalCount}`)
+      : (en ? "Ranking appears after results are saved" : "Ranking pojawi się po zapisaniu wyników");
+  }
+
+  list.innerHTML = "";
+  const ranking = buildLiveRoundRanking().filter(r=>r.place <= 3);
+  if(!ranking.length){
+    const empty = document.createElement("div");
+    empty.className = "liveRankEmpty";
+    empty.textContent = en ? "No settled results yet" : "Brak zapisanych wyników";
+    list.appendChild(empty);
+    return;
+  }
+
+  ranking.forEach(r=>{
+    const row = document.createElement("div");
+    row.className = "liveRankRow";
+    row.dataset.place = String(r.place);
+    const place = document.createElement("div");
+    place.className = "liveRankPlace";
+    place.textContent = String(r.place);
+    const nick = document.createElement("div");
+    nick.className = "liveRankNick";
+    nick.textContent = r.nick;
+    const pts = document.createElement("div");
+    pts.className = "liveRankPoints";
+    pts.textContent = en ? `${r.points} pts` : `${r.points} pkt`;
+    row.append(place,nick,pts);
+    list.appendChild(row);
+  });
+}
+
 function recomputePoints(){
   pointsByUid = {};
   myPoints = null;
 
-  if(!allResultsComplete()){
-    if(el("myPointsLabel")) el("myPointsLabel").textContent = "—";
-    return;
-  }
-
+  const settled = matchesCache.filter(m => !m?.cancelled && Number.isInteger(m?.resultH) && Number.isInteger(m?.resultA));
   for(const [uid, picksObj] of Object.entries(picksDocByUid)){
     if(!isCompletePicksObject(picksObj)) continue;
     let sum = 0;
-    for(const m of matchesCache){
+    for(const m of settled){
       const p = picksObj[m.id];
       const pts = scoreOneMatch(p?.h, p?.a, m.resultH, m.resultA);
       if(pts !== null) sum += pts;
@@ -3765,8 +3861,13 @@ function recomputePoints(){
     pointsByUid[uid] = sum;
   }
 
-  myPoints = pointsByUid[userUid] ?? 0;
-  if(el("myPointsLabel")) el("myPointsLabel").textContent = String(myPoints);
+  if(settled.length && isCompletePicksObject(picksDocByUid[userUid])){
+    myPoints = pointsByUid[userUid] ?? 0;
+    if(el("myPointsLabel")) el("myPointsLabel").textContent = String(myPoints);
+  }else if(el("myPointsLabel")){
+    el("myPointsLabel").textContent = "—";
+  }
+  renderLiveRoundTop3();
 }
 
 function _roomProfileRankRows(){
@@ -7530,6 +7631,7 @@ function renderPlayers(players){
   const adminUid = currentRoom?.adminUid;
   const myOk = iAmSubmitted();
   const resultsOk = allResultsComplete();
+  const hasSettledResults = hasAnySettledResult();
 
   visiblePlayers.forEach(p=>{
     const row = document.createElement("div");
@@ -7596,7 +7698,7 @@ function renderPlayers(players){
       right.appendChild(chk);
     }
 
-    if(resultsOk && isCompletePicksObject(picksDocByUid[p.uid])){
+    if(hasSettledResults && isCompletePicksObject(picksDocByUid[p.uid])){
       const pts = pointsByUid[p.uid] ?? 0;
       const ptsBadge = document.createElement("div");
       ptsBadge.className = "badge";
@@ -7657,7 +7759,7 @@ function renderMatches(){
   el("matchesCount").textContent = String(matchesCache.length || 0);
 
   if(el("myPointsLabel")){
-    if(allResultsComplete() && isCompletePicksObject(picksDocByUid[userUid])){
+    if(hasAnySettledResult() && isCompletePicksObject(picksDocByUid[userUid])){
       el("myPointsLabel").textContent = String(pointsByUid[userUid] ?? 0);
     }else{
       el("myPointsLabel").textContent = "—";
@@ -7842,7 +7944,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3060: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3061: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8119,16 +8221,20 @@ function renderResultsList(){
       resultsDraft[m.id].a = v;
     };
 
-    // jeśli mecz odwołany – pokazujemy etykietę i blokujemy wpisywanie
+    // Wynik zapisany jest ostateczny i nie może być już edytowany.
     if(m.cancelled){
       const lab = document.createElement("div");
       lab.className = "cancelledPill";
       lab.textContent = (getLang()==="en") ? "Cancelled" : "Odwołano";
       score.appendChild(lab);
-      inpH.disabled = true;
-      inpA.disabled = true;
-      inpH.value = "";
-      inpA.value = "";
+      card.classList.add("resultLockedRow");
+    }else if(isMatchResultLocked(m)){
+      const locked = document.createElement("div");
+      locked.className = "lockedResultPill";
+      locked.textContent = `${m.resultH} : ${m.resultA}`;
+      locked.title = getLang()==="en" ? "Saved result — editing is locked" : "Zapisany wynik — edycja zablokowana";
+      score.appendChild(locked);
+      card.classList.add("resultLockedRow");
     }else{
       score.appendChild(inpH);
       score.appendChild(sep);
@@ -8142,7 +8248,7 @@ function renderResultsList(){
     // 7030: checkboxy do odwoływania meczów – kolumna po prawej stronie
     const cancelCol = document.createElement("div");
     cancelCol.className = "cancelCol";
-    if(resultsCancelMode && !m.cancelled){
+    if(resultsCancelMode && !isMatchResultLocked(m)){
       const chk = document.createElement("input");
       chk.type = "checkbox";
       chk.className = "cancelChk";
@@ -8185,6 +8291,7 @@ async function saveResults(){
           cancelled: true,
           cancelledAt: boot.serverTimestamp(),
           cancelledBy: userUid,
+          resultLocked: true,
           resultH: null,
           resultA: null
         });
@@ -8195,6 +8302,7 @@ async function saveResults(){
         const m = matchesCache.find(x=>x.id===id);
         if(m){
           m.cancelled = true;
+          m.resultLocked = true;
           m.resultH = null;
           m.resultA = null;
         }
@@ -8212,6 +8320,7 @@ async function saveResults(){
   // Zapisujemy tylko te mecze, gdzie podano OBA pola wyniku.
   const updates = [];
   for(const m of matchesCache){
+    if(isMatchResultLocked(m)) continue;
     const d = resultsDraft[m.id];
     const hOk = d && Number.isInteger(d.h);
     const aOk = d && Number.isInteger(d.a);
@@ -8238,7 +8347,8 @@ async function saveResults(){
       resultH: u.h,
       resultA: u.a,
       resultAt: boot.serverTimestamp(),
-      resultBy: userUid
+      resultBy: userUid,
+      resultLocked: true
     });
   }
   await b.commit();
@@ -8249,6 +8359,7 @@ async function saveResults(){
     if(m){
       m.resultH = u.h;
       m.resultA = u.a;
+      m.resultLocked = true;
     }
   }
 
@@ -8258,7 +8369,7 @@ async function saveResults(){
   syncActionButtons();
   if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
 
-  showToast(getLang()==="en" ? "Results saved ✅" : "Zapisano wyniki ✅");
+  showToast(getLang()==="en" ? "Results saved and locked ✅" : "Wyniki zapisane i zablokowane ✅");
   showScreen("room");
 }
 
@@ -8350,7 +8461,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3060: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3061: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";

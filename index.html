@@ -5,11 +5,11 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3060)</title>
-<link href="manifest.json?v=3060" rel="manifest"/>
-<link href="favicon-32x32.png?v=3060" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3060" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3060" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3061)</title>
+<link href="manifest.json?v=3061" rel="manifest"/>
+<link href="favicon-32x32.png?v=3061" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3061" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3061" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
@@ -188,7 +188,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3060");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3061");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2672,8 +2672,8 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3060-rules">
-/* ===== REGULAMIN TYPERA — BUILD 3060 ===== */
+<style id="build3061-rules">
+/* ===== REGULAMIN TYPERA — BUILD 3061 ===== */
 .homeRules{
   position:absolute;
   left:50%;
@@ -2839,7 +2839,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <button class="flagBtn" id="btnLangPL" title="Polski" type="button"><img alt="PL" class="flagImg" src="ui/flags/pl.png"/></button>
 <button class="flagBtn" id="btnLangEN" title="English" type="button"><img alt="EN" class="flagImg" src="ui/flags/gb.png"/></button>
 </div>
-<!-- Profesjonalne menu główne — BUILD 3060 -->
+<!-- Profesjonalne menu główne — BUILD 3061 -->
 <button class="homeSettingsPro" id="btnHomeSettings" title="Ustawienia" type="button">
   <span class="homeSettingsIcon" aria-hidden="true">
     <svg viewBox="0 0 24 24"><path d="M19.4 13a7.9 7.9 0 0 0 .05-1 7.9 7.9 0 0 0-.05-1l2.1-1.64-2-3.46-2.56 1.03a8.1 8.1 0 0 0-1.72-1L14.83 3h-4l-.39 2.93a8.1 8.1 0 0 0-1.72 1L6.16 5.9l-2 3.46L6.26 11a7.9 7.9 0 0 0-.05 1 7.9 7.9 0 0 0 .05 1l-2.1 1.64 2 3.46 2.56-1.03a8.1 8.1 0 0 0 1.72 1L10.83 21h4l.39-2.93a8.1 8.1 0 0 0 1.72-1l2.56 1.03 2-3.46L19.4 13ZM12.83 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
@@ -2876,7 +2876,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </section>
 
-<!-- REGULAMIN TYPERA — BUILD 3060 -->
+<!-- REGULAMIN TYPERA — BUILD 3061 -->
 <div aria-hidden="true" hidden id="rulesOverlay" data-rules-lang="pl">
   <div aria-labelledby="rulesTitle" aria-modal="true" class="rulesModal" role="dialog">
     <div class="rulesHeader">
@@ -3096,6 +3096,16 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
   <button class="imgBtn sysBtn actionSmall modernRoomBtn danger" id="btnDeletePlayer" style="display:none" type="button"><span class="btnIcon ico-player" aria-hidden="true"></span><span class="label-pl">Usuń gracza</span><span class="label-en">Delete player</span></button>
 </div>
 <div class="playersList" id="playersList"></div>
+<div class="liveRoundTop3" id="liveRoundTop3">
+  <div class="liveRoundTop3Head">
+    <div>
+      <div class="liveRoundTop3Title" id="liveRoundTop3Title">TOP 3 KOLEJKI</div>
+      <div class="liveRoundTop3Sub" id="liveRoundTop3Sub">Ranking pojawi się po zapisaniu wyników</div>
+    </div>
+    <div class="liveRoundTop3Pulse" aria-hidden="true"></div>
+  </div>
+  <div class="liveRoundTop3List" id="liveRoundTop3List"></div>
+</div>
 <div class="spacer"></div>
 <!-- BUILD 3013: Wiadomości i Wyjście w jednym kontenerze -->
 <div class="rightBottomStack">
@@ -3371,7 +3381,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3060" type="module"></script>
+<script src="./app.js?v=3061" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3391,14 +3401,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3060', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3061', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.060</div>
+<div id="buildCornerText">Mariusz Gębka v.3.061</div>
 </div>
 
 <style>
@@ -4133,7 +4143,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 
 
 <style id="build3038-add-match-fix">
-/* BUILD 3060: korekta przycisku Dodaj mecz */
+/* BUILD 3061: korekta przycisku Dodaj mecz */
 #btnMQAddMatch.modernAppBtn{
   display:inline-flex;
   align-items:center;
@@ -4173,16 +4183,16 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3060-final-fixes">
-/* v3060: po dołączeniu do pokoju wyświetla się 5-sekundowy loader z piłkami */
+<style id="build3061-final-fixes">
+/* v3061: po dołączeniu do pokoju wyświetla się 5-sekundowy loader z piłkami */
 #room #btnRulesFromRoom{grid-column:1 / -1;width:100%;}
 </style>
 
 
 
 
-<style id="build3060-rules-buttons">
-/* BUILD 3060: niezależne, profesjonalne przyciski decyzji regulaminu */
+<style id="build3061-rules-buttons">
+/* BUILD 3061: niezależne, profesjonalne przyciski decyzji regulaminu */
 .rulesActions{
   gap:18px !important;
   padding:18px 22px 22px !important;
@@ -4269,8 +4279,8 @@ html[data-lang="en"] .rulesDecisionText .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3060-home-professional-buttons">
-/* BUILD 3060: nowe, profesjonalne przyciski menu głównego */
+<style id="build3061-home-professional-buttons">
+/* BUILD 3061: nowe, profesjonalne przyciski menu głównego */
 #home .homeProMenu{
   top:54% !important;
   width:min(1260px,91vw) !important;
@@ -4486,8 +4496,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3060-round-winner">
-/* BUILD 3060: kompaktowa karta zwycięzcy kolejki */
+<style id="build3061-round-winner">
+/* BUILD 3061: kompaktowa karta zwycięzcy kolejki */
 #announcementOverlay.roundWinnerOverlay{
   background:rgba(0,7,22,.78) !important;
   backdrop-filter:blur(9px) !important;
@@ -4631,8 +4641,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3060-results-actions">
-/* BUILD 3060: widoczne, spójne przyciski w ekranie wpisywania wyników */
+<style id="build3061-results-actions">
+/* BUILD 3061: widoczne, spójne przyciski w ekranie wpisywania wyników */
 #results .resultsTop > .row:last-child{
   display:flex;
   align-items:center;
@@ -4663,8 +4673,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 }
 </style>
 
-<style id="build3060-season-podium">
-/* BUILD 3060: profesjonalne zakończenie sezonu + eksport do PDF */
+<style id="build3061-season-podium">
+/* BUILD 3061: profesjonalne zakończenie sezonu + eksport do PDF */
 #announcementOverlay.seasonPodiumOverlay{
   padding:18px;
   overflow:auto;
@@ -4776,8 +4786,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3060-typing-deadline">
-/* BUILD 3060: stale widoczny licznik czasu i podgląd typów dopiero po zamknięciu typowania */
+<style id="build3061-typing-deadline">
+/* BUILD 3061: stale widoczny licznik czasu i podgląd typów dopiero po zamknięciu typowania */
 #typingDeadlineTopChip{
   align-items:center;
   gap:4px;
@@ -4799,8 +4809,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3060-single-typing-countdown">
-/* BUILD 3060: jeden licznik czasu — stale widoczny pod listą typów na komputerze i telefonie */
+<style id="build3061-single-typing-countdown">
+/* BUILD 3061: jeden licznik czasu — stale widoczny pod listą typów na komputerze i telefonie */
 #typingDeadlineTopChip{display:none !important;}
 #typingCountdownBar{
   flex:0 0 auto;
@@ -4846,6 +4856,42 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
   #typingCountdownBar .typingCountdownMain{gap:7px;font-size:11px;}
   #typingCountdownValue{font-size:14px;letter-spacing:.35px;}
   #typingCountdownBar .settledPointsBox{padding:6px 8px;font-size:10px;}
+}
+</style>
+
+
+<style id="build3061-live-ranking">
+/* BUILD 3061: ranking TOP 3 aktualizowany po każdym zapisanym wyniku */
+#room .liveRoundTop3{
+  flex:0 0 auto;
+  padding:10px;
+  border:1px solid rgba(104,190,255,.26);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(8,35,75,.88),rgba(4,19,44,.94));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.22);
+  min-height:116px;
+}
+#room .liveRoundTop3Head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;padding:0 2px 7px;border-bottom:1px solid rgba(255,255,255,.10)}
+#room .liveRoundTop3Title{font-size:13px;font-weight:1000;letter-spacing:.35px;color:#fff}
+#room .liveRoundTop3Sub{margin-top:2px;font-size:10px;font-weight:800;color:rgba(220,235,255,.72)}
+#room .liveRoundTop3Pulse{width:10px;height:10px;border-radius:50%;background:#39f59b;box-shadow:0 0 0 0 rgba(57,245,155,.5);animation:liveRankPulse 1.6s infinite}
+@keyframes liveRankPulse{0%{box-shadow:0 0 0 0 rgba(57,245,155,.48)}70%{box-shadow:0 0 0 8px rgba(57,245,155,0)}100%{box-shadow:0 0 0 0 rgba(57,245,155,0)}}
+#room .liveRoundTop3List{display:flex;flex-direction:column;gap:5px;max-height:122px;overflow:auto;scrollbar-width:none}
+#room .liveRoundTop3List::-webkit-scrollbar{width:0;height:0}
+#room .liveRankEmpty{padding:14px 8px;text-align:center;font-size:11px;font-weight:850;color:rgba(230,240,255,.65)}
+#room .liveRankRow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:30px;padding:5px 8px;border-radius:10px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.07)}
+#room .liveRankPlace{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;font-size:12px;font-weight:1000;color:#08152f;background:linear-gradient(180deg,#ffe990,#d9a826);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 3px 8px rgba(0,0,0,.24)}
+#room .liveRankRow[data-place="2"] .liveRankPlace{background:linear-gradient(180deg,#f3f7ff,#9eafc7)}
+#room .liveRankRow[data-place="3"] .liveRankPlace{background:linear-gradient(180deg,#ffc994,#a86632)}
+#room .liveRankNick{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:950;color:#fff}
+#room .liveRankPoints{white-space:nowrap;font-size:11px;font-weight:1000;color:#86d8ff}
+#room .resultLockedRow{background:rgba(24,92,145,.12)}
+#room .lockedResultPill{min-width:90px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:6px 12px;border-radius:12px;border:1px solid rgba(92,211,165,.35);background:linear-gradient(180deg,rgba(16,99,104,.46),rgba(8,54,73,.62));font-weight:1000;color:#c9ffe9;white-space:nowrap}
+#room .lockedResultPill::after{content:"🔒";font-size:12px;opacity:.9}
+@media(max-width:900px){
+  #room .liveRoundTop3{min-height:108px;padding:9px}
+  #room .liveRoundTop3List{max-height:112px}
+  #room .liveRankRow{min-height:29px;padding:4px 7px}
 }
 </style>
 
