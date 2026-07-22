@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3061;
+const BUILD = 3062;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3061 =====
+// ===== MODUŁY EVENTÓW — BUILD 3062 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1629,7 +1629,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3061: system buttons consistent with the rest of the game
+// BUILD 3062: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1746,7 +1746,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3061 =====
+// ===== Regulamin TYPERA — BUILD 3062 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3499,7 +3499,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.061` : "TYPER v.3.061",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.062` : "TYPER v.3.062",800,850);
   return canvas;
 }
 
@@ -3801,48 +3801,63 @@ function buildLiveRoundRanking(){
 }
 
 function renderLiveRoundTop3(){
-  const panel = el("liveRoundTop3");
-  const list = el("liveRoundTop3List");
-  const title = el("liveRoundTop3Title");
-  const sub = el("liveRoundTop3Sub");
-  if(!panel || !list) return;
+  const desktopPanel = el("liveRoundTop3");
+  const desktopList = el("liveRoundTop3List");
+  const desktopTitle = el("liveRoundTop3Title");
+  const desktopSub = el("liveRoundTop3Sub");
+  const mobilePanel = el("liveRoundTop3Mobile");
+  const mobileList = el("liveRoundTop3MobileList");
+  const mobileTitle = el("liveRoundTop3MobileTitle");
+  const mobileSub = el("liveRoundTop3MobileSub");
+  if((!desktopPanel || !desktopList) && (!mobilePanel || !mobileList)) return;
 
   const en = getLang()==="en";
   const resolvedCount = matchesCache.filter(m => isMatchResultLocked(m)).length;
   const totalCount = matchesCache.length;
-  if(title) title.textContent = en ? `ROUND ${currentRoundNo} • TOP 3` : `KOLEJKA ${currentRoundNo} • TOP 3`;
-  if(sub){
-    sub.textContent = resolvedCount
-      ? (en ? `Settled matches: ${resolvedCount}/${totalCount}` : `Rozliczone mecze: ${resolvedCount}/${totalCount}`)
-      : (en ? "Ranking appears after results are saved" : "Ranking pojawi się po zapisaniu wyników");
-  }
+  const fullTitle = en ? `ROUND ${currentRoundNo} • TOP 3` : `KOLEJKA ${currentRoundNo} • TOP 3`;
+  const fullSub = resolvedCount
+    ? (en ? `Settled matches: ${resolvedCount}/${totalCount}` : `Rozliczone mecze: ${resolvedCount}/${totalCount}`)
+    : (en ? "Ranking appears after results are saved" : "Ranking pojawi się po zapisaniu wyników");
 
-  list.innerHTML = "";
+  if(desktopTitle) desktopTitle.textContent = fullTitle;
+  if(desktopSub) desktopSub.textContent = fullSub;
+  if(mobileTitle) mobileTitle.textContent = en ? "LIVE TOP 3" : "TOP 3 NA ŻYWO";
+  if(mobileSub) mobileSub.textContent = `${resolvedCount}/${totalCount}`;
+
   const ranking = buildLiveRoundRanking().filter(r=>r.place <= 3);
-  if(!ranking.length){
-    const empty = document.createElement("div");
-    empty.className = "liveRankEmpty";
-    empty.textContent = en ? "No settled results yet" : "Brak zapisanych wyników";
-    list.appendChild(empty);
-    return;
+
+  function fillList(list, compact=false){
+    if(!list) return;
+    list.innerHTML = "";
+    if(!ranking.length){
+      const empty = document.createElement("div");
+      empty.className = "liveRankEmpty";
+      empty.textContent = compact
+        ? (en ? "Waiting for results" : "Czekamy na wyniki")
+        : (en ? "No settled results yet" : "Brak zapisanych wyników");
+      list.appendChild(empty);
+      return;
+    }
+    ranking.forEach(r=>{
+      const row = document.createElement("div");
+      row.className = "liveRankRow";
+      row.dataset.place = String(r.place);
+      const place = document.createElement("div");
+      place.className = "liveRankPlace";
+      place.textContent = String(r.place);
+      const nick = document.createElement("div");
+      nick.className = "liveRankNick";
+      nick.textContent = r.nick;
+      const pts = document.createElement("div");
+      pts.className = "liveRankPoints";
+      pts.textContent = compact ? `${r.points}` : (en ? `${r.points} pts` : `${r.points} pkt`);
+      row.append(place,nick,pts);
+      list.appendChild(row);
+    });
   }
 
-  ranking.forEach(r=>{
-    const row = document.createElement("div");
-    row.className = "liveRankRow";
-    row.dataset.place = String(r.place);
-    const place = document.createElement("div");
-    place.className = "liveRankPlace";
-    place.textContent = String(r.place);
-    const nick = document.createElement("div");
-    nick.className = "liveRankNick";
-    nick.textContent = r.nick;
-    const pts = document.createElement("div");
-    pts.className = "liveRankPoints";
-    pts.textContent = en ? `${r.points} pts` : `${r.points} pkt`;
-    row.append(place,nick,pts);
-    list.appendChild(row);
-  });
+  fillList(desktopList, false);
+  fillList(mobileList, true);
 }
 
 function recomputePoints(){
@@ -7944,7 +7959,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3061: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3062: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8461,7 +8476,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3061: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3062: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
