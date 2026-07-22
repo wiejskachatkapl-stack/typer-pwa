@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3058;
+const BUILD = 3059;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3058 =====
+// ===== MODUŁY EVENTÓW — BUILD 3059 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1628,7 +1628,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3058: system buttons consistent with the rest of the game
+// BUILD 3059: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1745,7 +1745,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3058 =====
+// ===== Regulamin TYPERA — BUILD 3059 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -2975,6 +2975,39 @@ function recomputeTypingDeadline(){
   typingClosed = Date.now() >= typingDeadlineMs;
 }
 
+function updateTypingDeadlineUI(){
+  const topChip = el("typingDeadlineTopChip");
+  const topLabel = el("typingDeadlineTopLabel");
+  const topValue = el("typingDeadlineTopValue");
+  const bottomValue = el("typingCountdownValue");
+  const bottomLabel = el("typingCountdownLabel");
+  const en = getLang()==="en";
+
+  if(bottomLabel){
+    bottomLabel.textContent = en ? "Time left for typing:" : "Do końca typowania pozostało:";
+  }
+
+  if(typingDeadlineMs == null){
+    if(topChip) topChip.style.display = "none";
+    return;
+  }
+
+  const left = typingDeadlineMs - Date.now();
+  if(left <= 0) typingClosed = true;
+  const txt = typingClosed ? (en ? "CLOSED" : "ZAKOŃCZONE") : formatCountdown(left);
+
+  if(topChip){
+    topChip.style.display = "inline-flex";
+    topChip.classList.toggle("typingClosed", typingClosed);
+    topChip.title = en
+      ? `Typing deadline: ${new Date(typingDeadlineMs).toLocaleString("en-GB")}`
+      : `Koniec typowania: ${new Date(typingDeadlineMs).toLocaleString("pl-PL")}`;
+  }
+  if(topLabel) topLabel.textContent = en ? "Typing" : "Typowanie";
+  if(topValue) topValue.textContent = txt;
+  if(bottomValue) bottomValue.textContent = typingClosed ? "00:00:00" : formatCountdown(left);
+}
+
 function formatCountdown(msLeft){
   const s = Math.max(0, Math.floor(msLeft/1000));
   const days = Math.floor(s/86400);
@@ -3458,7 +3491,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.058` : "TYPER v.3.058",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.059` : "TYPER v.3.059",800,850);
   return canvas;
 }
 
@@ -6386,18 +6419,21 @@ function bindUI(){
   // btnLeagueRefresh removed (BUILD 6014)
 
 
-  // 6008: odświeżaj licznik co 1s (bez dodatkowych renderów)
+  // 6008/3059: odświeżaj licznik co 1s i po czasie odblokuj podgląd typów innych graczy.
   if(!window.__typingCountdownTimer){
     window.__typingCountdownTimer = setInterval(()=>{
-      if(typingDeadlineMs == null) return;
+      if(typingDeadlineMs == null){
+        updateTypingDeadlineUI();
+        return;
+      }
       const left = typingDeadlineMs - Date.now();
-      const v = el("typingCountdownValue");
-      if(v) v.textContent = formatCountdown(left);
+      const wasClosed = typingClosed;
+      if(left <= 0) typingClosed = true;
+      updateTypingDeadlineUI();
 
-      // gdy dojdzie do 0 – blokujemy typowanie i odświeżamy widok (żeby inputy dostały disabled)
-      if(left <= 0 && !typingClosed){
-        typingClosed = true;
-        try{ renderMatches(); syncActionButtons(); }catch(e){}
+      // gdy dojdzie do 0 – blokujemy dalsze typowanie i odblokowujemy podgląd zapisanych typów.
+      if(left <= 0 && !wasClosed){
+        try{ renderMatches(); renderPlayers(lastPlayers); syncActionButtons(); updateTypingDeadlineUI(); }catch(e){}
       }
     }, 1000);
   }
@@ -7303,6 +7339,8 @@ async function openRoom(code, opts={}){
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
     currentRoom = d.data();
+    recomputeTypingDeadline();
+    updateTypingDeadlineUI();
     el("roomName").textContent = currentRoom.name || "—";
     el("roomAdmin").textContent = currentRoom.adminNick || "—";
     const prevSeasonNo = currentSeasonNo;
@@ -7320,6 +7358,7 @@ async function openRoom(code, opts={}){
     el("btnEndRound").style.display = adm2 ? "block" : "none";
     el("btnEndRound").disabled = !(adm2 && matchesCache.length && allResultsComplete());
     syncActionButtons();
+    renderPlayers(lastPlayers);
     setTimeout(()=>{ maybeShowPendingEvents(); }, 200);
   });
 
@@ -7561,10 +7600,14 @@ function renderPlayers(players){
     const eye = document.createElement("button");
     eye.className = "eyeBtn";
     eye.textContent = "👁";
-    eye.title = myOk
-      ? (getLang()==="en" ? "Preview picks" : "Podgląd typów")
-      : (getLang()==="en" ? "Save your picks to preview others" : "Zapisz swoje typy, aby podglądać innych");
-    eye.disabled = !myOk;
+    const targetHasPicks = isCompletePicksObject(picksDocByUid[p.uid]);
+    const canPreviewPicks = !!typingClosed;
+    eye.disabled = !(targetHasPicks && canPreviewPicks);
+    eye.title = !targetHasPicks
+      ? (getLang()==="en" ? "This player has not saved picks" : "Ten gracz nie zapisał typów")
+      : (canPreviewPicks
+        ? (getLang()==="en" ? "Preview picks" : "Podgląd typów")
+        : (getLang()==="en" ? "Preview available after typing time ends" : "Podgląd dostępny po zakończeniu czasu typowania"));
     eye.onclick = ()=> openPicksPreview(p.uid, p.nick || "—");
     right.appendChild(eye);
 
@@ -7623,6 +7666,9 @@ function renderMatches(){
       ? "No active round. Admin can add a fixture."
       : "Brak aktywnej kolejki. Admin może dodać własną kolejkę.";
     list.appendChild(info);
+    typingDeadlineMs = null;
+    typingClosed = false;
+    updateTypingDeadlineUI();
     updateSaveButtonState();
     return;
   }
@@ -7658,9 +7704,10 @@ function renderMatches(){
     cd.style.gap = "10px";
 
     const label = document.createElement("div");
+    label.id = "typingCountdownLabel";
     label.style.fontWeight = "950";
     label.style.color = "rgba(255,255,255,.92)";
-    label.textContent = "Do końca typowania pozostało:";
+    label.textContent = (getLang()==="en") ? "Time left for typing:" : "Do końca typowania pozostało:";
 
     const val = document.createElement("div");
     val.id = "typingCountdownValue";
@@ -7671,6 +7718,7 @@ function renderMatches(){
     cd.appendChild(label);
     cd.appendChild(val);
     list.appendChild(cd);
+    updateTypingDeadlineUI();
 
     updateSaveButtonState();
     return;
@@ -7828,9 +7876,10 @@ function renderMatches(){
   cd.style.gap = "10px";
 
   const label = document.createElement("div");
+  label.id = "typingCountdownLabel";
   label.style.fontWeight = "950";
   label.style.color = "rgba(255,255,255,.92)";
-  label.textContent = "Do końca typowania pozostało:";
+  label.textContent = (getLang()==="en") ? "Time left for typing:" : "Do końca typowania pozostało:";
 
   const val = document.createElement("div");
   val.id = "typingCountdownValue";
@@ -7870,6 +7919,7 @@ function renderMatches(){
   cd.appendChild(leftWrap);
   cd.appendChild(settledBox);
   list.appendChild(cd);
+  updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
 }
@@ -7882,6 +7932,13 @@ function updateSaveButtonState(){
 // ===== PODGLĄD TYPOW (MODAL) =====
 function openPicksPreview(uid, nick){
   if(!currentRoomCode) return;
+  recomputeTypingDeadline();
+  if(!typingClosed){
+    showToast(getLang()==="en"
+      ? "Picks preview will be available after typing time ends"
+      : "Podgląd typów będzie dostępny po zakończeniu czasu typowania");
+    return;
+  }
 
   const picksObj = picksDocByUid[uid] || null;
   const hasPicks = isCompletePicksObject(picksObj);
@@ -8369,7 +8426,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3058: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3059: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
