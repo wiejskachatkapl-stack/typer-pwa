@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3064;
+const BUILD = 3065;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3064 =====
+// ===== MODUŁY EVENTÓW — BUILD 3065 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1630,7 +1630,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3064: system buttons consistent with the rest of the game
+// BUILD 3065: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1747,7 +1747,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3064 =====
+// ===== Regulamin TYPERA — BUILD 3065 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -2922,7 +2922,7 @@ let lastPlayers = [];
 let deletePlayerMode = false;
 
 
-// ===== BUILD 3064: numer gracza jest główną tożsamością w pokoju =====
+// ===== BUILD 3065: numer gracza jest główną tożsamością w pokoju =====
 function normalizePlayerNoValue(value){
   return String(value || "").trim().toUpperCase();
 }
@@ -2945,51 +2945,59 @@ function identityTimeMs(value){
 }
 function getRoomPlayerIdentities(players = lastPlayers){
   const groups = new Map();
-  const uidToGroup = new Map();
+  const ensureGroup = (pno, uid="")=>{
+    const cleanNo = normalizePlayerNoValue(pno);
+    const cleanUid = String(uid || "");
+    const key = cleanNo ? `PN:${cleanNo}` : `UID:${cleanUid}`;
+    if(!groups.has(key)){
+      groups.set(key, {
+        key,
+        playerNo:cleanNo,
+        members:[],
+        leagueRows:[],
+        candidatePickUids:new Set()
+      });
+    }
+    return groups.get(key);
+  };
+
   const leagueByUid = new Map();
   const leagueByPlayerNo = new Map();
-
   (roomLeagueRows || []).forEach(row=>{
     const uid = String(row?.uid || "");
     const pno = normalizePlayerNoValue(row?.playerNo);
     if(uid) leagueByUid.set(uid, row);
     if(pno && !leagueByPlayerNo.has(pno)) leagueByPlayerNo.set(pno, row);
+    if(pno){
+      const group = ensureGroup(pno, uid);
+      group.leagueRows.push(row);
+      if(uid) group.candidatePickUids.add(uid);
+    }
   });
 
   (players || []).forEach((raw, idx)=>{
     const uid = String(raw?.uid || raw?.id || raw?.playerUid || raw?.playerId || "");
-    const pno = normalizePlayerNoValue(raw?.playerNo);
-    const key = pno ? `PN:${pno}` : `UID:${uid || idx}`;
-    if(!groups.has(key)) groups.set(key, { key, playerNo:pno, members:[], candidatePickUids:new Set() });
-    const group = groups.get(key);
+    const pno = normalizePlayerNoValue(raw?.playerNo || raw?.playerNumber || raw?.nrGracza || raw?.number);
+    const group = ensureGroup(pno, uid || `row-${idx}`);
     group.members.push({...raw, uid:uid || raw?.id || ""});
-    if(uid){
-      uidToGroup.set(uid, group);
-      group.candidatePickUids.add(uid);
-    }
+    if(uid) group.candidatePickUids.add(uid);
   });
 
-  // Dołącz dokumenty typów do numeru gracza. Dla starszych zapisów bez playerNo
-  // korzystamy z UID gracza albo z wcześniejszego wpisu w tabeli ligi.
+  // Dokumenty typów mogą pozostać nawet wtedy, gdy starszy wpis gracza został usunięty.
+  // Dzięki playerNo nadal pokażemy gracza na liście i połączymy jego punkty/status.
   Object.keys(picksDocByUid || {}).forEach(uid=>{
-    let group = uidToGroup.get(String(uid));
-    let pno = normalizePlayerNoValue(picksPlayerNoByUid?.[uid]);
-    if(!pno) pno = normalizePlayerNoValue(leagueByUid.get(String(uid))?.playerNo);
-    if(!group && pno) group = groups.get(`PN:${pno}`);
-    if(!group && pno){
-      group = { key:`PN:${pno}`, playerNo:pno, members:[], candidatePickUids:new Set() };
-      groups.set(group.key, group);
-    }
-    if(!group){
-      group = { key:`UID:${uid}`, playerNo:"", members:[], candidatePickUids:new Set() };
-      groups.set(group.key, group);
-    }
+    const pickNo = normalizePlayerNoValue(picksPlayerNoByUid?.[uid]);
+    const player = (players || []).find(p=>String(p?.uid || p?.id || "") === String(uid));
+    const league = leagueByUid.get(String(uid));
+    const pno = pickNo || normalizePlayerNoValue(player?.playerNo || league?.playerNo);
+    const group = ensureGroup(pno, uid);
     group.candidatePickUids.add(String(uid));
   });
 
   const result = [];
   groups.forEach(group=>{
     const members = group.members || [];
+    const leagueRows = group.leagueRows || [];
     const pno = normalizePlayerNoValue(group.playerNo);
     const memberUids = [...new Set(members.map(x=>String(x?.uid || x?.id || "")).filter(Boolean))];
     const candidatePickUids = [...new Set([...(group.candidatePickUids || []), ...memberUids])];
@@ -3003,7 +3011,7 @@ function getRoomPlayerIdentities(players = lastPlayers){
         identityTimeMs(x?.lastActiveAt) / 1e13;
       return score(b) - score(a);
     });
-    const base = sortedMembers[0] || {};
+    const base = sortedMembers[0] || leagueRows[0] || {};
 
     const pickUid = [...candidatePickUids].sort((a,b)=>{
       const completeA = isCompletePicksObject(picksDocByUid?.[a]) ? 1 : 0;
@@ -3017,18 +3025,20 @@ function getRoomPlayerIdentities(players = lastPlayers){
       return String(a).localeCompare(String(b));
     })[0] || "";
 
+    const currentPno = normalizePlayerNoValue(getPlayerNo() || getProfile()?.playerNo);
     const nickCandidates = [
+      ...(pno && pno === currentPno ? [getNick()] : []),
       ...sortedMembers.map(x=>x?.nick),
       ...candidatePickUids.map(uid=>picksNickByUid?.[uid]),
+      ...leagueRows.map(x=>x?.nick),
       leagueByPlayerNo.get(pno)?.nick,
       ...candidatePickUids.map(uid=>leagueByUid.get(uid)?.nick)
     ];
-    const currentPno = normalizePlayerNoValue(getPlayerNo?.() || getProfile?.()?.playerNo);
-    if(pno && pno === currentPno) nickCandidates.unshift(getNick?.());
-    const nick = String(nickCandidates.find(isUsefulPlayerNick) || "—");
+    const nick = String(nickCandidates.find(isUsefulPlayerNick) || (getLang()==="en" ? "Player" : "Gracz"));
 
     const activeMember = [...members].sort((a,b)=>identityTimeMs(b?.lastActiveAt)-identityTimeMs(a?.lastActiveAt))[0] || base;
-    const admin = members.some(x=>String(x?.uid || x?.id || "") === String(currentRoom?.adminUid || "") || x?.admin === true);
+    const admin = members.some(x=>String(x?.uid || x?.id || "") === String(currentRoom?.adminUid || "") || x?.admin === true)
+      || leagueRows.some(x=>String(x?.uid || "") === String(currentRoom?.adminUid || ""));
     const canonicalUid = String(
       members.find(x=>String(x?.uid || x?.id || "") === String(currentRoom?.adminUid || ""))?.uid ||
       members.find(x=>String(x?.uid || x?.id || "") === String(userUid || ""))?.uid ||
@@ -3037,18 +3047,20 @@ function getRoomPlayerIdentities(players = lastPlayers){
 
     result.push({
       ...base,
-      uid: canonicalUid,
-      id: canonicalUid,
-      playerNo: pno,
+      uid:canonicalUid,
+      id:canonicalUid,
+      playerNo:pno,
       nick,
       admin,
+      members,
+      leagueRows,
       memberUids,
       candidatePickUids,
       pickUid,
-      lastActiveAt: activeMember?.lastActiveAt || base?.lastActiveAt || null,
-      avatar: sortedMembers.find(x=>String(x?.avatar || "").trim())?.avatar || base?.avatar || "",
-      country: sortedMembers.find(x=>String(x?.country || "").trim())?.country || base?.country || "",
-      favClub: sortedMembers.find(x=>String(x?.favClub || "").trim())?.favClub || base?.favClub || ""
+      lastActiveAt:activeMember?.lastActiveAt || base?.lastActiveAt || null,
+      avatar:sortedMembers.find(x=>String(x?.avatar || "").trim())?.avatar || base?.avatar || "",
+      country:sortedMembers.find(x=>String(x?.country || "").trim())?.country || base?.country || "",
+      favClub:sortedMembers.find(x=>String(x?.favClub || "").trim())?.favClub || base?.favClub || ""
     });
   });
 
@@ -3076,57 +3088,12 @@ function currentPlayerIdentity(){
 let _identityRepairTimer = null;
 let _identityRepairRunning = false;
 function scheduleRoomIdentityRepair(){
-  if(!currentRoomCode) return;
-  clearTimeout(_identityRepairTimer);
-  _identityRepairTimer = setTimeout(()=>repairRoomPlayerIdentities().catch(e=>console.warn("identity repair failed",e)), 250);
+  // BUILD 3065: wyłączono automatyczne usuwanie duplikatów UID.
+  // Lista i punktacja są scalane wyłącznie do odczytu według numeru gracza,
+  // dzięki czemu żaden klient nie może przypadkowo usunąć wpisów innych graczy.
 }
 async function repairRoomPlayerIdentities(){
-  if(_identityRepairRunning || !currentRoomCode) return;
-  _identityRepairRunning = true;
-  try{
-    const byPno = new Map();
-    (lastPlayers || []).forEach(p=>{
-      const pno = normalizePlayerNoValue(p?.playerNo);
-      if(!pno) return;
-      if(!byPno.has(pno)) byPno.set(pno, []);
-      byPno.get(pno).push(p);
-    });
-    for(const [pno, docs] of byPno.entries()){
-      if(docs.length > 1){
-        await __canonicalizeRoomPlayerByPlayerNo(currentRoomCode, pno);
-        continue;
-      }
-      const player = docs[0];
-      if(!player) continue;
-      const uid = String(player.uid || player.id || "");
-      const leagueNick = (roomLeagueRows || []).find(r=>normalizePlayerNoValue(r?.playerNo)===pno)?.nick;
-      const repairedNick = [player.nick, picksNickByUid?.[uid], leagueNick].find(isUsefulPlayerNick);
-      const patch = {};
-      if(!isUsefulPlayerNick(player.nick) && repairedNick) patch.nick = String(repairedNick);
-      if(uid && Object.keys(patch).length){
-        patch.uid = uid;
-        patch.playerNo = pno;
-        patch.lastActiveAt = boot.serverTimestamp();
-        await boot.setDoc(boot.doc(db,"rooms",currentRoomCode,"players",uid), patch, {merge:true});
-      }
-    }
-    for(const uid of Object.keys(picksDocByUid || {})){
-      if(normalizePlayerNoValue(picksPlayerNoByUid?.[uid])) continue;
-      const player = (lastPlayers || []).find(p=>String(p?.uid || p?.id || "") === String(uid));
-      const league = (roomLeagueRows || []).find(r=>String(r?.uid || "") === String(uid));
-      const pno = normalizePlayerNoValue(player?.playerNo || league?.playerNo);
-      if(!pno) continue;
-      const nick = [picksNickByUid?.[uid], player?.nick, league?.nick].find(isUsefulPlayerNick);
-      await boot.setDoc(boot.doc(db,"rooms",currentRoomCode,"picks",uid), {
-        uid,
-        playerNo:pno,
-        ...(nick ? {nick:String(nick)} : {}),
-        updatedAt:boot.serverTimestamp()
-      }, {merge:true});
-    }
-  }finally{
-    _identityRepairRunning = false;
-  }
+  return;
 }
 
 
@@ -3711,7 +3678,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.064` : "TYPER v.3.064",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.065` : "TYPER v.3.065",800,850);
   return canvas;
 }
 
@@ -7898,7 +7865,7 @@ function renderPlayers(players){
   // Numer gracza jest kluczem głównym. Kilka historycznych UID z tym samym numerem
   // wyświetlamy jako jednego gracza, z jednym nickiem, statusem i punktami.
   const visiblePlayers = getRoomPlayerIdentities(players)
-    .filter(p => p.playerNo && p.members?.length);
+    .filter(p => p.playerNo);
 
   const delBtn = el("btnDeletePlayer");
   if(delBtn) delBtn.style.display = isAdmin() ? "" : "none";
@@ -8214,7 +8181,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3064: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3065: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8731,7 +8698,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3064: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3065: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
