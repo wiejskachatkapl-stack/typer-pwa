@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3065;
+const BUILD = 3066;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3065 =====
+// ===== MODUŁY EVENTÓW — BUILD 3066 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1630,7 +1630,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3065: system buttons consistent with the rest of the game
+// BUILD 3066: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1747,7 +1747,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3065 =====
+// ===== Regulamin TYPERA — BUILD 3066 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -2922,7 +2922,7 @@ let lastPlayers = [];
 let deletePlayerMode = false;
 
 
-// ===== BUILD 3065: numer gracza jest główną tożsamością w pokoju =====
+// ===== BUILD 3066: numer gracza jest główną tożsamością w pokoju =====
 function normalizePlayerNoValue(value){
   return String(value || "").trim().toUpperCase();
 }
@@ -3088,7 +3088,7 @@ function currentPlayerIdentity(){
 let _identityRepairTimer = null;
 let _identityRepairRunning = false;
 function scheduleRoomIdentityRepair(){
-  // BUILD 3065: wyłączono automatyczne usuwanie duplikatów UID.
+  // BUILD 3066: wyłączono automatyczne usuwanie duplikatów UID.
   // Lista i punktacja są scalane wyłącznie do odczytu według numeru gracza,
   // dzięki czemu żaden klient nie może przypadkowo usunąć wpisów innych graczy.
 }
@@ -3678,7 +3678,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.065` : "TYPER v.3.065",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.066` : "TYPER v.3.066",800,850);
   return canvas;
 }
 
@@ -4012,7 +4012,7 @@ function renderLiveRoundTop3(){
   if(mobileTitle) mobileTitle.textContent = en ? "LIVE TOP 3" : "TOP 3 NA ŻYWO";
   if(mobileSub) mobileSub.textContent = `${resolvedCount}/${totalCount}`;
 
-  const ranking = buildLiveRoundRanking().filter(r=>r.place <= 3);
+  const ranking = buildLiveRoundRanking().slice(0, 3);
 
   function fillList(list, compact=false){
     if(!list) return;
@@ -4026,13 +4026,14 @@ function renderLiveRoundTop3(){
       list.appendChild(empty);
       return;
     }
-    ranking.forEach(r=>{
+    ranking.forEach((r,index)=>{
+      const displayPlace = index + 1;
       const row = document.createElement("div");
       row.className = "liveRankRow";
-      row.dataset.place = String(r.place);
+      row.dataset.place = String(displayPlace);
       const place = document.createElement("div");
       place.className = "liveRankPlace";
-      place.textContent = String(r.place);
+      place.textContent = String(displayPlace);
       const nick = document.createElement("div");
       nick.className = "liveRankNick";
       nick.textContent = r.nick;
@@ -8181,7 +8182,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3065: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3066: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8698,7 +8699,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3065: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3066: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
