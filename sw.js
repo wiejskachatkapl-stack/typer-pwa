@@ -1,93 +1,80 @@
-// Typer PWA Service Worker (BUILD 3083)
-const CACHE_NAME = 'typer-cache-3083';
+// Typer PWA Service Worker (BUILD 3084)
+const BUILD = '3084';
+const CACHE_PREFIX = 'typer-cache-';
+const CACHE_NAME = `${CACHE_PREFIX}${BUILD}`;
+const VERSIONED_INDEX = `./index.html?v=${BUILD}`;
 
-// Core assets to pre-cache. leagues.json is intentionally NOT pre-cached,
-// because it should update immediately after edits on GitHub.
 const CORE = [
-  './',
-  './index.html',
-  './app.js?v=3083',
-  './manifest.json?v=3083',
-  './apple-touch-icon.png?v=3083',
-  './favicon-32x32.png?v=3083',
-  './favicon-16x16.png?v=3083',
-  './ui/loader_ball.webp',
+  VERSIONED_INDEX,
+  `./app.js?v=${BUILD}`,
+  `./manifest.json?v=${BUILD}`,
+  `./apple-touch-icon.png?v=${BUILD}`,
+  `./favicon-32x32.png?v=${BUILD}`,
+  `./favicon-16x16.png?v=${BUILD}`,
+  `./ui/loader_ball.webp?v=${BUILD}`,
   './icons/icon-192x192.png',
   './icons/icon-512x512.png'
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE)).catch(() => {})
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CORE)).catch(() => {}));
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   event.waitUntil((async () => {
-    try {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => key !== CACHE_NAME ? caches.delete(key) : Promise.resolve()));
-    } catch (e) {}
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map(key => caches.delete(key)));
     await self.clients.claim();
+    const clients = await self.clients.matchAll({type:'window', includeUncontrolled:true});
+    for (const client of clients) client.postMessage({type:'TYPER_BUILD_ACTIVE', build:BUILD});
   })());
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('message', event => {
+  if (event.data?.type === 'CLEAR_TYPER_CACHES') {
+    event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map(k => caches.delete(k)))));
+  }
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+self.addEventListener('fetch', event => {
   const req = event.request;
   const url = new URL(req.url);
-
   if (url.origin !== self.location.origin) return;
 
-  const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
-  const isJS = url.pathname.endsWith('.js');
-  const isLeaguesJSON = url.pathname.endsWith('/data/leagues.json');
+  const isNavigation = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+  const isCode = /\.(?:js|css|json)$/i.test(url.pathname);
   const isEventAsset = url.pathname.includes('/events/');
+  const isLeagueData = url.pathname.endsWith('/data/leagues.json');
 
-  // leagues.json: always try GitHub/network first so edits are visible immediately.
-  // The last good copy is kept only as an offline fallback.
-  if (isLeaguesJSON) {
+  if (isNavigation || isCode || isEventAsset || isLeagueData) {
     event.respondWith((async () => {
       try {
-        const fresh = await fetch(req, { cache: 'no-store' });
+        const fresh = await fetch(req, {cache:'no-store'});
         if (!fresh.ok) throw new Error(`HTTP ${fresh.status}`);
         const cache = await caches.open(CACHE_NAME);
         await cache.put(req, fresh.clone());
         return fresh;
-      } catch (e) {
-        return (await caches.match(req)) || Response.error();
+      } catch (error) {
+        return (await caches.match(req)) || (await caches.match(VERSIONED_INDEX)) || Response.error();
       }
     })());
     return;
   }
 
-  // Network-first for HTML/JS and modular Event files to avoid stale UI.
-  if (isHTML || isJS || isEventAsset) {
-    event.respondWith((async () => {
-      try {
-        const fresh = await fetch(req, { cache: 'no-store' });
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(req, fresh.clone());
-        return fresh;
-      } catch (e) {
-        const cached = await caches.match(req);
-        return cached || caches.match('./index.html') || Response.error();
-      }
-    })());
-    return;
-  }
-
-  // Other assets: cache-first.
   event.respondWith((async () => {
     const cached = await caches.match(req);
     if (cached) return cached;
     try {
-      const fresh = await fetch(req);
-      const cache = await caches.open(CACHE_NAME);
-      await cache.put(req, fresh.clone());
+      const fresh = await fetch(req, {cache:'no-store'});
+      if (fresh.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(req, fresh.clone());
+      }
       return fresh;
-    } catch (e) {
-      return cached || Response.error();
+    } catch (error) {
+      return Response.error();
     }
   })());
 });

@@ -5,14 +5,40 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3083)</title>
-<link href="manifest.json?v=3083" rel="manifest"/>
-<link href="favicon-32x32.png?v=3083" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3083" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3083" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3084)</title>
+<link href="manifest.json?v=3084" rel="manifest"/>
+<link href="favicon-32x32.png?v=3084" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3084" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3084" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
+<script id="typerCacheBoot">
+(() => {
+  const BUILD = "3084";
+  const URL_BUILD = new URL(location.href).searchParams.get("v");
+  // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
+  // zwrócić poprzedniego index.html pod tym samym URL-em.
+  if (URL_BUILD !== BUILD) {
+    const next = new URL(location.href);
+    next.searchParams.set("v", BUILD);
+    location.replace(next.href);
+    return;
+  }
+  const marker = `typer-cache-clean-${BUILD}`;
+  if (sessionStorage.getItem(marker) === "1") return;
+  sessionStorage.setItem(marker, "1");
+  Promise.allSettled([
+    ("caches" in window)
+      ? caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith("typer-cache-")).map(k => caches.delete(k))))
+      : Promise.resolve(),
+    ("serviceWorker" in navigator)
+      ? navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.update().catch(() => null))))
+      : Promise.resolve()
+  ]).catch(() => {});
+})();
+</script>
+
 <style>
 .roomCodeRow{display:flex;gap:10px;align-items:center;flex-wrap:nowrap;}
 .roomCodeRow .imgBtn{flex:0 0 auto;}
@@ -188,7 +214,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3083");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3084");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2672,8 +2698,8 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3083-rules">
-/* ===== REGULAMIN TYPERA — BUILD 3083 ===== */
+<style id="build3084-rules">
+/* ===== REGULAMIN TYPERA — BUILD 3084 ===== */
 .homeRules{
   position:absolute;
   left:50%;
@@ -2839,7 +2865,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <button class="flagBtn" id="btnLangPL" title="Polski" type="button"><img alt="PL" class="flagImg" src="ui/flags/pl.png"/></button>
 <button class="flagBtn" id="btnLangEN" title="English" type="button"><img alt="EN" class="flagImg" src="ui/flags/gb.png"/></button>
 </div>
-<!-- Profesjonalne menu główne — BUILD 3083 -->
+<!-- Profesjonalne menu główne — BUILD 3084 -->
 <button class="homeSettingsPro" id="btnHomeSettings" title="Ustawienia" type="button">
   <span class="homeSettingsIcon" aria-hidden="true">
     <svg viewBox="0 0 24 24"><path d="M19.4 13a7.9 7.9 0 0 0 .05-1 7.9 7.9 0 0 0-.05-1l2.1-1.64-2-3.46-2.56 1.03a8.1 8.1 0 0 0-1.72-1L14.83 3h-4l-.39 2.93a8.1 8.1 0 0 0-1.72 1L6.16 5.9l-2 3.46L6.26 11a7.9 7.9 0 0 0-.05 1 7.9 7.9 0 0 0 .05 1l-2.1 1.64 2 3.46 2.56-1.03a8.1 8.1 0 0 0 1.72 1L10.83 21h4l.39-2.93a8.1 8.1 0 0 0 1.72-1l2.56 1.03 2-3.46L19.4 13ZM12.83 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
@@ -2876,7 +2902,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 </section>
 
-<!-- REGULAMIN TYPERA — BUILD 3083 -->
+<!-- REGULAMIN TYPERA — BUILD 3084 -->
 <div aria-hidden="true" hidden id="rulesOverlay" data-rules-lang="pl">
   <div aria-labelledby="rulesTitle" aria-modal="true" class="rulesModal" role="dialog">
     <div class="rulesHeader">
@@ -3405,7 +3431,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3083" type="module"></script>
+<script src="./app.js?v=3084" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3425,14 +3451,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3083', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3084', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.083</div>
+<div id="buildCornerText">Mariusz Gębka v.3.084</div>
 </div>
 
 <style>
@@ -4167,7 +4193,7 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 
 
 <style id="build3038-add-match-fix">
-/* BUILD 3083: korekta przycisku Dodaj mecz */
+/* BUILD 3084: korekta przycisku Dodaj mecz */
 #btnMQAddMatch.modernAppBtn{
   display:inline-flex;
   align-items:center;
@@ -4207,16 +4233,16 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-<style id="build3083-final-fixes">
-/* v3083: po dołączeniu do pokoju wyświetla się 5-sekundowy loader z piłkami */
+<style id="build3084-final-fixes">
+/* v3084: po dołączeniu do pokoju wyświetla się 5-sekundowy loader z piłkami */
 #room #btnRulesFromRoom{grid-column:1 / -1;width:100%;}
 </style>
 
 
 
 
-<style id="build3083-rules-buttons">
-/* BUILD 3083: niezależne, profesjonalne przyciski decyzji regulaminu */
+<style id="build3084-rules-buttons">
+/* BUILD 3084: niezależne, profesjonalne przyciski decyzji regulaminu */
 .rulesActions{
   gap:18px !important;
   padding:18px 22px 22px !important;
@@ -4303,8 +4329,8 @@ html[data-lang="en"] .rulesDecisionText .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-home-professional-buttons">
-/* BUILD 3083: nowe, profesjonalne przyciski menu głównego */
+<style id="build3084-home-professional-buttons">
+/* BUILD 3084: nowe, profesjonalne przyciski menu głównego */
 #home .homeProMenu{
   top:54% !important;
   width:min(1260px,91vw) !important;
@@ -4520,8 +4546,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-round-winner">
-/* BUILD 3083: kompaktowa karta zwycięzcy kolejki */
+<style id="build3084-round-winner">
+/* BUILD 3084: kompaktowa karta zwycięzcy kolejki */
 #announcementOverlay.roundWinnerOverlay{
   background:rgba(0,7,22,.78) !important;
   backdrop-filter:blur(9px) !important;
@@ -4665,8 +4691,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-results-actions">
-/* BUILD 3083: widoczne, spójne przyciski w ekranie wpisywania wyników */
+<style id="build3084-results-actions">
+/* BUILD 3084: widoczne, spójne przyciski w ekranie wpisywania wyników */
 #results .resultsTop > .row:last-child{
   display:flex;
   align-items:center;
@@ -4697,8 +4723,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 }
 </style>
 
-<style id="build3083-season-podium">
-/* BUILD 3083: profesjonalne zakończenie sezonu + eksport do PDF */
+<style id="build3084-season-podium">
+/* BUILD 3084: profesjonalne zakończenie sezonu + eksport do PDF */
 #announcementOverlay.seasonPodiumOverlay{
   padding:18px;
   overflow:auto;
@@ -4810,8 +4836,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-typing-deadline">
-/* BUILD 3083: stale widoczny licznik czasu i podgląd typów dopiero po zamknięciu typowania */
+<style id="build3084-typing-deadline">
+/* BUILD 3084: stale widoczny licznik czasu i podgląd typów dopiero po zamknięciu typowania */
 #typingDeadlineTopChip{
   align-items:center;
   gap:4px;
@@ -4833,8 +4859,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-single-typing-countdown">
-/* BUILD 3083: jeden licznik czasu — stale widoczny pod listą typów na komputerze i telefonie */
+<style id="build3084-single-typing-countdown">
+/* BUILD 3084: jeden licznik czasu — stale widoczny pod listą typów na komputerze i telefonie */
 #typingDeadlineTopChip{display:none !important;}
 #typingCountdownBar{
   flex:0 0 auto;
@@ -4884,8 +4910,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-live-ranking">
-/* BUILD 3083: ranking TOP 3 aktualizowany po każdym zapisanym wyniku */
+<style id="build3084-live-ranking">
+/* BUILD 3084: ranking TOP 3 aktualizowany po każdym zapisanym wyniku */
 #room .liveRoundTop3{
   flex:0 0 auto;
   padding:10px;
@@ -4921,8 +4947,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 
 
 
-<style id="build3083-mobile-live-top3">
-/* BUILD 3083: na telefonie TOP 3 przeniesione do górnego panelu; desktop bez zmian */
+<style id="build3084-mobile-live-top3">
+/* BUILD 3084: na telefonie TOP 3 przeniesione do górnego panelu; desktop bez zmian */
 #room .liveRoundTop3Mobile{display:none;}
 @media (max-width:980px){
   #room .rightBar > .liveRoundTop3{display:none !important;}
@@ -5018,8 +5044,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-ten-matches-fit">
-/* BUILD 3083: wszystkie 10 spotkań widoczne w środkowym panelu bez przewijania */
+<style id="build3084-ten-matches-fit">
+/* BUILD 3084: wszystkie 10 spotkań widoczne w środkowym panelu bez przewijania */
 #room .mid{gap:8px !important;}
 #room .matchesWrap{
   gap:4px !important;
@@ -5084,8 +5110,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-season-top3-layout">
-/* BUILD 3083: Tabela ligi + ranking w jednym rzędzie oraz TOP 3 bieżącego sezonu */
+<style id="build3084-season-top3-layout">
+/* BUILD 3084: Tabela ligi + ranking w jednym rzędzie oraz TOP 3 bieżącego sezonu */
 #room .seasonTop3Desktop,
 #room .seasonTop3Mobile{display:none;}
 
@@ -5237,8 +5263,8 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3083-mobile-matches-height">
-/* BUILD 3083: większy i czytelniejszy obszar spotkań wyłącznie na telefonie */
+<style id="build3084-mobile-matches-height">
+/* BUILD 3084: większy i czytelniejszy obszar spotkań wyłącznie na telefonie */
 @media (max-width:980px){
   #room .mid{
     min-height:0 !important;
@@ -5272,6 +5298,279 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
     max-height:330px !important;
   }
   #room #matchesList .matchRow{min-height:48px !important;}
+}
+</style>
+
+
+
+<style id="build3084-safe-left-panel">
+/* BUILD 3084: stabilny układ z v3071 + wyłącznie poprawka lewego panelu na komputerze */
+@media (min-width:981px){
+  #room #roomProfileInfoCard .seasonTop3Desktop{
+    min-height:154px !important;
+    padding:11px !important;
+    gap:7px !important;
+  }
+  #room #roomProfileInfoCard .seasonTop3Desktop .seasonTop3Head{
+    padding:0 2px 8px !important;
+  }
+  #room #roomProfileInfoCard .seasonTop3Desktop .seasonRankRow{
+    min-height:33px !important;
+    padding:5px 8px !important;
+  }
+  #room #roomProfileInfoCard #btnRulesFromRoom{
+    grid-column:1 / -1 !important;
+    justify-self:start !important;
+    width:52% !important;
+    max-width:190px !important;
+    min-width:145px !important;
+    min-height:40px !important;
+    padding:6px 11px !important;
+    margin:0 !important;
+    font-size:11px !important;
+    gap:7px !important;
+  }
+  #room #roomProfileInfoCard #btnRulesFromRoom .btnIcon{
+    width:20px !important;
+    height:20px !important;
+    flex:0 0 20px !important;
+  }
+}
+</style>
+
+
+<style id="build3084-mobile-room-stable">
+/* BUILD 3084: stabilny, zwarty układ pokoju na telefonie. Desktop pozostaje bez zmian. */
+@media (max-width:980px){
+  body.room-screen-active{overflow:hidden !important;}
+  body.room-screen-active #room.active{display:block !important;width:100% !important;height:100% !important;min-height:0 !important;padding:4px !important;overflow:hidden !important;}
+  body.room-screen-active #roomLayout{
+    display:grid !important;
+    grid-template-columns:minmax(0,27fr) minmax(0,46fr) minmax(0,27fr) !important;
+    grid-template-rows:minmax(0,1fr) !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    gap:5px !important;
+    padding:4px !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #room .leftBar,
+  body.room-screen-active #room .mid,
+  body.room-screen-active #room .rightBar{
+    width:auto !important;
+    min-width:0 !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    margin:0 !important;
+    padding:5px !important;
+    gap:5px !important;
+    overflow:hidden !important;
+  }
+
+  /* LEWY PANEL */
+  body.room-screen-active #room .leftBar{
+    display:grid !important;
+    grid-template-rows:minmax(0,57%) minmax(0,43%) !important;
+  }
+  body.room-screen-active #room .leftTopProfile{
+    display:grid !important;
+    grid-template-columns:62px minmax(0,1fr) !important;
+    grid-template-rows:auto minmax(0,1fr) !important;
+    align-content:start !important;
+    align-items:start !important;
+    gap:5px 7px !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    padding:7px !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #room .leftTopProfile .avatarBox{
+    width:62px !important;height:62px !important;flex:0 0 62px !important;border-radius:14px !important;
+  }
+  body.room-screen-active #room .profileTopText{gap:2px !important;margin:1px 0 0 !important;min-width:0 !important;}
+  body.room-screen-active #room .profileTopText .profileNick{font-size:13px !important;line-height:1.05 !important;max-width:100% !important;}
+  body.room-screen-active #room .profileTopText .profileMeta{font-size:9px !important;line-height:1.12 !important;}
+  body.room-screen-active #room .profileStatsMini{display:grid !important;grid-template-columns:1fr 1fr !important;gap:3px !important;margin-top:2px !important;}
+  body.room-screen-active #room .profileStatMini{padding:4px 5px !important;border-radius:8px !important;min-width:0 !important;}
+  body.room-screen-active #room .profileStatMini .statLabel{font-size:7px !important;}
+  body.room-screen-active #room .profileStatMini .statValue{font-size:13px !important;}
+  body.room-screen-active #room .roomTopDetails{
+    grid-column:1 / -1 !important;
+    width:100% !important;height:auto !important;min-height:0 !important;
+    margin:0 !important;padding:5px 0 0 !important;
+    border-left:0 !important;border-top:1px solid rgba(255,255,255,.14) !important;
+    display:block !important;overflow:hidden !important;
+  }
+  body.room-screen-active #room .roomTopDetails .roomTopName{font-size:12px !important;line-height:1.05 !important;}
+  body.room-screen-active #room .roomTopDetails .roomTopAdmin{font-size:8px !important;line-height:1.1 !important;margin-top:1px !important;}
+  body.room-screen-active #room .roomTopDetails .roomCodeBlock{margin-top:3px !important;}
+  body.room-screen-active #room .roomTopDetails .chip{min-height:24px !important;padding:3px 7px !important;border-radius:8px !important;font-size:9px !important;}
+  body.room-screen-active #room .roomTopDetails .roomCodeActions{display:grid !important;grid-template-columns:1fr 1fr !important;gap:4px !important;margin-top:4px !important;}
+  body.room-screen-active #room .leftDeleteRoomCard{display:flex !important;padding:0 !important;min-height:0 !important;width:100% !important;}
+  body.room-screen-active #room .roomCodeActions .modernRoomBtn{
+    width:100% !important;min-width:0 !important;min-height:28px !important;padding:4px 4px !important;border-radius:8px !important;font-size:7.5px !important;gap:3px !important;
+  }
+  body.room-screen-active #room .roomCodeActions .btnIcon{width:12px !important;height:12px !important;flex:0 0 12px !important;}
+
+  body.room-screen-active #room #roomProfileInfoCard{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    grid-template-rows:34px 31px minmax(27px,1fr) !important;
+    gap:4px !important;
+    align-content:stretch !important;
+    width:100% !important;height:100% !important;min-height:0 !important;
+    padding:5px !important;overflow:hidden !important;
+  }
+  body.room-screen-active #room #roomProfileInfoCard #btnSubstitute{grid-column:1 / -1 !important;}
+  body.room-screen-active #room #roomProfileInfoCard #btnRulesFromRoom{grid-column:1 / -1 !important;width:58% !important;justify-self:start !important;}
+  body.room-screen-active #room #roomProfileInfoCard .seasonTop3Desktop{display:none !important;}
+  body.room-screen-active #room #roomProfileInfoCard .modernRoomBtn{
+    width:100% !important;min-width:0 !important;min-height:0 !important;height:100% !important;padding:3px 4px !important;border-radius:9px !important;font-size:7.5px !important;gap:3px !important;
+  }
+  body.room-screen-active #room #roomProfileInfoCard .btnIcon{width:13px !important;height:13px !important;flex:0 0 13px !important;}
+
+  /* ŚRODKOWY PANEL */
+  body.room-screen-active #room .mid{
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr) auto auto !important;
+  }
+  body.room-screen-active #room .midHead{padding:5px !important;min-height:0 !important;overflow:hidden !important;}
+  body.room-screen-active #room .midHead .row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    grid-template-areas:
+      "title add"
+      "round games"
+      "season live" !important;
+    gap:4px !important;
+    align-items:stretch !important;
+    min-height:0 !important;
+  }
+  body.room-screen-active #room .midHead .row > div:first-child{grid-area:title !important;align-self:center !important;}
+  body.room-screen-active #room .midHead .row > .roomTopBtns{grid-area:add !important;justify-content:flex-end !important;min-width:0 !important;}
+  body.room-screen-active #room .midHead .row > .chip:nth-of-type(1){grid-area:round !important;}
+  body.room-screen-active #room .midHead .row > .chip:nth-of-type(2){grid-area:games !important;}
+  body.room-screen-active #room .midHead .row > .seasonTop3Mobile{grid-area:season !important;}
+  body.room-screen-active #room .midHead .row > .liveRoundTop3Mobile{grid-area:live !important;}
+  body.room-screen-active #room .midHead .row > .spacer{display:none !important;}
+  body.room-screen-active #room .midHead .title{font-size:14px !important;line-height:1 !important;}
+  body.room-screen-active #room .roomTopBtns .modernRoomBtn{width:100% !important;min-width:0 !important;min-height:28px !important;padding:4px 6px !important;border-radius:8px !important;font-size:8px !important;gap:4px !important;}
+  body.room-screen-active #room .roomTopBtns .btnIcon{width:13px !important;height:13px !important;flex:0 0 13px !important;}
+  body.room-screen-active #room .midHead .chip{width:100% !important;min-width:0 !important;min-height:25px !important;padding:3px 6px !important;border-radius:8px !important;font-size:9px !important;justify-content:center !important;}
+  body.room-screen-active #room .midHead .chip #roundLabel{font-size:9px !important;}
+
+  body.room-screen-active #room .seasonTop3Mobile,
+  body.room-screen-active #room .liveRoundTop3Mobile{
+    display:flex !important;width:100% !important;min-width:0 !important;min-height:54px !important;max-height:58px !important;padding:4px !important;border-radius:9px !important;overflow:hidden !important;
+  }
+  body.room-screen-active #room .seasonTop3MobileHead,
+  body.room-screen-active #room .liveRoundTop3MobileHead{font-size:8px !important;padding:0 1px 3px !important;margin-bottom:2px !important;}
+  body.room-screen-active #room .seasonTop3MobileHead small,
+  body.room-screen-active #room .liveRoundTop3MobileHead small{font-size:7px !important;}
+  body.room-screen-active #room .seasonTop3MobileList,
+  body.room-screen-active #room .liveRoundTop3MobileList{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:2px !important;min-width:0 !important;}
+  body.room-screen-active #room .seasonTop3Mobile .seasonRankRow,
+  body.room-screen-active #room .liveRoundTop3Mobile .liveRankRow{
+    display:grid !important;grid-template-columns:14px minmax(0,1fr) !important;grid-template-areas:"place nick" "place points" !important;column-gap:2px !important;row-gap:0 !important;min-height:27px !important;padding:2px 3px !important;border-radius:6px !important;
+  }
+  body.room-screen-active #room .seasonTop3Mobile .seasonRankPlace,
+  body.room-screen-active #room .liveRoundTop3Mobile .liveRankPlace{grid-area:place !important;width:13px !important;height:13px !important;font-size:7px !important;}
+  body.room-screen-active #room .seasonTop3Mobile .seasonRankNick,
+  body.room-screen-active #room .liveRoundTop3Mobile .liveRankNick{grid-area:nick !important;font-size:7px !important;line-height:1 !important;}
+  body.room-screen-active #room .seasonTop3Mobile .seasonRankPoints,
+  body.room-screen-active #room .liveRoundTop3Mobile .liveRankPoints{grid-area:points !important;font-size:7px !important;line-height:1 !important;}
+
+  body.room-screen-active #room .matchesWrap{
+    flex:auto !important;width:100% !important;height:auto !important;min-height:0 !important;max-height:none !important;
+    padding:5px !important;gap:3px !important;overflow-y:auto !important;overflow-x:hidden !important;scrollbar-width:thin !important;
+  }
+  body.room-screen-active #room #matchesList .matchRow{flex:0 0 auto !important;min-height:31px !important;padding:3px 5px !important;gap:4px !important;border-radius:8px !important;}
+  body.room-screen-active #room #matchesList .team{font-size:8px !important;gap:3px !important;}
+  body.room-screen-active #room #matchesList .logo{display:none !important;}
+  body.room-screen-active #room #matchesList .scoreInput{width:24px !important;height:21px !important;font-size:9px !important;padding:1px 2px !important;}
+  body.room-screen-active #room #matchesList .matchResultCol,
+  body.room-screen-active #room #matchesList .matchDateCol{height:23px !important;font-size:7.5px !important;padding:0 3px !important;border-radius:7px !important;}
+  body.room-screen-active #room #matchesList .matchJudgeDot{width:10px !important;height:10px !important;min-width:10px !important;min-height:10px !important;flex-basis:10px !important;}
+  body.room-screen-active #room #matchesList .matchJudgePts{font-size:7.5px !important;}
+  body.room-screen-active #room #typingCountdownBar{min-height:34px !important;padding:4px 7px !important;border-radius:9px !important;}
+  body.room-screen-active #room .typingCountdownMain{font-size:8px !important;gap:5px !important;}
+  body.room-screen-active #room #typingCountdownValue{font-size:12px !important;}
+  body.room-screen-active #room .settledPointsBox{min-width:82px !important;height:25px !important;padding:0 6px !important;font-size:8px !important;border-radius:7px !important;}
+  body.room-screen-active #room .matchActionsPanel{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:4px !important;min-height:38px !important;padding:4px !important;}
+  body.room-screen-active #room .matchActionsPanel .modernRoomBtn{width:100% !important;min-width:0 !important;min-height:29px !important;padding:4px !important;border-radius:8px !important;font-size:7.5px !important;gap:3px !important;}
+  body.room-screen-active #room .matchActionsPanel .btnIcon{width:12px !important;height:12px !important;flex:0 0 12px !important;}
+
+  /* PRAWY PANEL */
+  body.room-screen-active #room .rightBar{display:grid !important;grid-template-rows:auto minmax(0,1fr) auto !important;}
+  body.room-screen-active #room .playersHeader{min-height:30px !important;gap:4px !important;align-items:center !important;}
+  body.room-screen-active #room .playersHeader .title{font-size:14px !important;}
+  body.room-screen-active #room #btnDeletePlayer{min-width:0 !important;min-height:28px !important;padding:4px 6px !important;border-radius:8px !important;font-size:7.5px !important;gap:3px !important;}
+  body.room-screen-active #room #btnDeletePlayer .btnIcon{width:12px !important;height:12px !important;flex:0 0 12px !important;}
+  body.room-screen-active #room .playersList{min-height:0 !important;overflow-y:auto !important;overflow-x:hidden !important;gap:3px !important;}
+  body.room-screen-active #room .playerRow{min-height:34px !important;padding:4px 5px !important;border-radius:8px !important;font-size:8px !important;gap:3px !important;}
+  body.room-screen-active #room .playerMain{min-width:0 !important;gap:3px !important;}
+  body.room-screen-active #room .playerNick{font-size:8px !important;}
+  body.room-screen-active #room .eyeBtn{width:24px !important;height:22px !important;}
+  body.room-screen-active #room .rightBar > .liveRoundTop3,
+  body.room-screen-active #room .rightBar > .spacer{display:none !important;}
+  body.room-screen-active #room .rightBottomStack{min-height:0 !important;gap:0 !important;}
+  body.room-screen-active #room .rightBottomMessages{display:grid !important;grid-template-columns:1fr 1fr !important;gap:4px !important;padding:4px !important;}
+  body.room-screen-active #room .rightBottomMessages .modernRoomBtn{width:100% !important;min-width:0 !important;min-height:31px !important;padding:4px !important;border-radius:8px !important;font-size:7.5px !important;gap:3px !important;}
+  body.room-screen-active #room .rightBottomMessages .btnIcon{width:12px !important;height:12px !important;flex:0 0 12px !important;}
+
+  body.room-screen-active #buildCorner{right:3px !important;bottom:2px !important;gap:1px !important;}
+  body.room-screen-active #buildCornerLogo{width:46px !important;}
+  body.room-screen-active #buildCornerText{font-size:7px !important;max-width:130px !important;}
+}
+
+@media (max-width:980px) and (orientation:landscape){
+  html,body.room-screen-active{width:100% !important;height:100% !important;overflow:hidden !important;}
+  body.room-screen-active #app{position:fixed !important;inset:0 !important;width:100vw !important;height:100dvh !important;min-height:0 !important;padding:2px !important;overflow:hidden !important;align-items:stretch !important;}
+  body.room-screen-active .frame{width:100% !important;height:100% !important;min-height:0 !important;max-width:none !important;max-height:none !important;border-radius:0 !important;overflow:hidden !important;}
+}
+
+@media (max-width:720px), (max-height:390px){
+  body.room-screen-active #roomLayout{grid-template-columns:minmax(0,28fr) minmax(0,45fr) minmax(0,27fr) !important;gap:3px !important;padding:2px !important;}
+  body.room-screen-active #room .leftBar,
+  body.room-screen-active #room .mid,
+  body.room-screen-active #room .rightBar{padding:3px !important;gap:3px !important;}
+  body.room-screen-active #room .leftBar{grid-template-rows:minmax(0,55%) minmax(0,45%) !important;}
+  body.room-screen-active #room .leftTopProfile .avatarBox{width:54px !important;height:54px !important;flex-basis:54px !important;}
+  body.room-screen-active #room .leftTopProfile{grid-template-columns:54px minmax(0,1fr) !important;padding:5px !important;}
+  body.room-screen-active #room .seasonTop3Mobile,
+  body.room-screen-active #room .liveRoundTop3Mobile{min-height:48px !important;max-height:50px !important;}
+  body.room-screen-active #room #matchesList .matchRow{min-height:28px !important;}
+}
+</style>
+
+
+<style id="build3084-mobile-room-final-tune">
+@media (max-width:980px){
+  body.room-screen-active #room #roomProfileInfoCard{
+    grid-template-rows:34px 31px 31px !important;
+    align-content:start !important;
+  }
+  body.room-screen-active #room #roomProfileInfoCard #btnRulesFromRoom{
+    height:31px !important;
+    min-height:31px !important;
+  }
+  body.room-screen-active #room #matchesList .matchRow{
+    grid-template-columns:minmax(0,1fr) 42px 58px !important;
+  }
+  body.room-screen-active #room #matchesList .matchPickCol{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) !important;
+    align-items:center !important;
+    gap:2px !important;
+    min-width:0 !important;
+  }
+  body.room-screen-active #room #matchesList .scoreBox{justify-content:center !important;gap:2px !important;min-width:0 !important;}
+  body.room-screen-active #room #matchesList .team{min-width:0 !important;justify-content:flex-start !important;}
+  body.room-screen-active #room #matchesList .team:nth-of-type(2){justify-content:flex-end !important;}
+  body.room-screen-active #room #matchesList .teamName{display:block !important;max-width:100% !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}
 }
 </style>
 
