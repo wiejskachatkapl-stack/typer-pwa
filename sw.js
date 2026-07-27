@@ -1,16 +1,16 @@
-// Typer PWA Service Worker (BUILD 3066)
-const CACHE_NAME = 'typer-cache-3066';
+// Typer PWA Service Worker (BUILD 3067)
+const CACHE_NAME = 'typer-cache-3067';
 
 // Core assets to pre-cache. leagues.json is intentionally NOT pre-cached,
 // because it should update immediately after edits on GitHub.
 const CORE = [
   './',
   './index.html',
-  './app.js?v=3066',
-  './manifest.json?v=3066',
-  './apple-touch-icon.png?v=3066',
-  './favicon-32x32.png?v=3066',
-  './favicon-16x16.png?v=3066',
+  './app.js?v=3067',
+  './manifest.json?v=3067',
+  './apple-touch-icon.png?v=3067',
+  './favicon-32x32.png?v=3067',
+  './favicon-16x16.png?v=3067',
   './ui/loader_ball.webp',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png'

@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3066;
+const BUILD = 3067;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3066 =====
+// ===== MODUŁY EVENTÓW — BUILD 3067 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1630,7 +1630,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3066: system buttons consistent with the rest of the game
+// BUILD 3067: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1747,7 +1747,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3066 =====
+// ===== Regulamin TYPERA — BUILD 3067 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -1940,6 +1940,81 @@ function __setAuthedThisSession(playerNo){
   try{ sessionStorage.setItem(KEY_SESSION_AUTH, String(playerNo||"").trim().toUpperCase()); }catch(e){}
 }
 
+
+function __makeLoginEntryChoiceModal(){
+  const existing = document.getElementById("loginEntryChoiceModal");
+  if(existing) existing.remove();
+
+  const en = getLang() === "en";
+  const wrap = document.createElement("div");
+  wrap.id = "loginEntryChoiceModal";
+  wrap.className = "loginEntryChoiceOverlay";
+  wrap.innerHTML = `
+    <div class="loginEntryChoiceBox" role="dialog" aria-modal="true" aria-labelledby="loginEntryChoiceTitle">
+      <div class="loginEntryChoiceTitle" id="loginEntryChoiceTitle">${en ? "Welcome to TYPER" : "Witaj w TYPERZE"}</div>
+      <div class="loginEntryChoiceText">${en ? "Choose how you want to continue." : "Wybierz sposób wejścia do gry."}</div>
+      <div class="loginEntryChoiceActions">
+        <button id="loginEntryExisting" class="modernAppBtn loginEntryChoiceBtn" type="button">
+          <span class="appBtnIcon ico-join2" aria-hidden="true"></span>
+          <span class="label-pl">Logowanie</span><span class="label-en">Login</span>
+        </button>
+        <button id="loginEntryNewProfile" class="modernAppBtn loginEntryChoiceBtn" type="button">
+          <span class="appBtnIcon ico-profile2" aria-hidden="true"></span>
+          <span class="label-pl">Nowy profil</span><span class="label-en">New profile</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  if(!document.getElementById("loginEntryChoiceStyles")){
+    const st = document.createElement("style");
+    st.id = "loginEntryChoiceStyles";
+    st.textContent = `
+      .loginEntryChoiceOverlay{position:fixed;inset:0;z-index:100120;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,9,24,.72);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);}
+      .loginEntryChoiceBox{width:min(600px,92vw);padding:28px 26px 24px;border:1px solid rgba(121,190,255,.28);border-radius:22px;background:linear-gradient(160deg,rgba(7,25,56,.98),rgba(4,14,34,.98));box-shadow:0 26px 70px rgba(0,0,0,.60),inset 0 1px 0 rgba(255,255,255,.10);}
+      .loginEntryChoiceTitle{font-size:28px;font-weight:1000;color:#fff;text-align:center;letter-spacing:.2px;}
+      .loginEntryChoiceText{margin-top:9px;text-align:center;color:rgba(255,255,255,.78);font-size:15px;font-weight:650;}
+      .loginEntryChoiceActions{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:24px;}
+      .loginEntryChoiceBtn{min-width:220px;min-height:58px;padding:11px 22px;font-size:16px;gap:11px;}
+      .loginEntryChoiceBtn .appBtnIcon{width:27px;height:27px;flex-basis:27px;}
+      @media(max-width:620px){
+        .loginEntryChoiceBox{padding:23px 16px 19px;border-radius:18px;}
+        .loginEntryChoiceTitle{font-size:23px;}
+        .loginEntryChoiceText{font-size:13px;}
+        .loginEntryChoiceActions{gap:11px;margin-top:19px;}
+        .loginEntryChoiceBtn{width:100%;min-width:0;min-height:52px;font-size:14px;}
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
+function chooseLoginEntryMode(){
+  return new Promise((resolve)=>{
+    const modal = __makeLoginEntryChoiceModal();
+    const finish = (mode)=>{
+      modal.remove();
+      resolve(mode);
+    };
+    modal.querySelector("#loginEntryExisting").onclick = ()=>finish("login");
+    modal.querySelector("#loginEntryNewProfile").onclick = ()=>finish("newProfile");
+  });
+}
+
+function createNewProfileFromStartup(){
+  return new Promise((resolve)=>{
+    openProfileModal({
+      required:true,
+      newProfile:true,
+      onDone: ()=>resolve(true),
+      onCancel: ()=>resolve(false)
+    });
+  });
+}
+
 function __makeLoginModal(){
   const existing = document.getElementById("pinLoginModal");
   if(existing) return existing;
@@ -2000,7 +2075,7 @@ function __makeLoginModal(){
 async function ensurePinLogin(force=false){
   // Normally we may skip within the same tab session,
   // but on app start we want to always show the login modal with the last player number.
-  const last = (localStorage.getItem(KEY_LAST_PLAYERNO) || "").trim();
+  const last = (localStorage.getItem(KEY_LAST_PLAYERNO) || getPlayerNo() || "").trim();
   if(!force && last && __isAuthedThisSession(last)) return true;
 
   return await new Promise((resolve)=>{
@@ -2482,18 +2557,18 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
   });
 }
 
-function openProfileModal({required=false, onDone, onCancel}={}){
+function openProfileModal({required=false, newProfile=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
     ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", playerNo:"Player number", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back"}
     : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", playerNo:"Nr gracza", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij"};
 
-  const existing = getProfile() || {};
-  const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
+  const existing = newProfile ? {} : (getProfile() || {});
+  const defaultNick = newProfile ? "" : (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
   // Start blank when no country is set yet
-  const defaultCountry = existing.country || "";
-  const defaultFav = (existing.favClub || "").trim();
-  const defaultPlayerNo = getPlayerNo();
+  const defaultCountry = newProfile ? "" : (existing.country || "");
+  const defaultFav = newProfile ? "" : (existing.favClub || "").trim();
+  const defaultPlayerNo = newProfile ? "" : getPlayerNo();
 
   const wrap = document.createElement("div");
   wrap.className = "profileModal";
@@ -2544,7 +2619,7 @@ function openProfileModal({required=false, onDone, onCancel}={}){
   }
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
-  let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
+  let chosenAvatar = (!newProfile && existing && existing.avatar) ? existing.avatar : "";
   const avatarImgEl = wrap.querySelector("#profileAvatarImg");
   const avatarPlaceholderEl = wrap.querySelector("#profileAvatarPlaceholder");
 
@@ -2643,9 +2718,9 @@ function openProfileModal({required=false, onDone, onCancel}={}){
         keepSamePlayerNo = await modal.open({text});
       }
 
-      const playerNo = keepSamePlayerNo
-        ? ensurePlayerNoForCountry(country)
-        : generateFreshPlayerNo(country);
+      const playerNo = newProfile
+        ? generateFreshPlayerNo(country)
+        : (keepSamePlayerNo ? ensurePlayerNoForCountry(country) : generateFreshPlayerNo(country));
 
       // pokaż w polu readonly
       const pnEl = document.getElementById("profilePlayerNo");
@@ -2922,7 +2997,7 @@ let lastPlayers = [];
 let deletePlayerMode = false;
 
 
-// ===== BUILD 3066: numer gracza jest główną tożsamością w pokoju =====
+// ===== BUILD 3067: numer gracza jest główną tożsamością w pokoju =====
 function normalizePlayerNoValue(value){
   return String(value || "").trim().toUpperCase();
 }
@@ -3088,7 +3163,7 @@ function currentPlayerIdentity(){
 let _identityRepairTimer = null;
 let _identityRepairRunning = false;
 function scheduleRoomIdentityRepair(){
-  // BUILD 3066: wyłączono automatyczne usuwanie duplikatów UID.
+  // BUILD 3067: wyłączono automatyczne usuwanie duplikatów UID.
   // Lista i punktacja są scalane wyłącznie do odczytu według numeru gracza,
   // dzięki czemu żaden klient nie może przypadkowo usunąć wpisów innych graczy.
 }
@@ -3678,7 +3753,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.066` : "TYPER v.3.066",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.067` : "TYPER v.3.067",800,850);
   return canvas;
 }
 
@@ -8182,7 +8257,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3066: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3067: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8699,7 +8774,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3066: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3067: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
@@ -10027,7 +10102,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.056`);
+    setFooter(`Mariusz Gębka v.3.067`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
@@ -10040,9 +10115,16 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     // zastosuj język od razu
     applyLangToUI();
 
-    // wymagane logowanie PIN przed wejściem — zawsze pokazuj okno logowania na starcie
-    const okLogin = await ensurePinLogin(true);
-    if(!okLogin) return;
+    // Najpierw wybór: logowanie istniejącym numerem albo utworzenie nowego profilu.
+    let okLogin = false;
+    while(!okLogin){
+      const entryMode = await chooseLoginEntryMode();
+      if(entryMode === "newProfile"){
+        const created = await createNewProfileFromStartup();
+        if(!created) continue;
+      }
+      okLogin = await ensurePinLogin(true);
+    }
 
     showScreen("home");
     openJoinRoomModal();
