@@ -5,17 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3090)</title>
-<link href="manifest.json?v=3090" rel="manifest"/>
-<link href="favicon-32x32.png?v=3090" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3090" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3090" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3091)</title>
+<link href="manifest.json?v=3091" rel="manifest"/>
+<link href="favicon-32x32.png?v=3091" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3091" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3091" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "3090";
+  const BUILD = "3091";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -33,9 +33,7 @@
       ? caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith("typer-cache-")).map(k => caches.delete(k))))
       : Promise.resolve(),
     ("serviceWorker" in navigator)
-      ? navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(async r => {
-          try { await r.unregister(); } catch (_) {}
-        })))
+      ? navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.update().catch(() => null))))
       : Promise.resolve()
   ]).catch(() => {});
 })();
@@ -216,7 +214,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3090");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3091");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -3433,7 +3431,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3090" type="module"></script>
+<script src="./app.js?v=3091" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3453,14 +3451,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3090', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3091', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.090</div>
+<div id="buildCornerText">Mariusz Gębka v.3.091</div>
 </div>
 
 <style>
@@ -6029,282 +6027,109 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 </style>
 
 
-<style id="build3088-room-responsive-final">
-/* BUILD 3088: wyrównanie wysokości trzech kolumn i pełna responsywność pokoju na telefonie.
-   Baza v3087 pozostaje bez zmian funkcjonalnych. */
-@media (max-width:980px){
-  body.room-screen-active{
-    height:100dvh !important;
-    min-height:100dvh !important;
-    overflow:hidden !important;
-  }
-  body.room-screen-active #app,
-  body.room-screen-active .frame,
+
+<style id="build3091-room-equal-columns">
+/* BUILD 3091: wyłącznie wyrównanie wysokości trzech kolumn pokoju i pełna responsywność. */
+body.room-screen-active #roomLayout{
+  align-items:stretch !important;
+}
+body.room-screen-active #roomLayout > .leftBar,
+body.room-screen-active #roomLayout > .mid,
+body.room-screen-active #roomLayout > .rightBar{
+  align-self:stretch !important;
+  box-sizing:border-box !important;
+  min-width:0 !important;
+  min-height:0 !important;
+}
+
+/* KOMPUTER: trzy kolumny mają dokładnie tę samą wysokość. */
+@media (min-width:981px){
   body.room-screen-active #room.active{
-    height:100dvh !important;
-    min-height:100dvh !important;
     overflow:hidden !important;
   }
-  body.room-screen-active #room{padding:4px !important;}
   body.room-screen-active #roomLayout{
     display:grid !important;
-    grid-template-columns:minmax(0,27fr) minmax(0,46fr) minmax(0,27fr) !important;
+    grid-template-columns:minmax(300px,350px) minmax(0,1fr) minmax(300px,340px) !important;
     grid-template-rows:minmax(0,1fr) !important;
-    align-items:stretch !important;
     width:100% !important;
     height:100% !important;
     min-height:0 !important;
-    gap:6px !important;
-    padding:4px !important;
     overflow:hidden !important;
   }
   body.room-screen-active #roomLayout > .leftBar,
   body.room-screen-active #roomLayout > .mid,
   body.room-screen-active #roomLayout > .rightBar{
-    width:auto !important;
-    min-width:0 !important;
     height:100% !important;
-    min-height:0 !important;
-    max-height:none !important;
-    align-self:stretch !important;
+    max-height:100% !important;
     overflow:hidden !important;
-    margin-top:0 !important;
-    top:auto !important;
-    transform:none !important;
   }
-
   body.room-screen-active #room .leftBar{
-    display:flex !important;
-    flex-direction:column !important;
-    gap:6px !important;
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr) !important;
+  }
+  body.room-screen-active #room #roomProfileInfoCard{
+    min-height:0 !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
   }
   body.room-screen-active #room .mid{
-    display:flex !important;
-    flex-direction:column !important;
-    gap:6px !important;
-  }
-  body.room-screen-active #room .rightBar{
-    display:flex !important;
-    flex-direction:column !important;
-    gap:6px !important;
-  }
-
-  body.room-screen-active #room .leftTopProfile,
-  body.room-screen-active #room .midHead,
-  body.room-screen-active #room .typingCountdownBar,
-  body.room-screen-active #room .matchActionsPanel,
-  body.room-screen-active #room .playersHeader,
-  body.room-screen-active #room .rightBar > .liveRoundTop3,
-  body.room-screen-active #room .rightBottomStack{
-    flex:0 0 auto !important;
-  }
-
-  body.room-screen-active #room #roomProfileInfoCard{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    height:auto !important;
-    overflow:hidden !important;
-    align-content:start !important;
-  }
-  body.room-screen-active #room #roomProfileInfoCard .seasonTop3Desktop{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    overflow:hidden !important;
-    display:flex !important;
-    flex-direction:column !important;
-  }
-  body.room-screen-active #room #roomProfileInfoCard .seasonTop3List{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    max-height:none !important;
-    overflow:auto !important;
-  }
-
-  body.room-screen-active #room .matchesWrap,
-  body.room-screen-active #room #matchesList{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    height:auto !important;
-    max-height:none !important;
-    overflow:auto !important;
-  }
-
-  body.room-screen-active #room .playersList{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    height:auto !important;
-    max-height:none !important;
-    overflow:auto !important;
-  }
-  body.room-screen-active #room .liveRoundTop3List{
-    max-height:122px !important;
-    overflow:auto !important;
-  }
-  body.room-screen-active #room .rightBottomStack{
-    margin-top:auto !important;
-    height:auto !important;
-    min-height:0 !important;
-  }
-
-  body.room-screen-active #room .panel{box-sizing:border-box !important;}
-}
-</style>
-
-
-<style id="build3089-fixed-ten-match-panel">
-/* BUILD 3089: środkowa kolumna ma stałą wysokość niezależnie od liczby spotkań.
-   Lista spotkań zawsze rezerwuje pełne miejsce na kolejkę 10-meczową. */
-#room.active,
-#room #roomLayout{
-  min-height:0 !important;
-}
-#room #roomLayout{
-  height:100% !important;
-  align-items:stretch !important;
-  overflow:hidden !important;
-}
-#room #roomLayout > .leftBar,
-#room #roomLayout > .mid,
-#room #roomLayout > .rightBar{
-  height:100% !important;
-  min-height:0 !important;
-  align-self:stretch !important;
-  overflow:hidden !important;
-}
-#room #roomLayout > .mid{
-  display:grid !important;
-  grid-template-rows:auto minmax(0,1fr) auto auto !important;
-  align-content:stretch !important;
-}
-#room .midHead,
-#room .typingCountdownBar,
-#room .matchActionsPanel{
-  min-height:0 !important;
-}
-#room .matchesWrap,
-#room #matchesList{
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  max-height:none !important;
-  overflow-x:hidden !important;
-  overflow-y:auto !important;
-  align-self:stretch !important;
-  contain:layout !important;
-}
-#room #matchesList .matchRow{
-  flex:0 0 auto !important;
-}
-
-/* Telefon i małe tablety: zachowujemy trzy kolumny, lecz ich wysokość
-   jest zawsze równa stałej wysokości środkowego panelu. */
-@media (max-width:980px){
-  html,
-  body.room-screen-active{
-    height:100dvh !important;
-    min-height:100dvh !important;
-    overflow:hidden !important;
-  }
-  body.room-screen-active #app,
-  body.room-screen-active .frame,
-  body.room-screen-active #room.active{
-    height:100dvh !important;
-    min-height:100dvh !important;
-    overflow:hidden !important;
-  }
-  body.room-screen-active #roomLayout{
-    grid-template-rows:minmax(0,1fr) !important;
-    height:100% !important;
-    min-height:0 !important;
-    align-items:stretch !important;
-    overflow:hidden !important;
-  }
-  body.room-screen-active #roomLayout > .leftBar,
-  body.room-screen-active #roomLayout > .mid,
-  body.room-screen-active #roomLayout > .rightBar{
-    height:100% !important;
-    min-height:0 !important;
-    max-height:100% !important;
-    align-self:stretch !important;
-    overflow:hidden !important;
-  }
-  body.room-screen-active #roomLayout > .mid{
     display:grid !important;
     grid-template-rows:auto minmax(0,1fr) auto auto !important;
   }
-  body.room-screen-active #room .matchesWrap,
-  body.room-screen-active #room #matchesList{
+  body.room-screen-active #room .matchesWrap{
+    min-height:0 !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+  body.room-screen-active #room .rightBar{
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr) auto auto !important;
+  }
+  body.room-screen-active #room .playersList{
+    min-height:0 !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+  body.room-screen-active #room .rightBar > .spacer{
+    display:none !important;
+  }
+}
+
+/* TELEFON POZIOMO: nadal trzy kolumny, równe od góry do dołu. */
+@media (max-width:980px) and (orientation:landscape){
+  html,
+  body.room-screen-active{
+    width:100% !important;
     height:100% !important;
     min-height:0 !important;
-    max-height:none !important;
-    overflow-y:auto !important;
-  }
-  body.room-screen-active #room .leftBar,
-  body.room-screen-active #room .rightBar{
-    display:flex !important;
-    flex-direction:column !important;
-  }
-  body.room-screen-active #room #roomProfileInfoCard,
-  body.room-screen-active #room .playersList{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    overflow:auto !important;
-  }
-}
-</style>
-
-
-<style id="build3090-fixed-ten-match-layout">
-/* BUILD 3090: środkowa kolumna ma zawsze stały rozmiar przewidziany dla 10 spotkań.
-   Liczba aktualnie dodanych pojedynków nie zmienia wysokości żadnej z trzech kolumn. */
-#room.active{min-height:0 !important;overflow:hidden !important;}
-#room #roomLayout{
-  height:100% !important;
-  min-height:0 !important;
-  align-items:stretch !important;
-  overflow:hidden !important;
-}
-#room #roomLayout > .leftBar,
-#room #roomLayout > .mid,
-#room #roomLayout > .rightBar{
-  height:100% !important;
-  min-height:0 !important;
-  max-height:100% !important;
-  align-self:stretch !important;
-  overflow:hidden !important;
-}
-#room #roomLayout > .mid{
-  display:grid !important;
-  grid-template-rows:auto minmax(0,1fr) auto auto !important;
-  align-content:stretch !important;
-}
-#room .matchesWrap,
-#room #matchesList{
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  max-height:none !important;
-  overflow-x:hidden !important;
-  overflow-y:auto !important;
-  align-self:stretch !important;
-}
-#room #matchesList .matchRow{flex:0 0 auto !important;}
-
-@media (max-width:980px){
-  html,body{height:100% !important;min-height:100% !important;overflow:hidden !important;}
-  body.room-screen-active,
-  body.room-screen-active #app,
-  body.room-screen-active .frame,
-  body.room-screen-active #room.active{
-    width:100% !important;
-    height:100dvh !important;
-    min-height:100dvh !important;
-    max-height:100dvh !important;
     overflow:hidden !important;
   }
-  body.room-screen-active #app{position:fixed !important;inset:0 !important;padding:0 !important;}
-  body.room-screen-active .frame{max-width:none !important;border-radius:0 !important;}
-  body.room-screen-active #room{padding:4px !important;}
+  body.room-screen-active #app{
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100dvh !important;
+    min-height:0 !important;
+    padding:2px !important;
+    overflow:hidden !important;
+    align-items:stretch !important;
+  }
+  body.room-screen-active .frame{
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-width:none !important;
+    max-height:none !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #room.active{
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+    min-height:0 !important;
+    padding:3px !important;
+    overflow:hidden !important;
+  }
   body.room-screen-active #roomLayout{
     display:grid !important;
     grid-template-columns:minmax(0,27fr) minmax(0,46fr) minmax(0,27fr) !important;
@@ -6312,37 +6137,134 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
     width:100% !important;
     height:100% !important;
     min-height:0 !important;
-    max-height:100% !important;
-    gap:5px !important;
-    padding:4px !important;
-    align-items:stretch !important;
+    gap:4px !important;
+    padding:3px !important;
     overflow:hidden !important;
+    align-items:stretch !important;
   }
   body.room-screen-active #roomLayout > .leftBar,
   body.room-screen-active #roomLayout > .mid,
   body.room-screen-active #roomLayout > .rightBar{
+    grid-row:1 !important;
     height:100% !important;
-    min-height:0 !important;
     max-height:100% !important;
-    align-self:stretch !important;
+    min-height:0 !important;
+    margin:0 !important;
+    overflow:hidden !important;
+    transform:none !important;
+  }
+  body.room-screen-active #roomLayout > .leftBar{grid-column:1 !important;}
+  body.room-screen-active #roomLayout > .mid{grid-column:2 !important;}
+  body.room-screen-active #roomLayout > .rightBar{grid-column:3 !important;}
+
+  body.room-screen-active #room .leftBar{
+    display:grid !important;
+    grid-template-rows:minmax(0,49%) minmax(0,51%) !important;
+  }
+  body.room-screen-active #room .leftTopProfile,
+  body.room-screen-active #room #roomProfileInfoCard{
+    min-height:0 !important;
+    max-height:none !important;
     overflow:hidden !important;
   }
-  body.room-screen-active #roomLayout > .mid{
+  body.room-screen-active #room #roomProfileInfoCard{
+    height:100% !important;
+  }
+
+  body.room-screen-active #room .mid{
     display:grid !important;
     grid-template-rows:auto minmax(0,1fr) auto auto !important;
   }
-  body.room-screen-active #room .matchesWrap,
-  body.room-screen-active #room #matchesList{
-    height:100% !important;
+  body.room-screen-active #room .matchesWrap{
+    height:auto !important;
     min-height:0 !important;
     max-height:none !important;
     overflow-y:auto !important;
+    overflow-x:hidden !important;
+    overscroll-behavior:contain !important;
+    -webkit-overflow-scrolling:touch !important;
   }
+
+  body.room-screen-active #room .rightBar{
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr) auto auto !important;
+  }
+  body.room-screen-active #room .playersList{
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    overscroll-behavior:contain !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+  body.room-screen-active #room .rightBar > .liveRoundTop3{
+    min-height:0 !important;
+    max-height:78px !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #room .rightBar > .spacer{
+    display:none !important;
+  }
+  body.room-screen-active #room .rightBottomStack{
+    min-height:0 !important;
+    margin:0 !important;
+  }
+}
+
+/* Bardzo niski ekran telefonu: elementy nadal mieszczą się w trzech równych kolumnach. */
+@media (max-width:980px) and (orientation:landscape) and (max-height:390px){
+  body.room-screen-active #roomLayout{gap:3px !important;padding:2px !important;}
   body.room-screen-active #room .leftBar,
-  body.room-screen-active #room .rightBar{display:flex !important;flex-direction:column !important;}
-  body.room-screen-active #room #roomProfileInfoCard,
-  body.room-screen-active #room .playersList{flex:1 1 auto !important;min-height:0 !important;overflow:auto !important;}
-  body.room-screen-active #room .rightBottomStack{margin-top:auto !important;flex:0 0 auto !important;}
+  body.room-screen-active #room .mid,
+  body.room-screen-active #room .rightBar{padding:3px !important;gap:3px !important;}
+  body.room-screen-active #room .leftBar{grid-template-rows:minmax(0,48%) minmax(0,52%) !important;}
+  body.room-screen-active #room .rightBar > .liveRoundTop3{max-height:68px !important;}
+}
+
+/* Telefon pionowo: bez rozsypywania — panele ustawiają się jeden pod drugim. */
+@media (max-width:720px) and (orientation:portrait){
+  html,
+  body.room-screen-active{
+    height:auto !important;
+    min-height:100% !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+  }
+  body.room-screen-active #app{
+    position:relative !important;
+    inset:auto !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:100dvh !important;
+    overflow:visible !important;
+  }
+  body.room-screen-active .frame,
+  body.room-screen-active #room.active{
+    width:100% !important;
+    height:auto !important;
+    min-height:100dvh !important;
+    overflow:visible !important;
+  }
+  body.room-screen-active #roomLayout{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:auto auto auto !important;
+    height:auto !important;
+    overflow:visible !important;
+  }
+  body.room-screen-active #roomLayout > .leftBar,
+  body.room-screen-active #roomLayout > .mid,
+  body.room-screen-active #roomLayout > .rightBar{
+    grid-column:1 !important;
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+  body.room-screen-active #roomLayout > .leftBar{grid-row:1 !important;}
+  body.room-screen-active #roomLayout > .mid{grid-row:2 !important;}
+  body.room-screen-active #roomLayout > .rightBar{grid-row:3 !important;}
 }
 </style>
 
