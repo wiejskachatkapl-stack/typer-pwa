@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3069;
+const BUILD = 3070;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3069 =====
+// ===== MODUŁY EVENTÓW — BUILD 3070 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -739,6 +739,7 @@ function applyLangToUI(){
   if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
   updateActiveEventButton();
   renderLiveRoundTop3();
+  renderLiveSeasonTop3();
 }
 
 // ===== Modal =====
@@ -1632,7 +1633,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3069: system buttons consistent with the rest of the game
+// BUILD 3070: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1749,7 +1750,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3069 =====
+// ===== Regulamin TYPERA — BUILD 3070 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3027,7 +3028,7 @@ let lastPlayers = [];
 let deletePlayerMode = false;
 
 
-// ===== BUILD 3069: numer gracza jest główną tożsamością w pokoju =====
+// ===== BUILD 3070: numer gracza jest główną tożsamością w pokoju =====
 function normalizePlayerNoValue(value){
   return String(value || "").trim().toUpperCase();
 }
@@ -3193,7 +3194,7 @@ function currentPlayerIdentity(){
 let _identityRepairTimer = null;
 let _identityRepairRunning = false;
 function scheduleRoomIdentityRepair(){
-  // BUILD 3069: wyłączono automatyczne usuwanie duplikatów UID.
+  // BUILD 3070: wyłączono automatyczne usuwanie duplikatów UID.
   // Lista i punktacja są scalane wyłącznie do odczytu według numeru gracza,
   // dzięki czemu żaden klient nie może przypadkowo usunąć wpisów innych graczy.
 }
@@ -3783,7 +3784,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.069` : "TYPER v.3.069",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.070` : "TYPER v.3.070",800,850);
   return canvas;
 }
 
@@ -4190,6 +4191,7 @@ function recomputePoints(){
     el("myPointsLabel").textContent = "—";
   }
   renderLiveRoundTop3();
+  renderLiveSeasonTop3();
 }
 
 function _roomProfileRankRows(){
@@ -4210,7 +4212,100 @@ function _roomProfileRankRows(){
   return rows;
 }
 
+
+function buildLiveSeasonRanking(){
+  const identities = getRoomPlayerIdentities(lastPlayers);
+  const rows = [];
+
+  for(const identity of identities){
+    const leagueRows = Array.isArray(identity.leagueRows) ? identity.leagueRows : [];
+    const basePoints = leagueRows.length
+      ? Math.max(0, ...leagueRows.map(row=>Number(row?.points || 0)).filter(Number.isFinite))
+      : 0;
+    const livePoints = identitySubmitted(identity) ? Number(identityPoints(identity) || 0) : 0;
+    const countUids = new Set([
+      identity.uid,
+      identity.pickUid,
+      ...(identity.memberUids || []),
+      ...(identity.candidatePickUids || [])
+    ].filter(Boolean).map(String));
+    let firstPlaces = 0;
+    let secondPlaces = 0;
+    countUids.forEach(uid=>{
+      const c = roomPlacementCounts.get(uid) || {};
+      firstPlaces += Number(c.firstPlaces || 0);
+      secondPlaces += Number(c.secondPlaces || 0);
+    });
+    rows.push({
+      uid:identity.uid || identity.pickUid || identity.playerNo,
+      playerNo:identity.playerNo || "",
+      nick:String(identity.nick || (getLang()==="en" ? "Player" : "Gracz")),
+      points:basePoints + livePoints,
+      firstPlaces,
+      secondPlaces
+    });
+  }
+
+  rows.sort((a,b)=>{
+    if(b.points !== a.points) return b.points - a.points;
+    if(b.firstPlaces !== a.firstPlaces) return b.firstPlaces - a.firstPlaces;
+    if(b.secondPlaces !== a.secondPlaces) return b.secondPlaces - a.secondPlaces;
+    return String(a.nick).localeCompare(String(b.nick), "pl");
+  });
+  return rows.slice(0,3).map((row,index)=>({...row,place:index+1}));
+}
+
+function renderLiveSeasonTop3(){
+  const desktopList = el("seasonTop3DesktopList");
+  const desktopTitle = el("seasonTop3DesktopTitle");
+  const desktopSub = el("seasonTop3DesktopSub");
+  const mobileList = el("seasonTop3MobileList");
+  const mobileTitle = el("seasonTop3MobileTitle");
+  const mobileSub = el("seasonTop3MobileSub");
+  if(!desktopList && !mobileList) return;
+
+  const en = getLang()==="en";
+  const title = en ? `SEASON ${currentSeasonNo} • TOP 3` : `SEZON ${currentSeasonNo} • TOP 3`;
+  if(desktopTitle) desktopTitle.textContent = title;
+  if(desktopSub) desktopSub.textContent = en ? "Live season ranking" : "Ranking sezonu na żywo";
+  if(mobileTitle) mobileTitle.textContent = title;
+  if(mobileSub) mobileSub.textContent = en ? "LIVE" : "NA ŻYWO";
+
+  const ranking = buildLiveSeasonRanking();
+  const fill = (list,compact=false)=>{
+    if(!list) return;
+    list.innerHTML = "";
+    if(!ranking.length){
+      const empty = document.createElement("div");
+      empty.className = "seasonRankEmpty";
+      empty.textContent = en ? "Season ranking is not available yet" : "Ranking sezonu nie jest jeszcze dostępny";
+      list.appendChild(empty);
+      return;
+    }
+    ranking.forEach(row=>{
+      const item = document.createElement("div");
+      item.className = "seasonRankRow";
+      item.dataset.place = String(row.place);
+      const place = document.createElement("div");
+      place.className = "seasonRankPlace";
+      place.textContent = String(row.place);
+      const nick = document.createElement("div");
+      nick.className = "seasonRankNick";
+      nick.textContent = row.nick;
+      const points = document.createElement("div");
+      points.className = "seasonRankPoints";
+      points.textContent = compact ? String(row.points) : (en ? `${row.points} pts` : `${row.points} pkt`);
+      item.append(place,nick,points);
+      list.appendChild(item);
+    });
+  };
+
+  fill(desktopList,false);
+  fill(mobileList,true);
+}
+
 function updateRoomProfileLeagueMini(){
+  renderLiveSeasonTop3();
   const pointsEl = el("roomProfilePoints");
   const placeEl = el("roomProfilePlace");
   if(!pointsEl && !placeEl) return;
@@ -8287,7 +8382,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3069: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3070: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8804,7 +8899,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3069: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3070: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
@@ -10132,7 +10227,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.069`);
+    setFooter(`Mariusz Gębka v.3.070`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
