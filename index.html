@@ -5,17 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3088)</title>
-<link href="manifest.json?v=3088" rel="manifest"/>
-<link href="favicon-32x32.png?v=3088" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3088" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3088" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3089)</title>
+<link href="manifest.json?v=3089" rel="manifest"/>
+<link href="favicon-32x32.png?v=3089" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3089" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3089" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "3088";
+  const BUILD = "3089";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -214,7 +214,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3088");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3089");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -3431,7 +3431,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3088" type="module"></script>
+<script src="./app.js?v=3089" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3451,7 +3451,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3088', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3089', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -6145,6 +6145,109 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
   }
 
   body.room-screen-active #room .panel{box-sizing:border-box !important;}
+}
+</style>
+
+
+<style id="build3089-fixed-ten-match-panel">
+/* BUILD 3089: środkowa kolumna ma stałą wysokość niezależnie od liczby spotkań.
+   Lista spotkań zawsze rezerwuje pełne miejsce na kolejkę 10-meczową. */
+#room.active,
+#room #roomLayout{
+  min-height:0 !important;
+}
+#room #roomLayout{
+  height:100% !important;
+  align-items:stretch !important;
+  overflow:hidden !important;
+}
+#room #roomLayout > .leftBar,
+#room #roomLayout > .mid,
+#room #roomLayout > .rightBar{
+  height:100% !important;
+  min-height:0 !important;
+  align-self:stretch !important;
+  overflow:hidden !important;
+}
+#room #roomLayout > .mid{
+  display:grid !important;
+  grid-template-rows:auto minmax(0,1fr) auto auto !important;
+  align-content:stretch !important;
+}
+#room .midHead,
+#room .typingCountdownBar,
+#room .matchActionsPanel{
+  min-height:0 !important;
+}
+#room .matchesWrap,
+#room #matchesList{
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  align-self:stretch !important;
+  contain:layout !important;
+}
+#room #matchesList .matchRow{
+  flex:0 0 auto !important;
+}
+
+/* Telefon i małe tablety: zachowujemy trzy kolumny, lecz ich wysokość
+   jest zawsze równa stałej wysokości środkowego panelu. */
+@media (max-width:980px){
+  html,
+  body.room-screen-active{
+    height:100dvh !important;
+    min-height:100dvh !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #app,
+  body.room-screen-active .frame,
+  body.room-screen-active #room.active{
+    height:100dvh !important;
+    min-height:100dvh !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #roomLayout{
+    grid-template-rows:minmax(0,1fr) !important;
+    height:100% !important;
+    min-height:0 !important;
+    align-items:stretch !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #roomLayout > .leftBar,
+  body.room-screen-active #roomLayout > .mid,
+  body.room-screen-active #roomLayout > .rightBar{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    align-self:stretch !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active #roomLayout > .mid{
+    display:grid !important;
+    grid-template-rows:auto minmax(0,1fr) auto auto !important;
+  }
+  body.room-screen-active #room .matchesWrap,
+  body.room-screen-active #room #matchesList{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow-y:auto !important;
+  }
+  body.room-screen-active #room .leftBar,
+  body.room-screen-active #room .rightBar{
+    display:flex !important;
+    flex-direction:column !important;
+  }
+  body.room-screen-active #room #roomProfileInfoCard,
+  body.room-screen-active #room .playersList{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    overflow:auto !important;
+  }
 }
 </style>
 
