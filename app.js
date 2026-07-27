@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3070;
+const BUILD = 3065;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3070 =====
+// ===== MODUŁY EVENTÓW — BUILD 3065 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -739,7 +739,6 @@ function applyLangToUI(){
   if(el("t_points_col")) el("t_points_col").textContent = t("pointsCol");
   updateActiveEventButton();
   renderLiveRoundTop3();
-  renderLiveSeasonTop3();
 }
 
 // ===== Modal =====
@@ -768,8 +767,6 @@ function modalClose(){
   }
   const mb = el("modalBack");
   if(mb) mb.remove();
-  const closeBtn = el("modalClose");
-  if(closeBtn) closeBtn.onclick = modalClose;
 }
 
 /** ROOMS MENU MODALS **/
@@ -1633,7 +1630,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3070: system buttons consistent with the rest of the game
+// BUILD 3065: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1750,7 +1747,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3070 =====
+// ===== Regulamin TYPERA — BUILD 3065 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -1943,99 +1940,6 @@ function __setAuthedThisSession(playerNo){
   try{ sessionStorage.setItem(KEY_SESSION_AUTH, String(playerNo||"").trim().toUpperCase()); }catch(e){}
 }
 
-
-function __makeLoginEntryChoiceModal(){
-  const existing = document.getElementById("loginEntryChoiceModal");
-  if(existing) existing.remove();
-
-  const en = getLang() === "en";
-  const wrap = document.createElement("div");
-  wrap.id = "loginEntryChoiceModal";
-  wrap.className = "loginEntryChoiceOverlay";
-  wrap.innerHTML = `
-    <div class="loginEntryChoiceBox" role="dialog" aria-modal="true" aria-labelledby="loginEntryChoiceTitle">
-      <div class="loginEntryChoiceTitle" id="loginEntryChoiceTitle">${en ? "Welcome to TYPER" : "Witaj w TYPERZE"}</div>
-      <div class="loginEntryChoiceText">${en ? "Choose how you want to continue." : "Wybierz sposób wejścia do gry."}</div>
-      <div class="loginEntryChoiceActions">
-        <button id="loginEntryExisting" class="modernAppBtn loginEntryChoiceBtn" type="button">
-          <span class="appBtnIcon ico-join2" aria-hidden="true"></span>
-          <span class="label-pl">Logowanie</span><span class="label-en">Login</span>
-        </button>
-        <button id="loginEntryNewProfile" class="modernAppBtn loginEntryChoiceBtn" type="button">
-          <span class="appBtnIcon ico-profile2" aria-hidden="true"></span>
-          <span class="label-pl">Nowy profil</span><span class="label-en">New profile</span>
-        </button>
-      </div>
-    </div>
-  `;
-
-  if(!document.getElementById("loginEntryChoiceStyles")){
-    const st = document.createElement("style");
-    st.id = "loginEntryChoiceStyles";
-    st.textContent = `
-      .loginEntryChoiceOverlay{position:fixed;inset:0;z-index:100120;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,9,24,.72);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);}
-      .loginEntryChoiceBox{width:min(600px,92vw);padding:28px 26px 24px;border:1px solid rgba(121,190,255,.28);border-radius:22px;background:linear-gradient(160deg,rgba(7,25,56,.98),rgba(4,14,34,.98));box-shadow:0 26px 70px rgba(0,0,0,.60),inset 0 1px 0 rgba(255,255,255,.10);}
-      .loginEntryChoiceTitle{font-size:28px;font-weight:1000;color:#fff;text-align:center;letter-spacing:.2px;}
-      .loginEntryChoiceText{margin-top:9px;text-align:center;color:rgba(255,255,255,.78);font-size:15px;font-weight:650;}
-      .loginEntryChoiceActions{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:24px;}
-      .loginEntryChoiceBtn{min-width:220px;min-height:58px;padding:11px 22px;font-size:16px;gap:11px;}
-      .loginEntryChoiceBtn .appBtnIcon{width:27px;height:27px;flex-basis:27px;}
-      @media(max-width:620px){
-        .loginEntryChoiceBox{padding:23px 16px 19px;border-radius:18px;}
-        .loginEntryChoiceTitle{font-size:23px;}
-        .loginEntryChoiceText{font-size:13px;}
-        .loginEntryChoiceActions{gap:11px;margin-top:19px;}
-        .loginEntryChoiceBtn{width:100%;min-width:0;min-height:52px;font-size:14px;}
-      }
-    `;
-    document.head.appendChild(st);
-  }
-
-  document.body.appendChild(wrap);
-  return wrap;
-}
-
-function chooseLoginEntryMode(){
-  return new Promise((resolve)=>{
-    const modal = __makeLoginEntryChoiceModal();
-    const finish = (mode)=>{
-      modal.remove();
-      resolve(mode);
-    };
-    modal.querySelector("#loginEntryExisting").onclick = ()=>finish("login");
-    modal.querySelector("#loginEntryNewProfile").onclick = ()=>finish("newProfile");
-  });
-}
-
-function createNewProfileFromStartup(){
-  return new Promise((resolve)=>{
-    openProfileModal({
-      required:true,
-      newProfile:true,
-      onDone: ()=>resolve(true),
-      onCancel: ()=>resolve(false)
-    });
-  });
-}
-
-async function returnToLoginEntryFromProfile(){
-  try{
-    let okLogin = false;
-    while(!okLogin){
-      const entryMode = await chooseLoginEntryMode();
-      if(entryMode === "newProfile"){
-        const created = await createNewProfileFromStartup();
-        if(!created) continue;
-      }
-      okLogin = await ensurePinLogin(true);
-    }
-    showScreen("home");
-    openJoinRoomModal();
-  }catch(err){
-    console.error("Return to login entry failed:", err);
-  }
-}
-
 function __makeLoginModal(){
   const existing = document.getElementById("pinLoginModal");
   if(existing) return existing;
@@ -2096,7 +2000,7 @@ function __makeLoginModal(){
 async function ensurePinLogin(force=false){
   // Normally we may skip within the same tab session,
   // but on app start we want to always show the login modal with the last player number.
-  const last = (localStorage.getItem(KEY_LAST_PLAYERNO) || getPlayerNo() || "").trim();
+  const last = (localStorage.getItem(KEY_LAST_PLAYERNO) || "").trim();
   if(!force && last && __isAuthedThisSession(last)) return true;
 
   return await new Promise((resolve)=>{
@@ -2578,18 +2482,18 @@ function openAvatarPicker({lang="pl", current="", onPick}={}){
   });
 }
 
-function openProfileModal({required=false, newProfile=false, onDone, onCancel}={}){
+function openProfileModal({required=false, onDone, onCancel}={}){
   const lang = getLang();
   const L = (lang === "en")
     ? {title:"Profile", desc: required?"Complete your profile to start.":"Edit your profile.", nick:"Nickname", country:"Country", playerNo:"Player number", fav:"Favorite club", saveBtn:"Change", cancelBtn:"Back"}
     : {title:"Profil", desc: required?"Uzupełnij profil, aby rozpocząć grę.":"Edytuj swój profil.", nick:"Nick", country:"Kraj", playerNo:"Nr gracza", fav:"Ulubiony klub", saveBtn:"Zmień", cancelBtn:"Cofnij"};
 
-  const existing = newProfile ? {} : (getProfile() || {});
-  const defaultNick = newProfile ? "" : (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
+  const existing = getProfile() || {};
+  const defaultNick = (localStorage.getItem(KEY_NICK) || existing.nick || "").trim();
   // Start blank when no country is set yet
-  const defaultCountry = newProfile ? "" : (existing.country || "");
-  const defaultFav = newProfile ? "" : (existing.favClub || "").trim();
-  const defaultPlayerNo = newProfile ? "" : getPlayerNo();
+  const defaultCountry = existing.country || "";
+  const defaultFav = (existing.favClub || "").trim();
+  const defaultPlayerNo = getPlayerNo();
 
   const wrap = document.createElement("div");
   wrap.className = "profileModal";
@@ -2629,16 +2533,6 @@ function openProfileModal({required=false, newProfile=false, onDone, onCancel}={
   const modalEl = el("modal");
   if(modalEl) modalEl.classList.add("profileMode");
   const modalCloseBtn = el("modalClose");
-  if(modalCloseBtn){
-    modalCloseBtn.onclick = ()=>{
-      modalClose();
-      if(typeof onCancel === "function"){
-        onCancel();
-      }else{
-        void returnToLoginEntryFromProfile();
-      }
-    };
-  }
   if(modalCloseBtn && !el("modalBack")){
     const btnBackTop = makeSysImgButton("btn_back.png", {cls:"sysBtn small", alt:L.cancelBtn, title:L.cancelBtn});
     btnBackTop.id = "modalBack";
@@ -2650,7 +2544,7 @@ function openProfileModal({required=false, newProfile=false, onDone, onCancel}={
   }
 
   // Avatar (ui/avatars/avatar_1.png ... avatar_60.png) – wybór z okna
-  let chosenAvatar = (!newProfile && existing && existing.avatar) ? existing.avatar : "";
+  let chosenAvatar = (existing && existing.avatar) ? existing.avatar : "";
   const avatarImgEl = wrap.querySelector("#profileAvatarImg");
   const avatarPlaceholderEl = wrap.querySelector("#profileAvatarPlaceholder");
 
@@ -2749,9 +2643,9 @@ function openProfileModal({required=false, newProfile=false, onDone, onCancel}={
         keepSamePlayerNo = await modal.open({text});
       }
 
-      const playerNo = newProfile
-        ? generateFreshPlayerNo(country)
-        : (keepSamePlayerNo ? ensurePlayerNoForCountry(country) : generateFreshPlayerNo(country));
+      const playerNo = keepSamePlayerNo
+        ? ensurePlayerNoForCountry(country)
+        : generateFreshPlayerNo(country);
 
       // pokaż w polu readonly
       const pnEl = document.getElementById("profilePlayerNo");
@@ -3028,7 +2922,7 @@ let lastPlayers = [];
 let deletePlayerMode = false;
 
 
-// ===== BUILD 3070: numer gracza jest główną tożsamością w pokoju =====
+// ===== BUILD 3065: numer gracza jest główną tożsamością w pokoju =====
 function normalizePlayerNoValue(value){
   return String(value || "").trim().toUpperCase();
 }
@@ -3051,59 +2945,51 @@ function identityTimeMs(value){
 }
 function getRoomPlayerIdentities(players = lastPlayers){
   const groups = new Map();
-  const ensureGroup = (pno, uid="")=>{
-    const cleanNo = normalizePlayerNoValue(pno);
-    const cleanUid = String(uid || "");
-    const key = cleanNo ? `PN:${cleanNo}` : `UID:${cleanUid}`;
-    if(!groups.has(key)){
-      groups.set(key, {
-        key,
-        playerNo:cleanNo,
-        members:[],
-        leagueRows:[],
-        candidatePickUids:new Set()
-      });
-    }
-    return groups.get(key);
-  };
-
+  const uidToGroup = new Map();
   const leagueByUid = new Map();
   const leagueByPlayerNo = new Map();
+
   (roomLeagueRows || []).forEach(row=>{
     const uid = String(row?.uid || "");
     const pno = normalizePlayerNoValue(row?.playerNo);
     if(uid) leagueByUid.set(uid, row);
     if(pno && !leagueByPlayerNo.has(pno)) leagueByPlayerNo.set(pno, row);
-    if(pno){
-      const group = ensureGroup(pno, uid);
-      group.leagueRows.push(row);
-      if(uid) group.candidatePickUids.add(uid);
-    }
   });
 
   (players || []).forEach((raw, idx)=>{
     const uid = String(raw?.uid || raw?.id || raw?.playerUid || raw?.playerId || "");
-    const pno = normalizePlayerNoValue(raw?.playerNo || raw?.playerNumber || raw?.nrGracza || raw?.number);
-    const group = ensureGroup(pno, uid || `row-${idx}`);
+    const pno = normalizePlayerNoValue(raw?.playerNo);
+    const key = pno ? `PN:${pno}` : `UID:${uid || idx}`;
+    if(!groups.has(key)) groups.set(key, { key, playerNo:pno, members:[], candidatePickUids:new Set() });
+    const group = groups.get(key);
     group.members.push({...raw, uid:uid || raw?.id || ""});
-    if(uid) group.candidatePickUids.add(uid);
+    if(uid){
+      uidToGroup.set(uid, group);
+      group.candidatePickUids.add(uid);
+    }
   });
 
-  // Dokumenty typów mogą pozostać nawet wtedy, gdy starszy wpis gracza został usunięty.
-  // Dzięki playerNo nadal pokażemy gracza na liście i połączymy jego punkty/status.
+  // Dołącz dokumenty typów do numeru gracza. Dla starszych zapisów bez playerNo
+  // korzystamy z UID gracza albo z wcześniejszego wpisu w tabeli ligi.
   Object.keys(picksDocByUid || {}).forEach(uid=>{
-    const pickNo = normalizePlayerNoValue(picksPlayerNoByUid?.[uid]);
-    const player = (players || []).find(p=>String(p?.uid || p?.id || "") === String(uid));
-    const league = leagueByUid.get(String(uid));
-    const pno = pickNo || normalizePlayerNoValue(player?.playerNo || league?.playerNo);
-    const group = ensureGroup(pno, uid);
+    let group = uidToGroup.get(String(uid));
+    let pno = normalizePlayerNoValue(picksPlayerNoByUid?.[uid]);
+    if(!pno) pno = normalizePlayerNoValue(leagueByUid.get(String(uid))?.playerNo);
+    if(!group && pno) group = groups.get(`PN:${pno}`);
+    if(!group && pno){
+      group = { key:`PN:${pno}`, playerNo:pno, members:[], candidatePickUids:new Set() };
+      groups.set(group.key, group);
+    }
+    if(!group){
+      group = { key:`UID:${uid}`, playerNo:"", members:[], candidatePickUids:new Set() };
+      groups.set(group.key, group);
+    }
     group.candidatePickUids.add(String(uid));
   });
 
   const result = [];
   groups.forEach(group=>{
     const members = group.members || [];
-    const leagueRows = group.leagueRows || [];
     const pno = normalizePlayerNoValue(group.playerNo);
     const memberUids = [...new Set(members.map(x=>String(x?.uid || x?.id || "")).filter(Boolean))];
     const candidatePickUids = [...new Set([...(group.candidatePickUids || []), ...memberUids])];
@@ -3117,7 +3003,7 @@ function getRoomPlayerIdentities(players = lastPlayers){
         identityTimeMs(x?.lastActiveAt) / 1e13;
       return score(b) - score(a);
     });
-    const base = sortedMembers[0] || leagueRows[0] || {};
+    const base = sortedMembers[0] || {};
 
     const pickUid = [...candidatePickUids].sort((a,b)=>{
       const completeA = isCompletePicksObject(picksDocByUid?.[a]) ? 1 : 0;
@@ -3131,20 +3017,18 @@ function getRoomPlayerIdentities(players = lastPlayers){
       return String(a).localeCompare(String(b));
     })[0] || "";
 
-    const currentPno = normalizePlayerNoValue(getPlayerNo() || getProfile()?.playerNo);
     const nickCandidates = [
-      ...(pno && pno === currentPno ? [getNick()] : []),
       ...sortedMembers.map(x=>x?.nick),
       ...candidatePickUids.map(uid=>picksNickByUid?.[uid]),
-      ...leagueRows.map(x=>x?.nick),
       leagueByPlayerNo.get(pno)?.nick,
       ...candidatePickUids.map(uid=>leagueByUid.get(uid)?.nick)
     ];
-    const nick = String(nickCandidates.find(isUsefulPlayerNick) || (getLang()==="en" ? "Player" : "Gracz"));
+    const currentPno = normalizePlayerNoValue(getPlayerNo?.() || getProfile?.()?.playerNo);
+    if(pno && pno === currentPno) nickCandidates.unshift(getNick?.());
+    const nick = String(nickCandidates.find(isUsefulPlayerNick) || "—");
 
     const activeMember = [...members].sort((a,b)=>identityTimeMs(b?.lastActiveAt)-identityTimeMs(a?.lastActiveAt))[0] || base;
-    const admin = members.some(x=>String(x?.uid || x?.id || "") === String(currentRoom?.adminUid || "") || x?.admin === true)
-      || leagueRows.some(x=>String(x?.uid || "") === String(currentRoom?.adminUid || ""));
+    const admin = members.some(x=>String(x?.uid || x?.id || "") === String(currentRoom?.adminUid || "") || x?.admin === true);
     const canonicalUid = String(
       members.find(x=>String(x?.uid || x?.id || "") === String(currentRoom?.adminUid || ""))?.uid ||
       members.find(x=>String(x?.uid || x?.id || "") === String(userUid || ""))?.uid ||
@@ -3153,20 +3037,18 @@ function getRoomPlayerIdentities(players = lastPlayers){
 
     result.push({
       ...base,
-      uid:canonicalUid,
-      id:canonicalUid,
-      playerNo:pno,
+      uid: canonicalUid,
+      id: canonicalUid,
+      playerNo: pno,
       nick,
       admin,
-      members,
-      leagueRows,
       memberUids,
       candidatePickUids,
       pickUid,
-      lastActiveAt:activeMember?.lastActiveAt || base?.lastActiveAt || null,
-      avatar:sortedMembers.find(x=>String(x?.avatar || "").trim())?.avatar || base?.avatar || "",
-      country:sortedMembers.find(x=>String(x?.country || "").trim())?.country || base?.country || "",
-      favClub:sortedMembers.find(x=>String(x?.favClub || "").trim())?.favClub || base?.favClub || ""
+      lastActiveAt: activeMember?.lastActiveAt || base?.lastActiveAt || null,
+      avatar: sortedMembers.find(x=>String(x?.avatar || "").trim())?.avatar || base?.avatar || "",
+      country: sortedMembers.find(x=>String(x?.country || "").trim())?.country || base?.country || "",
+      favClub: sortedMembers.find(x=>String(x?.favClub || "").trim())?.favClub || base?.favClub || ""
     });
   });
 
@@ -3194,12 +3076,57 @@ function currentPlayerIdentity(){
 let _identityRepairTimer = null;
 let _identityRepairRunning = false;
 function scheduleRoomIdentityRepair(){
-  // BUILD 3070: wyłączono automatyczne usuwanie duplikatów UID.
-  // Lista i punktacja są scalane wyłącznie do odczytu według numeru gracza,
-  // dzięki czemu żaden klient nie może przypadkowo usunąć wpisów innych graczy.
+  if(!currentRoomCode) return;
+  clearTimeout(_identityRepairTimer);
+  _identityRepairTimer = setTimeout(()=>repairRoomPlayerIdentities().catch(e=>console.warn("identity repair failed",e)), 250);
 }
 async function repairRoomPlayerIdentities(){
-  return;
+  if(_identityRepairRunning || !currentRoomCode) return;
+  _identityRepairRunning = true;
+  try{
+    const byPno = new Map();
+    (lastPlayers || []).forEach(p=>{
+      const pno = normalizePlayerNoValue(p?.playerNo);
+      if(!pno) return;
+      if(!byPno.has(pno)) byPno.set(pno, []);
+      byPno.get(pno).push(p);
+    });
+    for(const [pno, docs] of byPno.entries()){
+      if(docs.length > 1){
+        await __canonicalizeRoomPlayerByPlayerNo(currentRoomCode, pno);
+        continue;
+      }
+      const player = docs[0];
+      if(!player) continue;
+      const uid = String(player.uid || player.id || "");
+      const leagueNick = (roomLeagueRows || []).find(r=>normalizePlayerNoValue(r?.playerNo)===pno)?.nick;
+      const repairedNick = [player.nick, picksNickByUid?.[uid], leagueNick].find(isUsefulPlayerNick);
+      const patch = {};
+      if(!isUsefulPlayerNick(player.nick) && repairedNick) patch.nick = String(repairedNick);
+      if(uid && Object.keys(patch).length){
+        patch.uid = uid;
+        patch.playerNo = pno;
+        patch.lastActiveAt = boot.serverTimestamp();
+        await boot.setDoc(boot.doc(db,"rooms",currentRoomCode,"players",uid), patch, {merge:true});
+      }
+    }
+    for(const uid of Object.keys(picksDocByUid || {})){
+      if(normalizePlayerNoValue(picksPlayerNoByUid?.[uid])) continue;
+      const player = (lastPlayers || []).find(p=>String(p?.uid || p?.id || "") === String(uid));
+      const league = (roomLeagueRows || []).find(r=>String(r?.uid || "") === String(uid));
+      const pno = normalizePlayerNoValue(player?.playerNo || league?.playerNo);
+      if(!pno) continue;
+      const nick = [picksNickByUid?.[uid], player?.nick, league?.nick].find(isUsefulPlayerNick);
+      await boot.setDoc(boot.doc(db,"rooms",currentRoomCode,"picks",uid), {
+        uid,
+        playerNo:pno,
+        ...(nick ? {nick:String(nick)} : {}),
+        updatedAt:boot.serverTimestamp()
+      }, {merge:true});
+    }
+  }finally{
+    _identityRepairRunning = false;
+  }
 }
 
 
@@ -3784,7 +3711,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.070` : "TYPER v.3.070",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.065` : "TYPER v.3.065",800,850);
   return canvas;
 }
 
@@ -4118,7 +4045,7 @@ function renderLiveRoundTop3(){
   if(mobileTitle) mobileTitle.textContent = en ? "LIVE TOP 3" : "TOP 3 NA ŻYWO";
   if(mobileSub) mobileSub.textContent = `${resolvedCount}/${totalCount}`;
 
-  const ranking = buildLiveRoundRanking().slice(0, 3);
+  const ranking = buildLiveRoundRanking().filter(r=>r.place <= 3);
 
   function fillList(list, compact=false){
     if(!list) return;
@@ -4132,14 +4059,13 @@ function renderLiveRoundTop3(){
       list.appendChild(empty);
       return;
     }
-    ranking.forEach((r,index)=>{
-      const displayPlace = index + 1;
+    ranking.forEach(r=>{
       const row = document.createElement("div");
       row.className = "liveRankRow";
-      row.dataset.place = String(displayPlace);
+      row.dataset.place = String(r.place);
       const place = document.createElement("div");
       place.className = "liveRankPlace";
-      place.textContent = String(displayPlace);
+      place.textContent = String(r.place);
       const nick = document.createElement("div");
       nick.className = "liveRankNick";
       nick.textContent = r.nick;
@@ -4191,7 +4117,6 @@ function recomputePoints(){
     el("myPointsLabel").textContent = "—";
   }
   renderLiveRoundTop3();
-  renderLiveSeasonTop3();
 }
 
 function _roomProfileRankRows(){
@@ -4212,100 +4137,7 @@ function _roomProfileRankRows(){
   return rows;
 }
 
-
-function buildLiveSeasonRanking(){
-  const identities = getRoomPlayerIdentities(lastPlayers);
-  const rows = [];
-
-  for(const identity of identities){
-    const leagueRows = Array.isArray(identity.leagueRows) ? identity.leagueRows : [];
-    const basePoints = leagueRows.length
-      ? Math.max(0, ...leagueRows.map(row=>Number(row?.points || 0)).filter(Number.isFinite))
-      : 0;
-    const livePoints = identitySubmitted(identity) ? Number(identityPoints(identity) || 0) : 0;
-    const countUids = new Set([
-      identity.uid,
-      identity.pickUid,
-      ...(identity.memberUids || []),
-      ...(identity.candidatePickUids || [])
-    ].filter(Boolean).map(String));
-    let firstPlaces = 0;
-    let secondPlaces = 0;
-    countUids.forEach(uid=>{
-      const c = roomPlacementCounts.get(uid) || {};
-      firstPlaces += Number(c.firstPlaces || 0);
-      secondPlaces += Number(c.secondPlaces || 0);
-    });
-    rows.push({
-      uid:identity.uid || identity.pickUid || identity.playerNo,
-      playerNo:identity.playerNo || "",
-      nick:String(identity.nick || (getLang()==="en" ? "Player" : "Gracz")),
-      points:basePoints + livePoints,
-      firstPlaces,
-      secondPlaces
-    });
-  }
-
-  rows.sort((a,b)=>{
-    if(b.points !== a.points) return b.points - a.points;
-    if(b.firstPlaces !== a.firstPlaces) return b.firstPlaces - a.firstPlaces;
-    if(b.secondPlaces !== a.secondPlaces) return b.secondPlaces - a.secondPlaces;
-    return String(a.nick).localeCompare(String(b.nick), "pl");
-  });
-  return rows.slice(0,3).map((row,index)=>({...row,place:index+1}));
-}
-
-function renderLiveSeasonTop3(){
-  const desktopList = el("seasonTop3DesktopList");
-  const desktopTitle = el("seasonTop3DesktopTitle");
-  const desktopSub = el("seasonTop3DesktopSub");
-  const mobileList = el("seasonTop3MobileList");
-  const mobileTitle = el("seasonTop3MobileTitle");
-  const mobileSub = el("seasonTop3MobileSub");
-  if(!desktopList && !mobileList) return;
-
-  const en = getLang()==="en";
-  const title = en ? `SEASON ${currentSeasonNo} • TOP 3` : `SEZON ${currentSeasonNo} • TOP 3`;
-  if(desktopTitle) desktopTitle.textContent = title;
-  if(desktopSub) desktopSub.textContent = en ? "Live season ranking" : "Ranking sezonu na żywo";
-  if(mobileTitle) mobileTitle.textContent = title;
-  if(mobileSub) mobileSub.textContent = en ? "LIVE" : "NA ŻYWO";
-
-  const ranking = buildLiveSeasonRanking();
-  const fill = (list,compact=false)=>{
-    if(!list) return;
-    list.innerHTML = "";
-    if(!ranking.length){
-      const empty = document.createElement("div");
-      empty.className = "seasonRankEmpty";
-      empty.textContent = en ? "Season ranking is not available yet" : "Ranking sezonu nie jest jeszcze dostępny";
-      list.appendChild(empty);
-      return;
-    }
-    ranking.forEach(row=>{
-      const item = document.createElement("div");
-      item.className = "seasonRankRow";
-      item.dataset.place = String(row.place);
-      const place = document.createElement("div");
-      place.className = "seasonRankPlace";
-      place.textContent = String(row.place);
-      const nick = document.createElement("div");
-      nick.className = "seasonRankNick";
-      nick.textContent = row.nick;
-      const points = document.createElement("div");
-      points.className = "seasonRankPoints";
-      points.textContent = compact ? String(row.points) : (en ? `${row.points} pts` : `${row.points} pkt`);
-      item.append(place,nick,points);
-      list.appendChild(item);
-    });
-  };
-
-  fill(desktopList,false);
-  fill(mobileList,true);
-}
-
 function updateRoomProfileLeagueMini(){
-  renderLiveSeasonTop3();
   const pointsEl = el("roomProfilePoints");
   const placeEl = el("roomProfilePlace");
   if(!pointsEl && !placeEl) return;
@@ -8066,7 +7898,7 @@ function renderPlayers(players){
   // Numer gracza jest kluczem głównym. Kilka historycznych UID z tym samym numerem
   // wyświetlamy jako jednego gracza, z jednym nickiem, statusem i punktami.
   const visiblePlayers = getRoomPlayerIdentities(players)
-    .filter(p => p.playerNo);
+    .filter(p => p.playerNo && p.members?.length);
 
   const delBtn = el("btnDeletePlayer");
   if(delBtn) delBtn.style.display = isAdmin() ? "" : "none";
@@ -8382,7 +8214,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3070: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3065: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8899,7 +8731,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3070: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3065: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
@@ -10227,7 +10059,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.070`);
+    setFooter(`Mariusz Gębka v.3.056`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
@@ -10240,16 +10072,9 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     // zastosuj język od razu
     applyLangToUI();
 
-    // Najpierw wybór: logowanie istniejącym numerem albo utworzenie nowego profilu.
-    let okLogin = false;
-    while(!okLogin){
-      const entryMode = await chooseLoginEntryMode();
-      if(entryMode === "newProfile"){
-        const created = await createNewProfileFromStartup();
-        if(!created) continue;
-      }
-      okLogin = await ensurePinLogin(true);
-    }
+    // wymagane logowanie PIN przed wejściem — zawsze pokazuj okno logowania na starcie
+    const okLogin = await ensurePinLogin(true);
+    if(!okLogin) return;
 
     showScreen("home");
     openJoinRoomModal();
