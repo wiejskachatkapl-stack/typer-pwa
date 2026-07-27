@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3073;
+const BUILD = 3074;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -431,7 +431,7 @@ function setLang(lang){
 }
 
 
-// ===== MODUŁY EVENTÓW — BUILD 3073 =====
+// ===== MODUŁY EVENTÓW — BUILD 3074 =====
 const EVENT_CATALOG_URL = './events/events.json';
 const EVENT_FALLBACK_DEFINITION = Object.freeze({
   id: 'world-cup-2026',
@@ -1633,7 +1633,7 @@ async function adminDeletePlayer(uid, nick){
 
 
 // ===== "My profile" – enter player number modal (YES/NO) =====
-// BUILD 3073: system buttons consistent with the rest of the game
+// BUILD 3074: system buttons consistent with the rest of the game
 let _myProfileNoModal = null;
 function ensureMyProfileNoModal(){
   if(_myProfileNoModal) return _myProfileNoModal;
@@ -1750,7 +1750,7 @@ async function askAndSetPlayerNoFromMyProfile(){
 
 
 
-// ===== Regulamin TYPERA — BUILD 3073 =====
+// ===== Regulamin TYPERA — BUILD 3074 =====
 function syncRulesLanguage(){
   const ov = el("rulesOverlay");
   if(!ov) return;
@@ -3028,7 +3028,7 @@ let lastPlayers = [];
 let deletePlayerMode = false;
 
 
-// ===== BUILD 3073: numer gracza jest główną tożsamością w pokoju =====
+// ===== BUILD 3074: numer gracza jest główną tożsamością w pokoju =====
 function normalizePlayerNoValue(value){
   return String(value || "").trim().toUpperCase();
 }
@@ -3194,7 +3194,7 @@ function currentPlayerIdentity(){
 let _identityRepairTimer = null;
 let _identityRepairRunning = false;
 function scheduleRoomIdentityRepair(){
-  // BUILD 3073: wyłączono automatyczne usuwanie duplikatów UID.
+  // BUILD 3074: wyłączono automatyczne usuwanie duplikatów UID.
   // Lista i punktacja są scalane wyłącznie do odczytu według numeru gracza,
   // dzięki czemu żaden klient nie może przypadkowo usunąć wpisów innych graczy.
 }
@@ -3784,7 +3784,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.073` : "TYPER v.3.073",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.074` : "TYPER v.3.074",800,850);
   return canvas;
 }
 
@@ -8382,7 +8382,7 @@ function renderMatches(){
 
 
 
-  // BUILD 3073: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
+  // BUILD 3074: licznik jest w stałym dolnym pasku poza przewijaną listą meczów.
   updateTypingDeadlineUI();
   mainAttachMobileScoreKeyboard(list);
   updateSaveButtonState();
@@ -8899,7 +8899,7 @@ function ensureEndRoundConfirmModal(){
   if(_endRoundConfirmModal) return _endRoundConfirmModal;
   ensureSystemConfirmStyles();
 
-  // BUILD 3073: systemowe przyciski TAK/NIE zgodne z resztą gry.
+  // BUILD 3074: systemowe przyciski TAK/NIE zgodne z resztą gry.
   if(!document.getElementById("endRoundConfirmStyles")){
     const st = document.createElement('style');
     st.id = "endRoundConfirmStyles";
@@ -10227,7 +10227,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.073`);
+    setFooter(`Mariusz Gębka v.3.074`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
