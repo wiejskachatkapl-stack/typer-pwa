@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reset PWA — TYPER</title>
+  <style>
+    :root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top left,rgba(45,111,255,.35),transparent 35%),radial-gradient(circle at bottom right,rgba(255,122,37,.25),transparent 35%),linear-gradient(145deg,#041126,#0a234b 55%,#09162e);color:#fff}
+    .card{width:min(680px,100%);background:rgba(4,18,43,.94);border:1px solid rgba(137,197,255,.35);border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.55);overflow:hidden}
+    .head{padding:24px 26px 18px;background:linear-gradient(135deg,rgba(28,92,210,.5),rgba(10,41,93,.35));border-bottom:1px solid rgba(255,255,255,.12)}
+    h1{margin:0 0 7px;font-size:28px}.sub{margin:0;color:#cfe6ff;line-height:1.45}.content{padding:24px 26px 28px}
+    .info{padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);line-height:1.5;margin-bottom:18px}
+    label{display:flex;align-items:flex-start;gap:10px;margin:12px 0;color:#e8f3ff;line-height:1.4}input{margin-top:3px;transform:scale(1.25)}
+    .warn{color:#ffd77a;font-size:13px;margin:8px 0 18px}
+    button{width:100%;min-height:56px;border:1px solid #72caff;border-radius:14px;background:linear-gradient(180deg,#2b94ff,#0758c8);color:white;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 9px 22px rgba(0,65,160,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+    button:disabled{opacity:.55;cursor:wait}
+    #status{min-height:44px;margin-top:18px;padding:12px 14px;border-radius:12px;background:#07162f;color:#bfe2ff;white-space:pre-line;line-height:1.45}.ok{color:#86ffc1!important}.err{color:#ff9d9d!important}code{color:#9fdbff}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="head">
+      <h1>Reset pamięci PWA — TYPER</h1>
+      <p class="sub">Ten plik usuwa stary Service Worker i zapisane pliki cache, które mogą powodować uruchamianie poprzedniej wersji gry na telefonie.</p>
+    </div>
+    <div class="content">
+      <div class="info">Podstawowe czyszczenie nie usuwa danych z Firebase. Po zakończeniu strona uruchomi ponownie <code>index.html</code> z nowym znacznikiem czasu.</div>
+      <label><input id="clearDb" type="checkbox" checked><span>Usuń również lokalną pamięć IndexedDB (zalecane — usuwa lokalną kopię danych Firebase, ale nie dane zapisane na serwerze).</span></label>
+      <label><input id="clearLocal" type="checkbox"><span>Usuń także dane lokalne aplikacji, np. zapamiętany profil, pokój i akceptację regulaminu.</span></label>
+      <div class="warn">Drugą opcję zaznacz tylko wtedy, gdy chcesz pełny reset danych zapisanych na tym urządzeniu.</div>
+      <button id="resetBtn" type="button">WYCZYŚĆ I URUCHOM GRĘ</button>
+      <div id="status">Gotowe do czyszczenia.</div>
+    </div>
+  </main>
+<script>
+(() => {
+  const btn = document.getElementById('resetBtn');
+  const status = document.getElementById('status');
+  const setStatus = (txt, cls='') => { status.textContent = txt; status.className = cls; };
+  function deleteDatabase(name){return new Promise(resolve=>{try{const req=indexedDB.deleteDatabase(name);req.onsuccess=()=>resolve(true);req.onerror=()=>resolve(false);req.onblocked=()=>resolve(false);}catch(e){resolve(false);}})}
+  async function clearIndexedDb(){if(!('indexedDB' in window))return 0;let dbs=[];if(indexedDB.databases){try{dbs=await indexedDB.databases()}catch(e){}}let removed=0;for(const db of dbs){if(db&&db.name){if(await deleteDatabase(db.name))removed++}}return removed}
+  btn.addEventListener('click', async()=>{
+    btn.disabled=true;setStatus('Rozpoczynam czyszczenie…');
+    try{
+      let removedCaches=0,removedWorkers=0,removedDbs=0;
+      if('caches' in window){const keys=await caches.keys();for(const key of keys){if(await caches.delete(key))removedCaches++}}
+      if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const reg of regs){if(await reg.unregister())removedWorkers++}}
+      if(document.getElementById('clearDb').checked){removedDbs=await clearIndexedDb()}
+      if(document.getElementById('clearLocal').checked){try{localStorage.clear()}catch(e){}try{sessionStorage.clear()}catch(e){}}else{try{sessionStorage.clear()}catch(e){}}
+      setStatus('Wyczyszczono:\n• cache: '+removedCaches+'\n• Service Worker: '+removedWorkers+'\n• bazy lokalne: '+removedDbs+'\n\nUruchamiam świeżą wersję gry…','ok');
+      setTimeout(()=>{const target=new URL('./index.html',location.href);target.searchParams.set('fresh',Date.now().toString());location.replace(target.toString())},1200);
+    }catch(err){console.error(err);setStatus('Nie udało się zakończyć czyszczenia.\n'+(err?.message||String(err)),'err');btn.disabled=false}
+  });
+})();
+</script>
+</body>
+</html>

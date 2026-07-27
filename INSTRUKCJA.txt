@@ -1,0 +1,24 @@
+RESET PWA — TYPER
+
+1. Wgraj plik reset_pwa.html do głównego katalogu gry na GitHubie,
+   obok index.html, app.js i sw.js.
+
+2. Poczekaj chwilę na odświeżenie GitHub Pages.
+
+3. Na telefonie otwórz adres:
+   https://TWOJ-ADRES-GRY/reset_pwa.html
+
+4. Zostaw zaznaczoną opcję usuwania IndexedDB.
+
+5. Nie zaznaczaj usuwania danych lokalnych, chyba że chcesz usunąć
+   również zapamiętany profil, pokój i akceptację regulaminu.
+
+6. Kliknij:
+   WYCZYŚĆ I URUCHOM GRĘ
+
+Plik:
+- usuwa Cache Storage,
+- wyrejestrowuje Service Workery,
+- opcjonalnie usuwa lokalną kopię danych Firebase,
+- nie usuwa danych zapisanych na serwerze Firebase,
+- uruchamia index.html z nowym znacznikiem czasu.
