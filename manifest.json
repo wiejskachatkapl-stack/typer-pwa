@@ -2,10 +2,10 @@
   "name": "TYPER",
   "short_name": "TYPER",
   "description": "Gra w typowanie wyników meczów piłkarskich",
-  "start_url": "./index.html?v=3077",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#08122a",
   "theme_color": "#08122a",
   "icons": [
