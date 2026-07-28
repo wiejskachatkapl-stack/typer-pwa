@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "defaultEvent": "world-cup",
+  "events": [
+    {
+      "id": "world-cup",
+      "label": {
+        "pl": "Event Mistrzostwa Świata",
+        "en": "World Cup Event"
+      },
+      "defaultName": {
+        "pl": "Mistrzostwa Świata 2026",
+        "en": "World Cup 2026"
+      },
+      "teamsFile": "./events/teams/world-cup.json",
+      "defaultEnabled": true,
+      "legacyStorage": true
+    },
+    {
+      "id": "euro",
+      "label": {
+        "pl": "Mistrzostwa Europy",
+        "en": "European Championship"
+      },
+      "defaultName": {
+        "pl": "Mistrzostwa Europy",
+        "en": "European Championship"
+      },
+      "teamsFile": "./events/teams/euro.json",
+      "defaultEnabled": false
+    },
+    {
+      "id": "european-cups",
+      "label": {
+        "pl": "Puchary europejskie",
+        "en": "European Cups"
+      },
+      "defaultName": {
+        "pl": "Puchary europejskie",
+        "en": "European Cups"
+      },
+      "teamsFile": "./events/teams/european-cups.json",
+      "defaultEnabled": false
+    },
+    {
+      "id": "friendly-matches",
+      "label": {
+        "pl": "Mecze towarzyskie",
+        "en": "Friendly Matches"
+      },
+      "defaultName": {
+        "pl": "Mecze towarzyskie",
+        "en": "Friendly Matches"
+      },
+      "teamsFile": "./events/teams/friendly-matches.json",
+      "defaultEnabled": false
+    }
+  ]
+}
