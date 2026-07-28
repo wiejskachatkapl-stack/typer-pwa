@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1013;
+const BUILD = 1014;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 const EVENT_EMBEDDED_MODE = new URLSearchParams(window.location.search).get('embedded') === '1';
@@ -16,6 +16,14 @@ function closeEmbeddedEventsHost(){
 function reportEmbeddedEventsError(message){
   if(EVENT_EMBEDDED_MODE && window.parent !== window){
     window.parent.postMessage({type:'TYPER_SPECIAL_EVENTS_ERROR', message:String(message || '')}, window.location.origin);
+    return true;
+  }
+  return false;
+}
+
+function reportEmbeddedEventsStatus(anyActive){
+  if(EVENT_EMBEDDED_MODE && window.parent !== window){
+    window.parent.postMessage({type:'TYPER_SPECIAL_EVENTS_STATUS', anyActive:anyActive === true}, window.location.origin);
     return true;
   }
   return false;
@@ -6163,6 +6171,7 @@ async function updateRoomEventButtonState(){
     : (admin ? 'Eventy nieaktywne — administrator może je skonfigurować' : 'Eventy nieaktywne');
   btn.title = title;
   btn.setAttribute('aria-label', title);
+  reportEmbeddedEventsStatus(anyActive);
 }
 
 function wcMatchesCol(roundId){
