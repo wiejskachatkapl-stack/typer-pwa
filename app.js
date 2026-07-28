@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3107;
+const BUILD = 3108;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -563,6 +563,8 @@ async function importActiveEventModule(def){
 
 // ===== SPECJALNE EVENTY — osobny moduł uruchamiany w bezpiecznej ramce (v3106) =====
 let specialEventsHostOverlay = null;
+let specialEventsOpening = false;
+let specialEventsOpenTimer = null;
 
 
 const SPECIAL_EVENTS_STATUS_CATALOG_URL = './specjalne-eventy/events/event-types.json';
@@ -663,12 +665,51 @@ async function refreshMainSpecialEventsButton(force=false){
   return specialEventsStatusPromise;
 }
 
+
+function sendSpecialEventsContext(targetWindow){
+  const target = targetWindow || document.getElementById('specialEventsHostFrame')?.contentWindow;
+  if(!target) return;
+  let admin = false;
+  try{ admin = !!isAdmin(); }catch(e){}
+  try{
+    target.postMessage({
+      type:'TYPER_SPECIAL_EVENTS_CONTEXT',
+      roomCode:String(currentRoomCode || '').trim().toUpperCase(),
+      isAdmin:admin,
+      playerNo:String(getPlayerNo?.() || getProfile?.()?.playerNo || '').trim().toUpperCase()
+    }, window.location.origin);
+  }catch(e){}
+}
+
+function revealSpecialEventsApp(){
+  const overlay = specialEventsHostOverlay || document.getElementById('specialEventsHostOverlay');
+  const frame = document.getElementById('specialEventsHostFrame');
+  if(!overlay || !frame) return;
+  if(specialEventsOpenTimer){
+    clearTimeout(specialEventsOpenTimer);
+    specialEventsOpenTimer = null;
+  }
+  overlay.style.visibility = 'visible';
+  overlay.style.opacity = '1';
+  overlay.style.pointerEvents = 'auto';
+  frame.style.visibility = 'visible';
+  frame.style.opacity = '1';
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  specialEventsOpening = false;
+}
+
 function closeSpecialEventsApp(){
   const overlay = specialEventsHostOverlay || document.getElementById('specialEventsHostOverlay');
   if(overlay){
     try{ overlay.remove(); }catch(e){}
   }
+  if(specialEventsOpenTimer){
+    clearTimeout(specialEventsOpenTimer);
+    specialEventsOpenTimer = null;
+  }
   specialEventsHostOverlay = null;
+  specialEventsOpening = false;
   document.documentElement.style.removeProperty('overflow');
   document.body.style.removeProperty('overflow');
   try{ bumpPresence(true); }catch(e){}
@@ -676,6 +717,7 @@ function closeSpecialEventsApp(){
 }
 
 async function openSpecialEventsApp(){
+  if(specialEventsOpening) return;
   if(!currentRoomCode || !currentRoom){
     showToast(getLang()==='en' ? 'Join a room first.' : 'Najpierw dołącz do pokoju.');
     return;
@@ -688,12 +730,15 @@ async function openSpecialEventsApp(){
   }
 
   closeSpecialEventsApp();
+  specialEventsOpening = true;
 
   const overlay = document.createElement('div');
   overlay.id = 'specialEventsHostOverlay';
   Object.assign(overlay.style, {
     position:'fixed', inset:'0', zIndex:'2147483000',
-    background:'#020916', display:'block'
+    background:'#020916', display:'block',
+    visibility:'hidden', opacity:'0', pointerEvents:'none',
+    transition:'opacity .12s ease'
   });
 
   const frame = document.createElement('iframe');
@@ -702,25 +747,42 @@ async function openSpecialEventsApp(){
   frame.setAttribute('allow', 'fullscreen; screen-wake-lock');
   frame.setAttribute('allowfullscreen', '');
   Object.assign(frame.style, {
-    width:'100%', height:'100%', border:'0', display:'block', background:'#020916'
+    width:'100%', height:'100%', border:'0', display:'block', background:'#020916',
+    visibility:'hidden', opacity:'0', transition:'opacity .12s ease'
   });
+  frame.addEventListener('load', ()=> sendSpecialEventsContext(frame.contentWindow), {once:true});
 
   const url = new URL('./specjalne-eventy/index.html', document.baseURI);
   url.searchParams.set('embedded', '1');
   url.searchParams.set('room', currentRoomCode);
-  url.searchParams.set('v', '1014');
+  url.searchParams.set('v', '1015');
   frame.src = url.href;
 
   overlay.appendChild(frame);
   document.body.appendChild(overlay);
   specialEventsHostOverlay = overlay;
-  document.documentElement.style.overflow = 'hidden';
-  document.body.style.overflow = 'hidden';
+  // Ramka ładuje się niewidocznie. Główny TYPER pozostaje na ekranie aż
+  // gotowy moduł Eventów zgłosi TYPER_SPECIAL_EVENTS_READY.
+  specialEventsOpenTimer = setTimeout(()=>{
+    if(!specialEventsOpening) return;
+    closeSpecialEventsApp();
+    showToast(getLang()==='en' ? 'The Events module did not load.' : 'Nie udało się załadować modułu Eventów.');
+  }, 15000);
 }
 
 window.addEventListener('message', (event)=>{
   if(event.origin !== window.location.origin) return;
+  const frame = document.getElementById('specialEventsHostFrame');
+  if(frame?.contentWindow && event.source !== frame.contentWindow) return;
   const type = event.data?.type;
+  if(type === 'TYPER_SPECIAL_EVENTS_CONTEXT_REQUEST'){
+    sendSpecialEventsContext(event.source);
+    return;
+  }
+  if(type === 'TYPER_SPECIAL_EVENTS_READY'){
+    revealSpecialEventsApp();
+    return;
+  }
   if(type === 'TYPER_SPECIAL_EVENTS_STATUS'){
     const anyActive = event.data?.anyActive === true;
     specialEventsStatusCache = {roomCode:String(currentRoomCode||'').toUpperCase(), anyActive, checkedAt:Date.now()};
