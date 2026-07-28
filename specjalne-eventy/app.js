@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1002;
+const BUILD = 1003;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5175,10 +5175,29 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .wcAdminButtons .btn{min-height:38px !important;padding:7px 13px !important;font-size:14px !important;}
     #modal.worldcupMode .wcPickLocked{opacity:.55;cursor:not-allowed;}
     #modal.worldcupMode .wcBtnDisabled{opacity:.35;filter:grayscale(1) brightness(.8);cursor:not-allowed;pointer-events:none;}
-    #modal.worldcupMode .wcEventSelectChip{display:inline-flex;align-items:center;min-height:42px;padding:0 10px;border-radius:18px;border:1px solid rgba(255,255,255,.16);background:rgba(5,17,43,.72);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);}
-    #modal.worldcupMode .wcEventSelect{appearance:auto;-webkit-appearance:menulist;min-width:260px;max-width:360px;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-weight:1000;padding:8px 4px;cursor:pointer;}
-    #modal.worldcupMode .wcEventSelect option{background:#0b1b3d;color:#fff;}
-    @media(max-width:620px){#modal.worldcupMode .wcEventSelectChip{width:100%;}.wcEventSelect{width:100%;min-width:0 !important;max-width:none !important;}}
+    #modal.worldcupMode .wcEventDropdown{position:relative;z-index:120;flex:0 1 350px;min-width:285px;max-width:390px;}
+    #modal.worldcupMode .wcEventDropdownButton{width:100%;min-height:48px;display:grid;grid-template-columns:14px minmax(0,1fr) 30px;align-items:center;gap:10px;padding:8px 10px 8px 15px;border:1px solid rgba(89,185,255,.72);border-radius:18px;background:linear-gradient(180deg,rgba(27,102,198,.98) 0%,rgba(8,56,126,.98) 52%,rgba(5,38,91,.98) 100%);box-shadow:0 6px 16px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.3),0 0 0 1px rgba(20,105,215,.22);color:#fff;font:inherit;font-weight:1000;text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,filter .16s ease;}
+    #modal.worldcupMode .wcEventDropdownButton:hover{transform:translateY(-1px);border-color:rgba(142,218,255,.96);filter:brightness(1.07);box-shadow:0 8px 20px rgba(0,0,0,.38),0 0 20px rgba(38,143,255,.18),inset 0 1px 0 rgba(255,255,255,.32);}
+    #modal.worldcupMode .wcEventDropdownButton:active{transform:translateY(0);filter:brightness(.98);}
+    #modal.worldcupMode .wcEventDropdownButton:focus-visible{outline:3px solid rgba(98,194,255,.58);outline-offset:3px;}
+    #modal.worldcupMode .wcEventDropdownGlow{width:10px;height:10px;border-radius:50%;background:linear-gradient(180deg,#7ee9ff,#2299ff);box-shadow:0 0 0 3px rgba(70,174,255,.16),0 0 14px rgba(68,188,255,.88);}
+    #modal.worldcupMode .wcEventDropdownLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 3px rgba(0,0,0,.45);letter-spacing:.05px;}
+    #modal.worldcupMode .wcEventDropdownChevron{position:relative;width:28px;height:28px;border-radius:10px;background:rgba(1,20,54,.34);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:transform .2s ease,background .2s ease;}
+    #modal.worldcupMode .wcEventDropdownChevron::before{content:'';position:absolute;left:50%;top:46%;width:8px;height:8px;border-right:2px solid #eaf8ff;border-bottom:2px solid #eaf8ff;transform:translate(-50%,-62%) rotate(45deg);}
+    #modal.worldcupMode .wcEventDropdown.open .wcEventDropdownChevron{transform:rotate(180deg);background:rgba(23,102,191,.42);}
+    #modal.worldcupMode .wcEventDropdownMenu{position:absolute;left:0;right:0;top:calc(100% + 8px);padding:8px;border-radius:18px;border:1px solid rgba(96,192,255,.62);background:linear-gradient(180deg,rgba(10,41,92,.99),rgba(4,18,47,.99));box-shadow:0 18px 34px rgba(0,0,0,.5),0 0 24px rgba(35,139,255,.16),inset 0 1px 0 rgba(255,255,255,.09);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-7px) scale(.985);transform-origin:top center;transition:opacity .16s ease,visibility .16s ease,transform .16s ease;max-height:min(330px,52vh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(79,169,255,.7) rgba(0,0,0,.18);}
+    #modal.worldcupMode .wcEventDropdown.open .wcEventDropdownMenu{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1);}
+    #modal.worldcupMode .wcEventDropdownItem{width:100%;min-height:44px;display:grid;grid-template-columns:12px minmax(0,1fr) 24px;align-items:center;gap:10px;padding:9px 11px;border:1px solid transparent;border-radius:13px;background:transparent;color:rgba(239,247,255,.94);font:inherit;font-weight:900;text-align:left;cursor:pointer;transition:background .14s ease,border-color .14s ease,transform .14s ease,color .14s ease;}
+    #modal.worldcupMode .wcEventDropdownItem + .wcEventDropdownItem{margin-top:4px;}
+    #modal.worldcupMode .wcEventDropdownItem:hover,#modal.worldcupMode .wcEventDropdownItem:focus-visible{background:linear-gradient(180deg,rgba(33,122,220,.48),rgba(14,72,151,.48));border-color:rgba(112,205,255,.42);color:#fff;outline:none;transform:translateX(2px);}
+    #modal.worldcupMode .wcEventDropdownItem.selected{background:linear-gradient(180deg,rgba(31,132,235,.66),rgba(11,75,162,.64));border-color:rgba(126,218,255,.58);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 14px rgba(31,145,255,.12);color:#fff;}
+    #modal.worldcupMode .wcEventDropdownItemMark{width:8px;height:8px;border-radius:50%;background:rgba(164,190,222,.45);box-shadow:0 0 0 2px rgba(255,255,255,.04);}
+    #modal.worldcupMode .wcEventDropdownItem.selected .wcEventDropdownItemMark{background:#61e9ff;box-shadow:0 0 10px rgba(69,213,255,.9);}
+    #modal.worldcupMode .wcEventDropdownItemText{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.35);}
+    #modal.worldcupMode .wcEventDropdownItemCheck{opacity:0;color:#8dffb9;font-size:18px;text-align:center;text-shadow:0 0 10px rgba(66,255,146,.42);}
+    #modal.worldcupMode .wcEventDropdownItem.selected .wcEventDropdownItemCheck{opacity:1;}
+    #modal.worldcupMode .wcEventSelectNative{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important;}
+    @media(max-width:620px){#modal.worldcupMode .wcEventDropdown{width:100%;max-width:none;min-width:0;flex:1 1 100%;}#modal.worldcupMode .wcEventDropdownButton{min-height:46px;border-radius:16px;}#modal.worldcupMode .wcEventDropdownMenu{border-radius:16px;}}
     @media (max-width:980px){
       #modal.worldcupMode .modalCard{width:96vw !important;height:94vh !important;}
       #modal.worldcupMode .modalBody{padding:10px !important;}
@@ -6358,10 +6377,22 @@ function wcBuildShell(config=wcCurrentEventConfig()){
   top.style.alignItems = 'center';
   const eventNameSafe = escapeHtml(config.name);
   const selectedEventId = wcCurrentEventId();
-  const eventOptions = wcGetEventDefinitions().map(def=>{
+  const eventDefinitions = wcGetEventDefinitions();
+  const eventOptions = eventDefinitions.map(def=>{
     const label = escapeHtml(String(def?.label?.[getLang()] || def?.label?.pl || def?.defaultName?.pl || def?.id || 'Event'));
     const selected = def.id === selectedEventId ? ' selected' : '';
     return `<option value="${escapeHtml(def.id)}"${selected}>${label}</option>`;
+  }).join('');
+  const selectedEventDefinition = eventDefinitions.find(def=>def.id === selectedEventId) || eventDefinitions[0] || {};
+  const selectedEventLabel = escapeHtml(String(selectedEventDefinition?.label?.[getLang()] || selectedEventDefinition?.label?.pl || selectedEventDefinition?.defaultName?.pl || selectedEventDefinition?.id || 'Event'));
+  const eventMenuItems = eventDefinitions.map(def=>{
+    const label = escapeHtml(String(def?.label?.[getLang()] || def?.label?.pl || def?.defaultName?.pl || def?.id || 'Event'));
+    const selected = def.id === selectedEventId;
+    return `<button type="button" class="wcEventDropdownItem${selected ? ' selected' : ''}" role="option" aria-selected="${selected ? 'true' : 'false'}" data-event-id="${escapeHtml(def.id)}">
+      <span class="wcEventDropdownItemMark" aria-hidden="true"></span>
+      <span class="wcEventDropdownItemText">${label}</span>
+      <span class="wcEventDropdownItemCheck" aria-hidden="true">✓</span>
+    </button>`;
   }).join('');
   const eventIsActive = config.enabled !== false;
   const eventStatus = eventIsActive
@@ -6375,7 +6406,17 @@ function wcBuildShell(config=wcCurrentEventConfig()){
       </label>`
     : `<div class="chip wcEventStatusChip ${eventIsActive ? 'active' : 'inactive'}">${eventStatus}</div>`;
   top.innerHTML = `
-    <div class="wcEventSelectChip"><select id="wcEventSelect" class="wcEventSelect" aria-label="${getLang()==='en' ? 'Select Event' : 'Wybierz Event'}">${eventOptions}</select></div>
+    <div id="wcEventDropdown" class="wcEventDropdown">
+      <button id="wcEventDropdownButton" class="wcEventDropdownButton" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="wcEventDropdownMenu">
+        <span class="wcEventDropdownGlow" aria-hidden="true"></span>
+        <span id="wcEventDropdownLabel" class="wcEventDropdownLabel">${selectedEventLabel}</span>
+        <span class="wcEventDropdownChevron" aria-hidden="true"></span>
+      </button>
+      <div id="wcEventDropdownMenu" class="wcEventDropdownMenu" role="listbox" aria-label="${getLang()==='en' ? 'Select Event' : 'Wybierz Event'}">
+        ${eventMenuItems}
+      </div>
+      <select id="wcEventSelect" class="wcEventSelectNative" aria-hidden="true" tabindex="-1">${eventOptions}</select>
+    </div>
     ${activityControl}
     <div class="chip">Pokój: <span id="wcRoomName">—</span></div>
     <div class="chip">Gracz: <span id="wcNick">—</span></div>
@@ -6408,6 +6449,10 @@ function wcBuildShell(config=wcCurrentEventConfig()){
   grid.append(left,right); body.appendChild(grid);
   body._els = {
     eventSelect: ()=> body.querySelector('#wcEventSelect'),
+    eventDropdown: ()=> body.querySelector('#wcEventDropdown'),
+    eventDropdownButton: ()=> body.querySelector('#wcEventDropdownButton'),
+    eventDropdownMenu: ()=> body.querySelector('#wcEventDropdownMenu'),
+    eventDropdownItems: ()=> Array.from(body.querySelectorAll('.wcEventDropdownItem')),
     activeControl: ()=> body.querySelector('#wcEventActiveControl'),
     activeToggle: ()=> body.querySelector('#wcEventActiveToggle'),
     activeLabel: ()=> body.querySelector('#wcEventActiveLabel'),
@@ -6913,6 +6958,73 @@ async function endWorldCupEvent(){
   await openWorldCupEvent();
 }
 
+function wcInitEventDropdown(body, select){
+  const root = body?._els?.eventDropdown ? body._els.eventDropdown() : null;
+  const button = body?._els?.eventDropdownButton ? body._els.eventDropdownButton() : null;
+  const menu = body?._els?.eventDropdownMenu ? body._els.eventDropdownMenu() : null;
+  const items = body?._els?.eventDropdownItems ? body._els.eventDropdownItems() : [];
+  if(!root || !button || !menu || !select || !items.length) return;
+
+  const setOpen = (open, focusSelected=false)=>{
+    root.classList.toggle('open', !!open);
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open && focusSelected){
+      const selected = items.find(item=>item.getAttribute('aria-selected') === 'true') || items[0];
+      window.setTimeout(()=>selected?.focus(), 0);
+    }
+  };
+  const moveFocus = (fromIndex, delta)=>{
+    const next = (fromIndex + delta + items.length) % items.length;
+    items[next]?.focus();
+  };
+
+  button.addEventListener('click', ()=> setOpen(!root.classList.contains('open'), !root.classList.contains('open')));
+  button.addEventListener('keydown', event=>{
+    if(event.key === 'ArrowDown' || event.key === 'ArrowUp'){
+      event.preventDefault();
+      setOpen(true, true);
+    }else if(event.key === 'Escape'){
+      setOpen(false);
+    }
+  });
+
+  items.forEach((item, index)=>{
+    item.addEventListener('click', ()=>{
+      const eventId = String(item.dataset.eventId || '').trim();
+      setOpen(false);
+      if(!eventId || eventId === select.value){
+        button.focus();
+        return;
+      }
+      select.value = eventId;
+      select.dispatchEvent(new Event('change', {bubbles:true}));
+    });
+    item.addEventListener('keydown', event=>{
+      if(event.key === 'ArrowDown'){
+        event.preventDefault();
+        moveFocus(index, 1);
+      }else if(event.key === 'ArrowUp'){
+        event.preventDefault();
+        moveFocus(index, -1);
+      }else if(event.key === 'Home'){
+        event.preventDefault();
+        items[0]?.focus();
+      }else if(event.key === 'End'){
+        event.preventDefault();
+        items[items.length - 1]?.focus();
+      }else if(event.key === 'Escape'){
+        event.preventDefault();
+        setOpen(false);
+        button.focus();
+      }
+    });
+  });
+
+  body.addEventListener('click', event=>{
+    if(!root.contains(event.target)) setOpen(false);
+  });
+}
+
 async function renderWorldCupEvent(){
   if(!currentRoomCode){ showToast(getLang()==='en'?'No room':'Brak pokoju'); return; }
   await wcLoadEventCatalogData();
@@ -6945,6 +7057,7 @@ async function renderWorldCupEvent(){
       if(window.__wcDeadlineTimer){ clearInterval(window.__wcDeadlineTimer); window.__wcDeadlineTimer = null; }
       await renderWorldCupEvent();
     };
+    wcInitEventDropdown(body, wcEventSelect);
   }
   const wcEventActiveToggle = body._els.activeToggle ? body._els.activeToggle() : null;
   if(wcEventActiveToggle){
@@ -10903,7 +11016,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1002`);
+    setFooter(`Mariusz Gębka • EVENTY v1003`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();

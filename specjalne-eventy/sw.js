@@ -1,5 +1,5 @@
-// Specjalne Eventy Typera Service Worker (v1002)
-const BUILD = '1002';
+// Specjalne Eventy Typera Service Worker (v1003)
+const BUILD = '1003';
 const CACHE_PREFIX = 'typer-events-cache-';
 const CACHE_NAME = `${CACHE_PREFIX}${BUILD}`;
 const VERSIONED_INDEX = `./index.html?v=${BUILD}`;
