@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "activeEvent": "world-cup-2026",
+  "events": [
+    {
+      "id": "world-cup-2026",
+      "enabled": true,
+      "module": "./events/world-cup-2026/event.js",
+      "style": "./events/world-cup-2026/event.css",
+      "config": "./events/world-cup-2026/config.json",
+      "title": {
+        "pl": "SPECJALNE EVENTY",
+        "en": "SPECIAL EVENTS"
+      },
+      "buttonTitle": {
+        "pl": "Specjalne Eventy Typera",
+        "en": "Special Tipster Events"
+      }
+    }
+  ]
+}
