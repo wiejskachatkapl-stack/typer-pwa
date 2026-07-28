@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1006;
+const BUILD = 1007;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5174,22 +5174,25 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:48px !important;max-width:160px !important;}
     #modal.worldcupMode .wcAdminButtons .btn{min-height:38px !important;padding:7px 13px !important;font-size:14px !important;}
     /* v1006: wszystkie przyciski administracyjne Eventu przeniesione obok Cofnij/Wyjście */
+    /* v1007: na komputerze wszystkie przyciski Eventu są bezwzględnie w jednym rzędzie */
     #modal.worldcupMode .wcTopActionBar{
       width:100%;min-width:0;display:flex;align-items:center;justify-content:flex-end;
-      gap:7px;flex-wrap:nowrap;padding:2px 0 3px 0;flex:0 0 auto;
+      gap:6px;flex-wrap:nowrap;padding:2px 0 3px 0;flex:0 0 auto;
     }
-    #modal.worldcupMode .wcTopAdminButtons{display:contents;}
+    /* !important jest konieczne, bo starszy wspólny styl .wcAdminButtons wymuszał flex i zawijał Zakończ Event */
+    #modal.worldcupMode .wcTopAdminButtons{display:contents !important;}
     #modal.worldcupMode .wcTopActionBar .wcBtnImg{
-      flex:0 1 142px;min-width:108px !important;max-width:148px !important;
-      min-height:42px !important;padding:7px 9px !important;font-size:12px !important;
-      line-height:1.05 !important;white-space:nowrap;
+      flex:0 1 132px;min-width:96px !important;max-width:138px !important;
+      min-height:40px !important;padding:6px 7px !important;font-size:11px !important;
+      line-height:1.03 !important;white-space:nowrap;gap:5px !important;
+      justify-content:center;
     }
     #modal.worldcupMode .wcTopActionBar .wcBtnImg .appBtnIcon{
-      width:18px !important;height:18px !important;flex:0 0 18px !important;
+      width:16px !important;height:16px !important;flex:0 0 16px !important;
     }
     #modal.worldcupMode .wcTopActionBar #wcBackBtn,
     #modal.worldcupMode .wcTopActionBar #wcExitBtn{
-      flex-basis:122px;max-width:130px !important;
+      flex-basis:108px;max-width:116px !important;
     }
     #modal.worldcupMode .wcPlayerSaveBar{
       min-height:58px;margin:0 0 12px 0;padding:7px 10px;display:flex;align-items:center;
@@ -5265,7 +5268,7 @@ function wcEnsureEventStyles(){
         display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;
         align-items:stretch;justify-content:stretch;width:100%;
       }
-      #modal.worldcupMode .wcTopAdminButtons{display:contents;}
+      #modal.worldcupMode .wcTopAdminButtons{display:contents !important;}
       #modal.worldcupMode .wcTopActionBar .wcBtnImg{
         width:100% !important;max-width:none !important;min-width:0 !important;
         min-height:42px !important;padding:6px 5px !important;font-size:10.5px !important;
@@ -11270,7 +11273,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1006`);
+    setFooter(`Mariusz Gębka • EVENTY v1007`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
