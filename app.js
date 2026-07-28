@@ -1,10 +1,11 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3099;
+const BUILD = 3102;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
-const BG_HOME = "img_menu_pc.png";
-const BG_ROOM = "img_tlo.png";
+const BG_HOME = { desktop: "img_menu_pc.png", mobile: "img_menu.png" };
+const BG_ROOM = { desktop: "img_tlo.png", mobile: "img_typowanie.png" };
+let activeBg = BG_HOME;
 const WORLD_CUP_TEAMS = [
   "Meksyk","Republika Południowej Afryki","Korea Południowa","Czechy",
   "Szwajcaria","Katar","Kanada","Bośnia i Hercegowina",
@@ -59,7 +60,18 @@ const setBtnLabelSafe = (id, label) => {
     b.textContent = label;
   }
 };
-const setBg = (src) => { const bg = el("bg"); if (bg) bg.style.backgroundImage = `url("${src}")`; };
+const resolveResponsiveBg = (src) => {
+  if (typeof src === "string") return src;
+  return window.matchMedia("(orientation: portrait)").matches ? src.mobile : src.desktop;
+};
+const setBg = (src) => {
+  activeBg = src;
+  const bg = el("bg");
+  if (bg) bg.style.backgroundImage = `url("${resolveResponsiveBg(src)}")`;
+};
+const refreshResponsiveBg = () => setBg(activeBg);
+window.addEventListener("resize", refreshResponsiveBg, { passive:true });
+window.addEventListener("orientationchange", refreshResponsiveBg, { passive:true });
 const setFooter = (txt) => { const f = el("footerRight"); if (f) f.textContent = txt; };
 
 // ===== PRESENCE (online dot) =====
