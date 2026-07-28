@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3098;
+const BUILD = 3099;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3041,7 +3041,7 @@ function isUsefulPlayerNick(value){
   if(/^[A-Za-z0-9_-]{18,}$/.test(nick)) return false;
   return true;
 }
-// BUILD 3098: naprawa historycznego powiązania numeru gracza z rankingami.
+// BUILD 3099: naprawa historycznego powiązania numeru gracza z rankingami.
 // Numer gracza jest kluczem tożsamości, a nick służy wyłącznie do wyświetlania.
 const KNOWN_PLAYER_NUMBER_REPAIRS = Object.freeze({
   semusiu: "N279809",
@@ -3847,7 +3847,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.098` : "TYPER v.3.098",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.099` : "TYPER v.3.099",800,850);
   return canvas;
 }
 
@@ -9913,7 +9913,7 @@ async function openLeagueTable(roomCode, opts={}) {
     }
     updateLeagueHintForMode();
 
-    // BUILD 3098: numer gracza jest głównym kluczem rankingu.
+    // BUILD 3099: numer gracza jest głównym kluczem rankingu.
     // Stare dokumenty różnych UID tego samego gracza są scalane według playerNo.
     const currentPlayers = [];
     try{
@@ -10386,6 +10386,44 @@ function escapeHtml(s){
     .replaceAll("'","&#039;");
 }
 
+
+
+// BUILD 3099: na telefonie poziomo panel środkowy i prawy kończą się
+// dokładnie na wysokości dolnej krawędzi lewego panelu.
+function syncRoomColumnsToLeftHeight(){
+  const layout = document.getElementById('roomLayout');
+  const left = layout?.querySelector(':scope > .leftBar');
+  if(!layout || !left) return;
+
+  const landscapePhone = window.matchMedia?.('(max-width: 980px) and (orientation: landscape)').matches ||
+    window.matchMedia?.('(orientation: landscape) and (hover: none) and (pointer: coarse)').matches;
+
+  if(!landscapePhone){
+    layout.style.removeProperty('--room-left-column-height');
+    return;
+  }
+
+  requestAnimationFrame(()=>{
+    const height = Math.ceil(left.getBoundingClientRect().height);
+    if(height > 0) layout.style.setProperty('--room-left-column-height', `${height}px`);
+  });
+}
+
+let _roomLeftHeightObserver = null;
+function initRoomColumnHeightSync(){
+  const left = document.querySelector('#roomLayout > .leftBar');
+  if(!left) return;
+  try{ _roomLeftHeightObserver?.disconnect(); }catch(e){}
+  if('ResizeObserver' in window){
+    _roomLeftHeightObserver = new ResizeObserver(()=>syncRoomColumnsToLeftHeight());
+    _roomLeftHeightObserver.observe(left);
+  }
+  syncRoomColumnsToLeftHeight();
+  setTimeout(syncRoomColumnsToLeftHeight, 120);
+  setTimeout(syncRoomColumnsToLeftHeight, 500);
+}
+
+
 // ===== ORIENTATION (phones: landscape-first) =====
 function shouldLockLandscape(){
   const active = document.querySelector('.screen.active')?.id || '';
@@ -10418,19 +10456,20 @@ function updateLandscapeLock(){
   try{ applyOrientationPreference(); }catch(e){}
 }
 
-window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); }catch(e){} }, {passive:true});
-window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); }catch(e){} }, 60); });
+window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); syncRoomColumnsToLeftHeight(); }catch(e){} }, {passive:true});
+window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); syncRoomColumnsToLeftHeight(); }catch(e){} }, 60); });
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ updateLandscapeLock(); }catch(e){} } });
 
 // ===== START =====
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.098`);
+    setFooter(`Mariusz Gębka v.3.099`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
     bindUI();
+    initRoomColumnHeightSync();
     initActiveEventModule().catch(error => console.warn("Event module init failed:", error));
     ensurePlayersPanelFillFix();
 
