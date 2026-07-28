@@ -1,6 +1,6 @@
 {
   "id": "world-cup-2026",
-  "moduleVersion": 1003,
+  "moduleVersion": 1004,
   "name": {
     "pl": "Mistrzostwa Świata 2026",
     "en": "World Cup 2026"
@@ -10,6 +10,6 @@
     "state": "worldcup_event/state",
     "rounds": "worldcup_rounds"
   },
-  "notes": "Moduł v1003: systemowe pole wyboru Eventu zastąpiono własnym, zaokrąglonym menu rozwijanym w kolorystyce TYPERA. Zachowano dotychczasową mechanikę wyboru Eventu i przełącznik aktywności. TYPER v3105 pozostaje bez zmian.",
+  "notes": "Moduł v1004: pole tekstowe z listą drużyn zastąpiono czytelnym edytorem. Administrator może dodać drużynę, edytować nazwę ołówkiem i usunąć drużynę czerwonym przyciskiem. Zmiany są zapisywane dopiero przyciskiem Zapisz zmiany. TYPER v3105 pozostaje bez zmian.",
   "roomSettingsStorage": "special_event/config"
 }
