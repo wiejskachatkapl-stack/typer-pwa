@@ -1,6 +1,6 @@
 {
   "id": "world-cup-2026",
-  "moduleVersion": 1006,
+  "moduleVersion": 1007,
   "name": {
     "pl": "Mistrzostwa Świata 2026",
     "en": "World Cup 2026"
@@ -10,6 +10,6 @@
     "state": "worldcup_event/state",
     "rounds": "worldcup_rounds"
   },
-  "notes": "Moduł v1006: wszystkie przyciski administracyjne Eventu przeniesiono z panelu meczów do górnego paska obok Cofnij i Wyjście. Na komputerze tworzą jeden rząd, a na telefonie układają się w dwa rzędy po cztery miejsca. Przycisk Zapisz typy pozostał osobno w panelu meczów i jest dostępny dla graczy zgodnie z dotychczasową mechaniką. Uprawnienia administratora, Eventy, drużyny, kolejki, typy, wyniki i ranking pozostają bez zmian. TYPER v3105 nie został zmieniony.",
+  "notes": "Moduł v1007: poprawiono górny pasek przycisków Eventu. Na komputerze wszystkie przyciski administracyjne oraz Cofnij i Wyjście są wymuszone w jednym rzędzie. Przyciski zostały delikatnie zmniejszone. Na telefonie nadal układają się w dwa rzędy. Zapisz typy pozostaje osobno. Nie zmieniono mechaniki Eventów, uprawnień, drużyn, kolejek, typów, wyników ani rankingu. TYPER v3105 nie został zmieniony.",
   "roomSettingsStorage": "special_event/config"
 }
