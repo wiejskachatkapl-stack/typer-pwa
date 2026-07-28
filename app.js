@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3103;
+const BUILD = 3106;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -559,6 +559,68 @@ async function importActiveEventModule(def){
   }
   return activeEventModulePromise;
 }
+
+
+// ===== SPECJALNE EVENTY — osobny moduł uruchamiany w bezpiecznej ramce (v3106) =====
+let specialEventsHostOverlay = null;
+
+function closeSpecialEventsApp(){
+  const overlay = specialEventsHostOverlay || document.getElementById('specialEventsHostOverlay');
+  if(overlay){
+    try{ overlay.remove(); }catch(e){}
+  }
+  specialEventsHostOverlay = null;
+  document.documentElement.style.removeProperty('overflow');
+  document.body.style.removeProperty('overflow');
+  try{ bumpPresence(true); }catch(e){}
+}
+
+function openSpecialEventsApp(){
+  if(!currentRoomCode || !currentRoom){
+    showToast(getLang()==='en' ? 'Join a room first.' : 'Najpierw dołącz do pokoju.');
+    return;
+  }
+
+  closeSpecialEventsApp();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'specialEventsHostOverlay';
+  Object.assign(overlay.style, {
+    position:'fixed', inset:'0', zIndex:'2147483000',
+    background:'#020916', display:'block'
+  });
+
+  const frame = document.createElement('iframe');
+  frame.id = 'specialEventsHostFrame';
+  frame.title = getLang()==='en' ? 'Special Events' : 'Specjalne Eventy Typera';
+  frame.setAttribute('allow', 'fullscreen; screen-wake-lock');
+  frame.setAttribute('allowfullscreen', '');
+  Object.assign(frame.style, {
+    width:'100%', height:'100%', border:'0', display:'block', background:'#020916'
+  });
+
+  const url = new URL('./specjalne-eventy/index.html', document.baseURI);
+  url.searchParams.set('embedded', '1');
+  url.searchParams.set('room', currentRoomCode);
+  url.searchParams.set('v', '1013');
+  frame.src = url.href;
+
+  overlay.appendChild(frame);
+  document.body.appendChild(overlay);
+  specialEventsHostOverlay = overlay;
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+}
+
+window.addEventListener('message', (event)=>{
+  if(event.origin !== window.location.origin) return;
+  const type = event.data?.type;
+  if(type === 'TYPER_SPECIAL_EVENTS_CLOSE') closeSpecialEventsApp();
+  if(type === 'TYPER_SPECIAL_EVENTS_ERROR'){
+    closeSpecialEventsApp();
+    showToast(String(event.data?.message || (getLang()==='en' ? 'The Event could not be opened.' : 'Nie udało się otworzyć Eventu.')));
+  }
+});
 
 async function openActiveEventModule(){
   if(!eventCatalogLoaded) await loadEventCatalog();
@@ -6928,7 +6990,7 @@ function bindUI(){
 
   // Aktywny moduł Eventu wskazany w events/events.json
   const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openActiveEventModule();
+  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSpecialEventsApp();
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
