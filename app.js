@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3093;
+const BUILD = 3094;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3786,7 +3786,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.093` : "TYPER v.3.093",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.094` : "TYPER v.3.094",800,850);
   return canvas;
 }
 
@@ -9582,11 +9582,13 @@ const leagueState = {
   rows: [],
   finishedRounds: [],
   roundCache: new Map(),
+  rankingScope: "SEASON", // SEASON | ALL_TIME
+  currentSeasonNo: 1,
   viewMode: "TOTAL", // TOTAL | ROUND
   selectedRound: "ALL" // ALL or roundNo string
 };
 
-async function loadLeagueFinishedRounds(code){
+async function loadLeagueFinishedRounds(code, seasonNo=null){
   leagueState.finishedRounds = [];
   leagueState.roundCache = new Map();
   try{
@@ -9600,6 +9602,7 @@ async function loadLeagueFinishedRounds(code){
       const rn = Number(rd.seasonRoundNo || rd.roundNo || 0);
       const sn = Number(rd.seasonNo || 1);
       const ai = Number(rd.archiveIndex || 0);
+      if(seasonNo !== null && Number(sn) !== Number(seasonNo)) return;
       if(rn>0){
         const entry = { id: d.id, seasonNo: sn, roundNo: rn, archiveIndex: ai };
         list.push(entry);
@@ -9760,7 +9763,7 @@ async function setLeagueTableForRound(roundKey){
 }
 
 async function openLeagueTable(roomCode, opts={}) {
-  const { silent=false } = opts;
+  const { silent=false, allTime=false } = opts;
   roomCode = (roomCode||"").trim().toUpperCase();
   if(roomCode.length !== 6){
     showToast(getLang()==="en" ? "No room" : "Brak pokoju");
@@ -9774,12 +9777,24 @@ async function openLeagueTable(roomCode, opts={}) {
       return;
     }
     const room = snap.data();
+    const currentSeasonNo = Number(room?.currentSeasonNo || 1);
     leagueState.roomCode = roomCode;
     leagueState.roomName = room?.name || "—";
-    leagueState.afterRound = Number(room?.archiveCount || 0);
+    leagueState.currentSeasonNo = currentSeasonNo;
+    leagueState.rankingScope = allTime ? "ALL_TIME" : "SEASON";
 
     el("leagueRoomName").textContent = leagueState.roomName;
-    await loadLeagueFinishedRounds(roomCode);
+    const leagueHeader = el("t_league");
+    if(leagueHeader){
+      leagueHeader.textContent = allTime
+        ? ((getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów")
+        : ((getLang()==="en") ? "League table" : "Tabela ligi");
+    }
+
+    await loadLeagueFinishedRounds(roomCode, allTime ? null : currentSeasonNo);
+    leagueState.afterRound = allTime
+      ? Number(room?.archiveCount || 0)
+      : leagueState.finishedRounds.length;
     buildLeagueRoundDropdown();
     updateLeagueHintForMode();
 
@@ -9798,8 +9813,9 @@ async function openLeagueTable(roomCode, opts={}) {
     }
 
     const placementCounts = computeLeaguePlacementCounts();
-    const q = boot.query(leagueCol(roomCode), boot.orderBy("totalPoints","desc"));
-    const qs = await boot.getDocs(q);
+    // Tabela ligi pokazuje wyłącznie aktualny sezon.
+    // Ranking wszechczasów korzysta z sumy ze wszystkich sezonów.
+    const qs = await boot.getDocs(leagueCol(roomCode));
 
     const arr = [];
     qs.forEach(d=>{
@@ -9812,8 +9828,12 @@ async function openLeagueTable(roomCode, opts={}) {
         uid,
         nick: x.nick || "—",
         playerNo,
-        rounds: Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0),
-        points: Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0),
+        rounds: allTime
+          ? (Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0))
+          : (Number.isInteger(x.seasonRoundsPlayed) ? x.seasonRoundsPlayed : (x.seasonRoundsPlayed ?? 0)),
+        points: allTime
+          ? (Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0))
+          : (Number.isInteger(x.seasonPoints) ? x.seasonPoints : (x.seasonPoints ?? 0)),
         firstPlaces: Number(placement.firstPlaces || 0),
         secondPlaces: Number(placement.secondPlaces || 0),
         cupGold: Number(x.cupGold || 0),
@@ -9837,12 +9857,9 @@ async function openLeagueTable(roomCode, opts={}) {
   }
 }
 
-// Wrapper for the dedicated "all‑time" button.
-// Currently it shows the same totals table, but with a different header.
+// Osobny ranking sumujący punkty ze wszystkich sezonów.
 async function openAllTimeRanking(roomCode){
-  await openLeagueTable(roomCode, {silent:true});
-  const header = el("t_league");
-  if(header) header.textContent = (getLang()==="en") ? "All‑time ranking" : "Ranking wszechczasów";
+  await openLeagueTable(roomCode, {silent:true, allTime:true});
   showToast(getLang()==="en" ? "All‑time ranking" : "Ranking wszechczasów");
 }
 
@@ -10229,7 +10246,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.093`);
+    setFooter(`Mariusz Gębka v.3.094`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
