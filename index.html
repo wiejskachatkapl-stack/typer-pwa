@@ -5,17 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3099)</title>
-<link href="manifest.json?v=3099" rel="manifest"/>
-<link href="favicon-32x32.png?v=3099" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3099" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3099" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3100)</title>
+<link href="manifest.json?v=3100" rel="manifest"/>
+<link href="favicon-32x32.png?v=3100" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3100" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3100" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "3099";
+  const BUILD = "3100";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -214,7 +214,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3099");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3100");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2831,8 +2831,125 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
   }
 }
 </style>
+
+
+/* ===== BUILD 3100: animowany ekran startowy tylko na telefonie ===== */
+#mobileStartupIntro{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:300000;
+  overflow:hidden;
+  align-items:center;
+  justify-content:center;
+  background:#010817;
+  opacity:1;
+  visibility:visible;
+  transition:opacity .55s ease, visibility .55s ease;
+}
+#mobileStartupIntro.is-leaving{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.mobileStartupIntroImage{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  transform:scale(1.055);
+  filter:saturate(1.04) contrast(1.03) brightness(.96);
+  animation:mobileStartupCamera 4.3s cubic-bezier(.2,.72,.22,1) both;
+}
+.mobileStartupIntroGlow{
+  position:absolute;
+  left:50%;
+  top:72%;
+  width:min(38vw,520px);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(54,157,255,.35) 0%,rgba(13,91,255,.14) 35%,transparent 68%);
+  mix-blend-mode:screen;
+  animation:mobileStartupGlow 1.35s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+.mobileStartupIntroSweep{
+  position:absolute;
+  inset:-20%;
+  background:linear-gradient(112deg,transparent 35%,rgba(255,255,255,.16) 48%,rgba(90,188,255,.10) 52%,transparent 65%);
+  transform:translateX(-78%);
+  animation:mobileStartupSweep 2.2s ease-in-out .45s both;
+  pointer-events:none;
+}
+.mobileStartupIntroProgress{
+  position:absolute;
+  left:50%;
+  bottom:6.7%;
+  width:min(33vw,540px);
+  height:4px;
+  transform:translateX(-50%);
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(78,153,255,.18);
+  box-shadow:0 0 14px rgba(45,151,255,.45);
+  pointer-events:none;
+}
+.mobileStartupIntroProgress span{
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:inherit;
+  transform:scaleX(0);
+  transform-origin:left center;
+  background:linear-gradient(90deg,#168bff,#7ad8ff 72%,#fff);
+  box-shadow:0 0 14px #36b8ff,0 0 26px rgba(37,146,255,.85);
+  animation:mobileStartupLoad 4s cubic-bezier(.18,.68,.18,1) .12s forwards;
+}
+@keyframes mobileStartupCamera{
+  0%{transform:scale(1.085);filter:saturate(.92) contrast(1.02) brightness(.72)}
+  18%{filter:saturate(1.04) contrast(1.04) brightness(1)}
+  100%{transform:scale(1);filter:saturate(1.06) contrast(1.04) brightness(1)}
+}
+@keyframes mobileStartupGlow{
+  from{opacity:.48;transform:translate(-50%,-50%) scale(.86)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+}
+@keyframes mobileStartupSweep{
+  0%{transform:translateX(-78%);opacity:0}
+  20%{opacity:1}
+  100%{transform:translateX(78%);opacity:0}
+}
+@keyframes mobileStartupLoad{
+  0%{transform:scaleX(0)}
+  18%{transform:scaleX(.22)}
+  58%{transform:scaleX(.68)}
+  82%{transform:scaleX(.88)}
+  100%{transform:scaleX(1)}
+}
+@media (max-width:980px) and (pointer:coarse){
+  #mobileStartupIntro{display:flex}
+}
+@media (max-width:980px) and (pointer:coarse) and (orientation:portrait){
+  .mobileStartupIntroImage{object-fit:contain;background:#010817}
+  .mobileStartupIntroGlow{top:calc(50% + 14vw);width:42vw}
+  .mobileStartupIntroProgress{top:calc(50% + 24vw);bottom:auto;width:35vw;min-width:150px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mobileStartupIntroImage,.mobileStartupIntroGlow,.mobileStartupIntroSweep,.mobileStartupIntroProgress span{animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+
 </head>
 <body>
+<div id="mobileStartupIntro" aria-hidden="true">
+  <img class="mobileStartupIntroImage" src="./ui/startup/typer_mobile_intro.png?v=3100" alt=""/>
+  <div class="mobileStartupIntroGlow"></div>
+  <div class="mobileStartupIntroSweep"></div>
+  <div class="mobileStartupIntroProgress"><span></span></div>
+</div>
+
 <div id="bg"></div>
 <div aria-live="polite" id="rotateOverlay">
 <div class="rotateCard">
@@ -3431,7 +3548,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3099" type="module"></script>
+<script src="./app.js?v=3100" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3451,14 +3568,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3099', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3100', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.099</div>
+<div id="buildCornerText">Mariusz Gębka v.3.100</div>
 </div>
 
 <style>
@@ -6029,7 +6146,7 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 
 
 <style id="build3099-room-equal-columns">
-/* BUILD 3099: wyłącznie wyrównanie wysokości trzech kolumn pokoju i pełna responsywność. */
+/* BUILD 3100: wyłącznie wyrównanie wysokości trzech kolumn pokoju i pełna responsywność. */
 body.room-screen-active #roomLayout{
   align-items:stretch !important;
 }
@@ -6270,7 +6387,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-taller-responsive-room-panels">
-/* BUILD 3099: delikatnie skrócone, nadal równe panele na telefonie poziomo. */
+/* BUILD 3100: delikatnie skrócone, nadal równe panele na telefonie poziomo. */
 @media (max-width:980px) and (orientation:landscape){
   html,
   body.room-screen-active{
@@ -6380,7 +6497,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-alltime-ranking-layout">
-/* BUILD 3099: tylko układ Rankingu wszechczasów. */
+/* BUILD 3100: tylko układ Rankingu wszechczasów. */
 #league .leagueWrap.allTimeMode #leagueRoundFilter{
   display:none !important;
 }
@@ -6436,7 +6553,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-left-menu-directly-under-room-actions">
-/* BUILD 3099: tylko telefon poziomo — usuń pustą przestrzeń w lewym panelu.
+/* BUILD 3100: tylko telefon poziomo — usuń pustą przestrzeń w lewym panelu.
    Menu EVENT / rankingi / TOP 3 / Regulamin zaczyna się bezpośrednio pod
    przyciskami Opuść pokój i Usuń pokój. */
 @media (max-width:980px) and (orientation:landscape),
@@ -6474,7 +6591,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-align-middle-right-bottom-to-left">
-/* BUILD 3099: tylko telefon poziomo — dolna krawędź panelu środkowego
+/* BUILD 3100: tylko telefon poziomo — dolna krawędź panelu środkowego
    i prawego jest zsynchronizowana z dolną krawędzią panelu lewego. */
 @media (max-width:980px) and (orientation:landscape),
        (orientation:landscape) and (hover:none) and (pointer:coarse){

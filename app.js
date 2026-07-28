@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3099;
+const BUILD = 3100;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3041,7 +3041,7 @@ function isUsefulPlayerNick(value){
   if(/^[A-Za-z0-9_-]{18,}$/.test(nick)) return false;
   return true;
 }
-// BUILD 3099: naprawa historycznego powiązania numeru gracza z rankingami.
+// BUILD 3100: naprawa historycznego powiązania numeru gracza z rankingami.
 // Numer gracza jest kluczem tożsamości, a nick służy wyłącznie do wyświetlania.
 const KNOWN_PLAYER_NUMBER_REPAIRS = Object.freeze({
   semusiu: "N279809",
@@ -3847,7 +3847,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.099` : "TYPER v.3.099",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.100` : "TYPER v.3.100",800,850);
   return canvas;
 }
 
@@ -9913,7 +9913,7 @@ async function openLeagueTable(roomCode, opts={}) {
     }
     updateLeagueHintForMode();
 
-    // BUILD 3099: numer gracza jest głównym kluczem rankingu.
+    // BUILD 3100: numer gracza jest głównym kluczem rankingu.
     // Stare dokumenty różnych UID tego samego gracza są scalane według playerNo.
     const currentPlayers = [];
     try{
@@ -10388,7 +10388,7 @@ function escapeHtml(s){
 
 
 
-// BUILD 3099: na telefonie poziomo panel środkowy i prawy kończą się
+// BUILD 3100: na telefonie poziomo panel środkowy i prawy kończą się
 // dokładnie na wysokości dolnej krawędzi lewego panelu.
 function syncRoomColumnsToLeftHeight(){
   const layout = document.getElementById('roomLayout');
@@ -10460,11 +10460,53 @@ window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); syncRoomColu
 window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); syncRoomColumnsToLeftHeight(); }catch(e){} }, 60); });
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ updateLandscapeLock(); }catch(e){} } });
 
+
+
+// ===== BUILD 3100: mobilny animowany start przed pierwszym oknem logowania =====
+function isPhoneStartupIntroEnabled(){
+  try{
+    const uaPhone = /Android|iPhone|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "");
+    const touchPhone = (navigator.maxTouchPoints || 0) > 0 && Math.min(screen.width || innerWidth, screen.height || innerHeight) <= 980;
+    const coarse = window.matchMedia?.('(pointer:coarse)').matches;
+    const narrow = window.matchMedia?.('(max-width:980px)').matches;
+    return !!(narrow && coarse && (uaPhone || touchPhone));
+  }catch(e){
+    return false;
+  }
+}
+
+function startMobileStartupIntro(){
+  const overlay = document.getElementById('mobileStartupIntro');
+  if(!overlay || !isPhoneStartupIntroEnabled()){
+    if(overlay) overlay.style.display='none';
+    return { close: async()=>{} };
+  }
+
+  overlay.classList.remove('is-leaving');
+  overlay.style.display='flex';
+  overlay.setAttribute('aria-hidden','false');
+  document.body.classList.add('mobileStartupIntroRunning');
+  const minimum = new Promise(resolve=>setTimeout(resolve, 4200));
+
+  return {
+    close: async()=>{
+      await minimum;
+      overlay.classList.add('is-leaving');
+      await new Promise(resolve=>setTimeout(resolve, 560));
+      overlay.style.display='none';
+      overlay.setAttribute('aria-hidden','true');
+      document.body.classList.remove('mobileStartupIntroRunning');
+    }
+  };
+}
+
+
 // ===== START =====
 (async()=>{
+  const mobileStartupIntro = startMobileStartupIntro();
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.099`);
+    setFooter(`Mariusz Gębka v.3.100`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
@@ -10477,6 +10519,9 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 
     // zastosuj język od razu
     applyLangToUI();
+
+    // Na telefonie najpierw kończymy animowany ekran startowy.
+    await mobileStartupIntro.close();
 
     // Najpierw wybór: logowanie istniejącym numerem albo utworzenie nowego profilu.
     let okLogin = false;
