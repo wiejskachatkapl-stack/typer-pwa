@@ -1,5 +1,5 @@
-// Typer PWA Service Worker (BUILD 3100)
-const BUILD = '3100';
+// Typer PWA Service Worker (BUILD 3101)
+const BUILD = '3101';
 const CACHE_PREFIX = 'typer-cache-';
 const CACHE_NAME = `${CACHE_PREFIX}${BUILD}`;
 const VERSIONED_INDEX = `./index.html?v=${BUILD}`;
@@ -12,7 +12,7 @@ const CORE = [
   `./favicon-32x32.png?v=${BUILD}`,
   `./favicon-16x16.png?v=${BUILD}`,
   `./ui/loader_ball.webp?v=${BUILD}`,
-  `./ui/startup/typer_mobile_intro.png?v=${BUILD}`,
+  `./img_tlo.png?v=${BUILD}`,
   './icons/icon-192x192.png',
   './icons/icon-512x512.png'
 ];

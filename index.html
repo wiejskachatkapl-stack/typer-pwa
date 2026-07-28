@@ -5,17 +5,31 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3100)</title>
-<link href="manifest.json?v=3100" rel="manifest"/>
-<link href="favicon-32x32.png?v=3100" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3100" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3100" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3101)</title>
+<link href="manifest.json?v=3101" rel="manifest"/>
+<link href="favicon-32x32.png?v=3101" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3101" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3101" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
+
+<script id="typerMobileStartupDetector">
+(() => {
+  try {
+    const ua = String(navigator.userAgent || "");
+    const mobileUa = /Android|iPhone|iPod|Windows Phone|Mobile/i.test(ua);
+    const touch = (navigator.maxTouchPoints || 0) > 0 || "ontouchstart" in window;
+    const shortViewport = Math.min(Number(innerWidth || 9999), Number(innerHeight || 9999));
+    const longViewport = Math.max(Number(innerWidth || 0), Number(innerHeight || 0));
+    const phoneSizedTouch = touch && shortViewport <= 600 && longViewport <= 1200;
+    if (mobileUa || phoneSizedTouch) document.documentElement.classList.add("typer-phone-startup");
+  } catch (_) {}
+})();
+</script>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "3100";
+  const BUILD = "3101";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -214,7 +228,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3100");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3101");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2833,122 +2847,265 @@ html[data-lang="en"] .modernAppBtn .label-en{display:inline-flex}
 </style>
 
 
-/* ===== BUILD 3100: animowany ekran startowy tylko na telefonie ===== */
-#mobileStartupIntro{
+/* ===== BUILD 3101: profesjonalny start wyłącznie na telefonie ===== */
+#typerMobileStartup{
   display:none;
   position:fixed;
   inset:0;
-  z-index:300000;
+  z-index:400000;
   overflow:hidden;
   align-items:center;
   justify-content:center;
-  background:#010817;
+  isolation:isolate;
+  background:#020919;
   opacity:1;
   visibility:visible;
-  transition:opacity .55s ease, visibility .55s ease;
+  transition:opacity .48s ease,visibility .48s ease;
 }
-#mobileStartupIntro.is-leaving{
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
+html.typer-phone-startup #typerMobileStartup{display:flex;}
+#typerMobileStartup::before{
+  content:"";
+  position:absolute;
+  inset:-5%;
+  z-index:-4;
+  background-image:url("./img_tlo.png?v=3101");
+  background-repeat:no-repeat;
+  background-position:center 58%;
+  background-size:cover;
+  filter:saturate(1.08) contrast(1.07) brightness(.66);
+  transform:scale(1.08);
+  animation:typerIntroCamera 3.5s cubic-bezier(.18,.72,.2,1) both;
 }
-.mobileStartupIntroImage{
+#typerMobileStartup::after{
+  content:"";
   position:absolute;
   inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  transform:scale(1.055);
-  filter:saturate(1.04) contrast(1.03) brightness(.96);
-  animation:mobileStartupCamera 4.3s cubic-bezier(.2,.72,.22,1) both;
+  z-index:-3;
+  background:
+    radial-gradient(circle at 50% 48%,rgba(36,139,255,.32),transparent 34%),
+    linear-gradient(180deg,rgba(1,7,24,.18),rgba(1,7,24,.62)),
+    linear-gradient(90deg,rgba(0,0,0,.42),transparent 22%,transparent 78%,rgba(0,0,0,.42));
 }
-.mobileStartupIntroGlow{
+.typerIntroSweep{
   position:absolute;
-  left:50%;
-  top:72%;
-  width:min(38vw,520px);
-  aspect-ratio:1;
-  transform:translate(-50%,-50%);
+  inset:-30%;
+  z-index:-1;
+  pointer-events:none;
+  opacity:0;
+  background:linear-gradient(110deg,transparent 39%,rgba(255,255,255,.22) 48%,rgba(56,165,255,.15) 52%,transparent 61%);
+  transform:translateX(-75%);
+  animation:typerIntroSweep 1.8s ease-in-out .55s both;
+}
+.typerIntroParticles,
+.typerIntroParticles::before,
+.typerIntroParticles::after{
+  position:absolute;
+  inset:0;
+  content:"";
+  pointer-events:none;
+  background-image:
+    radial-gradient(circle,rgba(111,199,255,.95) 0 1.2px,transparent 1.8px),
+    radial-gradient(circle,rgba(255,255,255,.72) 0 1px,transparent 1.6px);
+  background-size:92px 68px,137px 103px;
+  background-position:13px 9px,57px 31px;
+  opacity:.20;
+  animation:typerIntroParticles 3.2s linear both;
+}
+.typerIntroParticles::before{transform:scale(.8) rotate(7deg);opacity:.55;}
+.typerIntroParticles::after{transform:scale(1.15) rotate(-5deg);opacity:.3;}
+.typerIntroContent{
+  width:min(92vw,820px);
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(3px,1.3vh,11px);
+  text-align:center;
+  padding:clamp(8px,2.3vh,22px) clamp(14px,3vw,30px);
+  transform:translateY(-1vh);
+}
+.typerIntroKicker{
+  font:900 clamp(8px,1.6vw,14px)/1.1 Arial,sans-serif;
+  letter-spacing:clamp(2px,.65vw,6px);
+  color:rgba(205,231,255,.82);
+  text-shadow:0 2px 12px rgba(0,0,0,.8);
+  opacity:0;
+  transform:translateY(10px);
+  animation:typerIntroRise .6s ease .18s forwards;
+}
+.typerIntroTitle{
+  position:relative;
+  font:1000 clamp(56px,15vw,150px)/.8 Arial Black,Arial,sans-serif;
+  letter-spacing:clamp(-5px,-.75vw,-1px);
+  color:#fff;
+  background:linear-gradient(180deg,#fff 0%,#dff3ff 34%,#70b9ff 68%,#0d5fe3 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 5px 0 #062565) drop-shadow(0 12px 22px rgba(0,0,0,.66));
+  opacity:0;
+  transform:scale(.62) translateY(18px);
+  animation:typerIntroLogo .9s cubic-bezier(.15,.82,.18,1.18) .18s forwards;
+}
+.typerIntroTitle::after{
+  content:"";
+  position:absolute;
+  left:8%;
+  right:8%;
+  bottom:-9%;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,#2ea4ff,#fff,#2ea4ff,transparent);
+  box-shadow:0 0 11px #168cff,0 0 28px rgba(42,156,255,.75);
+  transform:scaleX(0);
+  animation:typerIntroLine .7s ease .72s forwards;
+}
+.typerIntroSubtitle{
+  margin-top:clamp(4px,1.4vh,13px);
+  font:900 clamp(11px,2.15vw,20px)/1.1 Arial,sans-serif;
+  letter-spacing:clamp(.6px,.25vw,2px);
+  color:#f5fbff;
+  text-shadow:0 3px 14px rgba(0,0,0,.95);
+  opacity:0;
+  transform:translateY(8px);
+  animation:typerIntroRise .55s ease .82s forwards;
+}
+.typerIntroSubtitle span{color:#ff9b2f;margin:0 .5em;text-shadow:0 0 12px rgba(255,137,34,.85);}
+.typerIntroBallHalo{
+  position:relative;
+  width:clamp(64px,16vh,132px);
+  height:clamp(64px,16vh,132px);
+  margin-top:clamp(1px,.8vh,7px);
+  display:grid;
+  place-items:center;
+  opacity:0;
+  transform:translateY(16px) scale(.7);
+  animation:typerIntroBallIn .65s cubic-bezier(.18,.8,.2,1.15) 1.05s forwards;
+}
+.typerIntroBallHalo::before,
+.typerIntroBallHalo::after{
+  content:"";
+  position:absolute;
+  inset:8%;
   border-radius:50%;
-  background:radial-gradient(circle,rgba(54,157,255,.35) 0%,rgba(13,91,255,.14) 35%,transparent 68%);
-  mix-blend-mode:screen;
-  animation:mobileStartupGlow 1.35s ease-in-out infinite alternate;
-  pointer-events:none;
+  border:1px solid rgba(99,197,255,.65);
+  box-shadow:0 0 18px rgba(39,163,255,.58),inset 0 0 18px rgba(39,163,255,.25);
+  animation:typerIntroRing 1.25s ease-in-out 1.2s infinite;
 }
-.mobileStartupIntroSweep{
-  position:absolute;
-  inset:-20%;
-  background:linear-gradient(112deg,transparent 35%,rgba(255,255,255,.16) 48%,rgba(90,188,255,.10) 52%,transparent 65%);
-  transform:translateX(-78%);
-  animation:mobileStartupSweep 2.2s ease-in-out .45s both;
-  pointer-events:none;
+.typerIntroBallHalo::after{inset:-5%;animation-delay:1.55s;opacity:.5;}
+.typerIntroBall{
+  width:72%;
+  height:72%;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,.72)) drop-shadow(0 0 13px rgba(73,180,255,.65));
+  animation:typerIntroBallFloat 1.05s ease-in-out 1.45s infinite alternate;
 }
-.mobileStartupIntroProgress{
-  position:absolute;
-  left:50%;
-  bottom:6.7%;
-  width:min(33vw,540px);
-  height:4px;
-  transform:translateX(-50%);
+.typerIntroLoading{
+  font:900 clamp(8px,1.45vw,13px)/1 Arial,sans-serif;
+  letter-spacing:clamp(1.6px,.45vw,4px);
+  color:rgba(229,243,255,.9);
+  text-shadow:0 2px 9px rgba(0,0,0,.9);
+  opacity:0;
+  animation:typerIntroRise .45s ease 1.25s forwards;
+}
+.typerIntroProgress{
+  width:min(52vw,360px);
+  min-width:170px;
+  height:5px;
   overflow:hidden;
   border-radius:999px;
-  background:rgba(78,153,255,.18);
-  box-shadow:0 0 14px rgba(45,151,255,.45);
-  pointer-events:none;
+  border:1px solid rgba(117,198,255,.28);
+  background:rgba(2,23,60,.68);
+  box-shadow:0 0 12px rgba(32,141,255,.35),inset 0 1px 3px rgba(0,0,0,.75);
+  opacity:0;
+  animation:typerIntroRise .4s ease 1.35s forwards;
 }
-.mobileStartupIntroProgress span{
+.typerIntroProgress span{
   display:block;
   width:100%;
   height:100%;
   border-radius:inherit;
-  transform:scaleX(0);
   transform-origin:left center;
-  background:linear-gradient(90deg,#168bff,#7ad8ff 72%,#fff);
-  box-shadow:0 0 14px #36b8ff,0 0 26px rgba(37,146,255,.85);
-  animation:mobileStartupLoad 4s cubic-bezier(.18,.68,.18,1) .12s forwards;
+  transform:scaleX(0);
+  background:linear-gradient(90deg,#0b76ff,#49b8ff 64%,#fff);
+  box-shadow:0 0 12px #28a6ff,0 0 24px rgba(52,170,255,.82);
+  animation:typerIntroLoad 2.45s cubic-bezier(.16,.72,.17,1) .3s forwards;
 }
-@keyframes mobileStartupCamera{
-  0%{transform:scale(1.085);filter:saturate(.92) contrast(1.02) brightness(.72)}
-  18%{filter:saturate(1.04) contrast(1.04) brightness(1)}
-  100%{transform:scale(1);filter:saturate(1.06) contrast(1.04) brightness(1)}
+#typerMobileStartup.is-closing{opacity:0;visibility:hidden;pointer-events:none;}
+@keyframes typerIntroCamera{0%{transform:scale(1.14);filter:saturate(.82) contrast(1.03) brightness(.42)}35%{filter:saturate(1.1) contrast(1.07) brightness(.72)}100%{transform:scale(1.02);filter:saturate(1.12) contrast(1.08) brightness(.72)}}
+@keyframes typerIntroSweep{0%{transform:translateX(-75%);opacity:0}20%{opacity:1}100%{transform:translateX(75%);opacity:0}}
+@keyframes typerIntroParticles{0%{transform:translateY(12px);opacity:0}25%{opacity:.24}100%{transform:translateY(-15px);opacity:.12}}
+@keyframes typerIntroRise{to{opacity:1;transform:translateY(0)}}
+@keyframes typerIntroLogo{70%{opacity:1;transform:scale(1.035) translateY(0)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes typerIntroLine{to{transform:scaleX(1)}}
+@keyframes typerIntroBallIn{to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes typerIntroBallFloat{from{transform:translateY(-3px) rotate(-3deg)}to{transform:translateY(4px) rotate(3deg)}}
+@keyframes typerIntroRing{0%{transform:scale(.72);opacity:0}45%{opacity:.8}100%{transform:scale(1.35);opacity:0}}
+@keyframes typerIntroLoad{0%{transform:scaleX(0)}18%{transform:scaleX(.18)}47%{transform:scaleX(.51)}74%{transform:scaleX(.81)}100%{transform:scaleX(1)}}
+@media (orientation:landscape) and (max-height:520px){
+  .typerIntroContent{gap:2px;transform:translateY(-1px);padding:4px 12px;}
+  .typerIntroTitle{font-size:clamp(54px,17vh,112px);}
+  .typerIntroKicker{font-size:clamp(7px,1.7vh,11px);}
+  .typerIntroSubtitle{font-size:clamp(10px,2.8vh,16px);margin-top:5px;}
+  .typerIntroBallHalo{width:clamp(52px,17vh,94px);height:clamp(52px,17vh,94px);margin-top:0;}
+  .typerIntroLoading{font-size:clamp(7px,1.8vh,10px);}
+  .typerIntroProgress{height:4px;width:min(40vw,300px);}
 }
-@keyframes mobileStartupGlow{
-  from{opacity:.48;transform:translate(-50%,-50%) scale(.86)}
-  to{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
-}
-@keyframes mobileStartupSweep{
-  0%{transform:translateX(-78%);opacity:0}
-  20%{opacity:1}
-  100%{transform:translateX(78%);opacity:0}
-}
-@keyframes mobileStartupLoad{
-  0%{transform:scaleX(0)}
-  18%{transform:scaleX(.22)}
-  58%{transform:scaleX(.68)}
-  82%{transform:scaleX(.88)}
-  100%{transform:scaleX(1)}
-}
-@media (max-width:980px) and (pointer:coarse){
-  #mobileStartupIntro{display:flex}
-}
-@media (max-width:980px) and (pointer:coarse) and (orientation:portrait){
-  .mobileStartupIntroImage{object-fit:contain;background:#010817}
-  .mobileStartupIntroGlow{top:calc(50% + 14vw);width:42vw}
-  .mobileStartupIntroProgress{top:calc(50% + 24vw);bottom:auto;width:35vw;min-width:150px}
+@media (orientation:portrait){
+  #typerMobileStartup::before{background-size:auto 100%;background-position:center;}
+  .typerIntroContent{width:94vw;gap:clamp(7px,1.5vh,15px);}
+  .typerIntroTitle{font-size:clamp(68px,21vw,138px);}
+  .typerIntroBallHalo{width:clamp(88px,25vw,148px);height:clamp(88px,25vw,148px);}
+  .typerIntroProgress{width:min(68vw,360px);}
 }
 @media (prefers-reduced-motion:reduce){
-  .mobileStartupIntroImage,.mobileStartupIntroGlow,.mobileStartupIntroSweep,.mobileStartupIntroProgress span{animation-duration:.01ms!important;animation-iteration-count:1!important}
+  #typerMobileStartup *,#typerMobileStartup::before,#typerMobileStartup::after{animation-duration:.01ms!important;animation-iteration-count:1!important;}
 }
 
 </head>
 <body>
-<div id="mobileStartupIntro" aria-hidden="true">
-  <img class="mobileStartupIntroImage" src="./ui/startup/typer_mobile_intro.png?v=3100" alt=""/>
-  <div class="mobileStartupIntroGlow"></div>
-  <div class="mobileStartupIntroSweep"></div>
-  <div class="mobileStartupIntroProgress"><span></span></div>
+
+<div id="typerMobileStartup" aria-hidden="true">
+  <div class="typerIntroSweep"></div>
+  <div class="typerIntroParticles"></div>
+  <div class="typerIntroContent">
+    <div class="typerIntroKicker">SPORTOWE EMOCJE ZACZYNAJĄ SIĘ TUTAJ</div>
+    <div class="typerIntroTitle">TYPER</div>
+    <div class="typerIntroSubtitle">TYPUJ MECZE <span>•</span> WYGRYWAJ SEZON</div>
+    <div class="typerIntroBallHalo"><img class="typerIntroBall" src="./ui/loader_ball.webp?v=3101" alt=""/></div>
+    <div class="typerIntroLoading">URUCHAMIANIE GRY</div>
+    <div class="typerIntroProgress"><span></span></div>
+  </div>
 </div>
+<script id="typerMobileStartupController">
+(() => {
+  const overlay = document.getElementById("typerMobileStartup");
+  const enabled = document.documentElement.classList.contains("typer-phone-startup");
+  const startedAt = performance.now();
+  let closingPromise = null;
+
+  if (!enabled && overlay) overlay.style.display = "none";
+
+  window.finishTyperMobileStartup = () => {
+    if (!enabled || !overlay) return Promise.resolve();
+    if (closingPromise) return closingPromise;
+    closingPromise = (async () => {
+      const minimumVisible = 3000;
+      const remaining = Math.max(0, minimumVisible - (performance.now() - startedAt));
+      if (remaining) await new Promise(resolve => setTimeout(resolve, remaining));
+      overlay.classList.add("is-closing");
+      await new Promise(resolve => setTimeout(resolve, 500));
+      overlay.remove();
+      document.documentElement.classList.remove("typer-phone-startup");
+    })();
+    return closingPromise;
+  };
+
+  // Awaryjne zamknięcie, gdy połączenie z Firebase trwa wyjątkowo długo.
+  if (enabled) setTimeout(() => window.finishTyperMobileStartup(), 8500);
+})();
+</script>
 
 <div id="bg"></div>
 <div aria-live="polite" id="rotateOverlay">
@@ -3548,7 +3705,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3100" type="module"></script>
+<script src="./app.js?v=3101" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3568,14 +3725,14 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3100', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3101', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
 <!-- BUILD corner -->
 <div aria-hidden="true" id="buildCorner">
 <img alt="" id="buildCornerLogo" src="ui/logo/logo_RNAPP.png"/>
-<div id="buildCornerText">Mariusz Gębka v.3.100</div>
+<div id="buildCornerText">Mariusz Gębka v.3.101</div>
 </div>
 
 <style>
@@ -6146,7 +6303,7 @@ html[data-lang="en"] #home .homeSettingsPro .label-en{display:inline-flex;}
 
 
 <style id="build3099-room-equal-columns">
-/* BUILD 3100: wyłącznie wyrównanie wysokości trzech kolumn pokoju i pełna responsywność. */
+/* BUILD 3099: wyłącznie wyrównanie wysokości trzech kolumn pokoju i pełna responsywność. */
 body.room-screen-active #roomLayout{
   align-items:stretch !important;
 }
@@ -6387,7 +6544,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-taller-responsive-room-panels">
-/* BUILD 3100: delikatnie skrócone, nadal równe panele na telefonie poziomo. */
+/* BUILD 3099: delikatnie skrócone, nadal równe panele na telefonie poziomo. */
 @media (max-width:980px) and (orientation:landscape){
   html,
   body.room-screen-active{
@@ -6497,7 +6654,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-alltime-ranking-layout">
-/* BUILD 3100: tylko układ Rankingu wszechczasów. */
+/* BUILD 3099: tylko układ Rankingu wszechczasów. */
 #league .leagueWrap.allTimeMode #leagueRoundFilter{
   display:none !important;
 }
@@ -6553,7 +6710,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-left-menu-directly-under-room-actions">
-/* BUILD 3100: tylko telefon poziomo — usuń pustą przestrzeń w lewym panelu.
+/* BUILD 3099: tylko telefon poziomo — usuń pustą przestrzeń w lewym panelu.
    Menu EVENT / rankingi / TOP 3 / Regulamin zaczyna się bezpośrednio pod
    przyciskami Opuść pokój i Usuń pokój. */
 @media (max-width:980px) and (orientation:landscape),
@@ -6591,7 +6748,7 @@ body.room-screen-active #roomLayout > .rightBar{
 
 
 <style id="build3099-align-middle-right-bottom-to-left">
-/* BUILD 3100: tylko telefon poziomo — dolna krawędź panelu środkowego
+/* BUILD 3099: tylko telefon poziomo — dolna krawędź panelu środkowego
    i prawego jest zsynchronizowana z dolną krawędzią panelu lewego. */
 @media (max-width:980px) and (orientation:landscape),
        (orientation:landscape) and (hover:none) and (pointer:coarse){
