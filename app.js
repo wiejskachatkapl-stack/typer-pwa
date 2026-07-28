@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3097;
+const BUILD = 3098;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3041,7 +3041,7 @@ function isUsefulPlayerNick(value){
   if(/^[A-Za-z0-9_-]{18,}$/.test(nick)) return false;
   return true;
 }
-// BUILD 3096: naprawa historycznego powiązania numeru gracza z rankingami.
+// BUILD 3098: naprawa historycznego powiązania numeru gracza z rankingami.
 // Numer gracza jest kluczem tożsamości, a nick służy wyłącznie do wyświetlania.
 const KNOWN_PLAYER_NUMBER_REPAIRS = Object.freeze({
   semusiu: "N279809",
@@ -3847,7 +3847,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.097` : "TYPER v.3.097",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.098` : "TYPER v.3.098",800,850);
   return canvas;
 }
 
@@ -9913,7 +9913,7 @@ async function openLeagueTable(roomCode, opts={}) {
     }
     updateLeagueHintForMode();
 
-    // BUILD 3096: numer gracza jest głównym kluczem rankingu.
+    // BUILD 3098: numer gracza jest głównym kluczem rankingu.
     // Stare dokumenty różnych UID tego samego gracza są scalane według playerNo.
     const currentPlayers = [];
     try{
@@ -10426,7 +10426,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.097`);
+    setFooter(`Mariusz Gębka v.3.098`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
