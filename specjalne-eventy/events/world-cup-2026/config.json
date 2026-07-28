@@ -1,6 +1,6 @@
 {
   "id": "world-cup-2026",
-  "moduleVersion": 1000,
+  "moduleVersion": 1002,
   "name": {
     "pl": "Mistrzostwa Świata 2026",
     "en": "World Cup 2026"
@@ -10,6 +10,6 @@
     "state": "worldcup_event/state",
     "rounds": "worldcup_rounds"
   },
-  "notes": "Osobny moduł v1000 bazujący na sprawdzonej mechanice Eventu MŚ 2026 z TYPERA v3105. Główny TYPER v3105 nie jest modyfikowany.",
+  "notes": "Moduł v1002: bezpośredni przełącznik AKTYWNY/NIEAKTYWNY w górnym pasku. Zmiana zapisuje się natychmiast; aktywowanie zakończonego Eventu ponownie udostępnia dodawanie kolejek. TYPER v3105 pozostaje bez zmian.",
   "roomSettingsStorage": "special_event/config"
 }

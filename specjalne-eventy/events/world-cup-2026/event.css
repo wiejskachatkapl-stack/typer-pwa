@@ -60,7 +60,7 @@
 }
 
 
-/* SPECJALNE EVENTY TYPERA v1000 */
+/* SPECJALNE EVENTY TYPERA v1002 */
 #room #btnSubstitute.eventInactive{
   opacity:.48 !important;
   filter:grayscale(.7) brightness(.72) !important;
@@ -80,3 +80,40 @@
 }
 #modal.worldcupMode .wcEventToggleInput{width:28px;height:28px;accent-color:#24c85a;flex:0 0 auto;}
 #modal.worldcupMode .wcTeamsTextarea{min-height:260px;resize:vertical;line-height:1.45;}
+
+
+/* v1002: bezpośredni przełącznik aktywności w górnym pasku */
+#modal.worldcupMode .wcQuickToggle{
+  position:relative;display:inline-flex;align-items:center;gap:10px;min-height:42px;
+  padding:6px 14px 6px 8px;border-radius:18px;border:1px solid rgba(255,255,255,.16);
+  background:rgba(5,17,43,.72);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+  cursor:pointer;user-select:none;-webkit-user-select:none;transition:.18s ease;
+}
+#modal.worldcupMode .wcQuickToggle.active{border-color:rgba(51,255,136,.48);box-shadow:0 0 18px rgba(27,215,99,.12),inset 0 0 0 1px rgba(255,255,255,.03);}
+#modal.worldcupMode .wcQuickToggle.inactive{border-color:rgba(255,90,90,.42);}
+#modal.worldcupMode .wcQuickToggle.saving{opacity:.58;pointer-events:none;}
+#modal.worldcupMode .wcQuickToggleInput{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;}
+#modal.worldcupMode .wcQuickToggleTrack{
+  width:54px;height:30px;padding:3px;border-radius:999px;display:inline-flex;align-items:center;
+  background:linear-gradient(180deg,#7b2733,#4f1720);border:1px solid rgba(255,120,120,.45);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.42);transition:.18s ease;flex:0 0 auto;
+}
+#modal.worldcupMode .wcQuickToggleKnob{
+  display:block;width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg,#fff,#cfd8e8);
+  box-shadow:0 2px 6px rgba(0,0,0,.5);transform:translateX(0);transition:.18s ease;
+}
+#modal.worldcupMode .wcQuickToggleInput:checked + .wcQuickToggleTrack{
+  background:linear-gradient(180deg,#24df69,#0b8d3d);border-color:rgba(91,255,151,.72);
+}
+#modal.worldcupMode .wcQuickToggleInput:checked + .wcQuickToggleTrack .wcQuickToggleKnob{transform:translateX(24px);}
+#modal.worldcupMode .wcQuickToggleInput:focus-visible + .wcQuickToggleTrack{outline:3px solid rgba(76,169,255,.55);outline-offset:2px;}
+#modal.worldcupMode .wcQuickToggleLabel{font-weight:1000;letter-spacing:.15px;color:#ffaaaa;min-width:96px;text-align:center;}
+#modal.worldcupMode .wcQuickToggleInput:checked ~ .wcQuickToggleLabel{color:#8dffb9;}
+#modal.worldcupMode .wcActivitySettingsNote{
+  padding:10px 12px;border-radius:14px;border:1px solid rgba(72,169,255,.28);
+  background:rgba(17,79,145,.16);color:rgba(230,242,255,.9);
+}
+@media(max-width:620px){
+  #modal.worldcupMode .wcQuickToggle{flex:1 1 auto;justify-content:center;}
+  #modal.worldcupMode .wcQuickToggleLabel{min-width:88px;}
+}
