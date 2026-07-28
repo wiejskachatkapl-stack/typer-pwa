@@ -1,6 +1,6 @@
 {
   "id": "world-cup-2026",
-  "moduleVersion": 1005,
+  "moduleVersion": 1006,
   "name": {
     "pl": "Mistrzostwa Świata 2026",
     "en": "World Cup 2026"
@@ -10,6 +10,6 @@
     "state": "worldcup_event/state",
     "rounds": "worldcup_rounds"
   },
-  "notes": "Moduł v1005: wszystkie operacje administracyjne Eventów są dostępne wyłącznie dla administratora pokoju. Dotyczy to aktywowania i wyłączania Eventu, zmiany nazwy, dodawania, edycji i usuwania drużyn oraz przyszłego dodawania Eventów. Dodano centralną kontrolę uprawnień także bezpośrednio przed zapisem konfiguracji. TYPER v3105 pozostaje bez zmian.",
+  "notes": "Moduł v1006: wszystkie przyciski administracyjne Eventu przeniesiono z panelu meczów do górnego paska obok Cofnij i Wyjście. Na komputerze tworzą jeden rząd, a na telefonie układają się w dwa rzędy po cztery miejsca. Przycisk Zapisz typy pozostał osobno w panelu meczów i jest dostępny dla graczy zgodnie z dotychczasową mechaniką. Uprawnienia administratora, Eventy, drużyny, kolejki, typy, wyniki i ranking pozostają bez zmian. TYPER v3105 nie został zmieniony.",
   "roomSettingsStorage": "special_event/config"
 }
