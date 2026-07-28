@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1000;
+const BUILD = 1001;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5175,6 +5175,10 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .wcAdminButtons .btn{min-height:38px !important;padding:7px 13px !important;font-size:14px !important;}
     #modal.worldcupMode .wcPickLocked{opacity:.55;cursor:not-allowed;}
     #modal.worldcupMode .wcBtnDisabled{opacity:.35;filter:grayscale(1) brightness(.8);cursor:not-allowed;pointer-events:none;}
+    #modal.worldcupMode .wcEventSelectChip{display:inline-flex;align-items:center;min-height:42px;padding:0 10px;border-radius:18px;border:1px solid rgba(255,255,255,.16);background:rgba(5,17,43,.72);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);}
+    #modal.worldcupMode .wcEventSelect{appearance:auto;-webkit-appearance:menulist;min-width:260px;max-width:360px;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-weight:1000;padding:8px 4px;cursor:pointer;}
+    #modal.worldcupMode .wcEventSelect option{background:#0b1b3d;color:#fff;}
+    @media(max-width:620px){#modal.worldcupMode .wcEventSelectChip{width:100%;}.wcEventSelect{width:100%;min-width:0 !important;max-width:none !important;}}
     @media (max-width:980px){
       #modal.worldcupMode .modalCard{width:96vw !important;height:94vh !important;}
       #modal.worldcupMode .modalBody{padding:10px !important;}
@@ -5579,7 +5583,7 @@ function mainAttachMobileScoreKeyboard(root){
 }
 
 function wcLocalPickLockKey(roundId){
-  return `typer_wc_picks_saved_v1_${currentRoomCode||'room'}_${roundId||'round'}_${getPlayerNo()||userUid||'player'}`;
+  return `typer_wc_picks_saved_v2_${currentRoomCode||'room'}_${wcCurrentEventId()}_${roundId||'round'}_${getPlayerNo()||userUid||'player'}`;
 }
 function wcMarkPicksSavedLocal(roundId){ try{ localStorage.setItem(wcLocalPickLockKey(roundId), '1'); }catch{} }
 function wcArePicksSavedLocal(roundId){ try{ return localStorage.getItem(wcLocalPickLockKey(roundId)) === '1'; }catch{return false;} }
@@ -5639,25 +5643,143 @@ function wcCanPreviewRoundPicks(roundMeta, matches){
   return !!(deadlinePassed || resultsReady);
 }
 
+const WC_EVENT_CATALOG_URL = './events/event-types.json';
+const WC_DEFAULT_EVENT_ID = 'world-cup';
+let wcEventCatalogData = null;
+let wcEventCatalogPromise = null;
+
+function wcSafeEventId(value){
+  const id = String(value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  return id || WC_DEFAULT_EVENT_ID;
+}
+function wcSelectedEventStorageKey(){
+  return `typer_special_event_selected_v1_${String(currentRoomCode || 'room').toUpperCase()}`;
+}
+function wcCurrentEventId(){
+  if(window.__wcSelectedEventId) return wcSafeEventId(window.__wcSelectedEventId);
+  try{
+    const stored = localStorage.getItem(wcSelectedEventStorageKey());
+    if(stored) return wcSafeEventId(stored);
+  }catch{}
+  return WC_DEFAULT_EVENT_ID;
+}
+function wcSetCurrentEventId(eventId){
+  const id = wcSafeEventId(eventId);
+  window.__wcSelectedEventId = id;
+  window.__wcEventConfig = null;
+  window.__wcState = null;
+  try{ localStorage.setItem(wcSelectedEventStorageKey(), id); }catch{}
+  return id;
+}
+function wcFallbackEventCatalog(){
+  return {
+    defaultEvent: WC_DEFAULT_EVENT_ID,
+    events: [{
+      id: WC_DEFAULT_EVENT_ID,
+      label: {pl:'Event Mistrzostwa Świata', en:'World Cup Event'},
+      defaultName: {pl:'Mistrzostwa Świata 2026', en:'World Cup 2026'},
+      defaultEnabled: true,
+      legacyStorage: true,
+      teams: [...WORLD_CUP_TEAMS]
+    }]
+  };
+}
+async function wcLoadEventCatalogData(){
+  if(wcEventCatalogData) return wcEventCatalogData;
+  if(wcEventCatalogPromise) return wcEventCatalogPromise;
+  wcEventCatalogPromise = (async()=>{
+    let catalog = wcFallbackEventCatalog();
+    try{
+      const response = await fetch(`${WC_EVENT_CATALOG_URL}?v=${BUILD}`, {cache:'no-store'});
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      const parsed = await response.json();
+      if(Array.isArray(parsed?.events) && parsed.events.length) catalog = parsed;
+    }catch(error){
+      console.warn('Nie udało się wczytać katalogu rodzajów Eventów.', error);
+    }
+    const events = [];
+    for(const raw of (catalog.events || [])){
+      const def = {...raw, id:wcSafeEventId(raw?.id)};
+      let teams = Array.isArray(raw?.teams) ? raw.teams : [];
+      if(raw?.teamsFile){
+        try{
+          const separator = String(raw.teamsFile).includes('?') ? '&' : '?';
+          const response = await fetch(`${raw.teamsFile}${separator}v=${BUILD}`, {cache:'no-store'});
+          if(!response.ok) throw new Error(`HTTP ${response.status}`);
+          const teamData = await response.json();
+          if(Array.isArray(teamData?.teams)) teams = teamData.teams;
+        }catch(error){
+          console.warn(`Nie udało się wczytać listy drużyn: ${raw?.teamsFile}`, error);
+        }
+      }
+      const seen = new Set();
+      def.teams = teams.map(v=>String(v||'').trim()).filter(team=>{
+        const key = team.toLocaleLowerCase('pl');
+        if(!team || seen.has(key)) return false;
+        seen.add(key); return true;
+      });
+      events.push(def);
+    }
+    if(!events.length) events.push(...wcFallbackEventCatalog().events);
+    wcEventCatalogData = {
+      ...catalog,
+      defaultEvent: wcSafeEventId(catalog.defaultEvent || WC_DEFAULT_EVENT_ID),
+      events
+    };
+    const available = new Set(events.map(item=>item.id));
+    if(!available.has(wcCurrentEventId())) wcSetCurrentEventId(wcEventCatalogData.defaultEvent);
+    return wcEventCatalogData;
+  })().finally(()=>{ wcEventCatalogPromise = null; });
+  return wcEventCatalogPromise;
+}
+function wcGetEventDefinitions(){
+  return wcEventCatalogData?.events || wcFallbackEventCatalog().events;
+}
+function wcGetEventDefinition(eventId=wcCurrentEventId()){
+  const id = wcSafeEventId(eventId);
+  return wcGetEventDefinitions().find(item=>item.id===id) || wcGetEventDefinitions()[0] || wcFallbackEventCatalog().events[0];
+}
+function wcEventLabel(eventId=wcCurrentEventId()){
+  const def = wcGetEventDefinition(eventId);
+  return String(def?.label?.[getLang()] || def?.label?.pl || def?.defaultName?.[getLang()] || def?.defaultName?.pl || def?.id || 'Event');
+}
+function wcDefaultEventName(eventId=wcCurrentEventId()){
+  const def = wcGetEventDefinition(eventId);
+  return String(def?.defaultName?.pl || def?.defaultName?.en || def?.label?.pl || def?.id || 'Event');
+}
+function wcDefaultEventTeams(eventId=wcCurrentEventId()){
+  const def = wcGetEventDefinition(eventId);
+  return Array.isArray(def?.teams) && def.teams.length >= 2 ? [...def.teams] : [...WORLD_CUP_TEAMS];
+}
+function wcUsesLegacyStorage(eventId=wcCurrentEventId()){
+  const def = wcGetEventDefinition(eventId);
+  return def?.legacyStorage === true || wcSafeEventId(eventId) === WC_DEFAULT_EVENT_ID;
+}
 function wcEventStateRef(){
-  return boot.doc(db, "rooms", currentRoomCode, "worldcup_event", "state");
+  const eventId = wcCurrentEventId();
+  if(wcUsesLegacyStorage(eventId)) return boot.doc(db, 'rooms', currentRoomCode, 'worldcup_event', 'state');
+  return boot.doc(db, 'rooms', currentRoomCode, 'special_events', eventId);
 }
 function wcRoundRef(roundId){
-  return boot.doc(db, "rooms", currentRoomCode, "worldcup_rounds", roundId);
+  const eventId = wcCurrentEventId();
+  if(wcUsesLegacyStorage(eventId)) return boot.doc(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId);
+  return boot.doc(db, 'rooms', currentRoomCode, 'special_events', eventId, 'rounds', roundId);
 }
 function wcRoundsCol(){
-  return boot.collection(db, "rooms", currentRoomCode, "worldcup_rounds");
+  const eventId = wcCurrentEventId();
+  if(wcUsesLegacyStorage(eventId)) return boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds');
+  return boot.collection(db, 'rooms', currentRoomCode, 'special_events', eventId, 'rounds');
 }
 
-// ===== SPECJALNE EVENTY TYPERA v1000 — ustawienia odseparowane od głównego Typera =====
-const WC_DEFAULT_EVENT_CONFIG = Object.freeze({
-  enabled: true,
-  name: 'Mistrzostwa Świata 2026',
-  teams: [...WORLD_CUP_TEAMS]
-});
-function wcNormalizeEventConfig(raw={}){
-  const name = String(raw?.name || WC_DEFAULT_EVENT_CONFIG.name).trim().slice(0, 80) || WC_DEFAULT_EVENT_CONFIG.name;
-  const sourceTeams = Array.isArray(raw?.teams) ? raw.teams : WC_DEFAULT_EVENT_CONFIG.teams;
+// MŚ zachowuje sprawdzone ścieżki z v3105. Pozostałe Eventy otrzymują osobne dane.
+function wcNormalizeEventConfig(raw={}, eventId=wcCurrentEventId()){
+  const id = wcSafeEventId(eventId);
+  const def = wcGetEventDefinition(id);
+  const defaultName = wcDefaultEventName(id);
+  const nameValue = (raw?.name && typeof raw.name === 'object') ? (raw.name.pl || raw.name.en) : raw?.name;
+  const name = String(nameValue || defaultName).trim().slice(0, 80) || defaultName;
+  const defaultTeams = wcDefaultEventTeams(id);
+  const sourceTeams = Array.isArray(raw?.teams) ? raw.teams : defaultTeams;
   const seen = new Set();
   const teams = [];
   sourceTeams.forEach(value=>{
@@ -5665,41 +5787,55 @@ function wcNormalizeEventConfig(raw={}){
     const key = team.toLocaleLowerCase('pl');
     if(team && !seen.has(key)){ seen.add(key); teams.push(team); }
   });
+  const enabledDefault = def?.defaultEnabled !== false;
   return {
-    enabled: raw?.enabled !== false,
+    eventId:id,
+    enabled: raw?.enabled === undefined ? enabledDefault : raw.enabled !== false,
     name,
-    teams: teams.length >= 2 ? teams : [...WC_DEFAULT_EVENT_CONFIG.teams]
+    teams: teams.length >= 2 ? teams : defaultTeams
   };
 }
-function wcEventConfigRef(){
-  return boot.doc(db, 'rooms', currentRoomCode, 'special_event', 'config');
+function wcEventConfigRef(eventId=wcCurrentEventId()){
+  const id = wcSafeEventId(eventId);
+  // Zachowanie istniejących ustawień sprawdzonego Eventu MŚ z v1000.
+  if(wcUsesLegacyStorage(id)) return boot.doc(db, 'rooms', currentRoomCode, 'special_event', 'config');
+  return boot.doc(db, 'rooms', currentRoomCode, 'special_event', id);
 }
 function wcCurrentEventConfig(){
-  return wcNormalizeEventConfig(window.__wcEventConfig || WC_DEFAULT_EVENT_CONFIG);
+  return wcNormalizeEventConfig(window.__wcEventConfig || {}, wcCurrentEventId());
 }
-async function wcGetEventConfig(){
-  if(!currentRoomCode) return wcNormalizeEventConfig(WC_DEFAULT_EVENT_CONFIG);
+async function wcGetEventConfig(eventId=wcCurrentEventId()){
+  await wcLoadEventCatalogData();
+  const id = wcSafeEventId(eventId);
+  if(!currentRoomCode){
+    const config = wcNormalizeEventConfig({}, id);
+    if(id === wcCurrentEventId()) window.__wcEventConfig = config;
+    return config;
+  }
   try{
-    const snap = await boot.getDoc(wcEventConfigRef());
-    const config = wcNormalizeEventConfig(snap.exists() ? snap.data() : WC_DEFAULT_EVENT_CONFIG);
-    window.__wcEventConfig = config;
+    const snap = await boot.getDoc(wcEventConfigRef(id));
+    const config = wcNormalizeEventConfig(snap.exists() ? snap.data() : {}, id);
+    if(id === wcCurrentEventId()) window.__wcEventConfig = config;
     return config;
   }catch(error){
-    console.warn('Nie udało się pobrać ustawień Eventu.', error);
-    const config = wcNormalizeEventConfig(WC_DEFAULT_EVENT_CONFIG);
-    window.__wcEventConfig = config;
+    console.warn(`Nie udało się pobrać ustawień Eventu: ${id}.`, error);
+    const config = wcNormalizeEventConfig({}, id);
+    if(id === wcCurrentEventId()) window.__wcEventConfig = config;
     return config;
   }
 }
-async function wcSetEventConfig(patch){
+async function wcSetEventConfig(patch, eventId=wcCurrentEventId()){
   if(!currentRoomCode) throw new Error('Brak pokoju');
-  const next = wcNormalizeEventConfig({...wcCurrentEventConfig(), ...(patch || {})});
-  await boot.setDoc(wcEventConfigRef(), {
+  await wcLoadEventCatalogData();
+  const id = wcSafeEventId(eventId);
+  const base = id === wcCurrentEventId() ? wcCurrentEventConfig() : await wcGetEventConfig(id);
+  const next = wcNormalizeEventConfig({...base, ...(patch || {})}, id);
+  await boot.setDoc(wcEventConfigRef(id), {
     ...next,
     updatedAt: boot.serverTimestamp(),
     updatedBy: userUid || ''
   }, {merge:true});
-  window.__wcEventConfig = next;
+  if(id === wcCurrentEventId()) window.__wcEventConfig = next;
   return next;
 }
 function wcEventName(){ return wcCurrentEventConfig().name; }
@@ -5712,31 +5848,40 @@ function wcRequireEventActive(){
 async function updateRoomEventButtonState(){
   const btn = el('btnSubstitute');
   if(!btn || !currentRoomCode) return;
-  const config = await wcGetEventConfig();
+  await wcLoadEventCatalogData();
   const admin = isAdmin();
-  const inactive = config.enabled === false;
+  const configs = await Promise.all(wcGetEventDefinitions().map(def=>wcGetEventConfig(def.id).catch(()=>wcNormalizeEventConfig({}, def.id))));
+  const anyActive = configs.some(config=>config.enabled !== false);
   btn.hidden = false;
   btn.style.display = '';
-  btn.disabled = inactive && !admin;
-  btn.classList.toggle('eventInactive', inactive);
-  btn.dataset.eventEnabled = inactive ? '0' : '1';
-  const pl = inactive ? 'EVENT NIEAKTYWNY' : `EVENT: ${config.name}`;
-  const en = inactive ? 'EVENT INACTIVE' : `EVENT: ${config.name}`;
+  btn.disabled = !anyActive && !admin;
+  btn.classList.toggle('eventInactive', !anyActive);
+  btn.dataset.eventEnabled = anyActive ? '1' : '0';
+  const pl = anyActive ? 'SPECJALNE EVENTY TYPERA' : 'EVENTY NIEAKTYWNE';
+  const en = anyActive ? 'SPECIAL TIPSTER EVENTS' : 'EVENTS INACTIVE';
   const labelPl = btn.querySelector('.label-pl');
   const labelEn = btn.querySelector('.label-en');
   if(labelPl) labelPl.textContent = pl;
   if(labelEn) labelEn.textContent = en;
-  const title = inactive
-    ? (admin ? 'Event nieaktywny — administrator może otworzyć ustawienia' : 'Event nieaktywny')
-    : config.name;
+  const title = anyActive
+    ? (getLang()==='en' ? 'Open Special Events' : 'Otwórz Specjalne Eventy')
+    : (admin ? 'Eventy nieaktywne — administrator może je skonfigurować' : 'Eventy nieaktywne');
   btn.title = title;
   btn.setAttribute('aria-label', title);
 }
+
 function wcMatchesCol(roundId){
-  return boot.collection(db, "rooms", currentRoomCode, "worldcup_rounds", roundId, "matches");
+  const eventId = wcCurrentEventId();
+  if(wcUsesLegacyStorage(eventId)) return boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'matches');
+  return boot.collection(db, 'rooms', currentRoomCode, 'special_events', eventId, 'rounds', roundId, 'matches');
+}
+function wcPicksCol(roundId){
+  const eventId = wcCurrentEventId();
+  if(wcUsesLegacyStorage(eventId)) return boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks');
+  return boot.collection(db, 'rooms', currentRoomCode, 'special_events', eventId, 'rounds', roundId, 'picks');
 }
 function wcPicksRef(roundId, uid=userUid){
-  return boot.doc(db, "rooms", currentRoomCode, "worldcup_rounds", roundId, "picks", uid);
+  return boot.doc(wcPicksCol(roundId), uid);
 }
 async function wcGetState(){
   if(!currentRoomCode) return {activeRoundId:null, currentRoundNo:1, nextRoundNo:1, ended:false};
@@ -5787,7 +5932,7 @@ async function wcFetchMyPicksDoc(roundId){
   if(playerNo){
     try{
       const qs = await boot.getDocs(boot.query(
-        boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks'),
+        wcPicksCol(roundId),
         boot.where('playerNo','==', playerNo)
       ));
       if(qs && qs.docs && qs.docs.length){
@@ -5802,7 +5947,7 @@ async function wcFetchAllPicks(roundId){
   if(!roundId) return {};
   const out = {};
   try{
-    const qs = await boot.getDocs(boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks'));
+    const qs = await boot.getDocs(wcPicksCol(roundId));
     qs.forEach(d=>{
       const data = d.data() || {};
       out[d.id] = Object.assign({uid:d.id}, data, {picks:(data.picks || {})});
@@ -5839,14 +5984,14 @@ async function wcFetchRoundPicksForPlayer(roundId, player){
   const playerNo = player?.playerNo ? String(player.playerNo).trim().toUpperCase() : '';
   try{
     if(uid){
-      const snap = await boot.getDoc(boot.doc(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks', uid));
+      const snap = await boot.getDoc(wcPicksRef(roundId, uid));
       if(snap.exists()) return snap.data()?.picks || {};
     }
   }catch{}
   if(playerNo){
     try{
       const qs = await boot.getDocs(boot.query(
-        boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', roundId, 'picks'),
+        wcPicksCol(roundId),
         boot.where('playerNo','==', playerNo)
       ));
       if(qs && qs.docs && qs.docs.length) return qs.docs[0].data()?.picks || {};
@@ -6114,10 +6259,17 @@ async function wcOpenEventSettingsModal(){
     showToast(getLang()==='en' ? 'Only admin can do this' : 'Tylko admin może to wykonać');
     return;
   }
+  await wcLoadEventCatalogData();
   const config = await wcGetEventConfig();
+  const eventDefinition = wcGetEventDefinition();
   const body = document.createElement('div');
   body.className = 'col wcSettingsBody';
   body.style.gap = '14px';
+
+  const eventInfo = document.createElement('div');
+  eventInfo.className = 'chip';
+  eventInfo.style.alignSelf = 'flex-start';
+  eventInfo.textContent = `${getLang()==='en' ? 'Editing' : 'Edytujesz'}: ${wcEventLabel(eventDefinition.id)}`;
 
   const nameWrap = document.createElement('label');
   nameWrap.className = 'col';
@@ -6146,10 +6298,15 @@ async function wcOpenEventSettingsModal(){
   teamsWrap.style.gap = '6px';
   const teamsLabel = document.createElement('div');
   teamsLabel.className = 'sub';
-  teamsLabel.textContent = getLang()==='en' ? 'Teams — one name per line' : 'Drużyny — każda nazwa w osobnym wierszu';
+  const refreshTeamsLabel = ()=>{
+    const count = String(teamsInput?.value || '').split(/\r?\n/).map(v=>v.trim()).filter(Boolean).length;
+    teamsLabel.textContent = getLang()==='en' ? `Teams (${count}) — one name per line` : `Drużyny (${count}) — każda nazwa w osobnym wierszu`;
+  };
   const teamsInput = document.createElement('textarea');
   teamsInput.className = 'input wcTeamsTextarea';
   teamsInput.value = config.teams.join('\n');
+  teamsInput.addEventListener('input', refreshTeamsLabel);
+  refreshTeamsLabel();
   teamsWrap.append(teamsLabel, teamsInput);
 
   const note = document.createElement('div');
@@ -6188,7 +6345,7 @@ async function wcOpenEventSettingsModal(){
     }
   };
 
-  body.append(nameWrap, activeRow, teamsWrap, note, actions);
+  body.append(eventInfo, nameWrap, activeRow, teamsWrap, note, actions);
   modalOpen(getLang()==='en' ? 'Event settings' : 'Ustawienia Eventu', body);
   const wcModal = el('modal');
   if(wcModal) wcModal.classList.add('worldcupMode');
@@ -6204,11 +6361,17 @@ function wcBuildShell(config=wcCurrentEventConfig()){
   top.style.flexWrap = 'wrap';
   top.style.alignItems = 'center';
   const eventNameSafe = escapeHtml(config.name);
+  const selectedEventId = wcCurrentEventId();
+  const eventOptions = wcGetEventDefinitions().map(def=>{
+    const label = escapeHtml(String(def?.label?.[getLang()] || def?.label?.pl || def?.defaultName?.pl || def?.id || 'Event'));
+    const selected = def.id === selectedEventId ? ' selected' : '';
+    return `<option value="${escapeHtml(def.id)}"${selected}>${label}</option>`;
+  }).join('');
   const eventStatus = config.enabled === false
     ? (getLang()==='en' ? 'INACTIVE' : 'NIEAKTYWNY')
     : (getLang()==='en' ? 'ACTIVE' : 'AKTYWNY');
   top.innerHTML = `
-    <div class="chip">${eventNameSafe}</div>
+    <div class="wcEventSelectChip"><select id="wcEventSelect" class="wcEventSelect" aria-label="${getLang()==='en' ? 'Select Event' : 'Wybierz Event'}">${eventOptions}</select></div>
     <div class="chip wcEventStatusChip ${config.enabled === false ? 'inactive' : 'active'}">${eventStatus}</div>
     <div class="chip">Pokój: <span id="wcRoomName">—</span></div>
     <div class="chip">Gracz: <span id="wcNick">—</span></div>
@@ -6240,6 +6403,7 @@ function wcBuildShell(config=wcCurrentEventConfig()){
   playerBtns.append(wcSavePicksButton);
   grid.append(left,right); body.appendChild(grid);
   body._els = {
+    eventSelect: ()=> body.querySelector('#wcEventSelect'),
     roomName: ()=> body.querySelector('#wcRoomName'),
     nick: ()=> body.querySelector('#wcNick'),
     matchesCount: ()=> body.querySelector('#wcMatchesCount'),
@@ -6267,7 +6431,7 @@ async function wcComputeRanking(){
     for(const rdoc of roundsQs.docs){
       const rd = rdoc.data()||{}; if(!rd.closedAt) continue;
       const matches = await wcFetchRoundMatches(rdoc.id);
-      const picksQs = await boot.getDocs(boot.collection(db, 'rooms', currentRoomCode, 'worldcup_rounds', rdoc.id, 'picks'));
+      const picksQs = await boot.getDocs(wcPicksCol(rdoc.id));
       picksQs.forEach(pd=>{
         const data = pd.data() || {}; const uid = pd.id; const picks = data.picks || {};
         let pts = 0;
@@ -6742,6 +6906,7 @@ async function endWorldCupEvent(){
 
 async function renderWorldCupEvent(){
   if(!currentRoomCode){ showToast(getLang()==='en'?'No room':'Brak pokoju'); return; }
+  await wcLoadEventCatalogData();
   const eventConfig = await wcGetEventConfig();
   window.__wcEventConfig = eventConfig;
   const body = wcBuildShell(eventConfig);
@@ -6758,6 +6923,15 @@ async function renderWorldCupEvent(){
   body._els.nick().textContent = getNick() || '—';
   body._els.adminPanel().style.display = isAdmin() ? 'flex' : 'none';
   if(body._els.settingsBtn()) body._els.settingsBtn().onclick = ()=> wcOpenEventSettingsModal();
+  const wcEventSelect = body._els.eventSelect ? body._els.eventSelect() : null;
+  if(wcEventSelect){
+    wcEventSelect.value = wcCurrentEventId();
+    wcEventSelect.onchange = async ()=>{
+      wcSetCurrentEventId(wcEventSelect.value);
+      if(window.__wcDeadlineTimer){ clearInterval(window.__wcDeadlineTimer); window.__wcDeadlineTimer = null; }
+      await renderWorldCupEvent();
+    };
+  }
   body._els.saveRoundBtn().onclick = ()=> saveWorldCupRound();
   body._els.savePicksBtn().onclick = ()=> saveWorldCupPicks();
   body._els.addRoundBtn().onclick = ()=> openWorldCupAddRoundModal();
@@ -10682,7 +10856,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1000`);
+    setFooter(`Mariusz Gębka • EVENTY v1001`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();

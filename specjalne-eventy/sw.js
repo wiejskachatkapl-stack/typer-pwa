@@ -1,5 +1,5 @@
-// Specjalne Eventy Typera Service Worker (v1000)
-const BUILD = '1000';
+// Specjalne Eventy Typera Service Worker (v1001)
+const BUILD = '1001';
 const CACHE_PREFIX = 'typer-events-cache-';
 const CACHE_NAME = `${CACHE_PREFIX}${BUILD}`;
 const VERSIONED_INDEX = `./index.html?v=${BUILD}`;
@@ -12,6 +12,11 @@ const CORE = [
   `./favicon-32x32.png?v=${BUILD}`,
   `./favicon-16x16.png?v=${BUILD}`,
   `./ui/loader_ball.webp?v=${BUILD}`,
+  `./events/event-types.json?v=${BUILD}`,
+  `./events/teams/world-cup.json?v=${BUILD}`,
+  `./events/teams/euro.json?v=${BUILD}`,
+  `./events/teams/european-cups.json?v=${BUILD}`,
+  `./events/teams/friendly-matches.json?v=${BUILD}`,
   './icons/icon-192x192.png',
   './icons/icon-512x512.png'
 ];
