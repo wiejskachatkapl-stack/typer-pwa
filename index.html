@@ -5,17 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3106)</title>
-<link href="manifest.json?v=3106" rel="manifest"/>
-<link href="favicon-32x32.png?v=3106" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3106" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3106" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3107)</title>
+<link href="manifest.json?v=3107" rel="manifest"/>
+<link href="favicon-32x32.png?v=3107" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3107" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3107" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "3106";
+  const BUILD = "3107";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -214,7 +214,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3106");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3107");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -2346,6 +2346,27 @@ html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
   text-transform:uppercase;
 }
 
+#room .modernRoomBtn.event.eventInactive{
+  color:#ffc2c8;
+  border-color:rgba(255,118,132,.72);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,0) 34%),
+    linear-gradient(135deg,#2c3442 0%,#202938 45%,#351c27 100%);
+  box-shadow:0 5px 0 #151a23,0 9px 18px rgba(0,0,0,.34),0 0 15px rgba(255,82,105,.10),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.34);
+  filter:saturate(.62);
+}
+#room .modernRoomBtn.event.eventInactive .btnIcon{
+  background:#ff9eaa;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));
+}
+#room .modernRoomBtn.event.eventInactive:hover{filter:brightness(1.04) saturate(.68)}
+#room .modernRoomBtn.event.eventInactive:disabled{
+  opacity:.58;
+  filter:grayscale(.45) saturate(.5);
+  cursor:not-allowed;
+  transform:none;
+}
+
 #room .btnIcon{
   width:28px;
   height:28px;
@@ -3434,7 +3455,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3106" type="module"></script>
+<script src="./app.js?v=3107" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3454,7 +3475,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3106', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3107', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>

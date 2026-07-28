@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3106;
+const BUILD = 3107;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -564,6 +564,105 @@ async function importActiveEventModule(def){
 // ===== SPECJALNE EVENTY — osobny moduł uruchamiany w bezpiecznej ramce (v3106) =====
 let specialEventsHostOverlay = null;
 
+
+const SPECIAL_EVENTS_STATUS_CATALOG_URL = './specjalne-eventy/events/event-types.json';
+const SPECIAL_EVENTS_STATUS_FALLBACK = Object.freeze([
+  { id:'world-cup', defaultEnabled:true, legacyStorage:true },
+  { id:'euro', defaultEnabled:false },
+  { id:'european-cups', defaultEnabled:false },
+  { id:'friendly-matches', defaultEnabled:false }
+]);
+let specialEventsStatusCache = { roomCode:'', anyActive:null, checkedAt:0 };
+let specialEventsStatusPromise = null;
+
+function applyMainSpecialEventsButtonState(anyActive){
+  const btn = el('btnSubstitute');
+  if(!btn) return;
+  const active = anyActive === true;
+  let admin = false;
+  try{ admin = !!(currentRoomCode && currentRoom && isAdmin()); }catch(e){}
+
+  btn.hidden = false;
+  btn.style.display = '';
+  btn.disabled = !active && !admin;
+  btn.classList.toggle('eventInactive', !active);
+  btn.dataset.eventEnabled = active ? '1' : '0';
+  btn.setAttribute('aria-disabled', btn.disabled ? 'true' : 'false');
+
+  const labelPl = btn.querySelector('.label-pl');
+  const labelEn = btn.querySelector('.label-en');
+  if(labelPl) labelPl.textContent = active ? 'EVENT SPECJALNY' : 'EVENTY NIEAKTYWNE';
+  if(labelEn) labelEn.textContent = active ? 'SPECIAL EVENT' : 'EVENTS INACTIVE';
+
+  const title = active
+    ? (getLang()==='en' ? 'Open Special Events' : 'Otwórz Specjalne Eventy')
+    : (admin
+      ? (getLang()==='en' ? 'Events are inactive — open settings as room admin' : 'Eventy są nieaktywne — wejdź jako administrator, aby je włączyć')
+      : (getLang()==='en' ? 'Events are inactive' : 'Eventy są nieaktywne'));
+  btn.title = title;
+  btn.setAttribute('aria-label', title);
+}
+
+async function loadSpecialEventsStatusDefinitions(){
+  try{
+    const url = new URL(SPECIAL_EVENTS_STATUS_CATALOG_URL, document.baseURI);
+    url.searchParams.set('v', String(BUILD));
+    const response = await fetch(url.href, {cache:'no-store'});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const parsed = await response.json();
+    if(Array.isArray(parsed?.events) && parsed.events.length){
+      return parsed.events
+        .filter(item=>item && item.id)
+        .map(item=>({
+          id:String(item.id),
+          defaultEnabled:item.defaultEnabled !== false,
+          legacyStorage:item.legacyStorage === true || String(item.id)==='world-cup'
+        }));
+    }
+  }catch(error){
+    console.warn('Nie udało się wczytać katalogu statusów Eventów.', error);
+  }
+  return SPECIAL_EVENTS_STATUS_FALLBACK.map(item=>({...item}));
+}
+
+async function refreshMainSpecialEventsButton(force=false){
+  const roomCode = String(currentRoomCode || '').trim().toUpperCase();
+  if(!roomCode || !db || !boot){
+    specialEventsStatusCache = {roomCode:'', anyActive:null, checkedAt:0};
+    applyMainSpecialEventsButtonState(false);
+    return false;
+  }
+
+  const now = Date.now();
+  if(!force && specialEventsStatusCache.roomCode===roomCode && specialEventsStatusCache.anyActive!==null && now-specialEventsStatusCache.checkedAt<5000){
+    applyMainSpecialEventsButtonState(specialEventsStatusCache.anyActive);
+    return specialEventsStatusCache.anyActive;
+  }
+  if(specialEventsStatusPromise) return specialEventsStatusPromise;
+
+  specialEventsStatusPromise = (async()=>{
+    const definitions = await loadSpecialEventsStatusDefinitions();
+    const states = await Promise.all(definitions.map(async def=>{
+      const ref = def.legacyStorage
+        ? boot.doc(db, 'rooms', roomCode, 'special_event', 'config')
+        : boot.doc(db, 'rooms', roomCode, 'special_event', String(def.id));
+      try{
+        const snap = await boot.getDoc(ref);
+        if(snap.exists()) return snap.data()?.enabled !== false;
+        return def.defaultEnabled !== false;
+      }catch(error){
+        console.warn(`Nie udało się odczytać statusu Eventu ${def.id}.`, error);
+        return false;
+      }
+    }));
+    const anyActive = states.some(Boolean);
+    specialEventsStatusCache = {roomCode, anyActive, checkedAt:Date.now()};
+    applyMainSpecialEventsButtonState(anyActive);
+    return anyActive;
+  })().finally(()=>{ specialEventsStatusPromise = null; });
+  return specialEventsStatusPromise;
+}
+
 function closeSpecialEventsApp(){
   const overlay = specialEventsHostOverlay || document.getElementById('specialEventsHostOverlay');
   if(overlay){
@@ -573,11 +672,18 @@ function closeSpecialEventsApp(){
   document.documentElement.style.removeProperty('overflow');
   document.body.style.removeProperty('overflow');
   try{ bumpPresence(true); }catch(e){}
+  refreshMainSpecialEventsButton(true).catch(()=>{});
 }
 
-function openSpecialEventsApp(){
+async function openSpecialEventsApp(){
   if(!currentRoomCode || !currentRoom){
     showToast(getLang()==='en' ? 'Join a room first.' : 'Najpierw dołącz do pokoju.');
+    return;
+  }
+
+  const anyActive = await refreshMainSpecialEventsButton(true);
+  if(!anyActive && !isAdmin()){
+    showToast(getLang()==='en' ? 'All Events are inactive.' : 'Wszystkie Eventy są nieaktywne.');
     return;
   }
 
@@ -602,7 +708,7 @@ function openSpecialEventsApp(){
   const url = new URL('./specjalne-eventy/index.html', document.baseURI);
   url.searchParams.set('embedded', '1');
   url.searchParams.set('room', currentRoomCode);
-  url.searchParams.set('v', '1013');
+  url.searchParams.set('v', '1014');
   frame.src = url.href;
 
   overlay.appendChild(frame);
@@ -615,6 +721,11 @@ function openSpecialEventsApp(){
 window.addEventListener('message', (event)=>{
   if(event.origin !== window.location.origin) return;
   const type = event.data?.type;
+  if(type === 'TYPER_SPECIAL_EVENTS_STATUS'){
+    const anyActive = event.data?.anyActive === true;
+    specialEventsStatusCache = {roomCode:String(currentRoomCode||'').toUpperCase(), anyActive, checkedAt:Date.now()};
+    applyMainSpecialEventsButtonState(anyActive);
+  }
   if(type === 'TYPER_SPECIAL_EVENTS_CLOSE') closeSpecialEventsApp();
   if(type === 'TYPER_SPECIAL_EVENTS_ERROR'){
     closeSpecialEventsApp();
@@ -6990,7 +7101,7 @@ function bindUI(){
 
   // Aktywny moduł Eventu wskazany w events/events.json
   const __btnSubstitute = el("btnSubstitute");
-  if(__btnSubstitute) __btnSubstitute.onclick = ()=> openSpecialEventsApp();
+  if(__btnSubstitute) __btnSubstitute.onclick = async ()=>{ await openSpecialEventsApp(); };
 
   const __subOv = el("substituteOverlay");
   if(__subOv){
@@ -7998,6 +8109,7 @@ async function openRoom(code, opts={}){
 
   if(!force && currentRoomCode === code){
     showScreen("room");
+    refreshMainSpecialEventsButton(true).catch(()=>{});
     return;
   }
 
@@ -8047,6 +8159,7 @@ async function openRoom(code, opts={}){
   el("btnEndRound").style.display = adm ? "block" : "none";
   el("btnEndRound").disabled = true;
   syncActionButtons();
+  refreshMainSpecialEventsButton(true).catch(()=>{});
 
   unsubRoomDoc = boot.onSnapshot(ref, (d)=>{
     if(!d.exists()) return;
