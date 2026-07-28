@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1009;
+const BUILD = 1010;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -6691,7 +6691,7 @@ function wcBuildShell(config=wcCurrentEventConfig()){
   const eventNameSafe = escapeHtml(eventConfig.name || wcEventName());
   const body=document.createElement('div'); body.className='wcEventBody col'; body.style.gap='12px';
   const top=document.createElement('div'); top.className='row'; top.style.flexWrap='wrap'; top.style.gap='10px'; top.style.alignItems='center';
-  const eventDefinitions = wcEventDefinitions();
+  const eventDefinitions = wcGetEventDefinitions();
   const selectedEventId = wcCurrentEventId();
   const eventOptions = eventDefinitions.map(def=>{
     const label = escapeHtml(String(def?.label?.[getLang()] || def?.label?.pl || def?.defaultName?.pl || def?.id || 'Event'));
@@ -11595,7 +11595,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1009`);
+    setFooter(`Mariusz Gębka • EVENTY v1010`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();

@@ -2,7 +2,7 @@
   "name": "SPECJALNE EVENTY TYPERA",
   "short_name": "EVENTY TYPERA",
   "description": "Osobny moduł specjalnych Eventów gry TYPER",
-  "start_url": "./index.html?v=1009",
+  "start_url": "./index.html?v=1010",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
@@ -57,7 +57,7 @@
       "purpose": "any maskable"
     }
   ],
-  "id": "./specjalne-eventy-v1009",
+  "id": "./specjalne-eventy-v1010",
   "display_override": [
     "window-controls-overlay",
     "standalone",
