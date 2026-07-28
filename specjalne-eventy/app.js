@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1005;
+const BUILD = 1006;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5173,6 +5173,30 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .wcAdminButtons{align-items:center !important;}
     #modal.worldcupMode .wcAdminButtons .wcBtnImg img{height:48px !important;max-width:160px !important;}
     #modal.worldcupMode .wcAdminButtons .btn{min-height:38px !important;padding:7px 13px !important;font-size:14px !important;}
+    /* v1006: wszystkie przyciski administracyjne Eventu przeniesione obok Cofnij/Wyjście */
+    #modal.worldcupMode .wcTopActionBar{
+      width:100%;min-width:0;display:flex;align-items:center;justify-content:flex-end;
+      gap:7px;flex-wrap:nowrap;padding:2px 0 3px 0;flex:0 0 auto;
+    }
+    #modal.worldcupMode .wcTopAdminButtons{display:contents;}
+    #modal.worldcupMode .wcTopActionBar .wcBtnImg{
+      flex:0 1 142px;min-width:108px !important;max-width:148px !important;
+      min-height:42px !important;padding:7px 9px !important;font-size:12px !important;
+      line-height:1.05 !important;white-space:nowrap;
+    }
+    #modal.worldcupMode .wcTopActionBar .wcBtnImg .appBtnIcon{
+      width:18px !important;height:18px !important;flex:0 0 18px !important;
+    }
+    #modal.worldcupMode .wcTopActionBar #wcBackBtn,
+    #modal.worldcupMode .wcTopActionBar #wcExitBtn{
+      flex-basis:122px;max-width:130px !important;
+    }
+    #modal.worldcupMode .wcPlayerSaveBar{
+      min-height:58px;margin:0 0 12px 0;padding:7px 10px;display:flex;align-items:center;
+      justify-content:center;gap:10px;flex-wrap:wrap;border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);flex:0 0 auto;
+    }
+    #modal.worldcupMode .wcPlayerSaveBar:empty{display:none !important;}
     #modal.worldcupMode .wcPickLocked{opacity:.55;cursor:not-allowed;}
     #modal.worldcupMode .wcBtnDisabled{opacity:.35;filter:grayscale(1) brightness(.8);cursor:not-allowed;pointer-events:none;}
     #modal.worldcupMode .wcEventDropdown{position:relative;z-index:120;flex:0 1 350px;min-width:285px;max-width:390px;}
@@ -5220,6 +5244,13 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .wcTeamDeleteButton{border-color:rgba(255,115,126,.44);background:linear-gradient(180deg,rgba(180,53,70,.96),rgba(103,24,38,.97));}
     @media(max-width:620px){#modal.worldcupMode .wcEventDropdown{width:100%;max-width:none;min-width:0;flex:1 1 100%;}#modal.worldcupMode .wcEventDropdownButton{min-height:46px;border-radius:16px;}#modal.worldcupMode .wcEventDropdownMenu{border-radius:16px;}}
     @media(max-width:620px){
+      #modal.worldcupMode .wcTopActionBar{gap:5px;}
+      #modal.worldcupMode .wcTopActionBar .wcBtnImg{
+        min-height:40px !important;padding:5px 3px !important;font-size:9.5px !important;
+      }
+      #modal.worldcupMode .wcTopActionBar .wcBtnImg .appBtnIcon{
+        width:15px !important;height:15px !important;flex-basis:15px !important;
+      }
       #modal.worldcupMode .wcTeamsEditorHeader{align-items:stretch;}
       #modal.worldcupMode .wcTeamAddButton{width:100%;}
       #modal.worldcupMode .wcTeamsEditorList{max-height:300px;padding:6px;}
@@ -5230,6 +5261,26 @@ function wcEnsureEventStyles(){
       #modal.worldcupMode .wcTeamActionButton .appBtnIcon{width:18px;height:18px;flex-basis:18px;}
     }
     @media (max-width:980px){
+      #modal.worldcupMode .wcTopActionBar{
+        display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;
+        align-items:stretch;justify-content:stretch;width:100%;
+      }
+      #modal.worldcupMode .wcTopAdminButtons{display:contents;}
+      #modal.worldcupMode .wcTopActionBar .wcBtnImg{
+        width:100% !important;max-width:none !important;min-width:0 !important;
+        min-height:42px !important;padding:6px 5px !important;font-size:10.5px !important;
+        white-space:normal !important;text-align:center;justify-content:center;
+      }
+      #modal.worldcupMode .wcTopActionBar .wcBtnImg .label-pl,
+      #modal.worldcupMode .wcTopActionBar .wcBtnImg .label-en{
+        white-space:normal !important;line-height:1.02 !important;text-align:center;
+      }
+      #modal.worldcupMode .wcTopActionBar #wcBackBtn,
+      #modal.worldcupMode .wcTopActionBar #wcExitBtn{max-width:none !important;}
+      #modal.worldcupMode .wcTopActionBar.playerOnly{
+        grid-template-columns:repeat(2,minmax(0,1fr));max-width:300px;margin-left:auto;
+      }
+      #modal.worldcupMode .wcPlayerSaveBar{min-height:50px;margin-bottom:8px;padding:5px;}
       #modal.worldcupMode .modalCard{width:96vw !important;height:94vh !important;}
       #modal.worldcupMode .modalBody{padding:10px !important;}
       #modal.worldcupMode .wcEventBody{gap:8px !important;}
@@ -5255,7 +5306,7 @@ function wcEnsureEventStyles(){
       #modal.worldcupMode .wcEventLeft{display:flex !important;flex-direction:column !important;overflow:visible !important;min-height:0 !important;flex:0 0 auto !important;}
       #modal.worldcupMode #wcMatchesList{overflow:visible !important;max-height:none !important;min-height:0 !important;padding-bottom:8px !important;}
       #modal.worldcupMode .wcBottomActions{position:relative !important;z-index:5 !important;flex:0 0 auto !important;margin-top:10px !important;}
-      #modal.worldcupMode .wcAdminButtons{display:flex !important;position:relative !important;z-index:6 !important;}
+      #modal.worldcupMode .wcTopAdminButtons{position:relative !important;z-index:6 !important;}
       #modal.worldcupMode #wcResultsBtn{display:inline-flex !important;visibility:visible !important;}
       #modal.worldcupMode .wcEventGrid > .col{overflow:visible !important;flex:0 0 auto !important;}
       #modal.worldcupMode #wcRankingWrap{max-height:none !important;overflow:visible !important;}
@@ -6619,20 +6670,12 @@ function wcBuildShell(config=wcCurrentEventConfig()){
     <div class="chip">Gracz: <span id="wcNick">—</span></div>
     <div class="chip">Mecze: <span id="wcMatchesCount">0</span></div>
     <div class="chip">Punkty: <span id="wcMyPoints">0</span></div>`;
-  const btns = document.createElement('div');
-  btns.className='row'; btns.style.marginLeft='auto'; btns.style.gap='10px';
-  const back = wcMakeImgButton('btn_cofnij.png', 'wcBackBtn', getLang()==='en'?'Back':'Cofnij', ()=>modalClose());
-  const exit = wcMakeImgButton('btn_wyjscie.png', 'wcExitBtn', getLang()==='en'?'Exit':'Wyjście', ()=>{modalClose(); showScreen('room');});
-  btns.append(back, exit); top.appendChild(btns); body.appendChild(top);
-  const grid = document.createElement('div');
-  grid.className='wcEventGrid';
-  const left = document.createElement('div'); left.className='panel wcEventLeft'; left.style.padding='16px';
-  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">${getLang()==='en' ? 'Matches' : 'Mecze'} — ${eventNameSafe}</div><div id="wcBottomActions" class="wcBottomActions"><div class="row wcAdminButtons" style="flex-wrap:wrap;justify-content:center;gap:10px"></div><div id="wcPlayerActions" class="row wcPlayerActions" style="flex-wrap:wrap;justify-content:center;gap:10px"></div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
+  const topActions = document.createElement('div');
+  topActions.id = 'wcTopActionBar';
+  topActions.className = 'wcTopActionBar';
+  const adminBtns = document.createElement('div');
+  adminBtns.className = 'wcAdminButtons wcTopAdminButtons';
   const wcSaveRoundButton = wcMakeImgButton('btn_zapisz_kolejke.png', 'wcSaveRoundBtn', getLang()==='en'?'Save round':'Zapisz kolejkę');
-  const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
-  const right = document.createElement('div'); right.className='col wcEventRight'; right.style.gap='14px';
-  right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">${getLang()==='en' ? 'Ranking' : 'Ranking'} — ${eventNameSafe}</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">${getLang()==='en' ? 'Players' : 'Gracze'} — ${eventNameSafe}</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
-  const adminBtns = left.querySelector('.wcAdminButtons');
   adminBtns.append(
     wcMakeImgButton('btn_settings.png', 'wcSettingsBtn', getLang()==='en'?'Event settings':'Ustawienia Eventu'),
     wcMakeImgButton('btn_dodaj_kolejke.png', 'wcAddRoundBtn', getLang()==='en'?'Add round':'Dodaj kolejkę'),
@@ -6641,6 +6684,18 @@ function wcBuildShell(config=wcCurrentEventConfig()){
     wcMakeImgButton('btn_zakoncz_kolejke.png', 'wcEndRoundBtn', getLang()==='en'?'End round':'Zakończ kolejkę'),
     wcMakeTextButton('wcEndEventBtn', getLang()==='en'?'End Event':'Zakończ Event')
   );
+  const back = wcMakeImgButton('btn_cofnij.png', 'wcBackBtn', getLang()==='en'?'Back':'Cofnij', ()=>modalClose());
+  const exit = wcMakeImgButton('btn_wyjscie.png', 'wcExitBtn', getLang()==='en'?'Exit':'Wyjście', ()=>{modalClose(); showScreen('room');});
+  topActions.append(adminBtns, back, exit);
+  body.append(top, topActions);
+
+  const grid = document.createElement('div');
+  grid.className='wcEventGrid';
+  const left = document.createElement('div'); left.className='panel wcEventLeft'; left.style.padding='16px';
+  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">${getLang()==='en' ? 'Matches' : 'Mecze'} — ${eventNameSafe}</div><div id="wcPlayerActions" class="row wcPlayerActions wcPlayerSaveBar" style="flex-wrap:wrap;justify-content:center;gap:10px"></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
+  const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
+  const right = document.createElement('div'); right.className='col wcEventRight'; right.style.gap='14px';
+  right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">${getLang()==='en' ? 'Ranking' : 'Ranking'} — ${eventNameSafe}</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">${getLang()==='en' ? 'Players' : 'Gracze'} — ${eventNameSafe}</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
   const playerBtns = left.querySelector('.wcPlayerActions');
   playerBtns.append(wcSavePicksButton);
   grid.append(left,right); body.appendChild(grid);
@@ -6662,6 +6717,7 @@ function wcBuildShell(config=wcCurrentEventConfig()){
     saveRoundBtn: ()=> body.querySelector('#wcSaveRoundBtn'),
     adminPanel: ()=> body.querySelector('.wcAdminButtons'),
     playerActions: ()=> body.querySelector('#wcPlayerActions'),
+    topActionBar: ()=> body.querySelector('#wcTopActionBar'),
     settingsBtn: ()=> body.querySelector('#wcSettingsBtn'),
     addRoundBtn: ()=> body.querySelector('#wcAddRoundBtn'),
     resultsBtn: ()=> body.querySelector('#wcResultsBtn'),
@@ -7244,7 +7300,9 @@ async function renderWorldCupEvent(){
   }
   body._els.roomName().textContent = currentRoom?.name || currentRoomCode || '—';
   body._els.nick().textContent = getNick() || '—';
-  body._els.adminPanel().style.display = isAdmin() ? 'flex' : 'none';
+  const wcAdminMode = isAdmin();
+  body._els.adminPanel().style.display = wcAdminMode ? 'contents' : 'none';
+  if(body._els.topActionBar()) body._els.topActionBar().classList.toggle('playerOnly', !wcAdminMode);
   if(body._els.settingsBtn()) body._els.settingsBtn().onclick = ()=> wcOpenEventSettingsModal();
   const wcEventSelect = body._els.eventSelect ? body._els.eventSelect() : null;
   if(wcEventSelect){
@@ -11212,7 +11270,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1005`);
+    setFooter(`Mariusz Gębka • EVENTY v1006`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
