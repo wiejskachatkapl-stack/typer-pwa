@@ -5,17 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 3102)</title>
-<link href="manifest.json?v=3102" rel="manifest"/>
-<link href="favicon-32x32.png?v=3102" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=3102" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=3102" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 3103)</title>
+<link href="manifest.json?v=3103" rel="manifest"/>
+<link href="favicon-32x32.png?v=3103" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=3103" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=3103" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "3102";
+  const BUILD = "3103";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -214,7 +214,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3102");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=3103");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -3431,7 +3431,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=3102" type="module"></script>
+<script src="./app.js?v=3103" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3451,7 +3451,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=3102', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=3103', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -6509,6 +6509,35 @@ body.room-screen-active #roomLayout > .rightBar{
     min-height:0 !important;
     overflow-y:auto !important;
     overflow-x:hidden !important;
+  }
+}
+</style>
+
+
+<style id="build3103-room-ten-matches-height">
+/* BUILD 3103: tylko telefon poziomo — wydłużenie trzech kolumn pokoju,
+   aby środkowy panel mieścił pełne 10 spotkań. Bez zmian mechaniki. */
+@media (max-width:980px) and (orientation:landscape),
+       (orientation:landscape) and (hover:none) and (pointer:coarse){
+  body.room-screen-active #roomLayout{
+    grid-template-rows:620px !important;
+    height:620px !important;
+    min-height:620px !important;
+    align-items:stretch !important;
+  }
+  body.room-screen-active #roomLayout > .leftBar,
+  body.room-screen-active #roomLayout > .mid,
+  body.room-screen-active #roomLayout > .rightBar{
+    height:620px !important;
+    min-height:620px !important;
+    max-height:620px !important;
+    align-self:stretch !important;
+  }
+  body.room-screen-active #room .mid{
+    grid-template-rows:auto minmax(420px,1fr) auto auto !important;
+  }
+  body.room-screen-active #room .matchesWrap{
+    min-height:420px !important;
   }
 }
 </style>

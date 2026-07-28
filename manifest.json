@@ -2,7 +2,7 @@
   "name": "TYPER",
   "short_name": "TYPER",
   "description": "Gra w typowanie wyników meczów piłkarskich",
-  "start_url": "./index.html?v=3102",
+  "start_url": "./index.html?v=3103",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
