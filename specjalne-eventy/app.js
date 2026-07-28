@@ -1,7 +1,25 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1012;
+const BUILD = 1013;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
+const EVENT_EMBEDDED_MODE = new URLSearchParams(window.location.search).get('embedded') === '1';
+const EVENT_EMBEDDED_ROOM = String(new URLSearchParams(window.location.search).get('room') || '').trim().toUpperCase();
+
+function closeEmbeddedEventsHost(){
+  if(EVENT_EMBEDDED_MODE && window.parent !== window){
+    window.parent.postMessage({type:'TYPER_SPECIAL_EVENTS_CLOSE'}, window.location.origin);
+    return true;
+  }
+  return false;
+}
+
+function reportEmbeddedEventsError(message){
+  if(EVENT_EMBEDDED_MODE && window.parent !== window){
+    window.parent.postMessage({type:'TYPER_SPECIAL_EVENTS_ERROR', message:String(message || '')}, window.location.origin);
+    return true;
+  }
+  return false;
+}
 
 const BG_HOME = { desktop: "img_menu_pc.png", mobile: "img_menu.png" };
 const BG_ROOM = { desktop: "img_tlo.png", mobile: "img_typowanie.png" };
@@ -6852,8 +6870,8 @@ function wcBuildShell(config=wcCurrentEventConfig()){
     wcMakeImgButton('btn_zakoncz_kolejke.png', 'wcEndRoundBtn', getLang()==='en'?'End round':'Zakończ kolejkę'),
     wcMakeTextButton('wcEndEventBtn', getLang()==='en'?'End Event':'Zakończ Event')
   );
-  const back = wcMakeImgButton('btn_cofnij.png', 'wcBackBtn', getLang()==='en'?'Back':'Cofnij', ()=>modalClose());
-  const exit = wcMakeImgButton('btn_wyjscie.png', 'wcExitBtn', getLang()==='en'?'Exit':'Wyjście', ()=>{modalClose(); showScreen('room');});
+  const back = wcMakeImgButton('btn_cofnij.png', 'wcBackBtn', getLang()==='en'?'Back':'Cofnij', ()=>{ if(!closeEmbeddedEventsHost()) modalClose(); });
+  const exit = wcMakeImgButton('btn_wyjscie.png', 'wcExitBtn', getLang()==='en'?'Exit':'Wyjście', ()=>{ if(!closeEmbeddedEventsHost()){ modalClose(); showScreen('room'); } });
   topActions.append(adminBtns, back, exit);
   body.append(top, topActions);
 
@@ -11718,7 +11736,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1011`);
+    setFooter(`Mariusz Gębka • EVENTY v1013`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
@@ -11732,7 +11750,27 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     // zastosuj język od razu
     applyLangToUI();
 
-    // Najpierw wybór: logowanie istniejącym numerem albo utworzenie nowego profilu.
+    if(EVENT_EMBEDDED_MODE){
+      const roomCode = (/^[A-Z0-9]{6}$/.test(EVENT_EMBEDDED_ROOM) ? EVENT_EMBEDDED_ROOM : String(getSavedRoom() || '').trim().toUpperCase());
+      const playerNo = String(getPlayerNo() || (getProfile()||{}).playerNo || '').trim().toUpperCase();
+      if(!playerNo){
+        const msg = getLang()==='en' ? 'No logged-in player.' : 'Brak zalogowanego gracza.';
+        if(!reportEmbeddedEventsError(msg)) showToast(msg);
+        return;
+      }
+      if(!/^[A-Z0-9]{6}$/.test(roomCode)){
+        const msg = getLang()==='en' ? 'No active room.' : 'Brak aktywnego pokoju.';
+        if(!reportEmbeddedEventsError(msg)) showToast(msg);
+        return;
+      }
+      localStorage.setItem(KEY_ACTIVE_ROOM, roomCode);
+      await openRoom(roomCode, {force:true, silent:true});
+      await openWorldCupEvent();
+      try{ window.parent.postMessage({type:'TYPER_SPECIAL_EVENTS_READY'}, window.location.origin); }catch(e){}
+      return;
+    }
+
+    // Uruchomienie samodzielne nadal zachowuje dotychczasowe logowanie.
     let okLogin = false;
     while(!okLogin){
       const entryMode = await chooseLoginEntryMode();
