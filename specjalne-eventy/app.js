@@ -1,9 +1,41 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1014;
+const BUILD = 1015;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 const EVENT_EMBEDDED_MODE = new URLSearchParams(window.location.search).get('embedded') === '1';
 const EVENT_EMBEDDED_ROOM = String(new URLSearchParams(window.location.search).get('room') || '').trim().toUpperCase();
+let EVENT_EMBEDDED_ADMIN_GRANTED = false;
+let embeddedEventsContextResolved = !EVENT_EMBEDDED_MODE;
+let resolveEmbeddedEventsContext = null;
+const embeddedEventsContextPromise = new Promise(resolve=>{ resolveEmbeddedEventsContext = resolve; });
+
+window.addEventListener('message', event=>{
+  if(!EVENT_EMBEDDED_MODE || window.parent === window) return;
+  if(event.origin !== window.location.origin || event.source !== window.parent) return;
+  if(event.data?.type !== 'TYPER_SPECIAL_EVENTS_CONTEXT') return;
+  const contextRoom = String(event.data?.roomCode || '').trim().toUpperCase();
+  if(EVENT_EMBEDDED_ROOM && contextRoom && contextRoom !== EVENT_EMBEDDED_ROOM) return;
+  EVENT_EMBEDDED_ADMIN_GRANTED = event.data?.isAdmin === true;
+  if(!embeddedEventsContextResolved){
+    embeddedEventsContextResolved = true;
+    resolveEmbeddedEventsContext?.();
+  }
+});
+
+function requestEmbeddedEventsContext(){
+  if(EVENT_EMBEDDED_MODE && window.parent !== window){
+    window.parent.postMessage({type:'TYPER_SPECIAL_EVENTS_CONTEXT_REQUEST'}, window.location.origin);
+  }
+}
+
+async function waitForEmbeddedEventsContext(){
+  if(!EVENT_EMBEDDED_MODE || embeddedEventsContextResolved) return;
+  requestEmbeddedEventsContext();
+  await Promise.race([
+    embeddedEventsContextPromise,
+    new Promise(resolve=>setTimeout(resolve, 5000))
+  ]);
+}
 
 function closeEmbeddedEventsHost(){
   if(EVENT_EMBEDDED_MODE && window.parent !== window){
@@ -8984,7 +9016,8 @@ async function saveManualQueueFromUI(){
   try{ syncActionButtons(); }catch{}
 }
 function isAdmin(){
-  return currentRoom?.adminUid === userUid;
+  if(currentRoom?.adminUid === userUid) return true;
+  return !!(EVENT_EMBEDDED_MODE && EVENT_EMBEDDED_ADMIN_GRANTED);
 }
 
 // ===== CONTINUE FLOW =====
@@ -11745,7 +11778,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1013`);
+    setFooter(`Mariusz Gębka • EVENTY v1015`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
@@ -11760,6 +11793,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
     applyLangToUI();
 
     if(EVENT_EMBEDDED_MODE){
+      await waitForEmbeddedEventsContext();
       const roomCode = (/^[A-Z0-9]{6}$/.test(EVENT_EMBEDDED_ROOM) ? EVENT_EMBEDDED_ROOM : String(getSavedRoom() || '').trim().toUpperCase());
       const playerNo = String(getPlayerNo() || (getProfile()||{}).playerNo || '').trim().toUpperCase();
       if(!playerNo){
@@ -11775,6 +11809,8 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
       localStorage.setItem(KEY_ACTIVE_ROOM, roomCode);
       await openRoom(roomCode, {force:true, silent:true});
       await openWorldCupEvent();
+      document.documentElement.classList.remove('eventEmbeddedBoot');
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       try{ window.parent.postMessage({type:'TYPER_SPECIAL_EVENTS_READY'}, window.location.origin); }catch(e){}
       return;
     }
