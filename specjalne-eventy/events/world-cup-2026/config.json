@@ -1,0 +1,15 @@
+{
+  "id": "world-cup-2026",
+  "moduleVersion": 1000,
+  "name": {
+    "pl": "Mistrzostwa Świata 2026",
+    "en": "World Cup 2026"
+  },
+  "compatibilityMode": "legacy-worldcup-v1",
+  "firebaseStorage": {
+    "state": "worldcup_event/state",
+    "rounds": "worldcup_rounds"
+  },
+  "notes": "Osobny moduł v1000 bazujący na sprawdzonej mechanice Eventu MŚ 2026 z TYPERA v3105. Główny TYPER v3105 nie jest modyfikowany.",
+  "roomSettingsStorage": "special_event/config"
+}
