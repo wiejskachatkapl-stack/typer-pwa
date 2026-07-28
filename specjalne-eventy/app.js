@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1008;
+const BUILD = 1009;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5427,6 +5427,72 @@ function wcEnsureEventStyles(){
         flex-direction:column !important;
       }
     }
+
+    /* v1009: trzy główne panele Eventu — TOP 3 / mecze / gracze */
+    #modal.worldcupMode .modalCard{width:min(1500px,97vw) !important;}
+    #modal.worldcupMode .wcEventGrid{
+      display:grid !important;
+      grid-template-columns:minmax(245px,.72fr) minmax(540px,1.55fr) minmax(300px,.88fr) !important;
+      gap:14px !important;align-items:stretch !important;
+    }
+    #modal.worldcupMode .wcEventSummary,
+    #modal.worldcupMode .wcEventCenter,
+    #modal.worldcupMode .wcEventPlayersPanel{min-width:0;}
+    #modal.worldcupMode .wcEventSummary{display:flex;flex-direction:column;gap:14px;}
+    #modal.worldcupMode .wcEventCenter{display:flex;flex-direction:column;}
+    #modal.worldcupMode .wcEventPlayersPanel{display:flex !important;flex-direction:column !important;padding:16px !important;}
+    #modal.worldcupMode .wcEventPlayersPanel #wcPlayersList{flex:1 1 auto;min-height:390px;max-height:570px;overflow:auto;}
+    #modal.worldcupMode .wcTop3Card{padding:14px;border-radius:20px;overflow:hidden;}
+    #modal.worldcupMode .wcTop3Head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+    #modal.worldcupMode .wcTop3Title{font-size:19px;line-height:1.08;font-weight:1000;letter-spacing:.2px;}
+    #modal.worldcupMode .wcTop3Sub{margin-top:4px;font-size:11px;line-height:1.25;color:rgba(225,238,255,.7);font-weight:800;}
+    #modal.worldcupMode .wcTop3Pulse{width:10px;height:10px;flex:0 0 10px;margin-top:4px;border-radius:50%;background:#4de7ff;box-shadow:0 0 0 4px rgba(77,231,255,.11),0 0 14px rgba(77,231,255,.75);}
+    #modal.worldcupMode .wcRoundTop3Card .wcTop3Pulse{background:#65ff9a;box-shadow:0 0 0 4px rgba(101,255,154,.10),0 0 14px rgba(101,255,154,.68);}
+    #modal.worldcupMode .wcTop3List{display:flex;flex-direction:column;gap:7px;min-height:126px;}
+    #modal.worldcupMode .wcTop3Row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:36px;padding:5px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.16);}
+    #modal.worldcupMode .wcTop3Place{width:25px;height:25px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:12px;font-weight:1000;background:rgba(73,139,218,.32);border:1px solid rgba(117,191,255,.28);}
+    #modal.worldcupMode .wcTop3Row[data-place="1"] .wcTop3Place{color:#1b1400;background:linear-gradient(180deg,#ffe780,#e8ad27);border-color:#fff0a8;box-shadow:0 0 13px rgba(255,202,55,.25);}
+    #modal.worldcupMode .wcTop3Row[data-place="2"] .wcTop3Place{color:#17202c;background:linear-gradient(180deg,#eef5ff,#aab8c9);border-color:#f6fbff;}
+    #modal.worldcupMode .wcTop3Row[data-place="3"] .wcTop3Place{color:#281306;background:linear-gradient(180deg,#f1b178,#ad6437);border-color:#ffc496;}
+    #modal.worldcupMode .wcTop3Nick{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:1000;}
+    #modal.worldcupMode .wcTop3Points{white-space:nowrap;font-size:12px;font-weight:1000;color:#d9ebff;}
+    #modal.worldcupMode .wcTop3Empty{min-height:110px;display:flex;align-items:center;justify-content:center;padding:12px;text-align:center;color:rgba(226,238,255,.68);font-size:12px;font-weight:850;line-height:1.35;}
+    #modal.worldcupMode .wcEventTablePanel{padding:12px;display:flex;align-items:center;justify-content:center;}
+    #modal.worldcupMode .wcEventTableBtn{width:100% !important;min-height:46px !important;}
+    #modal.worldcupMode .wcEventCenter>.title,
+    #modal.worldcupMode .wcEventPlayersPanel>.title{font-size:22px !important;}
+    #modal.worldcupMode .wcMaxMatchesLabel{font-size:11px;font-weight:850;color:rgba(218,234,255,.66);white-space:nowrap;}
+    #modal.worldcupMode #wcMatchesList{max-height:none !important;overflow:visible !important;}
+    #modal.worldcupMode .wcEventFullTableWrap{max-height:min(570px,65vh);overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(0,0,0,.12);}
+    #modal.worldcupMode .wcEventFullTable{width:100%;border-collapse:collapse;}
+    #modal.worldcupMode .wcEventFullTable th{position:sticky;top:0;z-index:2;background:rgba(8,34,75,.98);}
+    #modal.worldcupMode .wcEventFullTable th,#modal.worldcupMode .wcEventFullTable td{padding:12px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,.09);}
+    #modal.worldcupMode .wcEventFullTable td:last-child,#modal.worldcupMode .wcEventFullTable th:last-child{text-align:center;}
+    #modal.worldcupMode .wcEventFullTablePlace{font-weight:1000;}
+    #modal.worldcupMode .wcEventFullTablePlayer{font-weight:950;}
+    #modal.worldcupMode .wcEventFullTablePoints{font-weight:1000;}
+
+    @media (max-width:1180px) and (min-width:981px){
+      #modal.worldcupMode .wcEventGrid{grid-template-columns:minmax(220px,.68fr) minmax(470px,1.45fr) minmax(260px,.82fr) !important;gap:10px !important;}
+      #modal.worldcupMode .wcTop3Card{padding:11px;}
+      #modal.worldcupMode .wcTop3Title{font-size:17px;}
+      #modal.worldcupMode .wcTop3Nick{font-size:12px;}
+    }
+    @media (max-width:980px), (max-height:620px){
+      #modal.worldcupMode .wcEventGrid{display:flex !important;flex-direction:column !important;}
+      #modal.worldcupMode .wcEventCenter{order:1;}
+      #modal.worldcupMode .wcEventSummary{order:2;display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;}
+      #modal.worldcupMode .wcEventTablePanel{grid-column:1/-1;}
+      #modal.worldcupMode .wcEventPlayersPanel{order:3;display:flex !important;flex-direction:column !important;}
+      #modal.worldcupMode .wcEventPlayersPanel #wcPlayersList{min-height:160px;max-height:320px;}
+      #modal.worldcupMode .wcTop3List{min-height:104px;}
+      #modal.worldcupMode .wcTop3Empty{min-height:90px;}
+    }
+    @media (max-width:620px){
+      #modal.worldcupMode .wcEventSummary{display:flex !important;flex-direction:column !important;}
+      #modal.worldcupMode .wcEventTablePanel{width:100%;}
+      #modal.worldcupMode .wcEventCenter>.title,#modal.worldcupMode .wcEventPlayersPanel>.title{font-size:19px !important;}
+    }
   `;
   document.head.appendChild(st);
 }
@@ -6620,22 +6686,16 @@ async function wcOpenEventSettingsModal(){
   if(wcModal) wcModal.classList.add('worldcupMode');
 }
 function wcBuildShell(config=wcCurrentEventConfig()){
-
   wcEnsureEventStyles();
-  const body = document.createElement('div');
-  body.className = 'col wcEventBody';
-  body.style.gap = '14px';
-  const top = document.createElement('div');
-  top.className = 'row';
-  top.style.flexWrap = 'wrap';
-  top.style.alignItems = 'center';
-  const eventNameSafe = escapeHtml(config.name);
+  const eventConfig = config || wcCurrentEventConfig();
+  const eventNameSafe = escapeHtml(eventConfig.name || wcEventName());
+  const body=document.createElement('div'); body.className='wcEventBody col'; body.style.gap='12px';
+  const top=document.createElement('div'); top.className='row'; top.style.flexWrap='wrap'; top.style.gap='10px'; top.style.alignItems='center';
+  const eventDefinitions = wcEventDefinitions();
   const selectedEventId = wcCurrentEventId();
-  const eventDefinitions = wcGetEventDefinitions();
   const eventOptions = eventDefinitions.map(def=>{
     const label = escapeHtml(String(def?.label?.[getLang()] || def?.label?.pl || def?.defaultName?.pl || def?.id || 'Event'));
-    const selected = def.id === selectedEventId ? ' selected' : '';
-    return `<option value="${escapeHtml(def.id)}"${selected}>${label}</option>`;
+    return `<option value="${escapeHtml(def.id)}" ${def.id===selectedEventId?'selected':''}>${label}</option>`;
   }).join('');
   const selectedEventDefinition = eventDefinitions.find(def=>def.id === selectedEventId) || eventDefinitions[0] || {};
   const selectedEventLabel = escapeHtml(String(selectedEventDefinition?.label?.[getLang()] || selectedEventDefinition?.label?.pl || selectedEventDefinition?.defaultName?.pl || selectedEventDefinition?.id || 'Event'));
@@ -6648,7 +6708,7 @@ function wcBuildShell(config=wcCurrentEventConfig()){
       <span class="wcEventDropdownItemCheck" aria-hidden="true">✓</span>
     </button>`;
   }).join('');
-  const eventIsActive = config.enabled !== false;
+  const eventIsActive = eventConfig.enabled !== false;
   const eventStatus = eventIsActive
     ? (getLang()==='en' ? 'ACTIVE' : 'AKTYWNY')
     : (getLang()==='en' ? 'INACTIVE' : 'NIEAKTYWNY');
@@ -6697,14 +6757,47 @@ function wcBuildShell(config=wcCurrentEventConfig()){
 
   const grid = document.createElement('div');
   grid.className='wcEventGrid';
-  const left = document.createElement('div'); left.className='panel wcEventLeft'; left.style.padding='16px';
-  left.innerHTML = `<div class="title" style="margin:0 0 10px 0">${getLang()==='en' ? 'Matches' : 'Mecze'} — ${eventNameSafe}</div><div id="wcPlayerActions" class="row wcPlayerActions wcPlayerSaveBar" style="flex-wrap:wrap;justify-content:center;gap:10px"></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
+
+  const summary = document.createElement('div');
+  summary.className='wcEventSummary';
+  summary.innerHTML = `
+    <div class="panel wcTop3Card wcEventTop3Card">
+      <div class="wcTop3Head">
+        <div><div class="wcTop3Title">${getLang()==='en' ? 'EVENT • TOP 3' : 'EVENT • TOP 3'}</div><div id="wcEventTop3Sub" class="wcTop3Sub">${getLang()==='en' ? 'Overall Event ranking' : 'Klasyfikacja całego Eventu'}</div></div>
+        <div class="wcTop3Pulse" aria-hidden="true"></div>
+      </div>
+      <div id="wcEventTop3List" class="wcTop3List"></div>
+    </div>
+    <div class="panel wcTop3Card wcRoundTop3Card">
+      <div class="wcTop3Head">
+        <div><div id="wcRoundTop3Title" class="wcTop3Title">${getLang()==='en' ? 'ROUND • TOP 3' : 'KOLEJKA • TOP 3'}</div><div id="wcRoundTop3Sub" class="wcTop3Sub">${getLang()==='en' ? 'Ranking appears after results are saved' : 'Ranking pojawi się po wpisaniu wyników'}</div></div>
+        <div class="wcTop3Pulse" aria-hidden="true"></div>
+      </div>
+      <div id="wcRoundTop3List" class="wcTop3List"></div>
+    </div>
+    <div class="panel wcEventTablePanel"><div id="wcEventTableButtonHost" style="width:100%"></div></div>`;
+  const tableBtn = document.createElement('button');
+  tableBtn.type = 'button';
+  tableBtn.id = 'wcEventTableBtn';
+  tableBtn.className = 'modernAppBtn sysModernBtn sysModernBtn--blue sysModernBtn--small sysModernBtn--wide wcEventTableBtn';
+  tableBtn.innerHTML = `<span class="appBtnIcon ico-table" aria-hidden="true"></span><span class="label-pl">Tabela Eventu</span><span class="label-en">Event table</span>`;
+  tableBtn.setAttribute('aria-label', getLang()==='en' ? 'Event table' : 'Tabela Eventu');
+  tableBtn.title = getLang()==='en' ? 'Show all Event places' : 'Pokaż wszystkie miejsca Eventu';
+  summary.querySelector('#wcEventTableButtonHost')?.appendChild(tableBtn);
+
+  const center = document.createElement('div');
+  center.className='panel wcEventLeft wcEventCenter';
+  center.style.padding='16px';
+  center.innerHTML = `<div class="row" style="align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px 0"><div class="title" style="margin:0">${getLang()==='en' ? 'Matches' : 'Mecze'} — ${eventNameSafe}</div><div class="wcMaxMatchesLabel">${getLang()==='en' ? 'maximum 10' : 'maksymalnie 10'}</div></div><div id="wcPlayerActions" class="row wcPlayerActions wcPlayerSaveBar" style="flex-wrap:wrap;justify-content:center;gap:10px"></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div id="wcDeadlineBox" class="wcDeadlineBox"></div>`;
   const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
-  const right = document.createElement('div'); right.className='col wcEventRight'; right.style.gap='14px';
-  right.innerHTML = `<div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">${getLang()==='en' ? 'Ranking' : 'Ranking'} — ${eventNameSafe}</div><div id="wcRankingWrap" style="overflow:auto;border-radius:18px;border:1px solid rgba(255,255,255,.10)"><table style="width:100%"><thead><tr><th style="width:60px">#</th><th>Gracz</th><th style="width:120px">Punkty</th></tr></thead><tbody id="wcRankingBody"><tr><td colspan="3">Brak danych…</td></tr></tbody></table></div></div><div class="panel" style="padding:16px"><div class="title" style="margin:0 0 12px 0">${getLang()==='en' ? 'Players' : 'Gracze'} — ${eventNameSafe}</div><div id="wcPlayersList" class="playersList" style="min-height:180px;max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:6px"></div></div>`;
-  const playerBtns = left.querySelector('.wcPlayerActions');
-  playerBtns.append(wcSavePicksButton);
-  grid.append(left,right); body.appendChild(grid);
+  center.querySelector('.wcPlayerActions')?.append(wcSavePicksButton);
+
+  const players = document.createElement('div');
+  players.className='panel wcEventRight wcEventPlayersPanel';
+  players.innerHTML = `<div class="title" style="margin:0 0 12px 0">${getLang()==='en' ? 'Players' : 'Gracze'} — ${eventNameSafe}</div><div id="wcPlayersList" class="playersList" style="overflow:auto;display:flex;flex-direction:column;gap:6px"></div>`;
+
+  grid.append(summary,center,players);
+  body.appendChild(grid);
   body._els = {
     eventSelect: ()=> body.querySelector('#wcEventSelect'),
     eventDropdown: ()=> body.querySelector('#wcEventDropdown'),
@@ -6729,7 +6822,12 @@ function wcBuildShell(config=wcCurrentEventConfig()){
     resultsBtn: ()=> body.querySelector('#wcResultsBtn'),
     endRoundBtn: ()=> body.querySelector('#wcEndRoundBtn'),
     endEventBtn: ()=> body.querySelector('#wcEndEventBtn'),
-    rankingBody: ()=> body.querySelector('#wcRankingBody'),
+    eventTop3List: ()=> body.querySelector('#wcEventTop3List'),
+    eventTop3Sub: ()=> body.querySelector('#wcEventTop3Sub'),
+    roundTop3List: ()=> body.querySelector('#wcRoundTop3List'),
+    roundTop3Title: ()=> body.querySelector('#wcRoundTop3Title'),
+    roundTop3Sub: ()=> body.querySelector('#wcRoundTop3Sub'),
+    eventTableBtn: ()=> body.querySelector('#wcEventTableBtn'),
     playersList: ()=> body.querySelector('#wcPlayersList')
   };
   return body;
@@ -6756,6 +6854,193 @@ async function wcComputeRanking(){
   }catch{}
   return Object.values(ranking).sort((a,b)=> b.points-a.points || String(a.nick).localeCompare(String(b.nick),'pl'));
 }
+
+function wcAssignPlaces(rows, tieKeyFn=(row)=>String(Number(row?.points||0))){
+  let lastKey = null;
+  let place = 0;
+  return (rows || []).map((row,index)=>{
+    const key = tieKeyFn(row);
+    if(index === 0 || key !== lastKey) place = index + 1;
+    lastKey = key;
+    return {...row, place};
+  });
+}
+
+function wcRenderTop3List(list, rows, emptyText){
+  if(!list) return;
+  list.innerHTML = '';
+  const ranked = (rows || []).slice(0,3);
+  if(!ranked.length){
+    const empty = document.createElement('div');
+    empty.className = 'wcTop3Empty';
+    empty.textContent = emptyText;
+    list.appendChild(empty);
+    return;
+  }
+  ranked.forEach((row,index)=>{
+    const placeNo = Number(row.place || index + 1);
+    const item = document.createElement('div');
+    item.className = 'wcTop3Row';
+    item.dataset.place = String(Math.min(3, placeNo || index + 1));
+    const place = document.createElement('div');
+    place.className = 'wcTop3Place';
+    place.textContent = String(placeNo || index + 1);
+    const nick = document.createElement('div');
+    nick.className = 'wcTop3Nick';
+    nick.textContent = String(row.nick || '—');
+    const points = document.createElement('div');
+    points.className = 'wcTop3Points';
+    points.textContent = getLang()==='en' ? `${Number(row.points||0)} pts` : `${Number(row.points||0)} pkt`;
+    item.append(place,nick,points);
+    list.appendChild(item);
+  });
+}
+
+async function wcComputeRoundRanking(roundId){
+  if(!roundId) return [];
+  const matches = await wcFetchRoundMatches(roundId);
+  const settled = matches.filter(m=>m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null);
+  if(!settled.length) return [];
+  const playerLookup = new Map();
+  (lastPlayers || []).forEach(p=>{
+    const uid = String(p?.uid || p?.id || p?.playerUid || p?.playerId || '');
+    if(uid) playerLookup.set(uid, p);
+  });
+  const rows = [];
+  try{
+    const picksQs = await boot.getDocs(wcPicksCol(roundId));
+    picksQs.forEach(pd=>{
+      const data = pd.data() || {};
+      const uid = pd.id;
+      const picks = data.picks || {};
+      let points = 0;
+      let exactCount = 0;
+      let outcomeCount = 0;
+      settled.forEach(m=>{
+        const pick = picks[m.id] || {};
+        const value = wcPointsForPick(pick.home,pick.away,m.resultHome,m.resultAway);
+        if(value === 3) exactCount += 1;
+        else if(value === 1) outcomeCount += 1;
+        if(value != null) points += value;
+      });
+      const roomPlayer = playerLookup.get(uid) || {};
+      rows.push({
+        uid,
+        nick: data.nick || roomPlayer.nick || uid,
+        playerNo: data.playerNo || roomPlayer.playerNo || '',
+        points,
+        exactCount,
+        outcomeCount
+      });
+    });
+  }catch(error){
+    console.warn('wcComputeRoundRanking failed', error);
+  }
+  rows.sort((a,b)=>{
+    if(b.points !== a.points) return b.points - a.points;
+    if(b.exactCount !== a.exactCount) return b.exactCount - a.exactCount;
+    if(b.outcomeCount !== a.outcomeCount) return b.outcomeCount - a.outcomeCount;
+    return String(a.nick).localeCompare(String(b.nick),'pl');
+  });
+  return wcAssignPlaces(rows,row=>`${row.points}|${row.exactCount}|${row.outcomeCount}`);
+}
+
+async function wcResolveRoundTop3(state, activeMatches=[]){
+  if(state?.activeRoundId){
+    const rows = await wcComputeRoundRanking(state.activeRoundId);
+    const resolvedCount = (activeMatches || []).filter(m=>m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null).length;
+    return {
+      roundId: state.activeRoundId,
+      roundNo: Number(state.currentRoundNo || 1),
+      rows,
+      totalCount: activeMatches.length,
+      resolvedCount,
+      isActive: true
+    };
+  }
+  try{
+    const qs = await boot.getDocs(boot.query(wcRoundsCol(), boot.orderBy('roundNo','asc')));
+    const closed = qs.docs.map(doc=>({id:doc.id,...(doc.data()||{})})).filter(r=>r.closedAt);
+    const last = closed[closed.length-1];
+    if(!last) return null;
+    const matches = await wcFetchRoundMatches(last.id);
+    const rows = await wcComputeRoundRanking(last.id);
+    return {
+      roundId:last.id,
+      roundNo:Number(last.roundNo || closed.length || 1),
+      rows,
+      totalCount:matches.length,
+      resolvedCount:matches.filter(m=>m.resultHome!==undefined && m.resultAway!==undefined && m.resultHome!==null && m.resultAway!==null).length,
+      isActive:false
+    };
+  }catch(error){
+    console.warn('wcResolveRoundTop3 failed', error);
+    return null;
+  }
+}
+
+async function openWorldCupEventTable(){
+  const eventConfig = await wcGetEventConfig();
+  const ranking = wcAssignPlaces(await wcComputeRanking(), row=>String(Number(row.points||0)));
+  const body = document.createElement('div');
+  body.className = 'col';
+  body.style.gap = '14px';
+  const info = document.createElement('div');
+  info.className = 'sub';
+  info.textContent = getLang()==='en' ? 'Complete Event standings.' : 'Pełna klasyfikacja Eventu.';
+  const wrap = document.createElement('div');
+  wrap.className = 'wcEventFullTableWrap';
+  const table = document.createElement('table');
+  table.className = 'wcEventFullTable';
+  table.innerHTML = `<thead><tr><th style="width:80px">#</th><th>${getLang()==='en'?'Player':'Gracz'}</th><th style="width:130px">${getLang()==='en'?'Points':'Punkty'}</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  if(!ranking.length){
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 3;
+    td.textContent = getLang()==='en' ? 'No ranking data.' : 'Brak danych rankingu.';
+    td.style.textAlign = 'center';
+    td.style.opacity = '.72';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }else{
+    ranking.forEach(row=>{
+      const tr = document.createElement('tr');
+      const place = document.createElement('td');
+      place.className = 'wcEventFullTablePlace';
+      place.textContent = String(row.place);
+      const player = document.createElement('td');
+      player.className = 'wcEventFullTablePlayer';
+      player.textContent = String(row.nick || '—');
+      const points = document.createElement('td');
+      points.className = 'wcEventFullTablePoints';
+      points.textContent = String(Number(row.points || 0));
+      tr.append(place,player,points);
+      tbody.appendChild(tr);
+    });
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  const actions = document.createElement('div');
+  actions.className = 'row';
+  actions.style.justifyContent = 'center';
+  const back = wcMakeImgButton('btn_cofnij.png','wcEventTableBackBtn',getLang()==='en'?'Back':'Cofnij',async()=>{
+    modalClose();
+    await openWorldCupEvent();
+  });
+  actions.appendChild(back);
+  body.append(info,wrap,actions);
+  modalOpen(`${getLang()==='en'?'Event table':'Tabela Eventu'} — ${eventConfig.name}`,body);
+  const wcModal = el('modal');
+  if(wcModal) wcModal.classList.add('worldcupMode');
+  const closeBtn = el('modalClose');
+  if(closeBtn){
+    closeBtn.style.setProperty('display','none','important');
+    closeBtn.style.setProperty('visibility','hidden','important');
+    closeBtn.style.setProperty('pointer-events','none','important');
+  }
+}
+
 async function saveWorldCupPicks(){
   if(!wcRequireEventActive()) return;
   const roundId = window.__wcState?.activeRoundId;
@@ -6883,14 +7168,26 @@ async function openWorldCupAddRoundModal(){
   const add = document.createElement('button'); add.id='wcAddMatchBtn'; add.type='button'; add.className='btn'; add.textContent = getLang()==='en' ? '+ Add match' : '+ Dodaj mecz'; add.style.borderRadius='14px'; add.style.padding='8px 14px'; add.style.minHeight='38px'; add.style.fontWeight='900'; add.style.whiteSpace='nowrap'; add.style.background='rgba(34,52,94,.78)'; add.style.border='1px solid rgba(255,255,255,.16)'; add.style.color='#fff'; add.style.boxShadow='inset 0 0 0 1px rgba(255,255,255,.04)';
   row.append(hw,aw,add); body.appendChild(row);
   const list = document.createElement('div'); list.className='panel'; list.style.padding='12px'; list.style.maxHeight='34vh'; list.style.overflow='auto'; body.appendChild(list);
-  const render=()=>{ list.innerHTML=''; if(!pending.length){ const e=document.createElement('div'); e.className='sub'; e.textContent=getLang()==='en'?'No matches added yet.':'Nie dodano jeszcze meczów.'; list.appendChild(e); return;} pending.forEach((m,idx)=>{ const r=document.createElement('div'); r.className='row'; r.style.justifyContent='space-between'; r.style.alignItems='center'; r.style.padding='8px 10px'; r.style.border='1px solid rgba(255,255,255,.10)'; r.style.borderRadius='12px'; r.style.background='rgba(0,0,0,.14)'; const txt=document.createElement('div'); txt.style.fontWeight='900'; txt.textContent=`${idx+1}. ${m.home} — ${m.away}`; const del=makeSysImgButton('btn_delete.png',{cls:'sysBtn small', alt:getLang()==='en'?'Delete':'Usuń', title:getLang()==='en'?'Delete':'Usuń', onClick:()=>{ pending.splice(idx,1); render(); }}); r.append(txt,del); list.appendChild(r);});}; render();
-  add.onclick=()=>{ if(!hs.value || !as.value || hs.value===as.value){ showToast(getLang()==='en'?'Choose two different teams':'Wybierz dwie różne drużyny'); return; } pending.push({home:hs.value, away:as.value}); render(); };
+  const render=()=>{
+    list.innerHTML='';
+    add.disabled = pending.length >= 10;
+    add.classList.toggle('wcBtnDisabled', pending.length >= 10);
+    add.textContent = getLang()==='en' ? `+ Add match (${pending.length}/10)` : `+ Dodaj mecz (${pending.length}/10)`;
+    if(!pending.length){ const e=document.createElement('div'); e.className='sub'; e.textContent=getLang()==='en'?'No matches added yet. Maximum: 10.':'Nie dodano jeszcze meczów. Maksymalnie: 10.'; list.appendChild(e); return;}
+    pending.forEach((m,idx)=>{ const r=document.createElement('div'); r.className='row'; r.style.justifyContent='space-between'; r.style.alignItems='center'; r.style.padding='8px 10px'; r.style.border='1px solid rgba(255,255,255,.10)'; r.style.borderRadius='12px'; r.style.background='rgba(0,0,0,.14)'; const txt=document.createElement('div'); txt.style.fontWeight='900'; txt.textContent=`${idx+1}. ${m.home} — ${m.away}`; const del=makeSysImgButton('btn_delete.png',{cls:'sysBtn small', alt:getLang()==='en'?'Delete':'Usuń', title:getLang()==='en'?'Delete':'Usuń', onClick:()=>{ pending.splice(idx,1); render(); }}); r.append(txt,del); list.appendChild(r);});
+  }; render();
+  add.onclick=()=>{
+    if(pending.length >= 10){ showToast(getLang()==='en'?'Maximum 10 matches':'Maksymalnie 10 meczów'); return; }
+    if(!hs.value || !as.value || hs.value===as.value){ showToast(getLang()==='en'?'Choose two different teams':'Wybierz dwie różne drużyny'); return; }
+    pending.push({home:hs.value, away:as.value}); render();
+  };
   const footer = document.createElement('div'); footer.className='row'; footer.style.justifyContent='center'; footer.style.flexWrap='wrap'; footer.style.gap='12px';
   const save=wcMakeImgButton('btn_zapisz_kolejke.png', 'wcModalSaveRoundBtn', getLang()==='en'?'Save round':'Zapisz kolejkę');
   const back=wcMakeImgButton('btn_cofnij.png', 'wcModalBackBtn', getLang()==='en'?'Back':'Cofnij', ()=>{ modalClose(); openWorldCupEvent(); });
   footer.append(save,back); body.appendChild(footer);
   save.onclick = async ()=>{
     if(!pending.length){ showToast(getLang()==='en'?'Add at least one match':'Dodaj przynajmniej jeden mecz'); return; }
+    if(pending.length > 10){ showToast(getLang()==='en'?'Maximum 10 matches':'Maksymalnie 10 meczów'); return; }
     const deadlineMs = await wcAskTypingDeadlineMs(wcDefaultDeadlineMs());
     if(!deadlineMs) return;
     try{
@@ -7310,6 +7607,7 @@ async function renderWorldCupEvent(){
   body._els.adminPanel().style.display = wcAdminMode ? 'contents' : 'none';
   if(body._els.topActionBar()) body._els.topActionBar().classList.toggle('playerOnly', !wcAdminMode);
   if(body._els.settingsBtn()) body._els.settingsBtn().onclick = ()=> wcOpenEventSettingsModal();
+  if(body._els.eventTableBtn()) body._els.eventTableBtn().onclick = ()=> openWorldCupEventTable();
   const wcEventSelect = body._els.eventSelect ? body._els.eventSelect() : null;
   if(wcEventSelect){
     wcEventSelect.value = wcCurrentEventId();
@@ -7475,20 +7773,41 @@ async function renderWorldCupEvent(){
     updateWcSavePicksButton();
     wcAttachMobileScoreKeyboard(body);
   }
-  const ranking = await wcComputeRanking();
-  const tbody = body._els.rankingBody(); tbody.innerHTML='';
+  const ranking = wcAssignPlaces(await wcComputeRanking(), row=>String(Number(row.points||0)));
   let myPoints = 0;
-  ranking.forEach((r,idx)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${idx+1}</td><td>${r.nick}</td><td>${r.points}</td>`;
-    tr.style.cursor = 'pointer';
-    tr.title = getLang()==='en' ? 'Open player results profile' : 'Otwórz profil wyników gracza';
-    tr.onclick = ()=> openWorldCupPlayerProfile(r);
-    tbody.appendChild(tr);
-    if(r.uid===userUid) myPoints=r.points;
-  });
-  if(!ranking.length){ tbody.innerHTML='<tr><td colspan="3" style="color:rgba(255,255,255,.75)">Brak danych…</td></tr>'; }
+  ranking.forEach(r=>{ if(r.uid===userUid) myPoints=r.points; });
   body._els.myPoints().textContent = String(myPoints);
+  wcRenderTop3List(
+    body._els.eventTop3List ? body._els.eventTop3List() : null,
+    ranking,
+    getLang()==='en' ? 'Event ranking is not available yet' : 'Ranking Eventu nie jest jeszcze dostępny'
+  );
+  const roundTop3 = await wcResolveRoundTop3(state,matches);
+  const roundTitle = body._els.roundTop3Title ? body._els.roundTop3Title() : null;
+  const roundSub = body._els.roundTop3Sub ? body._els.roundTop3Sub() : null;
+  if(roundTop3){
+    if(roundTitle) roundTitle.textContent = getLang()==='en' ? `ROUND ${roundTop3.roundNo} • TOP 3` : `KOLEJKA ${roundTop3.roundNo} • TOP 3`;
+    if(roundSub){
+      roundSub.textContent = roundTop3.isActive
+        ? (roundTop3.resolvedCount
+          ? (getLang()==='en' ? `Settled matches: ${roundTop3.resolvedCount}/${roundTop3.totalCount}` : `Rozliczone mecze: ${roundTop3.resolvedCount}/${roundTop3.totalCount}`)
+          : (getLang()==='en' ? 'Ranking appears after results are saved' : 'Ranking pojawi się po wpisaniu wyników'))
+        : (getLang()==='en' ? 'Last completed round' : 'Ostatnia zakończona kolejka');
+    }
+    wcRenderTop3List(
+      body._els.roundTop3List ? body._els.roundTop3List() : null,
+      roundTop3.rows,
+      getLang()==='en' ? 'No settled results yet' : 'Brak zapisanych wyników'
+    );
+  }else{
+    if(roundTitle) roundTitle.textContent = getLang()==='en' ? 'ROUND • TOP 3' : 'KOLEJKA • TOP 3';
+    if(roundSub) roundSub.textContent = getLang()==='en' ? 'Ranking appears after results are saved' : 'Ranking pojawi się po wpisaniu wyników';
+    wcRenderTop3List(
+      body._els.roundTop3List ? body._els.roundTop3List() : null,
+      [],
+      getLang()==='en' ? 'No round ranking yet' : 'Brak rankingu kolejki'
+    );
+  }
 
   const playersBox = body._els.playersList ? body._els.playersList() : null;
   if(playersBox){
@@ -11276,7 +11595,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1008`);
+    setFooter(`Mariusz Gębka • EVENTY v1009`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
