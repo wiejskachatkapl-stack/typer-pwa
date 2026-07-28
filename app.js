@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3094;
+const BUILD = 3095;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3786,7 +3786,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.094` : "TYPER v.3.094",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.095` : "TYPER v.3.095",800,850);
   return canvas;
 }
 
@@ -9783,6 +9783,9 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.currentSeasonNo = currentSeasonNo;
     leagueState.rankingScope = allTime ? "ALL_TIME" : "SEASON";
 
+    const leagueWrap = document.querySelector("#league .leagueWrap");
+    if(leagueWrap) leagueWrap.classList.toggle("allTimeMode", allTime);
+
     el("leagueRoomName").textContent = leagueState.roomName;
     const leagueHeader = el("t_league");
     if(leagueHeader){
@@ -9795,7 +9798,14 @@ async function openLeagueTable(roomCode, opts={}) {
     leagueState.afterRound = allTime
       ? Number(room?.archiveCount || 0)
       : leagueState.finishedRounds.length;
-    buildLeagueRoundDropdown();
+    if(allTime){
+      leagueState.selectedRound = "ALL";
+      leagueState.viewMode = "TOTAL";
+      const roundSelect = el("leagueAfterRound");
+      if(roundSelect) roundSelect.innerHTML = "";
+    }else{
+      buildLeagueRoundDropdown();
+    }
     updateLeagueHintForMode();
 
     // Player numbers (admin only display): build uid -> playerNo map from current room players
@@ -10246,7 +10256,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.094`);
+    setFooter(`Mariusz Gębka v.3.095`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
