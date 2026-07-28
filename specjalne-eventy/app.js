@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1001;
+const BUILD = 1002;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -6283,15 +6283,11 @@ async function wcOpenEventSettingsModal(){
   nameInput.value = config.name;
   nameWrap.append(nameLabel, nameInput);
 
-  const activeRow = document.createElement('label');
-  activeRow.className = 'wcEventToggleRow';
-  const activeText = document.createElement('div');
-  activeText.innerHTML = `<strong>${getLang()==='en' ? 'Event active' : 'Event aktywny'}</strong><div class="sub">${getLang()==='en' ? 'When disabled, players cannot open or use the Event.' : 'Po wyłączeniu gracze nie mogą wejść do Eventu ani typować.'}</div>`;
-  const activeInput = document.createElement('input');
-  activeInput.type = 'checkbox';
-  activeInput.checked = config.enabled !== false;
-  activeInput.className = 'wcEventToggleInput';
-  activeRow.append(activeText, activeInput);
+  const activityNote = document.createElement('div');
+  activityNote.className = 'sub wcActivitySettingsNote';
+  activityNote.textContent = getLang()==='en'
+    ? 'Use the ACTIVE / INACTIVE switch in the top bar. The change is saved immediately.'
+    : 'Aktywność Eventu zmieniasz przełącznikiem AKTYWNY / NIEAKTYWNY w górnym pasku. Zmiana zapisuje się od razu.';
 
   const teamsWrap = document.createElement('label');
   teamsWrap.className = 'col';
@@ -6332,7 +6328,7 @@ async function wcOpenEventSettingsModal(){
     try{
       save.disabled = true;
       save.classList.add('wcBtnDisabled');
-      await wcSetEventConfig({enabled:activeInput.checked, name, teams});
+      await wcSetEventConfig({name, teams});
       await updateRoomEventButtonState();
       showToast(getLang()==='en' ? 'Event settings saved' : 'Zapisano ustawienia Eventu');
       modalClose();
@@ -6345,7 +6341,7 @@ async function wcOpenEventSettingsModal(){
     }
   };
 
-  body.append(eventInfo, nameWrap, activeRow, teamsWrap, note, actions);
+  body.append(eventInfo, nameWrap, activityNote, teamsWrap, note, actions);
   modalOpen(getLang()==='en' ? 'Event settings' : 'Ustawienia Eventu', body);
   const wcModal = el('modal');
   if(wcModal) wcModal.classList.add('worldcupMode');
@@ -6367,12 +6363,20 @@ function wcBuildShell(config=wcCurrentEventConfig()){
     const selected = def.id === selectedEventId ? ' selected' : '';
     return `<option value="${escapeHtml(def.id)}"${selected}>${label}</option>`;
   }).join('');
-  const eventStatus = config.enabled === false
-    ? (getLang()==='en' ? 'INACTIVE' : 'NIEAKTYWNY')
-    : (getLang()==='en' ? 'ACTIVE' : 'AKTYWNY');
+  const eventIsActive = config.enabled !== false;
+  const eventStatus = eventIsActive
+    ? (getLang()==='en' ? 'ACTIVE' : 'AKTYWNY')
+    : (getLang()==='en' ? 'INACTIVE' : 'NIEAKTYWNY');
+  const activityControl = isAdmin()
+    ? `<label id="wcEventActiveControl" class="wcQuickToggle ${eventIsActive ? 'active' : 'inactive'}" title="${getLang()==='en' ? 'Activate or deactivate this Event' : 'Aktywuj lub wyłącz ten Event'}">
+        <input id="wcEventActiveToggle" class="wcQuickToggleInput" type="checkbox" ${eventIsActive ? 'checked' : ''} aria-label="${getLang()==='en' ? 'Event activity' : 'Aktywność Eventu'}">
+        <span class="wcQuickToggleTrack" aria-hidden="true"><span class="wcQuickToggleKnob"></span></span>
+        <span id="wcEventActiveLabel" class="wcQuickToggleLabel">${eventStatus}</span>
+      </label>`
+    : `<div class="chip wcEventStatusChip ${eventIsActive ? 'active' : 'inactive'}">${eventStatus}</div>`;
   top.innerHTML = `
     <div class="wcEventSelectChip"><select id="wcEventSelect" class="wcEventSelect" aria-label="${getLang()==='en' ? 'Select Event' : 'Wybierz Event'}">${eventOptions}</select></div>
-    <div class="chip wcEventStatusChip ${config.enabled === false ? 'inactive' : 'active'}">${eventStatus}</div>
+    ${activityControl}
     <div class="chip">Pokój: <span id="wcRoomName">—</span></div>
     <div class="chip">Gracz: <span id="wcNick">—</span></div>
     <div class="chip">Mecze: <span id="wcMatchesCount">0</span></div>
@@ -6404,6 +6408,9 @@ function wcBuildShell(config=wcCurrentEventConfig()){
   grid.append(left,right); body.appendChild(grid);
   body._els = {
     eventSelect: ()=> body.querySelector('#wcEventSelect'),
+    activeControl: ()=> body.querySelector('#wcEventActiveControl'),
+    activeToggle: ()=> body.querySelector('#wcEventActiveToggle'),
+    activeLabel: ()=> body.querySelector('#wcEventActiveLabel'),
     roomName: ()=> body.querySelector('#wcRoomName'),
     nick: ()=> body.querySelector('#wcNick'),
     matchesCount: ()=> body.querySelector('#wcMatchesCount'),
@@ -6900,6 +6907,8 @@ async function endWorldCupEvent(){
   if(!ok) return;
 
   await wcSetState({ended:true, endedAt: boot.serverTimestamp(), activeRoundId:null});
+  await wcSetEventConfig({enabled:false});
+  await updateRoomEventButtonState();
   await wcShowFinalWinnersForFiveSeconds(ranking);
   await openWorldCupEvent();
 }
@@ -6907,7 +6916,12 @@ async function endWorldCupEvent(){
 async function renderWorldCupEvent(){
   if(!currentRoomCode){ showToast(getLang()==='en'?'No room':'Brak pokoju'); return; }
   await wcLoadEventCatalogData();
-  const eventConfig = await wcGetEventConfig();
+  const storedEventConfig = await wcGetEventConfig();
+  const state = await wcGetState();
+  const eventConfig = {
+    ...storedEventConfig,
+    enabled: storedEventConfig.enabled !== false && !state.ended
+  };
   window.__wcEventConfig = eventConfig;
   const body = wcBuildShell(eventConfig);
   modalOpen(eventConfig.name, body);
@@ -6932,6 +6946,40 @@ async function renderWorldCupEvent(){
       await renderWorldCupEvent();
     };
   }
+  const wcEventActiveToggle = body._els.activeToggle ? body._els.activeToggle() : null;
+  if(wcEventActiveToggle){
+    wcEventActiveToggle.onchange = async ()=>{
+      if(!isAdmin()){
+        wcEventActiveToggle.checked = !wcEventActiveToggle.checked;
+        showToast(getLang()==='en' ? 'Only admin can do this' : 'Tylko admin może to wykonać');
+        return;
+      }
+      const enabled = !!wcEventActiveToggle.checked;
+      const control = body._els.activeControl ? body._els.activeControl() : null;
+      wcEventActiveToggle.disabled = true;
+      if(control) control.classList.add('saving');
+      try{
+        await wcSetEventConfig({enabled});
+        if(enabled){
+          const currentState = await wcGetState();
+          if(currentState.ended){
+            await wcSetState({ended:false, endedAt:null});
+          }
+        }
+        await updateRoomEventButtonState();
+        showToast(enabled
+          ? (getLang()==='en' ? 'Event active. You can add a round.' : 'Event aktywny. Możesz dodać kolejkę.')
+          : (getLang()==='en' ? 'Event inactive.' : 'Event nieaktywny.'));
+        await renderWorldCupEvent();
+      }catch(error){
+        console.error('wcEventActiveToggle failed', error);
+        wcEventActiveToggle.checked = !enabled;
+        wcEventActiveToggle.disabled = false;
+        if(control) control.classList.remove('saving');
+        showToast(getLang()==='en' ? 'Could not change Event activity' : 'Nie udało się zmienić aktywności Eventu');
+      }
+    };
+  }
   body._els.saveRoundBtn().onclick = ()=> saveWorldCupRound();
   body._els.savePicksBtn().onclick = ()=> saveWorldCupPicks();
   body._els.addRoundBtn().onclick = ()=> openWorldCupAddRoundModal();
@@ -6940,7 +6988,6 @@ async function renderWorldCupEvent(){
   const wcEndEventBtn = body._els.endEventBtn();
   if(wcEndEventBtn) wcEndEventBtn.onclick = ()=> endWorldCupEvent();
 
-  const state = await wcGetState();
   window.__wcState = state;
   const matches = await wcFetchRoundMatches(state.activeRoundId);
   const roundMeta = await wcFetchRoundMeta(state.activeRoundId);
@@ -10856,7 +10903,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1001`);
+    setFooter(`Mariusz Gębka • EVENTY v1002`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
