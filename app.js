@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3095;
+const BUILD = 3096;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -3041,6 +3041,66 @@ function isUsefulPlayerNick(value){
   if(/^[A-Za-z0-9_-]{18,}$/.test(nick)) return false;
   return true;
 }
+// BUILD 3096: naprawa historycznego powiązania numeru gracza z rankingami.
+// Numer gracza jest kluczem tożsamości, a nick służy wyłącznie do wyświetlania.
+const KNOWN_PLAYER_NUMBER_REPAIRS = Object.freeze({
+  semusiu: "N279809",
+  semusio: "N279809"
+});
+function normalizePlayerNickKey(value){
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+function knownPlayerNoFromNick(nick){
+  return normalizePlayerNoValue(KNOWN_PLAYER_NUMBER_REPAIRS[normalizePlayerNickKey(nick)] || "");
+}
+function buildPlayerNumberLookup(players = lastPlayers){
+  const uidToPlayerNo = new Map();
+  const nickNoSets = new Map();
+  const playerByNo = new Map();
+
+  (players || []).forEach(raw=>{
+    const uid = String(raw?.uid || raw?.id || raw?.playerUid || raw?.playerId || "");
+    const playerNo = normalizePlayerNoValue(raw?.playerNo || raw?.playerNumber || raw?.nrGracza || raw?.number);
+    const nick = String(raw?.nick || "").trim();
+    if(uid && playerNo) uidToPlayerNo.set(uid, playerNo);
+    if(playerNo){
+      const current = playerByNo.get(playerNo);
+      if(!current || (!isUsefulPlayerNick(current?.nick) && isUsefulPlayerNick(nick))){
+        playerByNo.set(playerNo, {...raw, uid, playerNo, nick});
+      }
+    }
+    const nickKey = normalizePlayerNickKey(nick);
+    if(nickKey && playerNo){
+      if(!nickNoSets.has(nickKey)) nickNoSets.set(nickKey, new Set());
+      nickNoSets.get(nickKey).add(playerNo);
+    }
+  });
+
+  const nickToPlayerNo = new Map();
+  nickNoSets.forEach((set,key)=>{
+    if(set.size === 1) nickToPlayerNo.set(key, [...set][0]);
+  });
+  Object.entries(KNOWN_PLAYER_NUMBER_REPAIRS).forEach(([key,value])=>{
+    nickToPlayerNo.set(key, normalizePlayerNoValue(value));
+  });
+
+  return {uidToPlayerNo, nickToPlayerNo, playerByNo};
+}
+function inferPlayerNoForRankingRecord(record, uid, lookup){
+  const direct = normalizePlayerNoValue(record?.playerNo || record?.playerNumber || record?.nrGracza || record?.number);
+  if(direct) return direct;
+  const byUid = normalizePlayerNoValue(lookup?.uidToPlayerNo?.get(String(uid || "")) || "");
+  if(byUid) return byUid;
+  const nickKey = normalizePlayerNickKey(record?.nick);
+  const byNick = normalizePlayerNoValue(lookup?.nickToPlayerNo?.get(nickKey) || "");
+  if(byNick) return byNick;
+  return knownPlayerNoFromNick(record?.nick);
+}
 function identityTimeMs(value){
   try{
     if(!value) return 0;
@@ -3074,12 +3134,13 @@ function getRoomPlayerIdentities(players = lastPlayers){
   (roomLeagueRows || []).forEach(row=>{
     const uid = String(row?.uid || "");
     const pno = normalizePlayerNoValue(row?.playerNo);
-    if(uid) leagueByUid.set(uid, row);
+    const rowUids = [...new Set([uid, ...((row?.memberUids || []).map(String))].filter(Boolean))];
+    rowUids.forEach(rowUid=>leagueByUid.set(rowUid, row));
     if(pno && !leagueByPlayerNo.has(pno)) leagueByPlayerNo.set(pno, row);
     if(pno){
-      const group = ensureGroup(pno, uid);
+      const group = ensureGroup(pno, uid || rowUids[0] || "");
       group.leagueRows.push(row);
-      if(uid) group.candidatePickUids.add(uid);
+      rowUids.forEach(rowUid=>group.candidatePickUids.add(rowUid));
     }
   });
 
@@ -3786,7 +3847,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.095` : "TYPER v.3.095",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.3.096` : "TYPER v.3.096",800,850);
   return canvas;
 }
 
@@ -4221,9 +4282,10 @@ function buildLiveSeasonRanking(){
 
   for(const identity of identities){
     const leagueRows = Array.isArray(identity.leagueRows) ? identity.leagueRows : [];
-    const basePoints = leagueRows.length
-      ? Math.max(0, ...leagueRows.map(row=>Number(row?.points || 0)).filter(Number.isFinite))
-      : 0;
+    const basePoints = leagueRows.reduce((sum,row)=>{
+      const value = Number(row?.points || 0);
+      return sum + (Number.isFinite(value) ? value : 0);
+    }, 0);
     const livePoints = identitySubmitted(identity) ? Number(identityPoints(identity) || 0) : 0;
     const countUids = new Set([
       identity.uid,
@@ -4394,19 +4456,62 @@ function subscribeRoomLeagueMini(roomCode){
   if(!code || !boot.onSnapshot) return;
   try{
     unsubRoomLeague = boot.onSnapshot(leagueCol(code), (qs)=>{
-      const rows = [];
+      const lookup = buildPlayerNumberLookup(lastPlayers);
+      const grouped = new Map();
+      const repairs = [];
+
       qs.forEach(d=>{
         const x = d.data() || {};
-        rows.push({
-          uid: x.uid || d.id,
-          nick: x.nick || '—',
-          playerNo: String(x.playerNo || '').trim().toUpperCase(),
-          points: Number(x.seasonPoints || 0)
-        });
+        const uid = String(x.uid || d.id || "");
+        const playerNo = inferPlayerNoForRankingRecord(x, uid, lookup);
+        const key = playerNo ? `PN:${playerNo}` : `UID:${uid}`;
+        if(!grouped.has(key)){
+          grouped.set(key, {
+            uid,
+            playerNo,
+            memberUids:[],
+            nickCandidates:[],
+            points:0
+          });
+        }
+        const row = grouped.get(key);
+        if(uid && !row.memberUids.includes(uid)) row.memberUids.push(uid);
+        if(isUsefulPlayerNick(x.nick)) row.nickCandidates.push(String(x.nick));
+        const seasonPoints = Number(x.seasonPoints || 0);
+        if(Number.isFinite(seasonPoints)) row.points += seasonPoints;
+        if(playerNo && !normalizePlayerNoValue(x.playerNo)) repairs.push({ref:d.ref, playerNo});
       });
+
+      const rows = [...grouped.values()].map(row=>{
+        const currentPlayer = row.playerNo ? lookup.playerByNo.get(row.playerNo) : null;
+        const nick = [currentPlayer?.nick, ...row.nickCandidates].find(isUsefulPlayerNick)
+          || (getLang()==="en" ? "Player" : "Gracz");
+        return {
+          uid: String(currentPlayer?.uid || row.uid || row.memberUids[0] || ""),
+          nick: String(nick),
+          playerNo: row.playerNo,
+          memberUids: row.memberUids,
+          points: row.points
+        };
+      });
+
       roomLeagueRows = rows;
       updateRoomProfileLeagueMini();
       loadRoomPlacementCounts(code, currentSeasonNo);
+
+      // Jednorazowo przywróć brakujący numer w starych dokumentach ligi.
+      if(repairs.length && isAdmin()){
+        try{
+          const batch = boot.writeBatch(db);
+          repairs.forEach(item=>batch.set(item.ref, {
+            playerNo:item.playerNo,
+            updatedAt:boot.serverTimestamp()
+          }, {merge:true}));
+          batch.commit().catch(err=>console.warn("league playerNo repair failed", err));
+        }catch(err){
+          console.warn("league playerNo repair prepare failed", err);
+        }
+      }
     });
   }catch(err){
     console.warn('subscribeRoomLeagueMini failed', err);
@@ -9808,50 +9913,108 @@ async function openLeagueTable(roomCode, opts={}) {
     }
     updateLeagueHintForMode();
 
-    // Player numbers (admin only display): build uid -> playerNo map from current room players
-    const pnMap = {};
+    // BUILD 3096: numer gracza jest głównym kluczem rankingu.
+    // Stare dokumenty różnych UID tego samego gracza są scalane według playerNo.
+    const currentPlayers = [];
     try{
       const pqs = await boot.getDocs(playersCol(roomCode));
       pqs.forEach(pd=>{
         const d = pd.data() || {};
-        const uid = d.uid || pd.id;
-        const pn = String(d.playerNo || "").trim().toUpperCase();
-        if(uid && pn) pnMap[uid] = pn;
+        currentPlayers.push({...d, uid:d.uid || pd.id});
       });
     }catch(e){
-      // ignore (player numbers are optional)
+      // Ranking może zostać zbudowany również ze starszych dokumentów ligi.
     }
+    const playerLookup = buildPlayerNumberLookup(currentPlayers.length ? currentPlayers : lastPlayers);
 
     const placementCounts = computeLeaguePlacementCounts();
     // Tabela ligi pokazuje wyłącznie aktualny sezon.
     // Ranking wszechczasów korzysta z sumy ze wszystkich sezonów.
     const qs = await boot.getDocs(leagueCol(roomCode));
+    const grouped = new Map();
+    const repairs = [];
 
-    const arr = [];
     qs.forEach(d=>{
-      const x = d.data();
-      const playerNo = pnMap[x.uid || d.id] || "";
-      if(!String(playerNo).trim()) return;
-      const uid = x.uid || d.id;
-      const placement = placementCounts.get(uid) || { firstPlaces:0, secondPlaces:0 };
-      arr.push({
-        uid,
-        nick: x.nick || "—",
-        playerNo,
-        rounds: allTime
-          ? (Number.isInteger(x.roundsPlayed) ? x.roundsPlayed : (x.roundsPlayed ?? 0))
-          : (Number.isInteger(x.seasonRoundsPlayed) ? x.seasonRoundsPlayed : (x.seasonRoundsPlayed ?? 0)),
-        points: allTime
-          ? (Number.isInteger(x.totalPoints) ? x.totalPoints : (x.totalPoints ?? 0))
-          : (Number.isInteger(x.seasonPoints) ? x.seasonPoints : (x.seasonPoints ?? 0)),
-        firstPlaces: Number(placement.firstPlaces || 0),
-        secondPlaces: Number(placement.secondPlaces || 0),
-        cupGold: Number(x.cupGold || 0),
-        cupSilver: Number(x.cupSilver || 0),
-        cupBronze: Number(x.cupBronze || 0),
-        avatar: String(x.avatar || "")
-      });
+      const x = d.data() || {};
+      const uid = String(x.uid || d.id || "");
+      const playerNo = inferPlayerNoForRankingRecord(x, uid, playerLookup);
+      if(!playerNo) return;
+      const key = `PN:${playerNo}`;
+      if(!grouped.has(key)){
+        grouped.set(key, {
+          playerNo,
+          memberUids:[],
+          nickCandidates:[],
+          avatarCandidates:[],
+          rounds:0,
+          points:0,
+          firstPlaces:0,
+          secondPlaces:0,
+          cupGold:0,
+          cupSilver:0,
+          cupBronze:0
+        });
+      }
+      const row = grouped.get(key);
+      if(uid && !row.memberUids.includes(uid)) row.memberUids.push(uid);
+      if(isUsefulPlayerNick(x.nick)) row.nickCandidates.push(String(x.nick));
+      if(String(x.avatar || "").trim()) row.avatarCandidates.push(String(x.avatar));
+
+      const rounds = allTime
+        ? Number(x.roundsPlayed || 0)
+        : Number(x.seasonRoundsPlayed || 0);
+      const points = allTime
+        ? Number(x.totalPoints || 0)
+        : Number(x.seasonPoints || 0);
+      if(Number.isFinite(rounds)) row.rounds += rounds;
+      if(Number.isFinite(points)) row.points += points;
+
+      const placement = placementCounts.get(uid) || {firstPlaces:0, secondPlaces:0};
+      row.firstPlaces += Number(placement.firstPlaces || 0);
+      row.secondPlaces += Number(placement.secondPlaces || 0);
+      row.cupGold += Number(x.cupGold || 0);
+      row.cupSilver += Number(x.cupSilver || 0);
+      row.cupBronze += Number(x.cupBronze || 0);
+
+      if(playerNo && !normalizePlayerNoValue(x.playerNo)) repairs.push({ref:d.ref, playerNo});
     });
+
+    const arr = [...grouped.values()].map(group=>{
+      const currentPlayer = playerLookup.playerByNo.get(group.playerNo);
+      const nick = [currentPlayer?.nick, ...group.nickCandidates].find(isUsefulPlayerNick)
+        || (getLang()==="en" ? "Player" : "Gracz");
+      const avatar = String(currentPlayer?.avatar || group.avatarCandidates[0] || "");
+      const canonicalUid = String(currentPlayer?.uid || group.memberUids[0] || group.playerNo);
+      return {
+        uid:canonicalUid,
+        memberUids:group.memberUids,
+        nick:String(nick),
+        playerNo:group.playerNo,
+        rounds:group.rounds,
+        points:group.points,
+        firstPlaces:group.firstPlaces,
+        secondPlaces:group.secondPlaces,
+        cupGold:group.cupGold,
+        cupSilver:group.cupSilver,
+        cupBronze:group.cupBronze,
+        avatar
+      };
+    });
+
+    // Admin zapisuje brakujący numer w historycznym dokumencie ligi.
+    // Dla Semusiu przywracany jest numer N279809, bez usuwania żadnego sezonu.
+    if(repairs.length && isAdmin()){
+      try{
+        const batch = boot.writeBatch(db);
+        repairs.forEach(item=>batch.set(item.ref, {
+          playerNo:item.playerNo,
+          updatedAt:boot.serverTimestamp()
+        }, {merge:true}));
+        await batch.commit();
+      }catch(err){
+        console.warn("Historical league playerNo repair failed", err);
+      }
+    }
 
     leagueState.rows = arr;
     // start as TOTAL
@@ -9925,23 +10088,26 @@ function renderLeagueTable(){
     if(isRoundView){
       tr.onclick = ()=> openArchivedPicksPreview(leagueState.roomCode, String(r._roundKey || leagueState.selectedRound), r.uid, r.nick);
     }else{
-      tr.onclick = ()=> openPlayerStatsFromLeague(r.uid, r.nick);
+      tr.onclick = ()=> openPlayerStatsFromLeague(r.uid, r.nick, r.memberUids || [r.uid]);
     }
     body.appendChild(tr);
   });
 }
 
 // ===== STATYSTYKI GRACZA (MODAL) =====
-async function openPlayerStatsFromLeague(uid, nick){
+async function openPlayerStatsFromLeague(uid, nick, memberUids=[]){
   if(!leagueState.roomCode) return;
 
   const code = leagueState.roomCode;
+  const targetUids = new Set([uid, ...(memberUids || [])].filter(Boolean).map(String));
 
   let qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy("archiveIndex","desc")));
   if(qs.empty){
     qs = await boot.getDocs(boot.query(roundsCol(code), boot.orderBy("roundNo","desc")));
   }
-  const leagueSelf = (leagueState.rows||[]).find(x=> x.uid===uid) || {};
+  const leagueSelf = (leagueState.rows||[]).find(x=>
+    x.uid===uid || (x.memberUids || []).some(memberUid=>targetUids.has(String(memberUid)))
+  ) || {};
 
   const wrap = document.createElement("div");
   wrap.style.display="flex";
@@ -9986,7 +10152,7 @@ async function openPlayerStatsFromLeague(uid, nick){
       if(b.pts!==a.pts) return b.pts-a.pts;
       return String(a.nick||a.uid).localeCompare(String(b.nick||b.uid), "pl");
     });
-    const pos = entries.findIndex(x=> x.uid===uid);
+    const pos = entries.findIndex(x=> targetUids.has(String(x.uid)));
     if(pos>=0 && pos<3){
       const m = pos+1;
       medalCounts[m] += 1;
@@ -10033,8 +10199,12 @@ async function openPlayerStatsFromLeague(uid, nick){
 
   roundDocs.forEach(rd=>{
     const rn = rd.seasonRoundNo ?? rd.roundNo ?? 0;
-    const pts = rd?.pointsByUid?.[uid];
-    const played = (pts !== undefined && pts !== null);
+    const roundPointsEntries = [...targetUids]
+      .filter(targetUid=>rd?.pointsByUid?.[targetUid] !== undefined && rd?.pointsByUid?.[targetUid] !== null)
+      .map(targetUid=>({uid:targetUid, points:Number(rd.pointsByUid[targetUid] || 0)}));
+    const played = roundPointsEntries.length > 0;
+    const pts = played ? roundPointsEntries.reduce((sum,item)=>sum + item.points, 0) : undefined;
+    const previewUid = played ? roundPointsEntries[0].uid : uid;
 
     // Medal for this round (if any)
     let medalSrc = "";
@@ -10071,7 +10241,7 @@ async function openPlayerStatsFromLeague(uid, nick){
     btn.textContent = (getLang()==="en") ? "Preview" : "Podgląd";
     btn.disabled = !played;
     btn.onclick = async ()=>{
-      await openArchivedPicksPreview(code, rd._id || rn, uid, nick);
+      await openArchivedPicksPreview(code, rd._id || rn, previewUid, nick);
     };
 
     right.appendChild(ptsChip);
@@ -10256,7 +10426,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.095`);
+    setFooter(`Mariusz Gębka v.3.096`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();

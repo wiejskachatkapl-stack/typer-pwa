@@ -1,5 +1,5 @@
-// Typer PWA Service Worker (BUILD 3095)
-const BUILD = '3095';
+// Typer PWA Service Worker (BUILD 3096)
+const BUILD = '3096';
 const CACHE_PREFIX = 'typer-cache-';
 const CACHE_NAME = `${CACHE_PREFIX}${BUILD}`;
 const VERSIONED_INDEX = `./index.html?v=${BUILD}`;
