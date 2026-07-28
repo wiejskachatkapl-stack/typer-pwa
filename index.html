@@ -2301,17 +2301,18 @@ html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
 #room .modernRoomBtn.event{
   position:relative;
   isolation:isolate;
-  --btn1:#ffde68;
-  --btn2:#ff8c10;
-  color:#ffe9a9;
-  border-color:rgba(255,227,145,.98);
+  overflow:hidden;
+  --btn1:#4af0ff;
+  --btn2:#0c56d8;
+  color:#f8fcff;
+  border-color:rgba(173,238,255,.96);
   background:
-    radial-gradient(circle at 14% 18%,rgba(255,255,255,.34),rgba(255,255,255,0) 15%),
-    radial-gradient(circle at 84% 26%,rgba(255,208,94,.22),rgba(255,208,94,0) 18%),
-    linear-gradient(135deg,rgba(255,220,110,.24) 0%,rgba(255,220,110,0) 26%),
-    linear-gradient(90deg,#04132f 0%,#08275e 16%,#11489b 36%,#0a2359 54%,#4a102f 75%,#b44f0d 100%);
-  box-shadow:0 5px 0 #7b3200,0 10px 22px rgba(0,0,0,.38),0 0 18px rgba(255,187,54,.28),inset 0 1px 0 rgba(255,255,255,.48),inset 0 -1px 0 rgba(0,0,0,.28);
-  text-shadow:0 2px 6px rgba(0,0,0,.48);
+    radial-gradient(circle at 12% 16%,rgba(255,255,255,.42),rgba(255,255,255,0) 16%),
+    radial-gradient(circle at 86% 20%,rgba(94,255,205,.22),rgba(94,255,205,0) 18%),
+    linear-gradient(180deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,0) 18%,rgba(0,0,0,.06) 58%,rgba(0,0,0,.22) 100%),
+    linear-gradient(135deg,#0a1537 0%,#0d2f73 18%,#117ad6 46%,#0c3c8d 63%,#0a7a57 100%);
+  box-shadow:0 6px 0 #06285f,0 12px 24px rgba(0,0,0,.40),0 0 22px rgba(44,180,255,.24),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(0,0,0,.24);
+  text-shadow:0 2px 6px rgba(0,0,0,.55);
 }
 #room .modernRoomBtn.event::before{
   content:"";
@@ -2320,27 +2321,29 @@ html[data-lang="en"] #room .modernRoomBtn .label-en{display:inline}
   border-radius:14px;
   pointer-events:none;
   background:
-    linear-gradient(145deg,rgba(255,221,130,.12),rgba(255,221,130,0) 34%),
-    linear-gradient(90deg,transparent 0%,rgba(255,255,255,.08) 14%,transparent 22%,transparent 74%,rgba(255,215,109,.18) 85%,transparent 100%);
-  opacity:.95;
+    linear-gradient(180deg,rgba(255,255,255,.24) 0%,rgba(255,255,255,.08) 28%,rgba(255,255,255,0) 48%),
+    linear-gradient(118deg,transparent 0%,rgba(255,255,255,.18) 18%,transparent 34%,transparent 68%,rgba(89,255,206,.12) 84%,transparent 100%);
+  opacity:.98;
   z-index:0;
 }
 #room .modernRoomBtn.event::after{
-  box-shadow:inset 0 0 0 1px rgba(255,247,215,.26), inset 0 0 26px rgba(255,214,112,.08);
+  box-shadow:inset 0 0 0 1px rgba(228,248,255,.24), inset 0 0 28px rgba(124,223,255,.10);
 }
-#room .modernRoomBtn.event:hover{filter:brightness(1.1) saturate(1.08)}
+#room .modernRoomBtn.event:hover{filter:brightness(1.06) saturate(1.08)}
+#room .modernRoomBtn.event:active{transform:translateY(3px);box-shadow:0 2px 0 #06285f,0 6px 14px rgba(0,0,0,.34),0 0 14px rgba(44,180,255,.18),inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(0,0,0,.22)}
 #room .modernRoomBtn.event .btnIcon{
   position:relative;
   z-index:1;
-  background:#ffe08a;
-  filter:drop-shadow(0 2px 2px rgba(0,0,0,.58)) drop-shadow(0 0 6px rgba(255,217,106,.48));
+  background:#ffffff;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.56)) drop-shadow(0 0 8px rgba(122,236,255,.38));
 }
 #room .modernRoomBtn.event .label-pl,
 #room .modernRoomBtn.event .label-en{
   position:relative;
   z-index:1;
-  font-weight:900;
-  letter-spacing:.02em;
+  font-weight:1000;
+  letter-spacing:.045em;
+  text-transform:uppercase;
 }
 
 #room .btnIcon{
@@ -3073,7 +3076,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 
   <!-- BUILD 3013: Event + tabela ligi + ranking w jednym rzędzie -->
   <div class="panel leftProfileInfo roomQuickMenu" id="roomProfileInfoCard">
-    <button aria-label="Event MŚ 2026" class="imgBtn sysBtn small modernRoomBtn event" id="btnSubstitute" title="Event MŚ 2026" type="button"><span class="btnIcon ico-event" aria-hidden="true"></span><span class="label-pl">EVENT MŚ 2026</span><span class="label-en">WORLD CUP 2026</span></button>
+    <button aria-label="Event Specjalny" class="imgBtn sysBtn small modernRoomBtn event" id="btnSubstitute" title="Event Specjalny" type="button"><span class="btnIcon ico-event" aria-hidden="true"></span><span class="label-pl">EVENT SPECJALNY</span><span class="label-en">SPECIAL EVENT</span></button>
     <button class="imgBtn sysBtn small modernRoomBtn info" id="btnLeagueFromRoom" type="button"><span class="btnIcon ico-table" aria-hidden="true"></span><span class="label-pl">Tabela ligi</span><span class="label-en">League table</span></button>
     <button class="imgBtn sysBtn small modernRoomBtn rank" id="btnAllRankingFromRoom" type="button"><span class="btnIcon ico-rank" aria-hidden="true"></span><span class="label-pl">Ranking wszechczasów</span><span class="label-en">All-time ranking</span></button>
     <div class="seasonTop3 seasonTop3Desktop" id="seasonTop3Desktop">

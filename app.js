@@ -453,8 +453,8 @@ const EVENT_FALLBACK_DEFINITION = Object.freeze({
   module: './events/world-cup-2026/event.js',
   style: './events/world-cup-2026/event.css',
   config: './events/world-cup-2026/config.json',
-  title: { pl: 'EVENT MŚ 2026', en: 'WORLD CUP 2026' },
-  buttonTitle: { pl: 'Event MŚ 2026', en: 'World Cup 2026 Event' },
+  title: { pl: 'EVENT SPECJALNY', en: 'SPECIAL EVENT' },
+  buttonTitle: { pl: 'Event Specjalny', en: 'Special Event' },
   fallback: true
 });
 
