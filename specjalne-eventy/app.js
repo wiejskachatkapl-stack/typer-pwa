@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1003;
+const BUILD = 1004;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5197,7 +5197,38 @@ function wcEnsureEventStyles(){
     #modal.worldcupMode .wcEventDropdownItemCheck{opacity:0;color:#8dffb9;font-size:18px;text-align:center;text-shadow:0 0 10px rgba(66,255,146,.42);}
     #modal.worldcupMode .wcEventDropdownItem.selected .wcEventDropdownItemCheck{opacity:1;}
     #modal.worldcupMode .wcEventSelectNative{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important;}
+    #modal.worldcupMode .wcTeamsEditorSection{width:100%;}
+    #modal.worldcupMode .wcTeamsEditorHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    #modal.worldcupMode .wcTeamsEditorLabel{font-weight:900;color:rgba(239,247,255,.94);}
+    #modal.worldcupMode .wcTeamAddButton{min-width:164px;min-height:40px;padding:6px 12px;font-size:12px;}
+    #modal.worldcupMode .wcTeamAddButton .appBtnIcon{width:20px;height:20px;flex-basis:20px;}
+    #modal.worldcupMode .wcTeamsEditorList{max-height:330px;overflow:auto;padding:8px;border:1px solid rgba(101,177,255,.28);border-radius:16px;background:linear-gradient(180deg,rgba(2,13,36,.76),rgba(1,9,27,.82));box-shadow:inset 0 1px 0 rgba(255,255,255,.04);scrollbar-width:thin;scrollbar-color:rgba(76,165,255,.72) rgba(0,0,0,.18);}
+    #modal.worldcupMode .wcTeamEditorRow{display:grid;grid-template-columns:38px minmax(0,1fr) 42px 42px;align-items:center;gap:8px;padding:6px 7px;border:1px solid transparent;border-radius:13px;transition:background .15s ease,border-color .15s ease,box-shadow .15s ease;}
+    #modal.worldcupMode .wcTeamEditorRow + .wcTeamEditorRow{margin-top:5px;}
+    #modal.worldcupMode .wcTeamEditorRow:hover{background:rgba(24,79,149,.18);border-color:rgba(91,178,255,.16);}
+    #modal.worldcupMode .wcTeamEditorRow.editing{background:linear-gradient(180deg,rgba(26,111,207,.27),rgba(10,58,127,.27));border-color:rgba(100,197,255,.58);box-shadow:0 0 16px rgba(32,143,255,.1);}
+    #modal.worldcupMode .wcTeamEditorNumber{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:10px;background:rgba(24,92,173,.34);border:1px solid rgba(92,178,255,.22);font-weight:1000;color:#dcedff;}
+    #modal.worldcupMode .wcTeamNameInput{width:100%;min-width:0;min-height:40px;padding:8px 11px;border-radius:11px;font-weight:850;color:#fff;}
+    #modal.worldcupMode .wcTeamNameInput[readonly]{background:rgba(1,12,34,.42);border-color:rgba(255,255,255,.1);cursor:default;box-shadow:none;}
+    #modal.worldcupMode .wcTeamEditorRow.editing .wcTeamNameInput{background:rgba(4,24,61,.9);border-color:rgba(91,188,255,.72);box-shadow:0 0 0 2px rgba(53,155,255,.11);}
+    #modal.worldcupMode .wcTeamActionButton{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;padding:0;border-radius:12px;border:1px solid rgba(107,194,255,.42);background:linear-gradient(180deg,rgba(28,111,212,.94),rgba(7,56,133,.96));color:#fff;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 4px 10px rgba(0,0,0,.22);transition:transform .14s ease,filter .14s ease,border-color .14s ease;}
+    #modal.worldcupMode .wcTeamActionButton:hover{transform:translateY(-1px);filter:brightness(1.1);border-color:rgba(151,222,255,.86);}
+    #modal.worldcupMode .wcTeamActionButton:active{transform:translateY(0);}
+    #modal.worldcupMode .wcTeamActionButton:focus-visible{outline:3px solid rgba(86,186,255,.5);outline-offset:2px;}
+    #modal.worldcupMode .wcTeamActionButton .appBtnIcon{width:21px;height:21px;flex:0 0 21px;}
+    #modal.worldcupMode .wcTeamEditButton.isConfirm{border-color:rgba(91,255,151,.62);background:linear-gradient(180deg,#27d86b,#0a873d);}
+    #modal.worldcupMode .wcTeamDeleteButton{border-color:rgba(255,115,126,.44);background:linear-gradient(180deg,rgba(180,53,70,.96),rgba(103,24,38,.97));}
     @media(max-width:620px){#modal.worldcupMode .wcEventDropdown{width:100%;max-width:none;min-width:0;flex:1 1 100%;}#modal.worldcupMode .wcEventDropdownButton{min-height:46px;border-radius:16px;}#modal.worldcupMode .wcEventDropdownMenu{border-radius:16px;}}
+    @media(max-width:620px){
+      #modal.worldcupMode .wcTeamsEditorHeader{align-items:stretch;}
+      #modal.worldcupMode .wcTeamAddButton{width:100%;}
+      #modal.worldcupMode .wcTeamsEditorList{max-height:300px;padding:6px;}
+      #modal.worldcupMode .wcTeamEditorRow{grid-template-columns:30px minmax(0,1fr) 38px 38px;gap:5px;padding:5px 4px;}
+      #modal.worldcupMode .wcTeamEditorNumber{width:28px;height:28px;font-size:12px;}
+      #modal.worldcupMode .wcTeamNameInput{min-height:38px;padding:7px 8px;font-size:13px;}
+      #modal.worldcupMode .wcTeamActionButton{width:36px;height:36px;border-radius:10px;}
+      #modal.worldcupMode .wcTeamActionButton .appBtnIcon{width:18px;height:18px;flex-basis:18px;}
+    }
     @media (max-width:980px){
       #modal.worldcupMode .modalCard{width:96vw !important;height:94vh !important;}
       #modal.worldcupMode .modalBody{padding:10px !important;}
@@ -6308,21 +6339,162 @@ async function wcOpenEventSettingsModal(){
     ? 'Use the ACTIVE / INACTIVE switch in the top bar. The change is saved immediately.'
     : 'Aktywność Eventu zmieniasz przełącznikiem AKTYWNY / NIEAKTYWNY w górnym pasku. Zmiana zapisuje się od razu.';
 
-  const teamsWrap = document.createElement('label');
-  teamsWrap.className = 'col';
-  teamsWrap.style.gap = '6px';
+  const teamsWrap = document.createElement('div');
+  teamsWrap.className = 'col wcTeamsEditorSection';
+  teamsWrap.style.gap = '8px';
+
+  const teamsHeader = document.createElement('div');
+  teamsHeader.className = 'wcTeamsEditorHeader';
   const teamsLabel = document.createElement('div');
-  teamsLabel.className = 'sub';
-  const refreshTeamsLabel = ()=>{
-    const count = String(teamsInput?.value || '').split(/\r?\n/).map(v=>v.trim()).filter(Boolean).length;
-    teamsLabel.textContent = getLang()==='en' ? `Teams (${count}) — one name per line` : `Drużyny (${count}) — każda nazwa w osobnym wierszu`;
+  teamsLabel.className = 'sub wcTeamsEditorLabel';
+  const addTeamBtn = document.createElement('button');
+  addTeamBtn.type = 'button';
+  addTeamBtn.className = 'modernAppBtn sysModernBtn sysModernBtn--blue sysModernBtn--small wcTeamAddButton';
+  addTeamBtn.innerHTML = '<span class="appBtnIcon ico-create2" aria-hidden="true"></span><span class="label-pl">Dodaj drużynę</span><span class="label-en">Add team</span>';
+  addTeamBtn.setAttribute('aria-label', getLang()==='en' ? 'Add team' : 'Dodaj drużynę');
+  addTeamBtn.title = getLang()==='en' ? 'Add a new team' : 'Dodaj nową drużynę';
+  teamsHeader.append(teamsLabel, addTeamBtn);
+
+  const teamsList = document.createElement('div');
+  teamsList.className = 'wcTeamsEditorList';
+
+  const getTeamRows = ()=>Array.from(teamsList.querySelectorAll('.wcTeamEditorRow'));
+  const setTeamEditButtonMode = (button, editing)=>{
+    if(!button) return;
+    button.classList.toggle('isConfirm', !!editing);
+    button.innerHTML = `<span class="appBtnIcon ${editing ? 'ico-check' : 'ico-manual2'}" aria-hidden="true"></span>`;
+    const label = editing
+      ? (getLang()==='en' ? 'Confirm team name' : 'Zatwierdź nazwę drużyny')
+      : (getLang()==='en' ? 'Edit team' : 'Edytuj drużynę');
+    button.setAttribute('aria-label', label);
+    button.title = label;
   };
-  const teamsInput = document.createElement('textarea');
-  teamsInput.className = 'input wcTeamsTextarea';
-  teamsInput.value = config.teams.join('\n');
-  teamsInput.addEventListener('input', refreshTeamsLabel);
-  refreshTeamsLabel();
-  teamsWrap.append(teamsLabel, teamsInput);
+  const refreshTeamsLabel = ()=>{
+    const rows = getTeamRows();
+    teamsLabel.textContent = getLang()==='en'
+      ? `Teams (${rows.length}) — use the pencil to edit`
+      : `Drużyny (${rows.length}) — kliknij ołówek, aby edytować`;
+    rows.forEach((row, index)=>{
+      const number = row.querySelector('.wcTeamEditorNumber');
+      if(number) number.textContent = String(index + 1);
+    });
+  };
+  const startTeamEdit = (row)=>{
+    if(!row) return;
+    const input = row.querySelector('.wcTeamNameInput');
+    const editButton = row.querySelector('.wcTeamEditButton');
+    if(!input || !editButton) return;
+    row.dataset.originalName = String(input.value || '').trim();
+    row.classList.add('editing');
+    input.readOnly = false;
+    setTeamEditButtonMode(editButton, true);
+    window.setTimeout(()=>{ input.focus(); input.select(); }, 0);
+  };
+  const finishTeamEdit = (row, revert=false)=>{
+    if(!row) return false;
+    const input = row.querySelector('.wcTeamNameInput');
+    const editButton = row.querySelector('.wcTeamEditButton');
+    if(!input || !editButton) return false;
+    const original = String(row.dataset.originalName || '').trim();
+    if(revert){
+      if(!original){
+        row.remove();
+        refreshTeamsLabel();
+        return true;
+      }
+      input.value = original;
+    }
+    const value = String(input.value || '').trim();
+    if(!value){
+      showToast(getLang()==='en' ? 'Enter the team name' : 'Wpisz nazwę drużyny');
+      input.focus();
+      return false;
+    }
+    const duplicate = getTeamRows().some(other=>{
+      if(other === row) return false;
+      const otherValue = String(other.querySelector('.wcTeamNameInput')?.value || '').trim();
+      return otherValue.localeCompare(value, undefined, {sensitivity:'accent'}) === 0;
+    });
+    if(duplicate){
+      showToast(getLang()==='en' ? 'This team is already on the list' : 'Ta drużyna jest już na liście');
+      input.focus();
+      return false;
+    }
+    input.value = value;
+    row.dataset.originalName = value;
+    input.readOnly = true;
+    row.classList.remove('editing');
+    setTeamEditButtonMode(editButton, false);
+    return true;
+  };
+  const addTeamRow = (teamName='', editImmediately=false)=>{
+    const row = document.createElement('div');
+    row.className = 'wcTeamEditorRow';
+    const number = document.createElement('div');
+    number.className = 'wcTeamEditorNumber';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'input wcTeamNameInput';
+    input.maxLength = 70;
+    input.value = String(teamName || '').trim();
+    input.readOnly = !editImmediately;
+    input.autocomplete = 'off';
+    input.spellcheck = true;
+
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.className = 'wcTeamActionButton wcTeamEditButton';
+    setTeamEditButtonMode(editButton, editImmediately);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'wcTeamActionButton wcTeamDeleteButton';
+    deleteButton.innerHTML = '<span class="appBtnIcon ico-trash2" aria-hidden="true"></span>';
+    deleteButton.setAttribute('aria-label', getLang()==='en' ? 'Delete team' : 'Usuń drużynę');
+    deleteButton.title = getLang()==='en' ? 'Delete team' : 'Usuń drużynę';
+
+    editButton.addEventListener('click', ()=>{
+      if(row.classList.contains('editing')) finishTeamEdit(row, false);
+      else startTeamEdit(row);
+    });
+    deleteButton.addEventListener('click', ()=>{
+      if(getTeamRows().length <= 2){
+        showToast(getLang()==='en' ? 'The Event must contain at least two teams' : 'Event musi zawierać co najmniej dwie drużyny');
+        return;
+      }
+      row.remove();
+      refreshTeamsLabel();
+    });
+    input.addEventListener('keydown', event=>{
+      if(event.key === 'Enter'){
+        event.preventDefault();
+        finishTeamEdit(row, false);
+      }else if(event.key === 'Escape'){
+        event.preventDefault();
+        finishTeamEdit(row, true);
+      }
+    });
+    input.addEventListener('dblclick', ()=>{
+      if(input.readOnly) startTeamEdit(row);
+    });
+
+    row.append(number, input, editButton, deleteButton);
+    teamsList.appendChild(row);
+    refreshTeamsLabel();
+    if(editImmediately){
+      row.classList.add('editing');
+      row.dataset.originalName = '';
+      window.setTimeout(()=>input.focus(), 0);
+    }
+    return row;
+  };
+
+  (Array.isArray(config.teams) ? config.teams : []).forEach(team=>addTeamRow(team, false));
+  addTeamBtn.addEventListener('click', ()=>{
+    const row = addTeamRow('', true);
+    window.setTimeout(()=>row.scrollIntoView({block:'nearest', behavior:'smooth'}), 20);
+  });
+  teamsWrap.append(teamsHeader, teamsList);
 
   const note = document.createElement('div');
   note.className = 'sub';
@@ -6335,15 +6507,33 @@ async function wcOpenEventSettingsModal(){
   actions.style.justifyContent = 'center';
   actions.style.flexWrap = 'wrap';
   actions.style.gap = '12px';
-  const save = wcMakeImgButton('btn_zapisz_kolejke.png', 'wcSaveEventSettingsBtn', getLang()==='en' ? 'Save settings' : 'Zapisz ustawienia');
+  const save = document.createElement('button');
+  save.type = 'button';
+  save.id = 'wcSaveEventSettingsBtn';
+  save.className = 'modernAppBtn sysModernBtn sysModernBtn--blue sysModernBtn--small sysModernBtn--wide wcBtnImg';
+  save.innerHTML = '<span class="appBtnIcon ico-save2" aria-hidden="true"></span><span class="label-pl">Zapisz zmiany</span><span class="label-en">Save changes</span>';
+  save.setAttribute('aria-label', getLang()==='en' ? 'Save changes' : 'Zapisz zmiany');
+  save.title = getLang()==='en' ? 'Save Event changes' : 'Zapisz zmiany Eventu';
   const back = wcMakeImgButton('btn_cofnij.png', 'wcSettingsBackBtn', getLang()==='en' ? 'Back' : 'Cofnij', ()=>{ modalClose(); openWorldCupEvent(); });
   actions.append(save, back);
 
   save.onclick = async ()=>{
     const name = String(nameInput.value || '').trim();
-    const teams = String(teamsInput.value || '').split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+    const rawTeams = getTeamRows().map(row=>String(row.querySelector('.wcTeamNameInput')?.value || '').trim());
     if(name.length < 3){ showToast(getLang()==='en' ? 'Enter the Event name' : 'Wpisz nazwę Eventu'); return; }
+    if(rawTeams.some(team=>!team)){
+      showToast(getLang()==='en' ? 'Complete or delete the empty team row' : 'Uzupełnij albo usuń pusty wiersz drużyny');
+      const emptyInput = getTeamRows().map(row=>row.querySelector('.wcTeamNameInput')).find(input=>!String(input?.value || '').trim());
+      if(emptyInput){ startTeamEdit(emptyInput.closest('.wcTeamEditorRow')); }
+      return;
+    }
+    const teams = rawTeams;
     if(teams.length < 2){ showToast(getLang()==='en' ? 'Enter at least two teams' : 'Wpisz co najmniej dwie drużyny'); return; }
+    const uniqueTeams = new Set(teams.map(team=>team.toLocaleLowerCase()));
+    if(uniqueTeams.size !== teams.length){
+      showToast(getLang()==='en' ? 'Team names cannot be duplicated' : 'Nazwy drużyn nie mogą się powtarzać');
+      return;
+    }
     try{
       save.disabled = true;
       save.classList.add('wcBtnDisabled');
@@ -11016,7 +11206,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1003`);
+    setFooter(`Mariusz Gębka • EVENTY v1004`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
