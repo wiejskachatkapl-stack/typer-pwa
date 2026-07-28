@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1004;
+const BUILD = 1005;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -5874,7 +5874,13 @@ async function wcGetEventConfig(eventId=wcCurrentEventId()){
     return config;
   }
 }
+function wcRequireRoomAdminForEvent(){
+  if(isAdmin()) return true;
+  showToast(getLang()==='en' ? 'Only the room admin can change Event settings' : 'Tylko administrator pokoju może zmieniać ustawienia Eventu');
+  return false;
+}
 async function wcSetEventConfig(patch, eventId=wcCurrentEventId()){
+  if(!wcRequireRoomAdminForEvent()) throw new Error('EVENT_ADMIN_ONLY');
   if(!currentRoomCode) throw new Error('Brak pokoju');
   await wcLoadEventCatalogData();
   const id = wcSafeEventId(eventId);
@@ -6305,10 +6311,7 @@ function openWorldCupPicksPreview(player, matches, picksObj, canPreview=true){
   host.appendChild(overlay);
 }
 async function wcOpenEventSettingsModal(){
-  if(!isAdmin()){
-    showToast(getLang()==='en' ? 'Only admin can do this' : 'Tylko admin może to wykonać');
-    return;
-  }
+  if(!wcRequireRoomAdminForEvent()) return;
   await wcLoadEventCatalogData();
   const config = await wcGetEventConfig();
   const eventDefinition = wcGetEventDefinition();
@@ -6336,8 +6339,8 @@ async function wcOpenEventSettingsModal(){
   const activityNote = document.createElement('div');
   activityNote.className = 'sub wcActivitySettingsNote';
   activityNote.textContent = getLang()==='en'
-    ? 'Use the ACTIVE / INACTIVE switch in the top bar. The change is saved immediately.'
-    : 'Aktywność Eventu zmieniasz przełącznikiem AKTYWNY / NIEAKTYWNY w górnym pasku. Zmiana zapisuje się od razu.';
+    ? 'Only the room admin can activate Events, add Events, rename them, and add, edit or delete teams. Use the ACTIVE / INACTIVE switch in the top bar.'
+    : 'Tylko administrator pokoju może aktywować Eventy, dodawać Eventy, zmieniać ich nazwy oraz dodawać, edytować i usuwać drużyny. Aktywność zmieniasz przełącznikiem AKTYWNY / NIEAKTYWNY w górnym pasku.';
 
   const teamsWrap = document.createElement('div');
   teamsWrap.className = 'col wcTeamsEditorSection';
@@ -6380,6 +6383,7 @@ async function wcOpenEventSettingsModal(){
     });
   };
   const startTeamEdit = (row)=>{
+    if(!wcRequireRoomAdminForEvent()) return;
     if(!row) return;
     const input = row.querySelector('.wcTeamNameInput');
     const editButton = row.querySelector('.wcTeamEditButton');
@@ -6458,6 +6462,7 @@ async function wcOpenEventSettingsModal(){
       else startTeamEdit(row);
     });
     deleteButton.addEventListener('click', ()=>{
+      if(!wcRequireRoomAdminForEvent()) return;
       if(getTeamRows().length <= 2){
         showToast(getLang()==='en' ? 'The Event must contain at least two teams' : 'Event musi zawierać co najmniej dwie drużyny');
         return;
@@ -6491,6 +6496,7 @@ async function wcOpenEventSettingsModal(){
 
   (Array.isArray(config.teams) ? config.teams : []).forEach(team=>addTeamRow(team, false));
   addTeamBtn.addEventListener('click', ()=>{
+    if(!wcRequireRoomAdminForEvent()) return;
     const row = addTeamRow('', true);
     window.setTimeout(()=>row.scrollIntoView({block:'nearest', behavior:'smooth'}), 20);
   });
@@ -6518,6 +6524,7 @@ async function wcOpenEventSettingsModal(){
   actions.append(save, back);
 
   save.onclick = async ()=>{
+    if(!wcRequireRoomAdminForEvent()) return;
     const name = String(nameInput.value || '').trim();
     const rawTeams = getTeamRows().map(row=>String(row.querySelector('.wcTeamNameInput')?.value || '').trim());
     if(name.length < 3){ showToast(getLang()==='en' ? 'Enter the Event name' : 'Wpisz nazwę Eventu'); return; }
@@ -7252,9 +7259,8 @@ async function renderWorldCupEvent(){
   const wcEventActiveToggle = body._els.activeToggle ? body._els.activeToggle() : null;
   if(wcEventActiveToggle){
     wcEventActiveToggle.onchange = async ()=>{
-      if(!isAdmin()){
+      if(!wcRequireRoomAdminForEvent()){
         wcEventActiveToggle.checked = !wcEventActiveToggle.checked;
-        showToast(getLang()==='en' ? 'Only admin can do this' : 'Tylko admin może to wykonać');
         return;
       }
       const enabled = !!wcEventActiveToggle.checked;
@@ -11206,7 +11212,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1004`);
+    setFooter(`Mariusz Gębka • EVENTY v1005`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();

@@ -5,17 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Specjalne Eventy Typera v1004</title>
-<link href="manifest.json?v=1004" rel="manifest"/>
-<link href="favicon-32x32.png?v=1004" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=1004" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=1004" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Specjalne Eventy Typera v1005</title>
+<link href="manifest.json?v=1005" rel="manifest"/>
+<link href="favicon-32x32.png?v=1005" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=1005" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=1005" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="EVENTY TYPERA" name="apple-mobile-web-app-title"/>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "1004";
+  const BUILD = "1005";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -3434,7 +3434,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=1004" type="module"></script>
+<script src="./app.js?v=1005" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3454,7 +3454,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=1004', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=1005', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
