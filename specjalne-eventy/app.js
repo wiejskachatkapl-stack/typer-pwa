@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1017;
+const BUILD = 1018;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 const EVENT_EMBEDDED_MODE = new URLSearchParams(window.location.search).get('embedded') === '1';
@@ -6137,6 +6137,134 @@ function wcEnsureEventStyles(){
       }
     }
 
+    /* v1018: telefon — strefa typowania 60% oraz gracze pokoju 40% obok meczów. */
+    @media (max-width:980px){
+      #modal.worldcupMode .wcEventGrid{
+        display:grid !important;
+        grid-template-columns:minmax(0,3fr) minmax(128px,2fr) !important;
+        grid-template-rows:auto auto !important;
+        gap:5px !important;
+        align-items:stretch !important;
+      }
+      #modal.worldcupMode .wcEventCenter{
+        grid-column:1 !important;
+        grid-row:1 !important;
+        order:initial !important;
+        min-width:0 !important;
+        align-self:stretch !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel{
+        grid-column:2 !important;
+        grid-row:1 !important;
+        order:initial !important;
+        min-width:0 !important;
+        min-height:0 !important;
+        height:auto !important;
+        max-height:none !important;
+        align-self:stretch !important;
+        contain:size layout !important;
+      }
+      #modal.worldcupMode .wcEventSummary{
+        grid-column:1 / -1 !important;
+        grid-row:2 !important;
+        order:initial !important;
+      }
+      #modal.worldcupMode .wcMatchesTitleEvent,
+      #modal.worldcupMode .wcPlayersTitleEvent{
+        display:none !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel #wcPlayersList{
+        flex:1 1 auto !important;
+        min-height:0 !important;
+        height:auto !important;
+        max-height:none !important;
+        overflow-y:auto !important;
+        overflow-x:hidden !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .playerRow{
+        min-width:0 !important;
+        padding:5px 6px !important;
+        gap:5px !important;
+        font-size:11px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .playerRow > div:first-child{
+        gap:5px !important;
+        min-width:0 !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .playerRow > .row{
+        gap:3px !important;
+        flex:0 0 auto !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .eyeBtn{
+        width:27px !important;
+        height:24px !important;
+        border-radius:8px !important;
+        font-size:11px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .badge{
+        padding:3px 5px !important;
+        border-radius:8px !important;
+        font-size:8px !important;
+      }
+    }
+    @media (max-width:620px){
+      #modal.worldcupMode .wcEventGrid{
+        grid-template-columns:minmax(0,3fr) minmax(112px,2fr) !important;
+        gap:4px !important;
+      }
+      #modal.worldcupMode .wcMaxMatchesLabel{
+        display:none !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcMatchesHeader,
+      #modal.worldcupMode .wcPlayersHeader{
+        min-height:38px !important;
+        padding:6px !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcMatchesHeader .title,
+      #modal.worldcupMode .wcPlayersHeader .title{
+        font-size:13px !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow{
+        grid-template-columns:minmax(0,1fr) 62px minmax(54px,.78fr) !important;
+        padding:4px !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow .teamName{
+        font-size:10px !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow .scoreInput{
+        width:24px !important;
+        height:23px !important;
+        padding:2px !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow .resultPill{
+        margin-left:0 !important;
+        padding:3px !important;
+        font-size:8px !important;
+        overflow:hidden !important;
+        text-overflow:ellipsis !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel #wcPlayersList{
+        padding:4px !important;
+        gap:3px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .playerRow{
+        padding:4px !important;
+        gap:3px !important;
+        font-size:9px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .playerRow > .row{
+        gap:2px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .eyeBtn{
+        width:23px !important;
+        height:21px !important;
+        font-size:9px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel .badge{
+        display:none !important;
+      }
+    }
+
   `;
   document.head.appendChild(st);
 }
@@ -7445,13 +7573,13 @@ function wcBuildShell(config=wcCurrentEventConfig()){
   const center = document.createElement('div');
   center.className='panel wcEventLeft wcEventCenter';
   center.style.padding='16px';
-  center.innerHTML = `<div class="row wcMatchesHeader" style="align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px 0"><div class="title" style="margin:0">${getLang()==='en' ? 'Matches' : 'Mecze'} — ${eventNameSafe}</div><div class="wcMaxMatchesLabel">${getLang()==='en' ? 'maximum 10' : 'maksymalnie 10'}</div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div class="wcEventFooter"><div id="wcDeadlineBox" class="wcDeadlineBox"></div><div id="wcPlayerActions" class="row wcPlayerActions wcPlayerSaveBar" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px"></div></div>`;
+  center.innerHTML = `<div class="row wcMatchesHeader" style="align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px 0"><div class="title" style="margin:0"><span>${getLang()==='en' ? 'Matches' : 'Mecze'}</span><span class="wcMatchesTitleEvent"> — ${eventNameSafe}</span></div><div class="wcMaxMatchesLabel">${getLang()==='en' ? 'maximum 10' : 'maksymalnie 10'}</div></div><div id="wcMatchesList" class="col" style="gap:10px"></div><div class="wcEventFooter"><div id="wcDeadlineBox" class="wcDeadlineBox"></div><div id="wcPlayerActions" class="row wcPlayerActions wcPlayerSaveBar" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px"></div></div>`;
   const wcSavePicksButton = wcMakeImgButton('btn_zapisz_typy.png', 'wcSavePicksBtn', getLang()==='en'?'Save picks':'Zapisz typy');
   center.querySelector('.wcPlayerActions')?.append(wcSavePicksButton);
 
   const players = document.createElement('div');
   players.className='panel wcEventRight wcEventPlayersPanel';
-  players.innerHTML = `<div class="wcPlayersHeader"><div class="title" style="margin:0">${getLang()==='en' ? 'Players' : 'Gracze'} — ${eventNameSafe}</div></div><div id="wcPlayersList" class="playersList" style="overflow:auto;display:flex;flex-direction:column;gap:6px"></div>`;
+  players.innerHTML = `<div class="wcPlayersHeader"><div class="title" style="margin:0"><span>${getLang()==='en' ? 'Players' : 'Gracze'}</span><span class="wcPlayersTitleEvent"> — ${eventNameSafe}</span></div></div><div id="wcPlayersList" class="playersList" style="overflow:auto;display:flex;flex-direction:column;gap:6px"></div>`;
 
   grid.append(summary,center,players);
   body.appendChild(grid);
@@ -12274,7 +12402,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1017`);
+    setFooter(`Mariusz Gębka • EVENTY v1018`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
