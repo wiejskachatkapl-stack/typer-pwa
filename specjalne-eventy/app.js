@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1016;
+const BUILD = 1017;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 const EVENT_EMBEDDED_MODE = new URLSearchParams(window.location.search).get('embedded') === '1';
@@ -5887,6 +5887,256 @@ function wcEnsureEventStyles(){
       #modal.worldcupMode .wcEventCenter .wcMatchesHeader .title,
       #modal.worldcupMode .wcPlayersHeader .title{font-size:17px !important;}
     }
+
+    /* v1017: wyłącznie telefon — kompaktowe panele Eventów bez pustych przestrzeni.
+       Całe okno przewija się pionowo; poprawny układ komputerowy pozostaje bez zmian. */
+    @media (max-width:980px){
+      #modal.worldcupMode .modalCard{
+        width:100vw !important;
+        height:100dvh !important;
+        max-height:100dvh !important;
+        border-radius:0 !important;
+        overflow:hidden !important;
+      }
+      #modal.worldcupMode .modalHead{
+        min-height:42px !important;
+        padding:5px 8px !important;
+      }
+      #modal.worldcupMode .modalBody{
+        padding:5px !important;
+        overflow-y:auto !important;
+        overflow-x:hidden !important;
+        overscroll-behavior-y:contain !important;
+        -webkit-overflow-scrolling:touch !important;
+      }
+      #modal.worldcupMode .wcEventBody{
+        height:auto !important;
+        min-height:0 !important;
+        gap:5px !important;
+        overflow:visible !important;
+      }
+      #modal.worldcupMode .wcEventStatusBar{
+        display:grid !important;
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+        gap:5px !important;
+        padding:5px !important;
+        border-radius:14px !important;
+      }
+      #modal.worldcupMode .wcEventStatusBar .wcEventDropdown{
+        grid-column:1 / -1 !important;
+        width:100% !important;
+      }
+      #modal.worldcupMode .wcEventStatusBar>.chip,
+      #modal.worldcupMode .wcEventStatusBar .wcQuickToggle,
+      #modal.worldcupMode .wcEventStatusBar .wcEventStatusChip{
+        min-height:36px !important;
+        height:auto !important;
+        padding:5px 8px !important;
+        border-radius:12px !important;
+        font-size:11px !important;
+      }
+      #modal.worldcupMode .wcEventDropdownButton{
+        min-height:40px !important;
+        padding:5px 7px 5px 11px !important;
+        border-radius:13px !important;
+      }
+      #modal.worldcupMode .wcTopActionBar{
+        grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+        gap:4px !important;
+        padding:4px !important;
+        border-radius:14px !important;
+      }
+      #modal.worldcupMode .wcTopActionBar .wcBtnImg{
+        min-height:36px !important;
+        padding:4px 3px !important;
+        border-radius:10px !important;
+        font-size:9.5px !important;
+        line-height:1 !important;
+      }
+      #modal.worldcupMode .wcEventGrid{
+        display:flex !important;
+        flex-direction:column !important;
+        height:auto !important;
+        min-height:0 !important;
+        gap:5px !important;
+        overflow:visible !important;
+      }
+      #modal.worldcupMode .wcEventCenter{
+        order:1 !important;
+        height:auto !important;
+        min-height:0 !important;
+        max-height:none !important;
+        overflow:hidden !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcMatchesHeader{
+        min-height:42px !important;
+        padding:8px 9px !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcMatchesHeader .title{
+        font-size:16px !important;
+      }
+      #modal.worldcupMode .wcEventCenter #wcMatchesList{
+        height:auto !important;
+        min-height:0 !important;
+        max-height:none !important;
+        margin:4px 4px 0 !important;
+        padding:0 2px 2px 0 !important;
+        gap:4px !important;
+        overflow:visible !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow{
+        min-height:40px !important;
+        padding:4px 5px !important;
+        gap:4px !important;
+        grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr) !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow .teamName{
+        font-size:11.5px !important;
+        line-height:1.05 !important;
+        white-space:nowrap !important;
+        overflow:hidden !important;
+        text-overflow:ellipsis !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow .scoreInput{
+        width:29px !important;
+        height:24px !important;
+        font-size:11px !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow .resultPill{
+        padding:3px 4px !important;
+        font-size:9.5px !important;
+      }
+      #modal.worldcupMode .wcEventFooter{
+        margin-top:0 !important;
+        padding:0 4px 4px !important;
+        background:transparent !important;
+      }
+      #modal.worldcupMode .wcEventFooter .wcDeadlineBox{
+        min-height:38px !important;
+        margin-top:4px !important;
+        padding:5px 8px !important;
+        border-radius:11px !important;
+        font-size:11px !important;
+      }
+      #modal.worldcupMode .wcEventFooter .wcPlayerSaveBar{
+        min-height:44px !important;
+        margin-top:4px !important;
+        padding:4px !important;
+        border-radius:11px !important;
+      }
+      #modal.worldcupMode .wcEventSummary{
+        order:2 !important;
+        height:auto !important;
+        min-height:0 !important;
+        max-height:none !important;
+        display:grid !important;
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+        grid-template-rows:auto auto !important;
+        gap:5px !important;
+        padding:5px !important;
+        overflow:visible !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcTop3Card{
+        min-height:0 !important;
+        height:auto !important;
+        padding:6px !important;
+        border:1px solid rgba(125,176,235,.15) !important;
+        border-radius:12px !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcRoundTop3Card{
+        border-top:1px solid rgba(125,176,235,.15) !important;
+        border-left:1px solid rgba(125,176,235,.15) !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcTop3Head{
+        margin-bottom:5px !important;
+        padding:0 1px 4px !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcTop3Title{
+        font-size:13px !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcTop3Sub{
+        font-size:8.5px !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcTop3List{
+        flex:none !important;
+        height:auto !important;
+        min-height:0 !important;
+        gap:4px !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcTop3Row{
+        min-height:32px !important;
+        padding:4px 6px !important;
+        border-radius:9px !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcTop3Empty{
+        height:auto !important;
+        min-height:44px !important;
+        padding:8px 4px !important;
+      }
+      #modal.worldcupMode .wcEventTablePanel{
+        grid-column:1 / -1 !important;
+        margin:0 !important;
+        padding:5px 0 0 !important;
+      }
+      #modal.worldcupMode .wcEventTableBtn{
+        min-height:40px !important;
+        border-radius:11px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel{
+        order:3 !important;
+        height:auto !important;
+        min-height:0 !important;
+        max-height:none !important;
+        overflow:hidden !important;
+      }
+      #modal.worldcupMode .wcPlayersHeader{
+        min-height:42px !important;
+        padding:8px 9px !important;
+      }
+      #modal.worldcupMode .wcPlayersHeader .title{
+        font-size:16px !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel #wcPlayersList{
+        height:auto !important;
+        min-height:0 !important;
+        max-height:260px !important;
+        padding:5px !important;
+        gap:4px !important;
+        overflow-y:auto !important;
+        overflow-x:hidden !important;
+        -webkit-overflow-scrolling:touch !important;
+      }
+    }
+    @media (max-width:620px){
+      #modal.worldcupMode .wcTopActionBar{
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+      }
+      #modal.worldcupMode .wcEventSummary{
+        display:flex !important;
+        flex-direction:column !important;
+      }
+      #modal.worldcupMode .wcEventSummary .wcRoundTop3Card{
+        border-left:1px solid rgba(125,176,235,.15) !important;
+      }
+      #modal.worldcupMode .wcEventCenter .wcPickRow{
+        grid-template-columns:minmax(0,1fr) 74px minmax(0,1fr) !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel #wcPlayersList{
+        max-height:300px !important;
+      }
+    }
+    @media (max-width:980px) and (orientation:landscape){
+      #modal.worldcupMode .wcEventStatusBar{
+        grid-template-columns:minmax(220px,1.35fr) auto repeat(4,minmax(86px,.55fr)) !important;
+      }
+      #modal.worldcupMode .wcEventStatusBar .wcEventDropdown{
+        grid-column:auto !important;
+      }
+      #modal.worldcupMode .wcEventPlayersPanel #wcPlayersList{
+        max-height:220px !important;
+      }
+    }
+
   `;
   document.head.appendChild(st);
 }
@@ -12024,7 +12274,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1016`);
+    setFooter(`Mariusz Gębka • EVENTY v1017`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
