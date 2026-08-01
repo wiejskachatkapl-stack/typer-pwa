@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3108;
+const BUILD = 3109;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -232,6 +232,60 @@ function showCenterLoading(text){
 function hideCenterLoading(){
   const ov = document.getElementById("centerLoadingOverlay");
   if(ov) ov.style.display = "none";
+}
+
+
+const ROOM_ENTRY_PRIZES_IMAGE_URL = `./nagrody_typera_logowanie.png?v=${BUILD}`;
+
+function showRoomEntryPrizesBoard(durationMs = 6000){
+  return new Promise(resolve=>{
+    const finish = ()=>{
+      try{ overlay.remove(); }catch(e){}
+      resolve();
+    };
+
+    const overlay = document.createElement('div');
+    overlay.id = 'roomEntryPrizesOverlay';
+    overlay.style.cssText = [
+      'position:fixed','inset:0','display:flex','align-items:center','justify-content:center',
+      'padding:14px','background:rgba(1,8,22,.78)','backdrop-filter:blur(8px)','-webkit-backdrop-filter:blur(8px)',
+      'z-index:100002','opacity:0','transition:opacity .22s ease'
+    ].join(';');
+
+    const card = document.createElement('div');
+    card.style.cssText = [
+      'width:min(96vw,1180px)','max-height:min(94vh,980px)','border-radius:28px','overflow:hidden',
+      'box-shadow:0 24px 80px rgba(0,0,0,.46)','border:1px solid rgba(255,215,120,.28)',
+      'background:rgba(6,16,35,.95)','display:flex','align-items:center','justify-content:center'
+    ].join(';');
+
+    const img = document.createElement('img');
+    img.src = ROOM_ENTRY_PRIZES_IMAGE_URL;
+    img.alt = getLang()==='en' ? 'Typer prizes' : 'Nagrody Typera';
+    img.style.cssText = [
+      'display:block','width:100%','height:auto','max-width:100%','max-height:min(94vh,980px)',
+      'object-fit:contain'
+    ].join(';');
+
+    const mobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+    if(mobile){
+      overlay.style.padding = '10px';
+      card.style.width = 'min(98vw, 760px)';
+      card.style.borderRadius = '20px';
+      img.style.maxHeight = '92vh';
+    }
+
+    let timer = setTimeout(finish, Math.max(1000, Number(durationMs)||6000));
+    overlay.addEventListener('click', ()=>{
+      clearTimeout(timer);
+      finish();
+    }, {once:true});
+
+    card.appendChild(img);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(()=>{ overlay.style.opacity = '1'; });
+  });
 }
 
 function showScreen(id){
@@ -8037,7 +8091,10 @@ async function openRoomWithEntryLoader(code, opts={}){
   }finally{
     hideCenterLoading();
   }
-  if(roomOpened) maybeShowRulesAfterRoomLogin();
+  if(roomOpened){
+    try{ await showRoomEntryPrizesBoard(6000); }catch(e){}
+    maybeShowRulesAfterRoomLogin();
+  }
 }
 
 async function joinRoom(code){
