@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3109;
+const BUILD = 3110;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -239,52 +239,16 @@ const ROOM_ENTRY_PRIZES_IMAGE_URL = `./nagrody_typera_logowanie.png?v=${BUILD}`;
 
 function showRoomEntryPrizesBoard(durationMs = 6000){
   return new Promise(resolve=>{
-    const finish = ()=>{
-      try{ overlay.remove(); }catch(e){}
-      resolve();
-    };
-
+    const finish = ()=>{ try{ overlay.remove(); }catch(e){} resolve(); };
     const overlay = document.createElement('div');
     overlay.id = 'roomEntryPrizesOverlay';
-    overlay.style.cssText = [
-      'position:fixed','inset:0','display:flex','align-items:center','justify-content:center',
-      'padding:14px','background:rgba(1,8,22,.78)','backdrop-filter:blur(8px)','-webkit-backdrop-filter:blur(8px)',
-      'z-index:100002','opacity:0','transition:opacity .22s ease'
-    ].join(';');
-
+    overlay.style.cssText = ['position:fixed','inset:0','display:flex','align-items:center','justify-content:center','padding:14px','background:rgba(1,8,22,.78)','backdrop-filter:blur(8px)','-webkit-backdrop-filter:blur(8px)','z-index:100002','opacity:0','transition:opacity .22s ease'].join(';');
     const card = document.createElement('div');
-    card.style.cssText = [
-      'width:min(96vw,1180px)','max-height:min(94vh,980px)','border-radius:28px','overflow:hidden',
-      'box-shadow:0 24px 80px rgba(0,0,0,.46)','border:1px solid rgba(255,215,120,.28)',
-      'background:rgba(6,16,35,.95)','display:flex','align-items:center','justify-content:center'
-    ].join(';');
-
-    const img = document.createElement('img');
-    img.src = ROOM_ENTRY_PRIZES_IMAGE_URL;
-    img.alt = getLang()==='en' ? 'Typer prizes' : 'Nagrody Typera';
-    img.style.cssText = [
-      'display:block','width:100%','height:auto','max-width:100%','max-height:min(94vh,980px)',
-      'object-fit:contain'
-    ].join(';');
-
-    const mobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
-    if(mobile){
-      overlay.style.padding = '10px';
-      card.style.width = 'min(98vw, 760px)';
-      card.style.borderRadius = '20px';
-      img.style.maxHeight = '92vh';
-    }
-
-    let timer = setTimeout(finish, Math.max(1000, Number(durationMs)||6000));
-    overlay.addEventListener('click', ()=>{
-      clearTimeout(timer);
-      finish();
-    }, {once:true});
-
-    card.appendChild(img);
-    overlay.appendChild(card);
-    document.body.appendChild(overlay);
-    requestAnimationFrame(()=>{ overlay.style.opacity = '1'; });
+    card.style.cssText = ['width:min(96vw,1180px)','max-height:min(94vh,980px)','border-radius:28px','overflow:hidden','box-shadow:0 24px 80px rgba(0,0,0,.46)','border:1px solid rgba(255,215,120,.28)','background:rgba(6,16,35,.95)','display:flex','align-items:center','justify-content:center'].join(';');
+    const img=document.createElement('img'); img.src=ROOM_ENTRY_PRIZES_IMAGE_URL; img.alt=getLang()==='en'?'Typer prizes':'Nagrody Typera'; img.style.cssText=['display:block','width:100%','height:auto','max-width:100%','max-height:min(94vh,980px)','object-fit:contain'].join(';');
+    const mobile=window.matchMedia&&window.matchMedia('(max-width: 720px)').matches; if(mobile){ overlay.style.padding='10px'; card.style.width='min(98vw, 760px)'; card.style.borderRadius='20px'; img.style.maxHeight='92vh'; }
+    let timer=setTimeout(finish,Math.max(1000,Number(durationMs)||6000)); overlay.addEventListener('click',()=>{clearTimeout(timer);finish();},{once:true});
+    card.appendChild(img); overlay.appendChild(card); document.body.appendChild(overlay); requestAnimationFrame(()=>{overlay.style.opacity='1';});
   });
 }
 
@@ -809,7 +773,7 @@ async function openSpecialEventsApp(){
   const url = new URL('./specjalne-eventy/index.html', document.baseURI);
   url.searchParams.set('embedded', '1');
   url.searchParams.set('room', currentRoomCode);
-  url.searchParams.set('v', '1015');
+  url.searchParams.set('v', '1019');
   frame.src = url.href;
 
   overlay.appendChild(frame);
@@ -8415,7 +8379,8 @@ function syncActionButtons(){
     // (inni gracze mogą jeszcze nie mieć zapisanych typów)
     const canEnter = (adm && matchesCache.length && (submitted || typingClosed));
     btnEnter.style.display = canEnter ? "block" : "none";
-    btnEnter.disabled = !canEnter || resultsOk;
+    // v3110: wynik można poprawić także po wcześniejszym zapisaniu kompletu wyników.
+    btnEnter.disabled = !canEnter;
   }
 
   // 6003: po dodaniu kolejki (gdy istnieją mecze w aktywnej kolejce) blokujemy "Dodaj kolejkę"
@@ -9072,21 +9037,22 @@ function renderResultsList(){
       resultsDraft[m.id].a = v;
     };
 
-    // Wynik zapisany jest ostateczny i nie może być już edytowany.
+    // v3110: zapisany wynik nie blokuje już administratora.
+    // Admin może ponownie wejść w „Wpisz wyniki”, poprawić pomyłkę i zapisać nowy wynik.
+    // Mecz oznaczony jako odwołany pozostaje bez pól wyniku.
     if(m.cancelled){
       const lab = document.createElement("div");
       lab.className = "cancelledPill";
       lab.textContent = (getLang()==="en") ? "Cancelled" : "Odwołano";
       score.appendChild(lab);
       card.classList.add("resultLockedRow");
-    }else if(isMatchResultLocked(m)){
-      const locked = document.createElement("div");
-      locked.className = "lockedResultPill";
-      locked.textContent = `${m.resultH} : ${m.resultA}`;
-      locked.title = getLang()==="en" ? "Saved result — editing is locked" : "Zapisany wynik — edycja zablokowana";
-      score.appendChild(locked);
-      card.classList.add("resultLockedRow");
     }else{
+      if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
+        card.classList.add("resultEditableRow");
+        card.title = getLang()==="en"
+          ? "Saved result — room admin can correct it"
+          : "Zapisany wynik — administrator może go poprawić";
+      }
       score.appendChild(inpH);
       score.appendChild(sep);
       score.appendChild(inpA);
@@ -9171,23 +9137,24 @@ async function saveResults(){
   // Zapisujemy tylko te mecze, gdzie podano OBA pola wyniku.
   const updates = [];
   for(const m of matchesCache){
-    if(isMatchResultLocked(m)) continue;
+    if(m?.cancelled) continue;
     const d = resultsDraft[m.id];
     const hOk = d && Number.isInteger(d.h);
     const aOk = d && Number.isInteger(d.a);
 
-    // jeśli coś wpisane, wymagamy kompletu dla danego meczu
+    // jeśli coś wpisano, wymagamy obu pól dla danego meczu
     if(hOk || aOk){
       if(!(hOk && aOk)){
         showToast(getLang()==="en" ? "Enter both scores for a match" : "Wpisz oba pola wyniku dla meczu");
         return;
       }
-      updates.push({ id: m.id, h: d.h, a: d.a });
+      const changed = !Number.isInteger(m.resultH) || !Number.isInteger(m.resultA) || m.resultH !== d.h || m.resultA !== d.a;
+      if(changed) updates.push({ id: m.id, h: d.h, a: d.a });
     }
   }
 
   if(!updates.length){
-    showToast(getLang()==="en" ? "No results to save" : "Brak wyników do zapisania");
+    showToast(getLang()==="en" ? "No result changes to save" : "Brak zmian wyników do zapisania");
     return;
   }
 
@@ -9220,7 +9187,7 @@ async function saveResults(){
   syncActionButtons();
   if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
 
-  showToast(getLang()==="en" ? "Results saved and locked ✅" : "Wyniki zapisane i zablokowane ✅");
+  showToast(getLang()==="en" ? "Results saved. Admin can correct them later ✅" : "Wyniki zapisane. Administrator może je później poprawić ✅");
   showScreen("room");
 }
 
