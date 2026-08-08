@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 1018;
+const BUILD = 1019;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 const EVENT_EMBEDDED_MODE = new URLSearchParams(window.location.search).get('embedded') === '1';
@@ -8036,17 +8036,29 @@ async function openWorldCupResultsModal(){
   const back=wcMakeImgButton('btn_cofnij.png', 'wcResultsBackBtn', getLang()==='en'?'Back':'Cofnij', ()=>{ modalClose(); openWorldCupEvent(); });
   footer.append(save,back); body.appendChild(footer);
   save.onclick = async ()=>{
+    const originalById = new Map(matches.map(m=>[String(m.id), m]));
+    const changed = [];
     for(const row of body.querySelectorAll('.matchCard')){
       const rh = clampInt(row._home.value,0,99); const ra = clampInt(row._away.value,0,99);
       if(rh===null || ra===null){ showToast(getLang()==='en'?'Fill all results':'Uzupełnij wszystkie wyniki'); return; }
-      await boot.updateDoc(boot.doc(wcMatchesCol(state.activeRoundId), row.dataset.matchId), {resultHome: rh, resultAway: ra, updatedAt: boot.serverTimestamp()});
+      const prev = originalById.get(String(row.dataset.matchId));
+      if(!prev || prev.resultHome !== rh || prev.resultAway !== ra){
+        changed.push({id:row.dataset.matchId, rh, ra});
+      }
+    }
+    if(!changed.length){
+      showToast(getLang()==='en'?'No result changes to save':'Brak zmian wyników do zapisania');
+      return;
+    }
+    for(const item of changed){
+      await boot.updateDoc(boot.doc(wcMatchesCol(state.activeRoundId), item.id), {resultHome: item.rh, resultAway: item.ra, updatedAt: boot.serverTimestamp()});
     }
     await boot.setDoc(wcRoundRef(state.activeRoundId), {
       typingDeadlineMs: Date.now(),
       typingClosedAt: boot.serverTimestamp(),
       updatedAt: boot.serverTimestamp()
     }, {merge:true});
-    showToast(getLang()==='en'?'Results saved. Typing is closed.':'Zapisano wyniki. Typowanie zostało zamknięte.');
+    showToast(getLang()==='en'?'Results saved. Admin can correct them later.':'Wyniki zapisane. Administrator może je później poprawić.');
     modalClose();
     await openWorldCupEvent();
   };
@@ -8480,9 +8492,9 @@ async function renderWorldCupEvent(){
   const wcAllPlayersSubmitted = !!(matches.length && visibleWcPlayers.length && visibleWcPlayers.every(p => wcHasCompletePicksForMatches(roundPicksByUid[p.uid]?.picks, matches)));
   setAdminBtnState(body._els.addRoundBtn(), eventConfig.enabled && !state.ended && !matches.length, !matches.length);
   setAdminBtnState(body._els.saveRoundBtn(), eventConfig.enabled && !state.ended && !!matches.length && !roundIsSaved && !wcTypingClosed, !!matches.length && !roundIsSaved);
-  // v2111: przycisk "Wpisz wyniki" u admina pojawia się dopiero po zapisaniu kolejki
-  // i pozostaje aktywny do czasu zapisania kompletu wyników. Nie zależy od tego, czy gracze jeszcze typują.
-  setAdminBtnState(body._els.resultsBtn(), eventConfig.enabled && !state.ended && !!matches.length && roundIsSaved && !allResultsSaved, !!matches.length && roundIsSaved && !allResultsSaved);
+  // v1019: administrator może ponownie otworzyć „Wpisz wyniki” także po zapisaniu kompletu wyników,
+  // żeby poprawić pomyłkę lub wynik wpisany przy niewłaściwym spotkaniu.
+  setAdminBtnState(body._els.resultsBtn(), eventConfig.enabled && !state.ended && !!matches.length && roundIsSaved, !!matches.length && roundIsSaved);
   setAdminBtnState(body._els.endRoundBtn(), eventConfig.enabled && !state.ended && !!matches.length && roundIsSaved && allResultsSaved, !!matches.length && allResultsSaved);
   setAdminBtnState(body._els.endEventBtn(), eventConfig.enabled && !state.ended && !state.activeRoundId, !state.activeRoundId);
   const myPicks = myPicksDoc.picks || {};
@@ -12402,7 +12414,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka • EVENTY v1018`);
+    setFooter(`Mariusz Gębka • EVENTY v1019`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
