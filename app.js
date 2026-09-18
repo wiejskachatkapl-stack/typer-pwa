@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 3110;
+const BUILD = 4000;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -235,20 +235,56 @@ function hideCenterLoading(){
 }
 
 
+// BUILD 3109: plansza nagród po wejściu do pokoju (plik grafiki pozostaje z v3109).
 const ROOM_ENTRY_PRIZES_IMAGE_URL = `./nagrody_typera_logowanie.png?v=${BUILD}`;
 
 function showRoomEntryPrizesBoard(durationMs = 6000){
   return new Promise(resolve=>{
-    const finish = ()=>{ try{ overlay.remove(); }catch(e){} resolve(); };
+    let closed = false;
     const overlay = document.createElement('div');
     overlay.id = 'roomEntryPrizesOverlay';
-    overlay.style.cssText = ['position:fixed','inset:0','display:flex','align-items:center','justify-content:center','padding:14px','background:rgba(1,8,22,.78)','backdrop-filter:blur(8px)','-webkit-backdrop-filter:blur(8px)','z-index:100002','opacity:0','transition:opacity .22s ease'].join(';');
+    overlay.style.cssText = [
+      'position:fixed','inset:0','display:flex','align-items:center','justify-content:center',
+      'padding:14px','background:rgba(1,8,22,.78)','backdrop-filter:blur(8px)','-webkit-backdrop-filter:blur(8px)',
+      'z-index:100002','opacity:0','transition:opacity .22s ease'
+    ].join(';');
+
     const card = document.createElement('div');
-    card.style.cssText = ['width:min(96vw,1180px)','max-height:min(94vh,980px)','border-radius:28px','overflow:hidden','box-shadow:0 24px 80px rgba(0,0,0,.46)','border:1px solid rgba(255,215,120,.28)','background:rgba(6,16,35,.95)','display:flex','align-items:center','justify-content:center'].join(';');
-    const img=document.createElement('img'); img.src=ROOM_ENTRY_PRIZES_IMAGE_URL; img.alt=getLang()==='en'?'Typer prizes':'Nagrody Typera'; img.style.cssText=['display:block','width:100%','height:auto','max-width:100%','max-height:min(94vh,980px)','object-fit:contain'].join(';');
-    const mobile=window.matchMedia&&window.matchMedia('(max-width: 720px)').matches; if(mobile){ overlay.style.padding='10px'; card.style.width='min(98vw, 760px)'; card.style.borderRadius='20px'; img.style.maxHeight='92vh'; }
-    let timer=setTimeout(finish,Math.max(1000,Number(durationMs)||6000)); overlay.addEventListener('click',()=>{clearTimeout(timer);finish();},{once:true});
-    card.appendChild(img); overlay.appendChild(card); document.body.appendChild(overlay); requestAnimationFrame(()=>{overlay.style.opacity='1';});
+    card.style.cssText = [
+      'width:min(96vw,1180px)','max-height:min(94vh,980px)','border-radius:28px','overflow:hidden',
+      'box-shadow:0 24px 80px rgba(0,0,0,.46)','border:1px solid rgba(255,215,120,.28)',
+      'background:rgba(6,16,35,.95)','display:flex','align-items:center','justify-content:center'
+    ].join(';');
+
+    const img = document.createElement('img');
+    img.src = ROOM_ENTRY_PRIZES_IMAGE_URL;
+    img.alt = getLang()==='en' ? 'Typer prizes' : 'Nagrody Typera';
+    img.style.cssText = [
+      'display:block','width:100%','height:auto','max-width:100%','max-height:min(94vh,980px)',
+      'object-fit:contain'
+    ].join(';');
+
+    const mobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+    if(mobile){
+      overlay.style.padding = '10px';
+      card.style.width = 'min(98vw,760px)';
+      card.style.borderRadius = '20px';
+      img.style.maxHeight = '92vh';
+    }
+
+    const finish = ()=>{
+      if(closed) return;
+      closed = true;
+      try{ overlay.remove(); }catch(e){}
+      resolve();
+    };
+    const timer = setTimeout(finish, Math.max(1000, Number(durationMs)||6000));
+    overlay.addEventListener('click', ()=>{ clearTimeout(timer); finish(); }, {once:true});
+
+    card.appendChild(img);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(()=>{ overlay.style.opacity = '1'; });
   });
 }
 
@@ -4112,7 +4148,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.3.099` : "TYPER v.3.099",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.4.000` : "TYPER v.4.000",800,850);
   return canvas;
 }
 
@@ -8379,7 +8415,7 @@ function syncActionButtons(){
     // (inni gracze mogą jeszcze nie mieć zapisanych typów)
     const canEnter = (adm && matchesCache.length && (submitted || typingClosed));
     btnEnter.style.display = canEnter ? "block" : "none";
-    // v3110: wynik można poprawić także po wcześniejszym zapisaniu kompletu wyników.
+    // BUILD 3110: admin może ponownie wejść i poprawić wcześniej zapisany wynik.
     btnEnter.disabled = !canEnter;
   }
 
@@ -9037,9 +9073,7 @@ function renderResultsList(){
       resultsDraft[m.id].a = v;
     };
 
-    // v3110: zapisany wynik nie blokuje już administratora.
-    // Admin może ponownie wejść w „Wpisz wyniki”, poprawić pomyłkę i zapisać nowy wynik.
-    // Mecz oznaczony jako odwołany pozostaje bez pól wyniku.
+    // BUILD 3110: zapisany wynik może być poprawiony przez administratora.
     if(m.cancelled){
       const lab = document.createElement("div");
       lab.className = "cancelledPill";
@@ -9047,15 +9081,13 @@ function renderResultsList(){
       score.appendChild(lab);
       card.classList.add("resultLockedRow");
     }else{
-      if(Number.isInteger(m.resultH) && Number.isInteger(m.resultA)){
-        card.classList.add("resultEditableRow");
-        card.title = getLang()==="en"
-          ? "Saved result — room admin can correct it"
-          : "Zapisany wynik — administrator może go poprawić";
-      }
       score.appendChild(inpH);
       score.appendChild(sep);
       score.appendChild(inpA);
+      if(isMatchResultLocked(m)){
+        card.classList.add("resultCorrectionRow");
+        card.title = getLang()==="en" ? "Saved result — admin can correct it" : "Zapisany wynik — administrator może go poprawić";
+      }
     }
 
     card.appendChild(leftTeam);
@@ -9137,24 +9169,23 @@ async function saveResults(){
   // Zapisujemy tylko te mecze, gdzie podano OBA pola wyniku.
   const updates = [];
   for(const m of matchesCache){
-    if(m?.cancelled) continue;
+    if(m.cancelled) continue;
     const d = resultsDraft[m.id];
     const hOk = d && Number.isInteger(d.h);
     const aOk = d && Number.isInteger(d.a);
 
-    // jeśli coś wpisano, wymagamy obu pól dla danego meczu
+    // jeśli coś wpisane, wymagamy kompletu dla danego meczu
     if(hOk || aOk){
       if(!(hOk && aOk)){
         showToast(getLang()==="en" ? "Enter both scores for a match" : "Wpisz oba pola wyniku dla meczu");
         return;
       }
-      const changed = !Number.isInteger(m.resultH) || !Number.isInteger(m.resultA) || m.resultH !== d.h || m.resultA !== d.a;
-      if(changed) updates.push({ id: m.id, h: d.h, a: d.a });
+      updates.push({ id: m.id, h: d.h, a: d.a });
     }
   }
 
   if(!updates.length){
-    showToast(getLang()==="en" ? "No result changes to save" : "Brak zmian wyników do zapisania");
+    showToast(getLang()==="en" ? "No results to save" : "Brak wyników do zapisania");
     return;
   }
 
@@ -9187,7 +9218,7 @@ async function saveResults(){
   syncActionButtons();
   if(el("btnEndRound")) el("btnEndRound").disabled = !(isAdmin() && matchesCache.length && allResultsComplete());
 
-  showToast(getLang()==="en" ? "Results saved. Admin can correct them later ✅" : "Wyniki zapisane. Administrator może je później poprawić ✅");
+  showToast(getLang()==="en" ? "Results saved ✅" : "Wyniki zapisane ✅");
   showScreen("room");
 }
 
@@ -10697,6 +10728,42 @@ function initRoomColumnHeightSync(){
 }
 
 
+// ===== BUILD 4000: TRYB SKUPIENIA EKRANU TYPOWANIA =====
+// Jeden przycisk chowa/pokazuje jednocześnie lewy panel oraz górny panel „Spotkania / Dodaj kolejkę”.
+const ROOM_FOCUS_STORAGE_KEY = 'typer_room_focus_mode_v4000';
+
+function setRoomFocusMode(enabled, {persist=true}={}){
+  const on = !!enabled;
+  document.body.classList.toggle('room-focus-mode', on);
+  const btn = document.getElementById('btnRoomFocusToggle');
+  if(btn){
+    const pl = on ? 'Pokaż panele' : 'Ukryj panele';
+    const en = on ? 'Show panels' : 'Hide panels';
+    btn.dataset.focus = on ? '1' : '0';
+    btn.title = getLang()==='en' ? en : pl;
+    btn.setAttribute('aria-label', getLang()==='en' ? en : pl);
+    const icon = btn.querySelector('.roomFocusToggleIcon');
+    if(icon) icon.textContent = on ? '»' : '«';
+  }
+  if(persist){
+    try{ localStorage.setItem(ROOM_FOCUS_STORAGE_KEY, on ? '1' : '0'); }catch(e){}
+  }
+  requestAnimationFrame(()=>{
+    try{ syncRoomColumnsToLeftHeight(); }catch(e){}
+  });
+}
+
+function initRoomFocusToggle(){
+  const btn = document.getElementById('btnRoomFocusToggle');
+  if(!btn) return;
+  let initial = false;
+  try{ initial = localStorage.getItem(ROOM_FOCUS_STORAGE_KEY) === '1'; }catch(e){}
+  setRoomFocusMode(initial, {persist:false});
+  btn.addEventListener('click', ()=>{
+    setRoomFocusMode(!document.body.classList.contains('room-focus-mode'));
+  });
+}
+
 // ===== ORIENTATION (phones: landscape-first) =====
 function shouldLockLandscape(){
   const active = document.querySelector('.screen.active')?.id || '';
@@ -10737,11 +10804,12 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ u
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.3.099`);
+    setFooter(`Mariusz Gębka v.4.000`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
     bindUI();
+    initRoomFocusToggle();
     initRoomColumnHeightSync();
     initActiveEventModule().catch(error => console.warn("Event module init failed:", error));
     ensurePlayersPanelFillFix();
