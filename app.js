@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 4000;
+const BUILD = 4001;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -10728,7 +10728,7 @@ function initRoomColumnHeightSync(){
 }
 
 
-// ===== BUILD 4000: TRYB SKUPIENIA EKRANU TYPOWANIA =====
+// ===== BUILD 4001: TRYB SKUPIENIA EKRANU TYPOWANIA =====
 // Jeden przycisk chowa/pokazuje jednocześnie lewy panel oraz górny panel „Spotkania / Dodaj kolejkę”.
 const ROOM_FOCUS_STORAGE_KEY = 'typer_room_focus_mode_v4000';
 
