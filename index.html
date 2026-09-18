@@ -5,17 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#08122a" name="theme-color"/>
-    <title>Typer (BUILD 4001)</title>
-<link href="manifest.json?v=4001" rel="manifest"/>
-<link href="favicon-32x32.png?v=4001" rel="icon" sizes="32x32" type="image/png"/>
-<link href="favicon-16x16.png?v=4001" rel="icon" sizes="16x16" type="image/png"/>
-<link href="apple-touch-icon.png?v=4001" rel="apple-touch-icon" sizes="180x180"/>
+    <title>Typer (BUILD 4002)</title>
+<link href="manifest.json?v=4002" rel="manifest"/>
+<link href="favicon-32x32.png?v=4002" rel="icon" sizes="32x32" type="image/png"/>
+<link href="favicon-16x16.png?v=4002" rel="icon" sizes="16x16" type="image/png"/>
+<link href="apple-touch-icon.png?v=4002" rel="apple-touch-icon" sizes="180x180"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="TYPER" name="apple-mobile-web-app-title"/>
 <script id="typerCacheBoot">
 (() => {
-  const BUILD = "4001";
+  const BUILD = "4002";
   const URL_BUILD = new URL(location.href).searchParams.get("v");
   // Każda wersja uruchamia się z własnym adresem. Stary service worker nie może
   // zwrócić poprzedniego index.html pod tym samym URL-em.
@@ -214,7 +214,7 @@
     .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     .splashLoaderWrap{display:none!important;margin-top:10px;flex-direction:column;align-items:center;justify-content:center;gap:6px}
     .footballLoader.splashLoader{display:flex;align-items:center;justify-content:center;gap:16px;min-height:76px}
-    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=4001");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
+    .footballLoader.splashLoader span{width:60px;height:60px;display:inline-flex;align-items:center;justify-content:center;background-image:url("./ui/loader_ball.webp?v=4002");background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent;font-size:0;line-height:0;opacity:0;transform:translateY(16px) scale(.6);animation:footballAppear 5s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28))}
     .footballLoader.splashLoader span:nth-child(2){animation-delay:.5s}
     .footballLoader.splashLoader span:nth-child(3){animation-delay:1s}
     .footballLoader.splashLoader span:nth-child(4){animation-delay:1.5s}
@@ -3456,7 +3456,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=4001" type="module"></script>
+<script src="./app.js?v=4002" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -3476,7 +3476,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=4001', { updateViaCache: 'none' }).catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v=4002', { updateViaCache: 'none' }).catch(() => {});
     });
   }
 </script>
@@ -6641,8 +6641,8 @@ body.room-screen-active #roomLayout > .rightBar{
 </style>
 
 
-<style id="build4001-room-focus-mode">
-/* BUILD 4001 — tryb skupienia: lewy panel + nagłówek Spotkania chowają się razem.
+<style id="build4002-room-focus-mode">
+/* BUILD 4002 — tryb skupienia: lewy panel + nagłówek Spotkania chowają się razem.
    Poprawka telefonu poziomo: lista meczów zaczyna się obok przycisku, nie pod nim,
    dzięki czemu może wejść wyżej; dodatkowo stabilny układ nazwa / typ / nazwa. */
 #room .mid{position:relative !important;}
@@ -6778,6 +6778,144 @@ body.room-screen-active.room-focus-mode #room .midHead{display:none !important;}
   body.room-screen-active.room-focus-mode #room #matchesList .teamName{font-size:15px !important;}
   body.room-screen-active.room-focus-mode #room #matchesList .scoreBox{width:100px !important;min-width:100px !important;}
   body.room-screen-active.room-focus-mode #room #matchesList .scoreInput{width:44px !important;height:32px !important;font-size:16px !important;}
+}
+</style>
+
+
+
+<style id="build4002-focus-mobile-fit-and-scroll">
+/* BUILD 4002 — tryb skupienia na telefonie poziomo.
+   1) wymuszamy faktyczną wysokość widoku, niezależnie od szerokości WebView,
+   2) 10 meczów dostaje maksymalnie dużo miejsca,
+   3) jeśli na danym telefonie nadal brakuje kilku pikseli, lista meczów jest przewijalna,
+      a czas i przyciski pozostają zawsze widoczne. */
+@media (orientation:landscape) and (max-height:900px){
+  body.room-screen-active.room-focus-mode #roomLayout{
+    grid-template-columns:minmax(0,72fr) minmax(0,28fr) !important;
+    grid-template-rows:minmax(0,1fr) !important;
+    width:100% !important;
+    height:calc(100dvh - 4px) !important;
+    min-height:0 !important;
+    max-height:calc(100dvh - 4px) !important;
+    padding:2px !important;
+    gap:3px !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active.room-focus-mode #roomLayout > .mid,
+  body.room-screen-active.room-focus-mode #roomLayout > .rightBar{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    overflow:hidden !important;
+  }
+  body.room-screen-active.room-focus-mode #room .mid{
+    grid-template-rows:minmax(0,1fr) 31px 36px !important;
+    gap:3px !important;
+    padding:2px !important;
+  }
+
+  body.room-screen-active.room-focus-mode #room .matchesWrap{
+    min-height:0 !important;
+    max-height:100% !important;
+    padding:2px 4px 2px 36px !important;
+    gap:2px !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior:contain !important;
+    touch-action:pan-y !important;
+    scrollbar-width:thin !important;
+  }
+  body.room-screen-active.room-focus-mode #room .matchesWrap::-webkit-scrollbar{width:5px !important;}
+  body.room-screen-active.room-focus-mode #room .matchesWrap::-webkit-scrollbar-thumb{
+    background:rgba(70,169,255,.42) !important;border-radius:8px !important;
+  }
+
+  body.room-screen-active.room-focus-mode #room #matchesList .matchRow{
+    flex:1 1 0 !important;
+    min-height:25px !important;
+    padding:2px 4px !important;
+    gap:3px !important;
+    border-radius:8px !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .matchPickCol{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr) !important;
+    align-items:center !important;
+    gap:3px !important;
+    min-width:0 !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .team,
+  body.room-screen-active.room-focus-mode #room #matchesList .teamName{
+    min-width:0 !important;
+    font-size:11px !important;
+    line-height:1 !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .teamName{
+    display:block !important;
+    max-width:100% !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .scoreBox{
+    width:68px !important;
+    min-width:68px !important;
+    gap:2px !important;
+    justify-content:center !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .scoreInput{
+    width:27px !important;
+    min-width:27px !important;
+    height:22px !important;
+    padding:1px 2px !important;
+    font-size:12px !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .sep{font-size:11px !important;}
+  body.room-screen-active.room-focus-mode #room #matchesList .matchResultCol,
+  body.room-screen-active.room-focus-mode #room #matchesList .matchDateCol{
+    height:22px !important;
+    min-height:22px !important;
+    padding:0 2px !important;
+    border-radius:7px !important;
+    font-size:8px !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .matchJudgeDot{
+    width:9px !important;height:9px !important;min-width:9px !important;min-height:9px !important;flex-basis:9px !important;
+  }
+  body.room-screen-active.room-focus-mode #room #matchesList .matchJudgePts{font-size:8px !important;}
+
+  body.room-screen-active.room-focus-mode #room #typingCountdownBar{
+    min-height:31px !important;
+    height:31px !important;
+    padding:3px 7px !important;
+    border-radius:8px !important;
+    flex-shrink:0 !important;
+  }
+  body.room-screen-active.room-focus-mode #room .typingCountdownMain{font-size:8px !important;gap:4px !important;}
+  body.room-screen-active.room-focus-mode #room #typingCountdownValue{font-size:11px !important;}
+  body.room-screen-active.room-focus-mode #room .settledPointsBox{
+    min-width:76px !important;height:23px !important;padding:0 5px !important;font-size:8px !important;border-radius:7px !important;
+  }
+  body.room-screen-active.room-focus-mode #room .matchActionsPanel{
+    min-height:36px !important;
+    height:36px !important;
+    padding:3px 5px !important;
+    gap:4px !important;
+    flex-shrink:0 !important;
+  }
+  body.room-screen-active.room-focus-mode #room .matchActionsPanel .modernRoomBtn,
+  body.room-screen-active.room-focus-mode #room .matchActionsPanel .modernAppBtn,
+  body.room-screen-active.room-focus-mode #room .matchActionsPanel .imgBtn{
+    min-height:29px !important;
+    height:29px !important;
+    padding:3px 7px !important;
+    font-size:8px !important;
+    gap:3px !important;
+  }
+  body.room-screen-active.room-focus-mode #room .matchActionsPanel .btnIcon{
+    width:12px !important;height:12px !important;flex:0 0 12px !important;
+  }
 }
 </style>
 
