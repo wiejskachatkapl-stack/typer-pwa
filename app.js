@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 4004;
+const BUILD = 4005;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -4148,7 +4148,7 @@ async function buildSeasonPodiumCanvas(ev){
   ctx.fillStyle="rgba(255,255,255,.68)";
   ctx.font="500 20px Arial, sans-serif";
   const room=String(ev?.roomName||currentRoom?.name||"").trim();
-  ctx.fillText(room ? `${room}  •  TYPER v.4.000` : "TYPER v.4.000",800,850);
+  ctx.fillText(room ? `${room}  •  TYPER v.4.005` : "TYPER v.4.005",800,850);
   return canvas;
 }
 
@@ -10733,9 +10733,22 @@ function initRoomColumnHeightSync(){
 }
 
 
-// ===== BUILD 4004: TRYB SKUPIENIA EKRANU TYPOWANIA =====
+// ===== BUILD 4005: TRYB SKUPIENIA EKRANU TYPOWANIA =====
 // Jeden przycisk chowa/pokazuje jednocześnie lewy panel oraz górny panel „Spotkania / Dodaj kolejkę”.
 // Po każdym wejściu do pokoju startujemy w pełnym, dawnym widoku. Tryb skupienia nie jest zapamiętywany.
+function alignRoomFocusToggleToPlace(){
+  const btn = document.getElementById('btnRoomFocusToggle');
+  const mid = document.querySelector('#roomLayout > .mid');
+  const placeBox = document.querySelector('#roomProfilePlace')?.closest('.profileStatMini');
+  if(!btn || !mid || !placeBox) return;
+  try{
+    const midRect = mid.getBoundingClientRect();
+    const placeRect = placeBox.getBoundingClientRect();
+    const top = (placeRect.top + placeRect.height / 2) - midRect.top;
+    if(Number.isFinite(top)) mid.style.setProperty('--room-focus-toggle-top', `${Math.max(24, top)}px`);
+  }catch(e){}
+}
+
 function setRoomFocusMode(enabled){
   const on = !!enabled;
   document.body.classList.toggle('room-focus-mode', on);
@@ -10751,6 +10764,7 @@ function setRoomFocusMode(enabled){
   }
   requestAnimationFrame(()=>{
     try{ syncRoomColumnsToLeftHeight(); }catch(e){}
+    try{ alignRoomFocusToggleToPlace(); }catch(e){}
   });
 }
 
@@ -10758,6 +10772,8 @@ function initRoomFocusToggle(){
   const btn = document.getElementById('btnRoomFocusToggle');
   if(!btn) return;
   setRoomFocusMode(false);
+  setTimeout(()=>{ try{ alignRoomFocusToggleToPlace(); }catch(e){} }, 80);
+  setTimeout(()=>{ try{ alignRoomFocusToggleToPlace(); }catch(e){} }, 350);
   btn.addEventListener('click', ()=>{
     setRoomFocusMode(!document.body.classList.contains('room-focus-mode'));
   });
@@ -10795,15 +10811,15 @@ function updateLandscapeLock(){
   try{ applyOrientationPreference(); }catch(e){}
 }
 
-window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); syncRoomColumnsToLeftHeight(); }catch(e){} }, {passive:true});
-window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); syncRoomColumnsToLeftHeight(); }catch(e){} }, 60); });
+window.addEventListener("resize", ()=>{ try{ updateLandscapeLock(); syncRoomColumnsToLeftHeight(); alignRoomFocusToggleToPlace(); }catch(e){} }, {passive:true});
+window.addEventListener("orientationchange", ()=>{ setTimeout(()=>{ try{ updateLandscapeLock(); syncRoomColumnsToLeftHeight(); alignRoomFocusToggleToPlace(); }catch(e){} }, 60); });
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ updateLandscapeLock(); }catch(e){} } });
 
 // ===== START =====
 (async()=>{
   try{
     setBg(BG_HOME);
-    setFooter(`Mariusz Gębka v.4.000`);
+    setFooter(`Mariusz Gębka v.4.005`);
     setSplash(`BUILD ${BUILD}\nŁadowanie Firebase…`);
 
     await initFirebase();
