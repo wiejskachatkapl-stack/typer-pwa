@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 4003;
+const BUILD = 4004;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -10733,7 +10733,7 @@ function initRoomColumnHeightSync(){
 }
 
 
-// ===== BUILD 4003: TRYB SKUPIENIA EKRANU TYPOWANIA =====
+// ===== BUILD 4004: TRYB SKUPIENIA EKRANU TYPOWANIA =====
 // Jeden przycisk chowa/pokazuje jednocześnie lewy panel oraz górny panel „Spotkania / Dodaj kolejkę”.
 // Po każdym wejściu do pokoju startujemy w pełnym, dawnym widoku. Tryb skupienia nie jest zapamiętywany.
 function setRoomFocusMode(enabled){
@@ -10747,7 +10747,7 @@ function setRoomFocusMode(enabled){
     btn.title = getLang()==='en' ? en : pl;
     btn.setAttribute('aria-label', getLang()==='en' ? en : pl);
     const icon = btn.querySelector('.roomFocusToggleIcon');
-    if(icon) icon.textContent = on ? '›' : '‹';
+    if(icon) icon.textContent = on ? '»' : '«';
   }
   requestAnimationFrame(()=>{
     try{ syncRoomColumnsToLeftHeight(); }catch(e){}
