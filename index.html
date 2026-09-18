@@ -3116,7 +3116,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
 </div>
 <!-- MIDDLE -->
 <div class="mid">
-<button id="btnRoomFocusToggle" class="roomFocusToggle" type="button" aria-label="Ukryj panele" title="Ukryj panele"><span class="roomFocusToggleIcon" aria-hidden="true">«</span></button>
+<button id="btnRoomFocusToggle" class="roomFocusToggle" type="button" aria-label="Ukryj panele" title="Ukryj panele"><span class="roomFocusToggleIcon" aria-hidden="true">‹</span></button>
 <div class="panel midHead">
 <div class="row">
 <div>
@@ -3456,7 +3456,7 @@ Gdy obrócisz ekran, wrócisz do typowania.</div>
       showErr("unhandledrejection", String(e?.reason?.message || e?.reason || e));
     });
   </script>
-<script src="./app.js?v=4002" type="module"></script>
+<script src="./app.js?v=4003" type="module"></script>
 <script>
   // BUILD 7024: usuń placeholdery reklam ("dummyAdOne"/"dummyAdTwo") jeśli gdziekolwiek się pojawią
   document.addEventListener('DOMContentLoaded', () => {
@@ -6916,6 +6916,51 @@ body.room-screen-active.room-focus-mode #room .midHead{display:none !important;}
   body.room-screen-active.room-focus-mode #room .matchActionsPanel .btnIcon{
     width:12px !important;height:12px !important;flex:0 0 12px !important;
   }
+}
+</style>
+
+
+<style id="build4003-sidebar-toggle">
+/* BUILD 4003 — pełny widok po wejściu do pokoju i klasyczny uchwyt chowania panelu.
+   Uchwyt jest na środku prawej krawędzi lewego panelu; po schowaniu zostaje
+   na środku lewej krawędzi obszaru typowania, aby zawsze można było panel przywrócić. */
+#room .mid{position:relative !important;}
+#room .roomFocusToggle{
+  top:50% !important;
+  left:-15px !important;
+  transform:translateY(-50%) !important;
+  width:30px !important;
+  height:62px !important;
+  border-radius:0 14px 14px 0 !important;
+  font-size:31px !important;
+  line-height:1 !important;
+  padding:0 2px 2px 0 !important;
+  z-index:120 !important;
+}
+#room .roomFocusToggle:hover{transform:translateY(-50%) scale(1.04) !important;}
+#room .roomFocusToggle:active{transform:translateY(-50%) scale(.98) !important;}
+body.room-screen-active:not(.room-focus-mode) #room .midHead{padding-left:initial !important;}
+
+/* Po schowaniu uchwyt przenosi się na lewą krawędź rozszerzonego panelu meczów. */
+body.room-screen-active.room-focus-mode #room .roomFocusToggle{
+  left:0 !important;
+  border-radius:0 14px 14px 0 !important;
+}
+body.room-screen-active.room-focus-mode #room .matchesWrap{padding-left:24px !important;}
+
+@media (max-width:980px){
+  #room .roomFocusToggle{
+    top:50% !important;
+    left:-12px !important;
+    width:24px !important;
+    height:50px !important;
+    border-radius:0 11px 11px 0 !important;
+    font-size:26px !important;
+    padding:0 1px 1px 0 !important;
+  }
+  body.room-screen-active:not(.room-focus-mode) #room .midHead{padding-left:initial !important;}
+  body.room-screen-active.room-focus-mode #room .roomFocusToggle{left:0 !important;}
+  body.room-screen-active.room-focus-mode #room .matchesWrap{padding-left:20px !important;}
 }
 </style>
 

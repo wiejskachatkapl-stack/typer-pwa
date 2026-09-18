@@ -1,5 +1,5 @@
 // BUILD number shown under the logo (cache-bust + version label)
-const BUILD = 4002;
+const BUILD = 4003;
 const SEASON_ROUNDS = 20;
 const KEY_SEEN_EVENT_PREFIX = "typer_seen_event_v1";
 
@@ -8226,6 +8226,11 @@ async function openRoom(code, opts={}){
   code = (code||"").trim().toUpperCase();
   if(!code || code.length!==6) throw new Error("Bad code");
 
+  // BUILD 4003: po zalogowaniu/wejściu do pokoju zawsze pokazujemy pełny, dawny układ.
+  if(currentRoomCode !== code){
+    try{ setRoomFocusMode(false); }catch(e){}
+  }
+
   if(!force && currentRoomCode === code){
     showScreen("room");
     refreshMainSpecialEventsButton(true).catch(()=>{});
@@ -10728,11 +10733,10 @@ function initRoomColumnHeightSync(){
 }
 
 
-// ===== BUILD 4001: TRYB SKUPIENIA EKRANU TYPOWANIA =====
+// ===== BUILD 4003: TRYB SKUPIENIA EKRANU TYPOWANIA =====
 // Jeden przycisk chowa/pokazuje jednocześnie lewy panel oraz górny panel „Spotkania / Dodaj kolejkę”.
-const ROOM_FOCUS_STORAGE_KEY = 'typer_room_focus_mode_v4000';
-
-function setRoomFocusMode(enabled, {persist=true}={}){
+// Po każdym wejściu do pokoju startujemy w pełnym, dawnym widoku. Tryb skupienia nie jest zapamiętywany.
+function setRoomFocusMode(enabled){
   const on = !!enabled;
   document.body.classList.toggle('room-focus-mode', on);
   const btn = document.getElementById('btnRoomFocusToggle');
@@ -10743,10 +10747,7 @@ function setRoomFocusMode(enabled, {persist=true}={}){
     btn.title = getLang()==='en' ? en : pl;
     btn.setAttribute('aria-label', getLang()==='en' ? en : pl);
     const icon = btn.querySelector('.roomFocusToggleIcon');
-    if(icon) icon.textContent = on ? '»' : '«';
-  }
-  if(persist){
-    try{ localStorage.setItem(ROOM_FOCUS_STORAGE_KEY, on ? '1' : '0'); }catch(e){}
+    if(icon) icon.textContent = on ? '›' : '‹';
   }
   requestAnimationFrame(()=>{
     try{ syncRoomColumnsToLeftHeight(); }catch(e){}
@@ -10756,9 +10757,7 @@ function setRoomFocusMode(enabled, {persist=true}={}){
 function initRoomFocusToggle(){
   const btn = document.getElementById('btnRoomFocusToggle');
   if(!btn) return;
-  let initial = false;
-  try{ initial = localStorage.getItem(ROOM_FOCUS_STORAGE_KEY) === '1'; }catch(e){}
-  setRoomFocusMode(initial, {persist:false});
+  setRoomFocusMode(false);
   btn.addEventListener('click', ()=>{
     setRoomFocusMode(!document.body.classList.contains('room-focus-mode'));
   });
